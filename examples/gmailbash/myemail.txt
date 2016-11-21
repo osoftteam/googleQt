@@ -1,0 +1,4 @@
+To: someone@mail.com 
+From: me@mail.com 
+Subject: this is a subject 
+And this is the body of the message
