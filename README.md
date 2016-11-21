@@ -1,0 +1,1 @@
+# first draft of googleQt
