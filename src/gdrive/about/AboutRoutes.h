@@ -27,6 +27,10 @@ namespace about{
 
             */
         std::unique_ptr<AboutResource> get(const gdrive::AboutArg& arg);
+        void get_Async(
+            const gdrive::AboutArg&,
+            std::function<void(std::unique_ptr<AboutResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
     protected:
     };//AboutRoutes

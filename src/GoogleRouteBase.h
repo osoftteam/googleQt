@@ -2,7 +2,7 @@
 
 namespace googleQt{
 
-	class Endpoint;
+    class Endpoint;
 
     class GoogleRouteBase
     {        

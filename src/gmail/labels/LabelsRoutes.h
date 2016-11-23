@@ -27,6 +27,10 @@ namespace labels{
 
             */
         std::unique_ptr<LabelResource> create(const LabelResource& body);
+        void create_Async(
+            const LabelResource& body,
+            std::function<void(std::unique_ptr<LabelResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('delete')
@@ -37,6 +41,10 @@ namespace labels{
 
             */
         void deleteOperation(const gmail::IdArg& );
+        void deleteOperation_Async(
+            const gmail::IdArg&,
+            std::function<void()> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('get')
@@ -46,6 +54,10 @@ namespace labels{
 
             */
         std::unique_ptr<LabelResource> get(const gmail::IdArg& arg);
+        void get_Async(
+            const gmail::IdArg&,
+            std::function<void(std::unique_ptr<LabelResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('list')
@@ -55,6 +67,9 @@ namespace labels{
 
             */
         std::unique_ptr<LabelsResultList> list(void);
+        void list_Async(
+            std::function<void(std::unique_ptr<LabelsResultList>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('update')
@@ -64,6 +79,11 @@ namespace labels{
 
             */
         std::unique_ptr<LabelResource> update(const gmail::IdArg& arg, const LabelResource& body);
+        void update_Async(
+            const gmail::IdArg&,
+            const LabelResource& body,
+            std::function<void(std::unique_ptr<LabelResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
     protected:
     };//LabelsRoutes

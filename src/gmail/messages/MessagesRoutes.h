@@ -27,6 +27,10 @@ namespace messages{
 
             */
         void deleteOperation(const gmail::IdArg& );
+        void deleteOperation_Async(
+            const gmail::IdArg&,
+            std::function<void()> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('get')
@@ -36,6 +40,10 @@ namespace messages{
 
             */
         std::unique_ptr<MessageResource> get(const gmail::IdArg& arg);
+        void get_Async(
+            const gmail::IdArg&,
+            std::function<void(std::unique_ptr<MessageResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('importMessage')
@@ -47,6 +55,11 @@ namespace messages{
 
             */
         std::unique_ptr<MessageResource> importMessage(const gmail::ImportMessageArg& arg, const MessageResource& body);
+        void importMessage_Async(
+            const gmail::ImportMessageArg&,
+            const MessageResource& body,
+            std::function<void(std::unique_ptr<MessageResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('insert')
@@ -57,6 +70,11 @@ namespace messages{
 
             */
         std::unique_ptr<MessageResource> insert(const gmail::InsertMessageArg& arg, const MessageResource& body);
+        void insert_Async(
+            const gmail::InsertMessageArg&,
+            const MessageResource& body,
+            std::function<void(std::unique_ptr<MessageResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('list')
@@ -66,6 +84,10 @@ namespace messages{
 
             */
         std::unique_ptr<MessageListRes> list(const gmail::ListArg& arg);
+        void list_Async(
+            const gmail::ListArg&,
+            std::function<void(std::unique_ptr<MessageListRes>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('send')
@@ -76,6 +98,11 @@ namespace messages{
 
             */
         std::unique_ptr<MessageResource> send(const gmail::SendMessageArg& arg, const MessageResource& body);
+        void send_Async(
+            const gmail::SendMessageArg&,
+            const MessageResource& body,
+            std::function<void(std::unique_ptr<MessageResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('trash')
@@ -85,6 +112,10 @@ namespace messages{
 
             */
         void trash(const gmail::TrashMessageArg& );
+        void trash_Async(
+            const gmail::TrashMessageArg&,
+            std::function<void()> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('untrash')
@@ -94,6 +125,10 @@ namespace messages{
 
             */
         void untrash(const gmail::UntrashMessageArg& );
+        void untrash_Async(
+            const gmail::UntrashMessageArg&,
+            std::function<void()> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
     protected:
     };//MessagesRoutes

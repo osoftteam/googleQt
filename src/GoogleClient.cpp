@@ -21,14 +21,14 @@ GoogleClient::~GoogleClient(){
 
 QString GoogleClient::lastApiCall()
 {
-	return m_endpoint->lastRequestInfo();
+    return m_endpoint->lastRequestInfo();
 }
 
 void GoogleClient::printLastApiCall()
 {
-	std::cout << "-----------------------------------------" << std::endl;
-	std::cout << "API call" << std::endl;
-	std::cout << lastApiCall().toStdString() << std::endl;
+    std::cout << "-----------------------------------------" << std::endl;
+    std::cout << "API call" << std::endl;
+    std::cout << lastApiCall().toStdString() << std::endl;
 };
 
 GmailRoutes* GoogleClient::gmail()
@@ -49,10 +49,10 @@ GtaskRoutes* GoogleClient::gtask()
 
 GdriveRoutes* GoogleClient::gdrive() 
 {
-	if (!m_gdrive_routes) {
-		m_gdrive_routes.reset(new GdriveRoutes(m_endpoint.get()));
-	}
-	return m_gdrive_routes.get();
+    if (!m_gdrive_routes) {
+        m_gdrive_routes.reset(new GdriveRoutes(m_endpoint.get()));
+    }
+    return m_gdrive_routes.get();
 };
 
 bool GoogleClient::refreshToken()

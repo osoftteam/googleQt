@@ -28,6 +28,11 @@ namespace files{
 
             */
         std::unique_ptr<FileResource> copy(const gdrive::CopyFileArg& arg, const FileResource& body);
+        void copy_Async(
+            const gdrive::CopyFileArg&,
+            const FileResource& body,
+            std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('create')
@@ -37,6 +42,11 @@ namespace files{
 
             */
         std::unique_ptr<FileResource> create(const gdrive::CreateFileArg& arg, QIODevice* readFrom);
+        void create_Async(
+            const gdrive::CreateFileArg&,
+            QIODevice* data,
+            std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('createFolder')
@@ -46,6 +56,11 @@ namespace files{
 
             */
         std::unique_ptr<FileResource> createFolder(const gdrive::CreateFileArg& arg, const FileResource& body);
+        void createFolder_Async(
+            const gdrive::CreateFileArg&,
+            const FileResource& body,
+            std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('delete')
@@ -57,6 +72,10 @@ namespace files{
 
             */
         void deleteOperation(const gdrive::DeleteFileArg& );
+        void deleteOperation_Async(
+            const gdrive::DeleteFileArg&,
+            std::function<void()> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('emptyTrash')
@@ -68,6 +87,10 @@ namespace files{
 
             */
         void emptyTrash(const gdrive::EmptyTrashArg& );
+        void emptyTrash_Async(
+            const gdrive::EmptyTrashArg&,
+            std::function<void()> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('get')
@@ -77,6 +100,10 @@ namespace files{
 
             */
         std::unique_ptr<FileResource> get(const gdrive::GetFileArg& arg);
+        void get_Async(
+            const gdrive::GetFileArg&,
+            std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('list')
@@ -86,6 +113,10 @@ namespace files{
 
             */
         std::unique_ptr<FileResourcesCollection> list(const gdrive::FileListArg& arg);
+        void list_Async(
+            const gdrive::FileListArg&,
+            std::function<void(std::unique_ptr<FileResourcesCollection>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
     protected:
     };//FilesRoutes

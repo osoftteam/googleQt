@@ -15,10 +15,10 @@ void IdArg::build(const QString& link_path, QUrl& url)const
 {
     UrlBuilder b(link_path + QString("/%1").arg(m_id), url);
     b.add("format", m_format);
-	for (QStringList::const_iterator i = m_headers.cbegin(); i != m_headers.cend(); i++)
-	{
-		b.add("metadataHeaders", *i);
-	}   
+    for (QStringList::const_iterator i = m_headers.cbegin(); i != m_headers.cend(); i++)
+    {
+        b.add("metadataHeaders", *i);
+    }   
 };
 
 
@@ -76,7 +76,7 @@ void DraftListArg::build(const QString& link_path, QUrl& url)const
 
 SendMessageArg::SendMessageArg()
 {
-	m_uploadType = "media";
+    m_uploadType = "media";
 };
 
 void SendMessageArg::build(const QString& link_path, QUrl& url)const 
@@ -88,9 +88,9 @@ void SendMessageArg::build(const QString& link_path, QUrl& url)const
 
 InsertMessageArg::InsertMessageArg() 
 {
-	m_deleted = false;
-	m_internalDateSource = "receivedTime";
-	m_uploadType = "media";
+    m_deleted = false;
+    m_internalDateSource = "receivedTime";
+    m_uploadType = "media";
 };
 
 
@@ -105,11 +105,11 @@ void InsertMessageArg::build(const QString& link_path, QUrl& url)const
 
 ImportMessageArg::ImportMessageArg()
 {
-	m_deleted = false;
-	m_internalDateSource = "receivedTime";
-	m_neverMarkSpam = false;
-	m_processForCalendar = false;
-	m_uploadType = "media";
+    m_deleted = false;
+    m_internalDateSource = "receivedTime";
+    m_neverMarkSpam = false;
+    m_processForCalendar = false;
+    m_uploadType = "media";
 };
 
 void ImportMessageArg::build(const QString& link_path, QUrl& url)const
@@ -126,60 +126,60 @@ void ImportMessageArg::build(const QString& link_path, QUrl& url)const
 #ifdef API_QT_AUTOTEST
 std::unique_ptr<IdArg> IdArg::EXAMPLE()
 {
-	std::unique_ptr<IdArg> rv(new IdArg);
-	rv->setId("id123");
-	rv->setFormat("metadata");
-	rv->headers().push_back("Subject");
-	rv->headers().push_back("From");
-	return rv;
+    std::unique_ptr<IdArg> rv(new IdArg);
+    rv->setId("id123");
+    rv->setFormat("metadata");
+    rv->headers().push_back("Subject");
+    rv->headers().push_back("From");
+    return rv;
 };
 
 std::unique_ptr<ListArg> ListArg::EXAMPLE()
 { 
-	std::unique_ptr<ListArg> rv(new ListArg); 
-	rv->setMaxResults(10);
-	rv->setPageToken("nextToken");
-	rv->labels() = QString("label1 label2 label3").split(" ");
-	return rv; 
+    std::unique_ptr<ListArg> rv(new ListArg); 
+    rv->setMaxResults(10);
+    rv->setPageToken("nextToken");
+    rv->labels() = QString("label1 label2 label3").split(" ");
+    return rv; 
 };
 
 std::unique_ptr<HistoryListArg> HistoryListArg::EXAMPLE()
 { 
-	std::unique_ptr<HistoryListArg> rv(new HistoryListArg); 
-	rv->setMaxResults(10);
-	rv->setPageToken("nextToken");
-	rv->labels() = QString("hlabel1 hlabel2 hlabel3").split(" ");
-	return rv; 
+    std::unique_ptr<HistoryListArg> rv(new HistoryListArg); 
+    rv->setMaxResults(10);
+    rv->setPageToken("nextToken");
+    rv->labels() = QString("hlabel1 hlabel2 hlabel3").split(" ");
+    return rv; 
 };
 
 std::unique_ptr<DraftListArg> DraftListArg::EXAMPLE()
 { 
-	std::unique_ptr<DraftListArg> rv(new DraftListArg); 
-	rv->setMaxResults(10);
-	rv->setPageToken("nextToken");
-	rv->setIncludeSpamTrash(true);
-	return rv; 
+    std::unique_ptr<DraftListArg> rv(new DraftListArg); 
+    rv->setMaxResults(10);
+    rv->setPageToken("nextToken");
+    rv->setIncludeSpamTrash(true);
+    return rv; 
 };
 
 std::unique_ptr<SendMessageArg> SendMessageArg::EXAMPLE() 
 {
-	std::unique_ptr<SendMessageArg> rv(new SendMessageArg);
-	rv->setUploadType("media");
-	return rv;
+    std::unique_ptr<SendMessageArg> rv(new SendMessageArg);
+    rv->setUploadType("media");
+    return rv;
 };
 
 std::unique_ptr<InsertMessageArg> InsertMessageArg::EXAMPLE()
 {
-	std::unique_ptr<InsertMessageArg> rv(new InsertMessageArg);
-	rv->setUploadType("media");
-	return rv;
+    std::unique_ptr<InsertMessageArg> rv(new InsertMessageArg);
+    rv->setUploadType("media");
+    return rv;
 };
 
 std::unique_ptr<ImportMessageArg> ImportMessageArg::EXAMPLE()
 {
-	std::unique_ptr<ImportMessageArg> rv(new ImportMessageArg);
-	rv->setUploadType("media");
-	return rv;
+    std::unique_ptr<ImportMessageArg> rv(new ImportMessageArg);
+    rv->setUploadType("media");
+    return rv;
 };
 
 

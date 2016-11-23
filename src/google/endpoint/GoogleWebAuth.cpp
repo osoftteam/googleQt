@@ -63,7 +63,7 @@ bool GoogleWebAuth::updateToken(const QUrl& url, ApiAuthInfo* auth, const QStrin
                                              QJsonObject js_in = doc.object();
                                              rv = auth->updateToken(js_in);
                                              ok = true;
-                                         }				
+                                         }              
                                  }break;
                              default:
                                  {
@@ -77,7 +77,7 @@ bool GoogleWebAuth::updateToken(const QUrl& url, ApiAuthInfo* auth, const QStrin
                          loop.exit();
                          if(!ok)
                              {
-                                 throw ReplyException(errorInfo, status_code, "");
+                                 throw GoogleException(errorInfo, status_code, "");
                              }        
                      });
     loop.exec();
@@ -111,14 +111,14 @@ bool GoogleWebAuth::refreshToken(const ApiAppInfo* appInfo, ApiAuthInfo* auth)
 
 #define DEFINE_SCOPE(N, L) QString GoogleWebAuth::N(){return L;};
 
-DEFINE_SCOPE(authScope_gmail_readonly,	"https://www.googleapis.com/auth/gmail.readonly");
-DEFINE_SCOPE(authScope_gmail_compose,	"https://www.googleapis.com/auth/gmail.compose");
-DEFINE_SCOPE(authScope_gmail_send,		"https://www.googleapis.com/auth/gmail.send");
-DEFINE_SCOPE(authScope_gmail_modify,	"https://www.googleapis.com/auth/gmail.modify");
-DEFINE_SCOPE(authScope_full_access,		"https://mail.google.com/");
-DEFINE_SCOPE(authScope_tasks,			"https://www.googleapis.com/auth/tasks");
-DEFINE_SCOPE(authScope_tasks_readonly,	"https://www.googleapis.com/auth/tasks.readonly");
-DEFINE_SCOPE(authScope_gdrive,			"https://www.googleapis.com/auth/drive");
+DEFINE_SCOPE(authScope_gmail_readonly,  "https://www.googleapis.com/auth/gmail.readonly");
+DEFINE_SCOPE(authScope_gmail_compose,   "https://www.googleapis.com/auth/gmail.compose");
+DEFINE_SCOPE(authScope_gmail_send,      "https://www.googleapis.com/auth/gmail.send");
+DEFINE_SCOPE(authScope_gmail_modify,    "https://www.googleapis.com/auth/gmail.modify");
+DEFINE_SCOPE(authScope_full_access,     "https://mail.google.com/");
+DEFINE_SCOPE(authScope_tasks,           "https://www.googleapis.com/auth/tasks");
+DEFINE_SCOPE(authScope_tasks_readonly,  "https://www.googleapis.com/auth/tasks.readonly");
+DEFINE_SCOPE(authScope_gdrive,          "https://www.googleapis.com/auth/drive");
 DEFINE_SCOPE(authScope_gdrive_readonly, "https://www.googleapis.com/auth/drive.readonly");
 
 #undef DEFINE_SCOPE

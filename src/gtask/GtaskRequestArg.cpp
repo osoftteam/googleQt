@@ -5,7 +5,7 @@ using namespace googleQt;
 using namespace gtask;
 
 /**
-	TaskListIdArg
+    TaskListIdArg
 */
 TaskListIdArg::TaskListIdArg(QString tasklist):m_tasklist(tasklist)
 {
@@ -14,12 +14,12 @@ TaskListIdArg::TaskListIdArg(QString tasklist):m_tasklist(tasklist)
 
 void TaskListIdArg::build(const QString& link_path, QUrl& url)const
 {
-	QString link = link_path + QString("/%1/tasks").arg(m_tasklist);
-	url.setUrl(link);
+    QString link = link_path + QString("/%1/tasks").arg(m_tasklist);
+    url.setUrl(link);
 };
 
 /**
-	TaskListContainerIdArg
+    TaskListContainerIdArg
 */
 TaskListContainerIdArg::TaskListContainerIdArg(QString tasklist_id):TaskListIdArg(tasklist_id)
 {
@@ -28,12 +28,12 @@ TaskListContainerIdArg::TaskListContainerIdArg(QString tasklist_id):TaskListIdAr
 
 void TaskListContainerIdArg::build(const QString& link_path, QUrl& url)const
 {
-	QString link = link_path + QString("/%1").arg(m_tasklist);
-	url.setUrl(link);
+    QString link = link_path + QString("/%1").arg(m_tasklist);
+    url.setUrl(link);
 };
 
 /**
-	TaskListClearArg
+    TaskListClearArg
 */
 TaskListClearArg::TaskListClearArg(QString tasklist_id):TaskListIdArg(tasklist_id)
 {
@@ -42,12 +42,12 @@ TaskListClearArg::TaskListClearArg(QString tasklist_id):TaskListIdArg(tasklist_i
 
 void TaskListClearArg::build(const QString& link_path, QUrl& url)const
 {
-	QString link = link_path + QString("/%1/clear").arg(m_tasklist);
-	url.setUrl(link);
+    QString link = link_path + QString("/%1/clear").arg(m_tasklist);
+    url.setUrl(link);
 };
 
 /**
-	TaskIdArg
+    TaskIdArg
 */
 TaskIdArg::TaskIdArg() 
 {
@@ -63,12 +63,12 @@ void TaskIdArg::build(const QString& link_path, QUrl& url)const
 {
     UrlBuilder b(link_path + QString("/%1/tasks/%2").arg(m_tasklist).arg(m_task),
                  url);
-    //	QString link = link_path + QString("/%1").arg(m_tasklist);
-    //	url.setUrl(link);
+    //  QString link = link_path + QString("/%1").arg(m_tasklist);
+    //  url.setUrl(link);
 };
 
 /**
-	TaskInsertArg
+    TaskInsertArg
 */
 TaskInsertArg::TaskInsertArg() 
 {
@@ -76,20 +76,20 @@ TaskInsertArg::TaskInsertArg()
 
 void TaskInsertArg::build(const QString& link_path, QUrl& url)const
 {
-	TaskListIdArg::build(link_path, url);
-	if (!m_parent.isEmpty() || !m_previous.isEmpty())
-	{
-		QUrlQuery uq;
-		if (!m_parent.isEmpty())		
-			uq.addQueryItem("parent", m_parent);	
-		if (!m_previous.isEmpty())		
-			uq.addQueryItem("previous", m_previous);		
-		url.setQuery(uq);
-	}
+    TaskListIdArg::build(link_path, url);
+    if (!m_parent.isEmpty() || !m_previous.isEmpty())
+    {
+        QUrlQuery uq;
+        if (!m_parent.isEmpty())        
+            uq.addQueryItem("parent", m_parent);    
+        if (!m_previous.isEmpty())      
+            uq.addQueryItem("previous", m_previous);        
+        url.setQuery(uq);
+    }
 };
 
 /**
-	TaskMoveArg
+    TaskMoveArg
 */
 TaskMoveArg::TaskMoveArg()
 {
@@ -102,25 +102,25 @@ TaskMoveArg::TaskMoveArg(QString task_list_id, QString task_id):TaskIdArg(task_l
 
 void TaskMoveArg::build(const QString& link_path, QUrl& url)const
 {
-	TaskListIdArg::build(link_path + "/move", url);
-	if (!m_parent.isEmpty() || !m_previous.isEmpty())
-	{
-		QUrlQuery uq;
-		if (!m_parent.isEmpty())
-			uq.addQueryItem("parent", m_parent);
-		if (!m_previous.isEmpty())
-			uq.addQueryItem("previous", m_previous);
-		url.setQuery(uq);
-	}
+    TaskListIdArg::build(link_path + "/move", url);
+    if (!m_parent.isEmpty() || !m_previous.isEmpty())
+    {
+        QUrlQuery uq;
+        if (!m_parent.isEmpty())
+            uq.addQueryItem("parent", m_parent);
+        if (!m_previous.isEmpty())
+            uq.addQueryItem("previous", m_previous);
+        url.setQuery(uq);
+    }
 };
 
 /**
-	TaskListArg
+    TaskListArg
 */
 TaskListArg::TaskListArg(QString tasklist):TaskListIdArg(tasklist)
 {
-	m_maxResults = 100;
-	m_showDeleted = m_showHidden = false;
+    m_maxResults = 100;
+    m_showDeleted = m_showHidden = false;
 };
 
 void TaskListArg::build(const QString& link_path, QUrl& url)const
@@ -150,82 +150,82 @@ TasklistsListArg::TasklistsListArg(QString pageToken) :m_maxResults(100), m_page
 
 void TasklistsListArg::build(const QString& link_path, QUrl& url)const 
 {
-	url.setUrl(link_path);
-	QUrlQuery uq;
-	uq.addQueryItem("maxResults", QString("%1").arg(m_maxResults));
-	if (!m_pageToken.isEmpty())
-		uq.addQueryItem("pageToken", m_pageToken);
-	url.setQuery(uq);
+    url.setUrl(link_path);
+    QUrlQuery uq;
+    uq.addQueryItem("maxResults", QString("%1").arg(m_maxResults));
+    if (!m_pageToken.isEmpty())
+        uq.addQueryItem("pageToken", m_pageToken);
+    url.setQuery(uq);
 };
 
 #ifdef API_QT_AUTOTEST
 std::unique_ptr<TaskListIdArg> TaskListIdArg::EXAMPLE() 
 {
-	std::unique_ptr<TaskListIdArg> rv(new TaskListIdArg);
-	rv->setTasklist("task-list1");
-	return rv;
+    std::unique_ptr<TaskListIdArg> rv(new TaskListIdArg);
+    rv->setTasklist("task-list1");
+    return rv;
 };
 
 std::unique_ptr<TaskListContainerIdArg> TaskListContainerIdArg::EXAMPLE() 
 {
-	std::unique_ptr<TaskListContainerIdArg> rv(new TaskListContainerIdArg);
-	rv->setTasklist("task-list1");
-	return rv;
+    std::unique_ptr<TaskListContainerIdArg> rv(new TaskListContainerIdArg);
+    rv->setTasklist("task-list1");
+    return rv;
 };
 
 std::unique_ptr<TaskIdArg> TaskIdArg::EXAMPLE()
 {
-	std::unique_ptr<TaskIdArg> rv(new TaskIdArg);
-	rv->setTasklist("task-list1");
-	rv->setTask("task1");
-	return rv;
+    std::unique_ptr<TaskIdArg> rv(new TaskIdArg);
+    rv->setTasklist("task-list1");
+    rv->setTask("task1");
+    return rv;
 };
 
 std::unique_ptr<TaskInsertArg> TaskInsertArg::EXAMPLE()
 {
-	std::unique_ptr<TaskInsertArg> rv(new TaskInsertArg);
-	rv->setTasklist("task-list1");
-	rv->setParent("parent-task2");
-	rv->setPrevious("prev-task3");
-	return rv;
+    std::unique_ptr<TaskInsertArg> rv(new TaskInsertArg);
+    rv->setTasklist("task-list1");
+    rv->setParent("parent-task2");
+    rv->setPrevious("prev-task3");
+    return rv;
 };
 
 std::unique_ptr<TaskMoveArg> TaskMoveArg::EXAMPLE()
 {
-	std::unique_ptr<TaskMoveArg> rv(new TaskMoveArg);
-	rv->setTasklist("task-list1");
-	rv->setTask("task1");
-	rv->setParent("parent-task2");
-	rv->setPrevious("prev-task3");
-	return rv;
+    std::unique_ptr<TaskMoveArg> rv(new TaskMoveArg);
+    rv->setTasklist("task-list1");
+    rv->setTask("task1");
+    rv->setParent("parent-task2");
+    rv->setPrevious("prev-task3");
+    return rv;
 };
 
 
 std::unique_ptr<TaskListClearArg> TaskListClearArg::EXAMPLE()
 {
-	std::unique_ptr<TaskListClearArg> rv(new TaskListClearArg);
-	rv->setTasklist("task-list1");
-	return rv;
+    std::unique_ptr<TaskListClearArg> rv(new TaskListClearArg);
+    rv->setTasklist("task-list1");
+    return rv;
 };
 
 std::unique_ptr<TaskListArg> TaskListArg::EXAMPLE()
 {
-	std::unique_ptr<TaskListArg> rv(new TaskListArg);
-	rv->setTasklist("task-list1");
-	rv->setMaxResults(20);
-	rv->setPageToken("nextToken");
-	rv->setCompletedMax("2016-09-08T10:47:31Z");
-	rv->setCompletedMin("2016-09-08T10:47:31Z");
-	rv->setDueMax("2016-09-08T10:47:31Z");
-	rv->setDueMin("2016-09-08T10:47:31Z");
-	return rv;
+    std::unique_ptr<TaskListArg> rv(new TaskListArg);
+    rv->setTasklist("task-list1");
+    rv->setMaxResults(20);
+    rv->setPageToken("nextToken");
+    rv->setCompletedMax("2016-09-08T10:47:31Z");
+    rv->setCompletedMin("2016-09-08T10:47:31Z");
+    rv->setDueMax("2016-09-08T10:47:31Z");
+    rv->setDueMin("2016-09-08T10:47:31Z");
+    return rv;
 };
 
 std::unique_ptr<TasklistsListArg> TasklistsListArg::EXAMPLE() 
 {
-	std::unique_ptr<TasklistsListArg> rv(new TasklistsListArg);
-	rv->setMaxResults(20);
-	rv->setPageToken("nextToken");	
-	return rv;
+    std::unique_ptr<TasklistsListArg> rv(new TasklistsListArg);
+    rv->setMaxResults(20);
+    rv->setPageToken("nextToken");  
+    return rv;
 };
 #endif

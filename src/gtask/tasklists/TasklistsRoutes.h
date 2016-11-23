@@ -27,6 +27,10 @@ namespace tasklists{
 
             */
         void deleteOperation(const gtask::TaskListContainerIdArg& );
+        void deleteOperation_Async(
+            const gtask::TaskListContainerIdArg&,
+            std::function<void()> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('get')
@@ -36,6 +40,10 @@ namespace tasklists{
 
             */
         std::unique_ptr<TaskListResource> get(const gtask::TaskListContainerIdArg& arg);
+        void get_Async(
+            const gtask::TaskListContainerIdArg&,
+            std::function<void(std::unique_ptr<TaskListResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('insert')
@@ -46,6 +54,10 @@ namespace tasklists{
 
             */
         std::unique_ptr<TaskListResource> insert(const TaskListResource& body);
+        void insert_Async(
+            const TaskListResource& body,
+            std::function<void(std::unique_ptr<TaskListResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('list')
@@ -55,6 +67,10 @@ namespace tasklists{
 
             */
         std::unique_ptr<TaskListCollectionRes> list(const gtask::TasklistsListArg& arg);
+        void list_Async(
+            const gtask::TasklistsListArg&,
+            std::function<void(std::unique_ptr<TaskListCollectionRes>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('update')
@@ -64,6 +80,11 @@ namespace tasklists{
 
             */
         std::unique_ptr<TaskListResource> update(const gtask::TaskListContainerIdArg& arg, const TaskListResource& body);
+        void update_Async(
+            const gtask::TaskListContainerIdArg&,
+            const TaskListResource& body,
+            std::function<void(std::unique_ptr<TaskListResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
     protected:
     };//TasklistsRoutes

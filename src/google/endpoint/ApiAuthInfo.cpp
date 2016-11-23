@@ -8,7 +8,7 @@ using namespace googleQt;
 ApiAuthInfo::ApiAuthInfo() 
 {
 #ifdef API_QT_AUTOTEST
-	m_accessToken = "TEST-TOKEN";
+    m_accessToken = "TEST-TOKEN";
 #endif //API_QT_AUTOTEST
 };
 

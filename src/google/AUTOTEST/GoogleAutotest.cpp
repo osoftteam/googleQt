@@ -19,9 +19,9 @@ GoogleAutotest::~GoogleAutotest()
 void GoogleAutotest::generateCalls()
 {
 #define AUTOTEST_GENERATE_CALLS(T){T a(m_cl);a.generateCalls();}
-	AUTOTEST_GENERATE_CALLS(GmailAutotest);
-	AUTOTEST_GENERATE_CALLS(GtaskAutotest);
-	AUTOTEST_GENERATE_CALLS(GdriveAutotest);
+    AUTOTEST_GENERATE_CALLS(GmailAutotest);
+    AUTOTEST_GENERATE_CALLS(GtaskAutotest);
+    AUTOTEST_GENERATE_CALLS(GdriveAutotest);
 #undef AUTOTEST_GENERATE_CALLS
 }
 #endif//#ifdef API_QT_AUTOTEST

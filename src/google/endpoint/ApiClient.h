@@ -8,14 +8,15 @@ namespace googleQt{
         Q_OBJECT
     public:
         ApiClient(ApiAppInfo* appInfo, ApiAuthInfo* authInfo);
-		virtual ~ApiClient() {};
+        virtual ~ApiClient() {};
         QString getToken()const;
-		QString getAppKey()const;
+        QString getAppKey()const;
         virtual bool refreshToken() = 0;
-		virtual QString userId()const = 0;
+        virtual QString userId()const = 0;
         
     signals:
-        void progress(qint64 bytesProcessed, qint64 total);
+        void downloadProgress(qint64 bytesProcessed, qint64 total);
+        void uploadProgress(qint64 bytesProcessed, qint64 total);
 
     protected:
         std::unique_ptr<ApiAppInfo>  m_app;

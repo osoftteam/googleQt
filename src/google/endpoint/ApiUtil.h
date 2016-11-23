@@ -3,6 +3,7 @@
 #include <list>
 #include <set>
 #include <memory>
+#include <functional>
 #include <QString>
 #include <QDebug>
 #include <QDateTime>
@@ -158,10 +159,10 @@ namespace googleQt{
         static VoidType& instance();
         operator QJsonObject ()const;
 
-		void build(const QString& link, QUrl& url)const 
-		{
-			url.setUrl(link);
-		}
+        void build(const QString& link, QUrl& url)const 
+        {
+            url.setUrl(link);
+        }
     };
 
     class NotAnException
@@ -191,68 +192,224 @@ namespace googleQt{
     };
 
     class UrlBuilder;
-	class QParamArg
-	{
-	public:
-		virtual void build(const QString& link_path, QUrl& url)const = 0;
+    class QParamArg
+    {
+    public:
+        virtual void build(const QString& link_path, QUrl& url)const = 0;
         void addResponseField(QString name){m_partResponseFields.insert(name);};
         void clearResponseFields(){m_partResponseFields.clear();};
     protected:
         void ResponseFields2Builder(UrlBuilder& b)const;
     protected:
         FIELDS m_partResponseFields;
-	};
+    };
+
+    template <class P, class D>
+    class PathArg : public P
+    {
+    public:
+        virtual void build(const QString& link_path, QUrl& url)const 
+        {
+            url.setUrl(link_path + QString("/%1").arg(P::path()));
+        }
+
+        #ifdef API_QT_AUTOTEST
+        static std::unique_ptr<D> EXAMPLE(){std::unique_ptr<D> rv(new D);return rv;};
+        #endif //API_QT_AUTOTEST        
+    };
+
+    template <class P, class D>
+    class PathWithIdArg : public P
+    {
+    public:
+        PathWithIdArg() {}
+        PathWithIdArg(QString idValue) :m_id(idValue) {}
+        virtual void build(const QString& link_path, QUrl& url)const
+        {
+            url.setUrl(link_path + QString("/%1/%2").arg(m_id).arg(P::path()));
+        }
+
+#ifdef API_QT_AUTOTEST
+        static std::unique_ptr<D> EXAMPLE() { std::unique_ptr<D> rv(new D("100")); return rv; };
+#endif //API_QT_AUTOTEST
+    protected:
+        QString m_id;
+    };
+
+    class UrlBuilder 
+    {
+    public:
+        UrlBuilder(const QString& link_path, QUrl& url);
+        virtual ~UrlBuilder();
+
+        UrlBuilder& add(QString name, QString value);
+        UrlBuilder& add(QString name, bool value);
+        UrlBuilder& add(QString name, int value);
+        UrlBuilder& add(QString name, const QDateTime& value);
+
+    protected:
+        QUrlQuery m_q;
+        QUrl&     m_url;
+    };
 
 
 #define DECLARE_PATH_CLASS(P) struct path_##P{QString path()const{return #P;}}
 #define EXPECT(E, M) if(!E)qWarning() << M;
 
-	template <class P, class D>
-	class PathArg : public P
-	{
-	public:
-		virtual void build(const QString& link_path, QUrl& url)const 
-		{
-			url.setUrl(link_path + QString("/%1").arg(P::path()));
-		}
+    //........
+    /**
+    GOOGLE_BLOCKING_CALL or GBC - macross converts 2 async callbacks into one blocking call
+    that returns value of the first callback and throws exception in case of second callback.
+    */
 
-		#ifdef API_QT_AUTOTEST
-		static std::unique_ptr<D> EXAMPLE(){std::unique_ptr<D> rv(new D);return rv;};
-		#endif //API_QT_AUTOTEST		
-	};
+#define GOOGLE_BLOCKING_CALL(AFUNC, REST, ARGV)    \
+        std::unique_ptr<GoogleException> ex;   \
+        std::unique_ptr<REST> result;           \
+        AFUNC(ARGV,                             \
+            [this, &result](std::unique_ptr<REST> r)        \
+        {                                       \
+            result = std::move(r);              \
+            m_end_point->exitEventsLoop();      \
+        },                                          \
+            [&](std::unique_ptr<GoogleException> e)\
+        {                                       \
+            ex = std::move(e);                  \
+            m_end_point->exitEventsLoop();      \
+        }                                       \
+        );                                      \
+		if(!ex && !result)						\
+            m_end_point->runEventsLoop();       \
+        if (ex)                                 \
+            ex->raise();                        \
+        return result;                          \
 
-	template <class P, class D>
-	class PathWithIdArg : public P
-	{
-	public:
-		PathWithIdArg() {}
-		PathWithIdArg(QString idValue) :m_id(idValue) {}
-		virtual void build(const QString& link_path, QUrl& url)const
-		{
-			url.setUrl(link_path + QString("/%1/%2").arg(m_id).arg(P::path()));
-		}
+#define BODY_ARG_GBC(AFUNC, REST, ARGV, BODY_VAL)    \
+        std::unique_ptr<GoogleException> ex;   \
+        std::unique_ptr<REST> result;           \
+        AFUNC(ARGV, BODY_VAL,                   \
+            [this, &result](std::unique_ptr<REST> r)        \
+        {                                       \
+            result = std::move(r);              \
+            m_end_point->exitEventsLoop();      \
+        },                                          \
+            [&](std::unique_ptr<GoogleException> e)\
+        {                                       \
+            ex = std::move(e);                  \
+            m_end_point->exitEventsLoop();      \
+        }                                       \
+        );                                      \
+		if(!ex && !result)						\
+			m_end_point->runEventsLoop();       \
+        if (ex)                                 \
+            ex->raise();                        \
+        return result;                          \
 
-#ifdef API_QT_AUTOTEST
-		static std::unique_ptr<D> EXAMPLE() { std::unique_ptr<D> rv(new D("100")); return rv; };
-#endif //API_QT_AUTOTEST
-	protected:
-		QString m_id;
-	};
+#define BODY_NO_ARG_ARG_GBC(AFUNC, REST, BODY_VAL)    \
+        std::unique_ptr<GoogleException> ex;   \
+        std::unique_ptr<REST> result;           \
+        AFUNC(BODY_VAL,                   \
+            [this, &result](std::unique_ptr<REST> r)        \
+        {                                       \
+            result = std::move(r);              \
+            m_end_point->exitEventsLoop();      \
+        },                                          \
+            [&](std::unique_ptr<GoogleException> e)\
+        {                                       \
+            ex = std::move(e);                  \
+            m_end_point->exitEventsLoop();      \
+        }                                       \
+        );                                      \
+		if(!ex && !result)						\
+			m_end_point->runEventsLoop();       \
+        if (ex)                                 \
+            ex->raise();                        \
+        return result;                          \
 
-	class UrlBuilder 
-	{
-	public:
-		UrlBuilder(const QString& link_path, QUrl& url);
-		virtual ~UrlBuilder();
 
-		UrlBuilder& add(QString name, QString value);
-		UrlBuilder& add(QString name, bool value);
-		UrlBuilder& add(QString name, int value);
-		UrlBuilder& add(QString name, const QDateTime& value);
+#define DATA_GBC(AFUNC, REST, ARGV, DATA)   \
+        std::unique_ptr<GoogleException> ex;   \
+        std::unique_ptr<REST> result;           \
+        AFUNC(ARGV,                             \
+            DATA,                               \
+            [this, &result](std::unique_ptr<REST> r)        \
+        {                                       \
+            result = std::move(r);              \
+            m_end_point->exitEventsLoop();      \
+        },                                          \
+            [&](std::unique_ptr<GoogleException> e)\
+        {                                       \
+            ex = std::move(e);                  \
+            m_end_point->exitEventsLoop();      \
+        }                                       \
+        );                                      \
+		if(!ex && !result)						\
+			m_end_point->runEventsLoop();       \
+        if (ex)                                 \
+            ex->raise();                        \
+        return result;                          \
 
-	protected:
-		QUrlQuery m_q;
-		QUrl&     m_url;
-	};
+
+
+#define VOID_ARG_GBC(AFUNC, REST)           \
+        std::unique_ptr<GoogleException> ex;   \
+        std::unique_ptr<REST> result;           \
+        AFUNC([this, &result](std::unique_ptr<REST> r)      \
+        {                                       \
+            result = std::move(r);              \
+            m_end_point->exitEventsLoop();      \
+        },                                          \
+            [&](std::unique_ptr<GoogleException> e)\
+        {                                       \
+            ex = std::move(e);                  \
+            m_end_point->exitEventsLoop();      \
+        }                                       \
+        );                                      \
+		if(!ex && !result)						\
+			m_end_point->runEventsLoop();       \
+        if (ex)                                 \
+            ex->raise();                        \
+        return result;                          \
+
+
+#define VOID_RESULT_GBC(AFUNC, ARGV)                \
+        std::unique_ptr<GoogleException> ex;   \
+		bool completed = false;					\
+        AFUNC(ARGV,                             \
+            [this, &completed](void)            \
+        {                                       \
+			completed = true;					\
+            m_end_point->exitEventsLoop();      \
+        },                                          \
+            [&](std::unique_ptr<GoogleException> e)\
+        {                                       \
+            ex = std::move(e);                  \
+            m_end_point->exitEventsLoop();      \
+        }                                       \
+        );                                      \
+		if(!ex && !completed)					\
+			m_end_point->runEventsLoop();       \
+        if (ex)                                 \
+            ex->raise();                        \
+
+/*
+#define VOID_RESULT_GBC(AFUNC, ARGV)                \
+        std::unique_ptr<GoogleException> ex;   \
+        AFUNC(ARGV,                             \
+            [this](void)						\
+        {										\         
+							\
+            m_end_point->exitEventsLoop();      \
+        },                                       \
+            [&](std::unique_ptr<GoogleException> e)\
+        {                                       \
+            ex = std::move(e);                  \
+            m_end_point->exitEventsLoop();      \
+        }                                       \
+        );                                      \
+		if(!ex && !processed)						\
+            m_end_point->runEventsLoop();       \
+        if (ex)                                 \
+            ex->raise();                        \
+			*/
 }
 

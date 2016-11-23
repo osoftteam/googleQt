@@ -2,6 +2,10 @@
 
 #include <exception>
 #include <string>
+#include <memory>
+#include <QByteArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 namespace googleQt{
   class GoogleException: public std::exception
@@ -14,6 +18,11 @@ namespace googleQt{
       m_status_code(code)
     {};        
         
+    explicit GoogleException(const std::string& message, int code, const std::string summary) :
+        m_msg(message), m_status_code(code), m_error_summary(summary) {
+        build("");
+    };
+
     virtual const char* what() const throw (){
       return m_msg.c_str();
     }
@@ -21,31 +30,20 @@ namespace googleQt{
     virtual int statusCode()const throw(){
       return m_status_code;
     }        
-        
+
+    const std::string& errSummary()const { return m_error_summary; }
+
+    static  std::unique_ptr<GoogleException> create(const QByteArray& data, int status_code, const std::string& message);
+    virtual void raise() { throw *this; }
+
+
+  protected:
+      void build(std::string err);
+
   protected:
     std::string m_msg;
     int m_status_code;
-  };
-
-  class ReplyException: public GoogleException
-  {
-  public:
-    explicit ReplyException(const std::string& message, int code, const std::string summary)
-      :GoogleException(message, code), m_error_summary(summary){build("");};
-
-    virtual const char* what() const throw (){
-      return m_what.c_str();
-    }
-
-    const std::string& errSummary()const{return m_error_summary;}
-        
-        
-  protected:
-    void build(std::string err);
-        
-  protected:
     std::string m_error_summary;
     std::string m_what;
-  };    
-
+  };
 };

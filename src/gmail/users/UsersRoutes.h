@@ -26,6 +26,9 @@ namespace users{
 
             */
         std::unique_ptr<GetProfileResponse> profile(void);
+        void profile_Async(
+            std::function<void(std::unique_ptr<GetProfileResponse>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
     protected:
     };//UsersRoutes

@@ -27,6 +27,11 @@ namespace permissions{
 
             */
         std::unique_ptr<ResourcePermission> create(const gdrive::CreatePermissionArg& arg, const ResourcePermission& body);
+        void create_Async(
+            const gdrive::CreatePermissionArg&,
+            const ResourcePermission& body,
+            std::function<void(std::unique_ptr<ResourcePermission>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('delete')
@@ -36,6 +41,10 @@ namespace permissions{
 
             */
         void deleteOperation(const gdrive::PermissionArg& );
+        void deleteOperation_Async(
+            const gdrive::PermissionArg&,
+            std::function<void()> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('get')
@@ -45,6 +54,10 @@ namespace permissions{
 
             */
         std::unique_ptr<ResourcePermission> get(const gdrive::PermissionArg& arg);
+        void get_Async(
+            const gdrive::PermissionArg&,
+            std::function<void(std::unique_ptr<ResourcePermission>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('list')
@@ -54,6 +67,10 @@ namespace permissions{
 
             */
         std::unique_ptr<PermissionResourcesCollection> list(const gdrive::PermissionListArg& arg);
+        void list_Async(
+            const gdrive::PermissionListArg&,
+            std::function<void(std::unique_ptr<PermissionResourcesCollection>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
     protected:
     };//PermissionsRoutes

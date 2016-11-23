@@ -27,6 +27,10 @@ namespace drafts{
 
             */
         std::unique_ptr<DraftResource> get(const gmail::IdArg& arg);
+        void get_Async(
+            const gmail::IdArg&,
+            std::function<void(std::unique_ptr<DraftResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('list')
@@ -36,6 +40,10 @@ namespace drafts{
 
             */
         std::unique_ptr<DraftListRes> list(const gmail::DraftListArg& arg);
+        void list_Async(
+            const gmail::DraftListArg&,
+            std::function<void(std::unique_ptr<DraftListRes>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
     protected:
     };//DraftsRoutes

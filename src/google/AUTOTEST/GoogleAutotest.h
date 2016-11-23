@@ -5,7 +5,7 @@
 
 #ifdef API_QT_AUTOTEST
 namespace googleQt{
-	class GoogleClient;
+    class GoogleClient;
 
     class GoogleAutotest: public ApiAutotest{
     public:

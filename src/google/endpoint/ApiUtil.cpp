@@ -47,42 +47,42 @@ VoidType::operator QJsonObject ()const
 };
 
 /**
-	UrlBuilder
+    UrlBuilder
 */
 UrlBuilder::UrlBuilder(const QString& link_path, QUrl& url) :m_url(url)
 {
-	url.setUrl(link_path);
+    url.setUrl(link_path);
 };
 
 UrlBuilder::~UrlBuilder() 
 {
-	m_url.setQuery(m_q);
+    m_url.setQuery(m_q);
 };
 
 UrlBuilder& UrlBuilder::add(QString name, QString value) 
 {
-	if(!value.isEmpty())
-		m_q.addQueryItem(name, value);
-	return *this;
+    if(!value.isEmpty())
+        m_q.addQueryItem(name, value);
+    return *this;
 };
 
 UrlBuilder& UrlBuilder::add(QString name, bool value) 
 {
-	m_q.addQueryItem(name, value ? "true" : "false");
-	return *this;
+    m_q.addQueryItem(name, value ? "true" : "false");
+    return *this;
 };
 
 UrlBuilder& UrlBuilder::add(QString name, int value) 
 {
-	m_q.addQueryItem(name, QString("%1").arg(value));
-	return *this;
+    m_q.addQueryItem(name, QString("%1").arg(value));
+    return *this;
 };
 
 UrlBuilder& UrlBuilder::add(QString name, const QDateTime& value) 
 {
-	if(value.isValid())
-		m_q.addQueryItem(name, value.toString("yyyy-MM-ddThh:mm:ssZ"));
-	return *this;
+    if(value.isValid())
+        m_q.addQueryItem(name, value.toString("yyyy-MM-ddThh:mm:ssZ"));
+    return *this;
 };
 
 void QParamArg::ResponseFields2Builder(UrlBuilder& b)const

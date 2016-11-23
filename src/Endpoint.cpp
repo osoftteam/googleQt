@@ -5,7 +5,7 @@ using namespace googleQt;
 
 Endpoint::Endpoint(ApiClient* c):ApiEndpoint(c)
 {
-	
+    
 }
 
 
@@ -31,16 +31,16 @@ void Endpoint::onErrorUnauthorized(const errors::ErrorInfo*)
 
 QString Endpoint::prepareErrorInfo(int status_code, const QUrl& url, const QByteArray& data) 
 {
-	QString rv = QString("ERROR. Unexpected status %1 %2 ").arg(status_code).arg(url.url());
-	rv += data;
-	rv += "\n";
-	rv += lastRequestInfo();
-	return rv;
+    QString rv = QString("ERROR. Unexpected status %1 %2 ").arg(status_code).arg(url.url());
+    rv += data;
+    rv += "\n";
+    rv += lastRequestInfo();
+    return rv;
 };
 
 void Endpoint::addAppKeyParameter(QUrl& url)const
 {
-	QUrlQuery q(url);
-	q.addQueryItem("key", client()->getAppKey());
-	url.setQuery(q);
+    QUrlQuery q(url);
+    q.addQueryItem("key", client()->getAppKey());
+    url.setQuery(q);
 };

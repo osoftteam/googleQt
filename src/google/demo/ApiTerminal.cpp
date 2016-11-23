@@ -5,8 +5,8 @@ using namespace demo;
 
 std::ostream& operator << (std::ostream& os, const QString& s)
 {
-	os << s.toStdString();
-	return os;
+    os << s.toStdString();
+    return os;
 }
 
 

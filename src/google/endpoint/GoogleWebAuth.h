@@ -10,11 +10,11 @@ namespace googleQt{
     class GoogleWebAuth
     {
     public:
-		/**
-			getCodeAuthorizeUrl - format string that should be opened to enable
-			Dropbox access and request for access token, which will be used in all
-			API interactions.
-		*/
+        /**
+            getCodeAuthorizeUrl - format string that should be opened to enable
+            Dropbox access and request for access token, which will be used in all
+            API interactions.
+        */
         static QUrl getCodeAuthorizeUrl(const ApiAppInfo* appInfo, QString scope);
 
         static QUrl getCodeAuthorizeUrl(const ApiAppInfo* appInfo, const std::list<QString>& scopes);
@@ -57,25 +57,25 @@ namespace googleQt{
          */
         static QString authScope_full_access();
 
-		/**
-		* read/write access to Tasks
-		*/
-		static QString authScope_tasks();
+        /**
+        * read/write access to Tasks
+        */
+        static QString authScope_tasks();
 
-		/**
-		* read-only access to Tasks
-		*/
-		static QString authScope_tasks_readonly();
+        /**
+        * read-only access to Tasks
+        */
+        static QString authScope_tasks_readonly();
 
-		/**
-		* GDrive access
-		*/
-		static QString authScope_gdrive();
+        /**
+        * GDrive access
+        */
+        static QString authScope_gdrive();
 
-		/**
-		* GDrive readonly access
-		*/
-		static QString authScope_gdrive_readonly();
+        /**
+        * GDrive readonly access
+        */
+        static QString authScope_gdrive_readonly();
 
     protected:
         static bool updateToken(const QUrl& url, ApiAuthInfo* auth, const QString& str);

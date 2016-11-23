@@ -7,7 +7,7 @@
 
 using namespace googleQt;
 
-ApiEndpoint::ApiEndpoint(ApiClient* c):m_client(c), m_reply_in_progress(NULL)
+ApiEndpoint::ApiEndpoint(ApiClient* c):m_client(c)//, m_reply_in_progress(NULL)
 {
 
 }
@@ -18,26 +18,59 @@ void ApiEndpoint::addAuthHeader(QNetworkRequest& request)
     request.setRawHeader("Authorization", bearer.toUtf8());
 };
 
-void ApiEndpoint::execEventLoop(QNetworkReply *reply)
+void ApiEndpoint::runEventsLoop()const
 {
-    m_reply_in_progress = reply;
     m_loop.exec();
 };
 
-void ApiEndpoint::exitEventLoop(QNetworkReply *reply)
+void ApiEndpoint::exitEventsLoop()const
 {
-    EXPECT((m_reply_in_progress == reply), QString("Expected stored reply object."));
-    m_reply_in_progress = NULL;
-    reply->deleteLater();
     m_loop.exit();
 };
 
-void ApiEndpoint::cancel()
+
+void ApiEndpoint::cancelAll()
 {
-    if(m_reply_in_progress != NULL){
-        m_reply_in_progress->abort();
-    }
+    NET_REPLIES_IN_PROGRESS copy_of_replies = m_replies_in_progress;
+    std::for_each(copy_of_replies.begin(), copy_of_replies.end(), [](QNetworkReply *r)
+    {
+        r->abort();
+    });
 };
+
+void ApiEndpoint::registerReply(QNetworkReply* r)
+{
+    QObject::connect(r, &QNetworkReply::downloadProgress, [&](qint64 bytesProcessed, qint64 total) {
+        emit m_client->downloadProgress(bytesProcessed, total);
+    });
+
+    QObject::connect(r, &QNetworkReply::uploadProgress, [&](qint64 bytesProcessed, qint64 total) {
+        emit m_client->uploadProgress(bytesProcessed, total);
+    });
+
+    NET_REPLIES_IN_PROGRESS::iterator i = m_replies_in_progress.find(r);
+    if (i != m_replies_in_progress.end())
+    {
+        qWarning() << "Duplicate reply objects registered, map size:" << m_replies_in_progress.size() << r;
+    }
+
+    m_replies_in_progress.insert(r);
+};
+
+void ApiEndpoint::unregisterReply(QNetworkReply* r)
+{
+    NET_REPLIES_IN_PROGRESS::iterator i = m_replies_in_progress.find(r);
+    if (i == m_replies_in_progress.end())
+    {
+        qWarning() << "Failed to locate reply objects in registered map, map size:" << m_replies_in_progress.size() << r;
+    }
+    else
+    {
+        m_replies_in_progress.erase(i);
+    }
+    r->deleteLater();
+};
+
 
 void ApiEndpoint::updateLastRequestInfo(QString s)
 {
@@ -57,8 +90,9 @@ QNetworkReply* ApiEndpoint::getData(const QNetworkRequest &req)
     LOG_REQUEST;
     return nullptr;
 #else
-    QNetworkReply *reply = m_con_mgr.get(req);
-    return reply;
+    QNetworkReply *r = m_con_mgr.get(req);
+    registerReply(r);
+    return r;
 #endif
 };
 
@@ -76,8 +110,9 @@ QNetworkReply* ApiEndpoint::postData(const QNetworkRequest &req, const QByteArra
     LOG_REQUEST;
     return nullptr;
 #else
-    QNetworkReply *reply = m_con_mgr.post(req, data);
-    return reply;
+    QNetworkReply *r = m_con_mgr.post(req, data);
+    registerReply(r);
+    return r;
 #endif
 };
 
@@ -94,8 +129,9 @@ QNetworkReply* ApiEndpoint::putData(const QNetworkRequest &req, const QByteArray
     LOG_REQUEST;
     return nullptr;
 #else
-    QNetworkReply *reply = m_con_mgr.put(req, data);
-    return reply;
+    QNetworkReply *r = m_con_mgr.put(req, data);
+    registerReply(r);
+    return r;
 #endif
 };
 
@@ -112,7 +148,8 @@ QNetworkReply* ApiEndpoint::deleteData(const QNetworkRequest &req)
     LOG_REQUEST;
     return nullptr;
 #else
-    QNetworkReply *reply = m_con_mgr.deleteResource(req);
-    return reply;
+    QNetworkReply *r = m_con_mgr.deleteResource(req);
+    registerReply(r);
+    return r;
 #endif
 };

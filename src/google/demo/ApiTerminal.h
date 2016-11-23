@@ -13,9 +13,9 @@ namespace googleQt{
         public:
             struct Selection
             {
-                QString							name;
-                QString							description;
-                std::function<void(QString)>	action;
+                QString                         name;
+                QString                         description;
+                std::function<void(QString)>    action;
             };
             typedef std::list<Selection> SELECTION_LIST;
             typedef std::map<QString, Selection> SELECTION_MAP;
@@ -53,7 +53,7 @@ Terminal(QString prompt):m_prompt(prompt){};
                         std::cout << " " << pad(exit_option, 20) << " " << "Exit terminal" << std::endl << std::endl;
 std::cout << " " << m_prompt << "> ";
 
-                        std::string tmp;			
+                        std::string tmp;            
                         getline(std::cin, tmp);
                         QString str = tmp.c_str();
                         QStringList arg_list = str.split(" ", QString::SkipEmptyParts);

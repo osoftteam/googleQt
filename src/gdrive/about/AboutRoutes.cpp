@@ -11,6 +11,21 @@ using namespace googleQt;
 using namespace about;
 
 std::unique_ptr<AboutResource> AboutRoutes::get(const gdrive::AboutArg& arg){
-    return m_end_point->getStyle<std::unique_ptr<AboutResource>, AboutResource::factory, NotAnException>(m_end_point->buildGdriveUrl("about", arg));
+    GOOGLE_BLOCKING_CALL(get_Async, AboutResource, arg);
+}
+
+void AboutRoutes::get_Async(
+    const gdrive::AboutArg& arg,
+    std::function<void(std::unique_ptr<AboutResource>)> completed_callback ,
+    std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+{
+    m_end_point->getStyle
+        <
+        std::unique_ptr<AboutResource>,
+        AboutResource::factory
+        >
+        (m_end_point->buildGdriveUrl("about", arg),
+        completed_callback,
+        failed_callback);
 }
 

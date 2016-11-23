@@ -27,6 +27,11 @@ namespace comments{
 
             */
         std::unique_ptr<Comment> create(const gdrive::CreateCommentArg& arg, const Comment& body);
+        void create_Async(
+            const gdrive::CreateCommentArg&,
+            const Comment& body,
+            std::function<void(std::unique_ptr<Comment>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('delete')
@@ -36,6 +41,10 @@ namespace comments{
 
             */
         void deleteOperation(const gdrive::DeleteCommentArg& );
+        void deleteOperation_Async(
+            const gdrive::DeleteCommentArg&,
+            std::function<void()> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('get')
@@ -45,6 +54,10 @@ namespace comments{
 
             */
         std::unique_ptr<Comment> get(const gdrive::GetCommentArg& arg);
+        void get_Async(
+            const gdrive::GetCommentArg&,
+            std::function<void(std::unique_ptr<Comment>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
             ApiRoute('list')
@@ -54,6 +67,10 @@ namespace comments{
 
             */
         std::unique_ptr<CommentListResult> list(const gdrive::CommentListArg& arg);
+        void list_Async(
+            const gdrive::CommentListArg&,
+            std::function<void(std::unique_ptr<CommentListResult>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
     protected:
     };//CommentsRoutes
