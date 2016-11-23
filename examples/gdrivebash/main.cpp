@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 
     demo::ApiListener lsn;
     GoogleClient c(appInfo.release(), authInfo.release());
-    QObject::connect(&c, &GoogleClient::progress, &lsn, &demo::ApiListener::transferProgress);
+    QObject::connect(&c, &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);
 
     GdriveCommands cmd(c);
     demo::Terminal t("gdrive");

@@ -7,14 +7,6 @@
 #include "GmailCommands.h"
 #include "google/demo/ApiTerminal.h"
 #include "gmail/GmailRoutes.h"
-/*
-#include "gmail/messages/MessagesRoutes.h"
-#include "gmail/labels/LabelsRoutes.h"
-#include "gmail/threads/ThreadsRoutes.h"
-#include "gmail/history/HistoryRoutes.h"
-#include "gmail/drafts/DraftsRoutes.h"
-*/
-
 
 GmailCommands::GmailCommands(GoogleClient& c):m_c(c)
 {

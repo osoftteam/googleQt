@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 
     demo::ApiListener lsn;
     GoogleClient c(appInfo.release(), authInfo.release(), argUserId);
-    QObject::connect(&c, &GoogleClient::progress, &lsn, &demo::ApiListener::transferProgress);
+    QObject::connect(&c, &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);
 
     GmailCommands cmd(c);
     demo::Terminal t("gmail");

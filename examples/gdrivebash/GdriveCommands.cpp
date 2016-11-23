@@ -80,7 +80,7 @@ void GdriveCommands::get(QString fileId)
 	}
 };
 
-void GdriveCommands::mkdir(QString title, QString title_Space_parentFolderId)
+void GdriveCommands::mkdir(QString title_Space_parentFolderId)
 {
     QStringList arg_list = title_Space_parentFolderId.split(" ",
                                                         QString::SkipEmptyParts);
