@@ -9,9 +9,9 @@
 
 namespace googleQt
 {
-	class Endpoint;
+    class Endpoint;
     
-    class GdriveRoutes{	
+    class GdriveRoutes{ 
     public:
 
         GdriveRoutes(Endpoint*);
@@ -19,13 +19,13 @@ namespace googleQt
 
         files::FilesRoutes* getFiles();
         about::AboutRoutes* getAbout();
-		permissions::PermissionsRoutes* getPermissions();
-		comments::CommentsRoutes* getComments();
+        permissions::PermissionsRoutes* getPermissions();
+        comments::CommentsRoutes* getComments();
     protected:
         std::unique_ptr<files::FilesRoutes> m_Files;
         std::unique_ptr<about::AboutRoutes> m_About;
-		std::unique_ptr<permissions::PermissionsRoutes> m_Permissions;
-		std::unique_ptr<comments::CommentsRoutes> m_Comments;
+        std::unique_ptr<permissions::PermissionsRoutes> m_Permissions;
+        std::unique_ptr<comments::CommentsRoutes> m_Comments;
         Endpoint*  m_endpoint;
     };
 };//googleQt

@@ -7,9 +7,9 @@
 
 namespace googleQt
 {
-	class Endpoint;
+    class Endpoint;
 
-    class GtaskRoutes{	
+    class GtaskRoutes{  
     public:
 
         GtaskRoutes(Endpoint*);

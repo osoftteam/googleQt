@@ -277,7 +277,7 @@ namespace googleQt{
             m_end_point->exitEventsLoop();      \
         }                                       \
         );                                      \
-		if(!ex && !result)						\
+        if(!ex && !result)                      \
             m_end_point->runEventsLoop();       \
         if (ex)                                 \
             ex->raise();                        \
@@ -298,8 +298,8 @@ namespace googleQt{
             m_end_point->exitEventsLoop();      \
         }                                       \
         );                                      \
-		if(!ex && !result)						\
-			m_end_point->runEventsLoop();       \
+        if(!ex && !result)                      \
+            m_end_point->runEventsLoop();       \
         if (ex)                                 \
             ex->raise();                        \
         return result;                          \
@@ -319,8 +319,8 @@ namespace googleQt{
             m_end_point->exitEventsLoop();      \
         }                                       \
         );                                      \
-		if(!ex && !result)						\
-			m_end_point->runEventsLoop();       \
+        if(!ex && !result)                      \
+            m_end_point->runEventsLoop();       \
         if (ex)                                 \
             ex->raise();                        \
         return result;                          \
@@ -342,8 +342,8 @@ namespace googleQt{
             m_end_point->exitEventsLoop();      \
         }                                       \
         );                                      \
-		if(!ex && !result)						\
-			m_end_point->runEventsLoop();       \
+        if(!ex && !result)                      \
+            m_end_point->runEventsLoop();       \
         if (ex)                                 \
             ex->raise();                        \
         return result;                          \
@@ -364,8 +364,8 @@ namespace googleQt{
             m_end_point->exitEventsLoop();      \
         }                                       \
         );                                      \
-		if(!ex && !result)						\
-			m_end_point->runEventsLoop();       \
+        if(!ex && !result)                      \
+            m_end_point->runEventsLoop();       \
         if (ex)                                 \
             ex->raise();                        \
         return result;                          \
@@ -373,11 +373,11 @@ namespace googleQt{
 
 #define VOID_RESULT_GBC(AFUNC, ARGV)                \
         std::unique_ptr<GoogleException> ex;   \
-		bool completed = false;					\
+        bool completed = false;                 \
         AFUNC(ARGV,                             \
             [this, &completed](void)            \
         {                                       \
-			completed = true;					\
+            completed = true;                   \
             m_end_point->exitEventsLoop();      \
         },                                          \
             [&](std::unique_ptr<GoogleException> e)\
@@ -386,8 +386,8 @@ namespace googleQt{
             m_end_point->exitEventsLoop();      \
         }                                       \
         );                                      \
-		if(!ex && !completed)					\
-			m_end_point->runEventsLoop();       \
+        if(!ex && !completed)                   \
+            m_end_point->runEventsLoop();       \
         if (ex)                                 \
             ex->raise();                        \
 
@@ -395,9 +395,9 @@ namespace googleQt{
 #define VOID_RESULT_GBC(AFUNC, ARGV)                \
         std::unique_ptr<GoogleException> ex;   \
         AFUNC(ARGV,                             \
-            [this](void)						\
-        {										\         
-							\
+            [this](void)                        \
+        {                                       \         
+                            \
             m_end_point->exitEventsLoop();      \
         },                                       \
             [&](std::unique_ptr<GoogleException> e)\
@@ -406,10 +406,10 @@ namespace googleQt{
             m_end_point->exitEventsLoop();      \
         }                                       \
         );                                      \
-		if(!ex && !processed)						\
+        if(!ex && !processed)                       \
             m_end_point->runEventsLoop();       \
         if (ex)                                 \
             ex->raise();                        \
-			*/
+            */
 }
 

@@ -13,7 +13,7 @@
 namespace googleQt{
   class Endpoint;
 
-  class GmailRoutes{	
+  class GmailRoutes{    
   public:
 
     GmailRoutes(Endpoint*);

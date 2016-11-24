@@ -25,16 +25,16 @@ about::AboutRoutes* GdriveRoutes::getAbout()
 
 permissions::PermissionsRoutes* GdriveRoutes::getPermissions() 
 {
-	if (!m_Permissions) {
-		m_Permissions.reset(new permissions::PermissionsRoutes(m_endpoint));
-	}
-	return m_Permissions.get();
+    if (!m_Permissions) {
+        m_Permissions.reset(new permissions::PermissionsRoutes(m_endpoint));
+    }
+    return m_Permissions.get();
 };
 
 comments::CommentsRoutes* GdriveRoutes::getComments()
 {
-	if (!m_Comments) {
-		m_Comments.reset(new comments::CommentsRoutes(m_endpoint));
-	}
-	return m_Comments.get();
+    if (!m_Comments) {
+        m_Comments.reset(new comments::CommentsRoutes(m_endpoint));
+    }
+    return m_Comments.get();
 };

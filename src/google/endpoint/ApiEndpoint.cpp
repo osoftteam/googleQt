@@ -32,13 +32,13 @@ void ApiEndpoint::exitEventsLoop()const
 void ApiEndpoint::cancelAll()
 {
     NET_REPLIES_IN_PROGRESS copy_of_replies = m_replies_in_progress;
-    std::for_each(copy_of_replies.begin(), copy_of_replies.end(), [](QNetworkReply *r)
+    std::for_each(copy_of_replies.begin(), copy_of_replies.end(), [](std::pair<QNetworkReply*, std::shared_ptr<FINISHED_REQ>> p)
     {
-        r->abort();
+        p.first->abort();
     });
 };
 
-void ApiEndpoint::registerReply(QNetworkReply* r)
+void ApiEndpoint::registerReply(QNetworkReply* r, std::shared_ptr<FINISHED_REQ> finishedLambda)
 {
     QObject::connect(r, &QNetworkReply::downloadProgress, [&](qint64 bytesProcessed, qint64 total) {
         emit m_client->downloadProgress(bytesProcessed, total);
@@ -54,7 +54,8 @@ void ApiEndpoint::registerReply(QNetworkReply* r)
         qWarning() << "Duplicate reply objects registered, map size:" << m_replies_in_progress.size() << r;
     }
 
-    m_replies_in_progress.insert(r);
+    m_replies_in_progress[r] = finishedLambda;
+   // m_replies_in_progress.insert(std::make_pair(r, nullptr));
 };
 
 void ApiEndpoint::unregisterReply(QNetworkReply* r)
@@ -91,7 +92,7 @@ QNetworkReply* ApiEndpoint::getData(const QNetworkRequest &req)
     return nullptr;
 #else
     QNetworkReply *r = m_con_mgr.get(req);
-    registerReply(r);
+//    registerReply(r);
     return r;
 #endif
 };
@@ -111,7 +112,7 @@ QNetworkReply* ApiEndpoint::postData(const QNetworkRequest &req, const QByteArra
     return nullptr;
 #else
     QNetworkReply *r = m_con_mgr.post(req, data);
-    registerReply(r);
+//    registerReply(r);
     return r;
 #endif
 };
@@ -130,7 +131,7 @@ QNetworkReply* ApiEndpoint::putData(const QNetworkRequest &req, const QByteArray
     return nullptr;
 #else
     QNetworkReply *r = m_con_mgr.put(req, data);
-    registerReply(r);
+//    registerReply(r);
     return r;
 #endif
 };
@@ -149,7 +150,7 @@ QNetworkReply* ApiEndpoint::deleteData(const QNetworkRequest &req)
     return nullptr;
 #else
     QNetworkReply *r = m_con_mgr.deleteResource(req);
-    registerReply(r);
+//    registerReply(r);
     return r;
 #endif
 };
