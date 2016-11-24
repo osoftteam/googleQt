@@ -18,8 +18,8 @@ GdriveCommands::GdriveCommands(GoogleClient& c):m_c(c)
 
 void GdriveCommands::about(QString)
 {
-	try
-	{
+    try
+    {
         AboutArg arg;
         arg.addResponseField("user(displayName,emailAddress)");
         arg.addResponseField("storageQuota(limit,usage)");
@@ -29,17 +29,17 @@ void GdriveCommands::about(QString)
         
         m_c.printLastApiCall();
     }
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}    
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }    
 };
 
 
 void GdriveCommands::ls(QString)
 {
-	try
-	{
+    try
+    {
         FileListArg arg;
         auto lst = m_gd->getFiles()->list(arg);
         const std::list <files::FileResource>& files = lst->files();
@@ -49,10 +49,10 @@ void GdriveCommands::ls(QString)
         }
         m_c.printLastApiCall();
     }
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}    
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }    
 };
 
 void GdriveCommands::get(QString fileId)
@@ -63,8 +63,8 @@ void GdriveCommands::get(QString fileId)
             return;
         }
     
-	try
-	{
+    try
+    {
         GetFileArg arg(fileId);
         arg.addResponseField("id,name,size,webContentLink");
         auto f = m_gd->getFiles()->get(arg);
@@ -74,10 +74,10 @@ void GdriveCommands::get(QString fileId)
                   << "link=" << f->webcontentlink() << std::endl;
         m_c.printLastApiCall();
     }
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 void GdriveCommands::mkdir(QString title_Space_parentFolderId)
@@ -96,11 +96,11 @@ void GdriveCommands::mkdir(QString title_Space_parentFolderId)
         parentId = arg_list[1];
     }
 
-	try
+    try
         {
             
         }
-	catch (GoogleException& e)
+    catch (GoogleException& e)
         {
             std::cout << "Exception: " << e.what() << std::endl;
         }
@@ -108,7 +108,7 @@ void GdriveCommands::mkdir(QString title_Space_parentFolderId)
 
 void GdriveCommands::ls_comments(QString fileId)
 {
-	try
+    try
         {
             CommentListArg arg(fileId);
             arg.addResponseField("comments(content,id)");
@@ -119,7 +119,7 @@ void GdriveCommands::ls_comments(QString fileId)
                 std::cout << idx++ << ". " << c.id() << " " << c.content() << std::endl;
             }
         }
-	catch (GoogleException& e)
+    catch (GoogleException& e)
         {
             std::cout << "Exception: " << e.what() << std::endl;
         }
@@ -137,13 +137,13 @@ void GdriveCommands::rm_comment(QString fileId_Space_commentId)
     
     QString fileId = arg_list[0];
     QString commentId = arg_list[1];
-	try
+    try
         {
             DeleteCommentArg arg(fileId, commentId);
             m_gd->getComments()->deleteOperation(arg);
             std::cout << "comment deleted" << std::endl;
         }
-	catch (GoogleException& e)
+    catch (GoogleException& e)
         {
             std::cout << "Exception: " << e.what() << std::endl;
         }
@@ -161,17 +161,17 @@ void GdriveCommands::get_comment(QString fileId_Space_commentId)
     
     QString fileId = arg_list[0];
     QString commentId = arg_list[1];    
-	try
-	{
+    try
+    {
         GetCommentArg arg(fileId, commentId);
         arg.addResponseField("content,id");
         auto c = m_gd->getComments()->get(arg);
         std::cout << c->id() << " " << c->content() << std::endl;
     }
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 void GdriveCommands::new_comment(QString fileId_Space_content)
@@ -185,8 +185,8 @@ void GdriveCommands::new_comment(QString fileId_Space_content)
         }
     QString fileId = arg_list[0];
     QString content = arg_list[1];
-	try
-	{
+    try
+    {
         CreateCommentArg arg(fileId);
         arg.addResponseField("content,id");
         comments::Comment cmt;
@@ -194,15 +194,15 @@ void GdriveCommands::new_comment(QString fileId_Space_content)
         auto c = m_gd->getComments()->create(arg, cmt);
         std::cout << c->id() << " " << c->content() << std::endl;
     }
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 void GdriveCommands::ls_permissions(QString fileId)
 {
-	try
+    try
         {
             PermissionListArg arg(fileId);
             auto col = m_gd->getPermissions()->list(arg);
@@ -212,7 +212,7 @@ void GdriveCommands::ls_permissions(QString fileId)
                 std::cout << idx++ << ". " << p.id() << " " << p.role() << " " << p.type() << std::endl;
             }
         }
-	catch (GoogleException& e)
+    catch (GoogleException& e)
         {
             std::cout << "Exception: " << e.what() << std::endl;
         }
@@ -230,14 +230,14 @@ void GdriveCommands::get_permission(QString fileId_Space_permissionId)
     
     QString fileId = arg_list[0];
     QString permissionId = arg_list[1];    
-	try
-	{
+    try
+    {
         PermissionArg arg(fileId, permissionId);
         auto p = m_gd->getPermissions()->get(arg);
         std::cout << p->id() << " " << p->role() << " " << p->type() << std::endl;
     }
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };

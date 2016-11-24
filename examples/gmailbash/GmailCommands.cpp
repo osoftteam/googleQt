@@ -10,7 +10,7 @@
 
 GmailCommands::GmailCommands(GoogleClient& c):m_c(c)
 {
-	m_gm = m_c.gmail();
+    m_gm = m_c.gmail();
 };
 
 void GmailCommands::listMessages(QString nextToken, QString labelIds)
@@ -30,15 +30,15 @@ void GmailCommands::listMessages(QString nextToken, QString labelIds)
             msgID.headers().push_back("From");
             
             int n = 1;
-			auto mlist = m_gm->getMessages()->list(listArg);
-			for(auto m : mlist->messages())
+            auto mlist = m_gm->getMessages()->list(listArg);
+            for(auto m : mlist->messages())
                 {
                     msgID.setId(m.id());
                     auto msg_resource = m_gm->getMessages()->get(msgID);
                     auto payload = msg_resource->payload();
-					auto header_list = payload.headers();
+                    auto header_list = payload.headers();
                     std::cout << n << ". " << msg_resource->id() << " ";
-					for(auto h : header_list)
+                    for(auto h : header_list)
                         {
                             std::cout << h.value()
                                       << " ";
@@ -59,76 +59,76 @@ void GmailCommands::listMessages(QString nextToken, QString labelIds)
 
 void GmailCommands::listThreads(QString nextToken, QString labelIds)
 {
-	try
-	{
-		gmail::ListArg listArg;
-		listArg.setMaxResults(40);
-		listArg.setPageToken(nextToken);
-		if (!labelIds.isEmpty()) {
-			listArg.labels() = labelIds.split(" ");
-		}
+    try
+    {
+        gmail::ListArg listArg;
+        listArg.setMaxResults(40);
+        listArg.setPageToken(nextToken);
+        if (!labelIds.isEmpty()) {
+            listArg.labels() = labelIds.split(" ");
+        }
 
         int idx = 1;
-		auto threads_list = m_gm->getThreads()->list(listArg);
-		for (auto t : threads_list->threads())
-		{
-			std::cout << idx++ << ". " << t.id() << std::endl;
-		}
+        auto threads_list = m_gm->getThreads()->list(listArg);
+        for (auto t : threads_list->threads())
+        {
+            std::cout << idx++ << ". " << t.id() << std::endl;
+        }
 
-		nextToken = threads_list->nextpagetoken();
-		std::cout << "next-token: " << nextToken << std::endl;
-		m_c.printLastApiCall();
-	}
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+        nextToken = threads_list->nextpagetoken();
+        std::cout << "next-token: " << nextToken << std::endl;
+        m_c.printLastApiCall();
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 void GmailCommands::listDrafts(QString nextToken)
 {
-	try
-	{
-		gmail::DraftListArg listArg;
-		listArg.setMaxResults(40);
-		listArg.setPageToken(nextToken);
+    try
+    {
+        gmail::DraftListArg listArg;
+        listArg.setMaxResults(40);
+        listArg.setPageToken(nextToken);
 
         int idx = 1;
-		auto drafts_list = m_gm->getDrafts()->list(listArg);
-		for (auto d : drafts_list->drafts())
-		{
-			std::cout << idx++ << ". " << "id="<< d.id() << std::endl;
-		}
+        auto drafts_list = m_gm->getDrafts()->list(listArg);
+        for (auto d : drafts_list->drafts())
+        {
+            std::cout << idx++ << ". " << "id="<< d.id() << std::endl;
+        }
 
-		nextToken = drafts_list->nextpagetoken();
+        nextToken = drafts_list->nextpagetoken();
         if(!nextToken.isEmpty()){
             std::cout << "next-token: " << nextToken << std::endl;
         }
-		m_c.printLastApiCall();
-	}
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+        m_c.printLastApiCall();
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 bool GmailCommands::loadMessageFile(QString fileName, messages::MessageResource* msg)
 {
-	if (fileName.isEmpty())
-	{
-		std::cout << "Error, prepared message file expected: " << fileName << std::endl;
-		return false;
-	}
+    if (fileName.isEmpty())
+    {
+        std::cout << "Error, prepared message file expected: " << fileName << std::endl;
+        return false;
+    }
 
-	QFile mf(fileName);
-	if (!mf.open(QFile::ReadOnly)) {
-		std::cout << "Error, failed to open prepared message file: " << fileName << std::endl;
-		return false;
-	}
+    QFile mf(fileName);
+    if (!mf.open(QFile::ReadOnly)) {
+        std::cout << "Error, failed to open prepared message file: " << fileName << std::endl;
+        return false;
+    }
 
-	QByteArray ba = mf.readAll().toBase64();
-	msg->setRaw(ba);
-	return true;
+    QByteArray ba = mf.readAll().toBase64();
+    msg->setRaw(ba);
+    return true;
 };
 
 void GmailCommands::ls(QString nextToken)
@@ -143,82 +143,82 @@ void GmailCommands::ls_by_labels(QString labelIds)
 
 void GmailCommands::send(QString message_file_name) 
 {
-	try
-	{
-		gmail::SendMessageArg arg;
-		messages::MessageResource body;
-		if (!loadMessageFile(message_file_name, &body)) 
-			return;
-		printMessage(&body);
-		return;
-		auto r = m_gm->getMessages()->send(arg, body);
-		printMessage(r.get());
-	}
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+    try
+    {
+        gmail::SendMessageArg arg;
+        messages::MessageResource body;
+        if (!loadMessageFile(message_file_name, &body)) 
+            return;
+        printMessage(&body);
+        return;
+        auto r = m_gm->getMessages()->send(arg, body);
+        printMessage(r.get());
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 void GmailCommands::importMessage(QString message_file_name)
 {
-	try
-	{
-		gmail::ImportMessageArg arg;
-		messages::MessageResource body;
-		if (!loadMessageFile(message_file_name, &body))
-			return;
-		auto r = m_gm->getMessages()->importMessage(arg, body);
-		printMessage(r.get());
-	}
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+    try
+    {
+        gmail::ImportMessageArg arg;
+        messages::MessageResource body;
+        if (!loadMessageFile(message_file_name, &body))
+            return;
+        auto r = m_gm->getMessages()->importMessage(arg, body);
+        printMessage(r.get());
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 void GmailCommands::insertMessage(QString message_file_name)
 {
-	try
-	{
-		gmail::InsertMessageArg arg;
-		messages::MessageResource body;
-		if (!loadMessageFile(message_file_name, &body))
-			return;
-		auto r = m_gm->getMessages()->insert(arg, body);
-		printMessage(r.get());
-	}
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+    try
+    {
+        gmail::InsertMessageArg arg;
+        messages::MessageResource body;
+        if (!loadMessageFile(message_file_name, &body))
+            return;
+        auto r = m_gm->getMessages()->insert(arg, body);
+        printMessage(r.get());
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 
 void GmailCommands::trash(QString message_id) 
-{	
-	try
-	{
-		gmail::TrashMessageArg arg(message_id);
-		m_gm->getMessages()->trash(arg);
-	}
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+{   
+    try
+    {
+        gmail::TrashMessageArg arg(message_id);
+        m_gm->getMessages()->trash(arg);
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 void GmailCommands::untrash(QString message_id) 
 {
-	try
-	{
-		gmail::UntrashMessageArg arg(message_id);
-		m_gm->getMessages()->untrash(arg);
-	}
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+    try
+    {
+        gmail::UntrashMessageArg arg(message_id);
+        m_gm->getMessages()->untrash(arg);
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 void GmailCommands::printMessage(messages::MessageResource* r)
@@ -293,19 +293,19 @@ void GmailCommands::get(QString msg_id)
 
 void GmailCommands::ls_labels(QString )
 {
-	try
-	{
-		auto labels_list = m_gm->getLabels()->list();
-		for (auto lbl : labels_list->labels())
-		{
-			std::cout << "id=" << lbl.id() << " name=" << lbl.name() << " type=" << lbl.type() << std::endl;
-		}
+    try
+    {
+        auto labels_list = m_gm->getLabels()->list();
+        for (auto lbl : labels_list->labels())
+        {
+            std::cout << "id=" << lbl.id() << " name=" << lbl.name() << " type=" << lbl.type() << std::endl;
+        }
 
-	}
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 void GmailCommands::printLabel(labels::LabelResource* lbl)
@@ -321,44 +321,44 @@ void GmailCommands::printLabel(labels::LabelResource* lbl)
 
 void GmailCommands::get_label(QString label_id)
 {
-	try
-	{
-		auto lbl = m_gm->getLabels()->get(label_id);
+    try
+    {
+        auto lbl = m_gm->getLabels()->get(label_id);
         printLabel(lbl.get());
-	}
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 void GmailCommands::create_label(QString name)
 {
-	try
-	{
+    try
+    {
         labels::LabelResource lbl;
         lbl.setName(name).setMessagelistvisibility("show").setLabellistvisibility("labelShow");
         auto new_label = m_gm->getLabels()->create(lbl);
         printLabel(new_label.get());
-	}
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 void GmailCommands::delete_label(QString label_id)
 {
-	try
-	{
+    try
+    {
         gmail::IdArg l_id(label_id);
         m_gm->getLabels()->deleteOperation(l_id);
         std::cout << "label deleted" << std::endl;
-	}
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 void GmailCommands::update_label(QString labelid_space_name)
@@ -373,8 +373,8 @@ void GmailCommands::update_label(QString labelid_space_name)
     QString labelid = arg_list[0];
     QString name = arg_list[1];
     
-	try
-	{                
+    try
+    {                
         gmail::IdArg l_id(labelid);
         labels::LabelResource lbl;
         lbl.setName(name).setMessagelistvisibility("show").setLabellistvisibility("labelShow");
@@ -382,30 +382,30 @@ void GmailCommands::update_label(QString labelid_space_name)
         printLabel(new_label.get());
         //        labels::LabelResource lbl;
         //        m_gm->getLabels()->deleteOperation(l_id);
-	}
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 
 void GmailCommands::ls_threads(QString nextToken)
 {
-	listThreads(nextToken, "");
+    listThreads(nextToken, "");
 };
 
 void GmailCommands::get_thread(QString thread_id)
 {
-	try
-	{
-		auto t = m_gm->getThreads()->get(thread_id);
-		std::cout << "tid=" << t->id() << " snipped=" << t->snipped() << " historyid=" << t->historyid() << " messagescount=" << t->messages().size() << std::endl;
-	}
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+    try
+    {
+        auto t = m_gm->getThreads()->get(thread_id);
+        std::cout << "tid=" << t->id() << " snipped=" << t->snipped() << " historyid=" << t->historyid() << " messagescount=" << t->messages().size() << std::endl;
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 void GmailCommands::history(QString startHistoryIdStr)
@@ -417,47 +417,47 @@ void GmailCommands::history(QString startHistoryIdStr)
         return;
     }
     
-	try
-	{
-		gmail::HistoryListArg histArg(startHistoryId);
+    try
+    {
+        gmail::HistoryListArg histArg(startHistoryId);
 
-		auto history = m_gm->getHistory()->list(histArg);
-		for (auto h : history->history())
-		{
-			std::cout << "id= " << h.id()
-				<< " messages=" << h.messages().size()
-				<< " added=" << h.messagesadded().size()
-				<< " deleted=" << h.messagesdeleted().size()
-				<< " labelsadded=" << h.labelsadded().size()
-				<< " labelsremoved=" << h.labelsremoved().size()
-				<< std::endl;
-		}
+        auto history = m_gm->getHistory()->list(histArg);
+        for (auto h : history->history())
+        {
+            std::cout << "id= " << h.id()
+                << " messages=" << h.messages().size()
+                << " added=" << h.messagesadded().size()
+                << " deleted=" << h.messagesdeleted().size()
+                << " labelsadded=" << h.labelsadded().size()
+                << " labelsremoved=" << h.labelsremoved().size()
+                << std::endl;
+        }
 
-		std::cout << "historyid=" << history->historyid() << "nextpagetoken=" << history->nextpagetoken()
-			<< std::endl;
-	}
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+        std::cout << "historyid=" << history->historyid() << "nextpagetoken=" << history->nextpagetoken()
+            << std::endl;
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 void GmailCommands::ls_drafts(QString page_token)
 {
-	listDrafts(page_token);
+    listDrafts(page_token);
 };
 
 void GmailCommands::get_draft(QString draft_id)
 {
-	try
-	{
-		auto d = m_gm->getDrafts()->get(draft_id);
+    try
+    {
+        auto d = m_gm->getDrafts()->get(draft_id);
         auto m = d->message();
-		std::cout << "id=" << d->id() << std::endl;
+        std::cout << "id=" << d->id() << std::endl;
         printMessage(&m);
-	}
-	catch (GoogleException& e)
-	{
-		std::cout << "Exception: " << e.what() << std::endl;
-	}
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };

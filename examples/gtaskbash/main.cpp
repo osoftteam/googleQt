@@ -63,17 +63,17 @@ int main(int argc, char *argv[])
 
     GtaskCommands cmd(c);
     demo::Terminal t("gtask");
-	t.addAction("ls_tlist",		"List TaskLists", [&](QString arg) {cmd.ls_tlist(arg); });
-	t.addAction("get_tlist",	"Get TaskList by tasklistID", [&](QString arg) {cmd.get_tlist(arg); });
-	t.addAction("insert_tlist", "Insert new tasklist", [&](QString arg) {cmd.insert_tlist(arg); });
-	t.addAction("update_tlist", "Update a tasklist", [&](QString arg) {cmd.update_tlist(arg); });
-	t.addAction("delete_tlist", "Delete a tasklist", [&](QString arg) {cmd.delete_tlist(arg); });
-    t.addAction("------------",	"-------------", [&](QString) {});
-	t.addAction("ls",			"List Tasks", [&](QString arg) {cmd.ls(arg); });
-	t.addAction("get",			"Get Task by tasklistID & taskID", [&](QString arg) {cmd.get(arg); });
-	t.addAction("insert",		"Insert new task", [&](QString arg) {cmd.insert(arg); });
-	t.addAction("update",		"Update a task", [&](QString arg) {cmd.update(arg); });
-	t.addAction("delete",		"Delete a task", [&](QString arg) {cmd.delete_task(arg); });
+    t.addAction("ls_tlist",     "List TaskLists", [&](QString arg) {cmd.ls_tlist(arg); });
+    t.addAction("get_tlist",    "Get TaskList by tasklistID", [&](QString arg) {cmd.get_tlist(arg); });
+    t.addAction("insert_tlist", "Insert new tasklist", [&](QString arg) {cmd.insert_tlist(arg); });
+    t.addAction("update_tlist", "Update a tasklist", [&](QString arg) {cmd.update_tlist(arg); });
+    t.addAction("delete_tlist", "Delete a tasklist", [&](QString arg) {cmd.delete_tlist(arg); });
+    t.addAction("------------", "-------------", [&](QString) {});
+    t.addAction("ls",           "List Tasks", [&](QString arg) {cmd.ls(arg); });
+    t.addAction("get",          "Get Task by tasklistID & taskID", [&](QString arg) {cmd.get(arg); });
+    t.addAction("insert",       "Insert new task", [&](QString arg) {cmd.insert(arg); });
+    t.addAction("update",       "Update a task", [&](QString arg) {cmd.update(arg); });
+    t.addAction("delete",       "Delete a task", [&](QString arg) {cmd.delete_task(arg); });
     t.start();
     return 0;
 }

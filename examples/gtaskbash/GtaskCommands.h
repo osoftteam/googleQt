@@ -5,14 +5,14 @@
 using namespace googleQt;
 
 namespace googleQt {
-	namespace tasks
-	{
-		class TaskResource;
-	};
+    namespace tasks
+    {
+        class TaskResource;
+    };
 
-	namespace tasklists {
-		class TaskListResource;
-	};
+    namespace tasklists {
+        class TaskListResource;
+    };
 }//googleQt
 
 class GtaskCommands
@@ -20,73 +20,73 @@ class GtaskCommands
 public:
     GtaskCommands(GoogleClient& c);
 
-	/**
-	* ls - list tasks in a tasklist
-	*/
-	void ls(QString tasklist);
+    /**
+    * ls - list tasks in a tasklist
+    */
+    void ls(QString tasklist);
 
-	/**
-	* get - get task by tasklist ID and task ID
-	*/
-	void get(QString tlistid_space_taskid);
+    /**
+    * get - get task by tasklist ID and task ID
+    */
+    void get(QString tlistid_space_taskid);
 
-	/**
-	* insert - insert new task into tasklist ID with title
-	*/
-	void insert(QString tlistid_space_title);
+    /**
+    * insert - insert new task into tasklist ID with title
+    */
+    void insert(QString tlistid_space_title);
 
-	/**
-	* update - update title of a task, requires tasklist ID, task ID
-	*/
-	void update(QString tlistid_space_taskid_title);
+    /**
+    * update - update title of a task, requires tasklist ID, task ID
+    */
+    void update(QString tlistid_space_taskid_title);
 
-	/**
-	* deleteTask - delete task by task list ID and task ID
-	*/
-	void delete_task(QString tlistid_space_taskid);
+    /**
+    * deleteTask - delete task by task list ID and task ID
+    */
+    void delete_task(QString tlistid_space_taskid);
 
-	/**
-	* clearCompleted - hide all completed tasks in task list
-	*/
-	void clearCompleted(QString tlistid);
+    /**
+    * clearCompleted - hide all completed tasks in task list
+    */
+    void clearCompleted(QString tlistid);
 
-	/**
-	* move - move task, requires four space-separated arguments tasklistID, taskID, parentID, positionID
-	*/
-	void move(QString four_arguments);
+    /**
+    * move - move task, requires four space-separated arguments tasklistID, taskID, parentID, positionID
+    */
+    void move(QString four_arguments);
 
-	/**
-	* display list of tasklists
-	*/
-	void ls_tlist(QString pageToken);
+    /**
+    * display list of tasklists
+    */
+    void ls_tlist(QString pageToken);
 
-	/**
-	* get tasklist by tasklist_id
-	*/
-	void get_tlist(QString tasklist_id);
+    /**
+    * get tasklist by tasklist_id
+    */
+    void get_tlist(QString tasklist_id);
 
-	/**
-	* insert new tasklist with title
-	*/
-	void insert_tlist(QString title);
+    /**
+    * insert new tasklist with title
+    */
+    void insert_tlist(QString title);
 
-	/**
-	* update title of a tasklist ID, by tasklist ID
-	*/
-	void update_tlist(QString tlistid_space_title);
+    /**
+    * update title of a tasklist ID, by tasklist ID
+    */
+    void update_tlist(QString tlistid_space_title);
 
-	/**
-	* deleteTask - delete tasklist by tasklistID
-	*/
-	void delete_tlist(QString tlistid);
+    /**
+    * deleteTask - delete tasklist by tasklistID
+    */
+    void delete_tlist(QString tlistid);
 
 
 protected:
-	void printTask(tasks::TaskResource*);
-	void printTaskList(tasklists::TaskListResource*);
+    void printTask(tasks::TaskResource*);
+    void printTaskList(tasklists::TaskListResource*);
 
 
 protected:
     GoogleClient& m_c;
-	GtaskRoutes*  m_gt;
+    GtaskRoutes*  m_gt;
 };

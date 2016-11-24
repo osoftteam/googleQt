@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
             }
         }
     
-	std::unique_ptr<ApiAppInfo> appInfo(new ApiAppInfo);
+    std::unique_ptr<ApiAppInfo> appInfo(new ApiAppInfo);
     if(!appInfo->readFromFile(argAppInfoFile)){
         std::cerr << "Error reading <app-info-file>" << std::endl;
         return 0;
