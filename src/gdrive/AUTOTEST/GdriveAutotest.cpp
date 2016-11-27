@@ -59,16 +59,8 @@ static void call_copy_from_Files(){
 static void call_create_from_Files(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("create");
     std::unique_ptr<gdrive::CreateFileArg> arg = gdrive::CreateFileArg::EXAMPLE();
-    QIODevice* io = nullptr;
-    cl->getFiles()->create(*(arg.get()) , io);
-    ApiAutotest::INSTANCE() << "--------------------------";
-}
-
-static void call_createFolder_from_Files(){
-    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("createFolder");
-    std::unique_ptr<gdrive::CreateFileArg> arg = gdrive::CreateFileArg::EXAMPLE();
     std::unique_ptr<files::FileResource> arg2 = files::FileResource::EXAMPLE();
-    cl->getFiles()->createFolder(*(arg.get()) , *(arg2.get()));
+    cl->getFiles()->create(*(arg.get()) , *(arg2.get()));
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
@@ -144,7 +136,6 @@ static void test_call_CommentsRoutes(){
 static void test_call_FilesRoutes(){
     call_copy_from_Files();
     call_create_from_Files();
-    call_createFolder_from_Files();
     call_deleteOperation_from_Files();
     call_emptyTrash_from_Files();
     call_get_from_Files();
