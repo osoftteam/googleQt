@@ -37,6 +37,7 @@ bool ApiAuthInfo::storeToFile(QString path)const
     js["token_type"] = m_type;
     js["expires_in"] = m_expires_in;
     js["expire_time"] = m_expire_time;
+    js["update_time"] = QDateTime::currentDateTime().toString(Qt::ISODate);;
     
     if(!storeJsonToFile(path, js))
         return false;
