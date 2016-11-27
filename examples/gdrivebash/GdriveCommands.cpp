@@ -8,6 +8,7 @@
 #include "google/demo/ApiTerminal.h"
 #include "gdrive/GdriveRoutes.h"
 
+
 using namespace googleQt;
 using namespace gdrive;
 
@@ -45,7 +46,18 @@ void GdriveCommands::ls(QString)
         const std::list <files::FileResource>& files = lst->files();
         int idx = 1;
         for(const files::FileResource& f : files){
-            std::cout << idx++ << ". " << f.id() << " " << f.name() << " " << f.mimetype() << std::endl;
+            QString mimeType = f.mimetype();
+            QString ftype = "[f]";
+            if(mimeType == "application/vnd.google-apps.folder"){
+                ftype = "[d]";
+            }else if(mimeType == "image/jpeg"){
+                ftype = "[i]";
+            }
+            std::cout << QString("%1").arg(idx++).leftJustified(3, ' ')
+                      << ftype << " "
+                      << f.id() << " "
+                      << f.name()<< " "
+                      << mimeType << std::endl;
         }
         m_c.printLastApiCall();
     }
@@ -66,12 +78,14 @@ void GdriveCommands::get(QString fileId)
     try
     {
         GetFileArg arg(fileId);
-        arg.addResponseField("id,name,size,webContentLink");
+        //        arg.addResponseField("id,name,size,webContentLink");
+        arg.addResponseField("id,name,size,mimeType,webContentLink");
         auto f = m_gd->getFiles()->get(arg);
-        std::cout << "id=" << f->id() << std::endl
-                  << "name=" << f->name() << std::endl
-                  << "size=" << f->size() << std::endl
-                  << "link=" << f->webcontentlink() << std::endl;
+        std::cout << "id= " << f->id() << std::endl
+                  << "name= " << f->name() << std::endl
+                  << "type= " << f->mimetype() << std::endl
+                  << "size= " << f->size() << std::endl
+                  << "webLink= " << f->webcontentlink() << std::endl;
         m_c.printLastApiCall();
     }
     catch (GoogleException& e)
