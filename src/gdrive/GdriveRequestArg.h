@@ -190,8 +190,8 @@ namespace googleQt {
                 The type of upload request to the /upload URI. Acceptable values are:
                 media - Simple upload. Upload the media only, without any metadata.
             */
-            QString getUploadType()const { return m_uploadType; }
-            void    setUploadType(QString val) { m_uploadType = val; }
+            //            QString getUploadType()const { return m_uploadType; }
+            //void    setUploadType(QString val) { m_uploadType = val; }
 
             /**
                 Whether to ignore the domain's default visibility settings for the created file. 
@@ -226,13 +226,13 @@ namespace googleQt {
 #endif //API_QT_AUTOTEST
 
         protected:
-            QString m_uploadType;
+            //QString m_uploadType;
             bool    m_ignoreDefaultVisibility;
             bool    m_keepRevisionForever;
             QString m_ocrLanguage;
             bool    m_useContentAsIndexableText;
         };
-
+        
         class EmptyTrashArg: public PathArg<path_trash, EmptyTrashArg>
         {
         public:

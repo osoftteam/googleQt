@@ -38,25 +38,11 @@ namespace files{
             ApiRoute('create')
 
 
-            Creates a new file.
+            Creates a new file or folder.
 
             */
-        std::unique_ptr<FileResource> create(const gdrive::CreateFileArg& arg, QIODevice* readFrom);
+        std::unique_ptr<FileResource> create(const gdrive::CreateFileArg& arg, const FileResource& body);
         void create_Async(
-            const gdrive::CreateFileArg&,
-            QIODevice* data,
-            std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
-            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
-
-            /**
-            ApiRoute('createFolder')
-
-
-            Creates a new folder.
-
-            */
-        std::unique_ptr<FileResource> createFolder(const gdrive::CreateFileArg& arg, const FileResource& body);
-        void createFolder_Async(
             const gdrive::CreateFileArg&,
             const FileResource& body,
             std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,

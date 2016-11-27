@@ -32,32 +32,11 @@ void FilesRoutes::copy_Async(
         failed_callback);
 }
 
-std::unique_ptr<FileResource> FilesRoutes::create(const gdrive::CreateFileArg& arg, QIODevice* data){
-    DATA_GBC(create_Async, FileResource, arg, data);
+std::unique_ptr<FileResource> FilesRoutes::create(const gdrive::CreateFileArg& arg, const FileResource& body){
+    BODY_ARG_GBC(create_Async, FileResource, arg, body);
 }
 
 void FilesRoutes::create_Async(
-    const gdrive::CreateFileArg& arg,
-    QIODevice* data,
-    std::function<void(std::unique_ptr<FileResource>)> completed_callback ,
-    std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
-{
-    m_end_point->uploadStyle
-        <
-        std::unique_ptr<FileResource>,
-        FileResource::factory
-        >
-        (m_end_point->buildGdriveUploadUrl("files", arg),
-        data,
-        completed_callback,
-        failed_callback);
-}
-
-std::unique_ptr<FileResource> FilesRoutes::createFolder(const gdrive::CreateFileArg& arg, const FileResource& body){
-    BODY_ARG_GBC(createFolder_Async, FileResource, arg, body);
-}
-
-void FilesRoutes::createFolder_Async(
     const gdrive::CreateFileArg& arg,
     const FileResource& body,
     std::function<void(std::unique_ptr<FileResource>)> completed_callback ,

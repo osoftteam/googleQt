@@ -109,7 +109,7 @@ void DeleteFileArg::build(const QString& link_path, QUrl& url)const
 */
 CreateFileArg::CreateFileArg()
 {
-    m_uploadType = "media";
+    //m_uploadType = "media";
     m_ignoreDefaultVisibility = false;
     m_keepRevisionForever = false;
     m_useContentAsIndexableText = false;
@@ -118,12 +118,14 @@ CreateFileArg::CreateFileArg()
 void CreateFileArg::build(const QString& link_path, QUrl& url)const
 {
     UrlBuilder b(link_path + "/files", url);
-    b.add("uploadType", m_uploadType)
-        .add("ignoreDefaultVisibility", m_ignoreDefaultVisibility)
+    // b.add("uploadType", m_uploadType)
+    b.add("ignoreDefaultVisibility", m_ignoreDefaultVisibility)
         .add("keepRevisionForever", m_keepRevisionForever)
         .add("ocrLanguage", m_ocrLanguage)
         .add("useContentAsIndexableText", m_useContentAsIndexableText);
 }
+
+
 
 /**
     PermissionArg
