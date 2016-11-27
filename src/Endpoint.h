@@ -155,7 +155,8 @@ namespace googleQt{
         QUrl buildGmailUrl(const QString& namespace_path, const ARG& a)const
         {
             QUrl url;
-            a.build(QString("https://www.googleapis.com/gmail/v1/users/%1/%2").arg(client()->userId()).arg(namespace_path), url);
+            a.build(QString("https://www.googleapis.com/gmail/v1/users/%1/%2")
+                    .arg(client()->userId()).arg(namespace_path), url);
             return url;
         }
 
@@ -163,7 +164,8 @@ namespace googleQt{
         QUrl buildGmailUploadlUrl(const QString& namespace_path, const ARG& a)const
         {
             QUrl url;
-            a.build(QString("https://www.googleapis.com/upload/gmail/v1/users/%1/%2").arg(client()->userId()).arg(namespace_path), url);
+            a.build(QString("https://www.googleapis.com/upload/gmail/v1/users/%1/%2")
+                    .arg(client()->userId()).arg(namespace_path), url);
             return url;
         }
 
@@ -242,7 +244,7 @@ namespace googleQt{
 #endif //API_QT_AUTOTEST
                     return;
                 }
-
+            
             std::shared_ptr<FINISHED_REQ> finishedRequest(new FINISHED_REQ([=](std::shared_ptr<requester> rb,
                                                             QNetworkRequest req,
                                                             QNetworkReply *reply,
@@ -256,6 +258,7 @@ namespace googleQt{
                                              if (completed_callback != nullptr)
                                                  {
                                                      QByteArray data = reply->readAll();
+                                                     std::cout << "200-data:" << data.data() << std::endl;
                                                      completed_callback(factory.create(data));
                                                  }
                                          }break;
@@ -300,13 +303,14 @@ namespace googleQt{
                                                  }
                                              else
                                                  {
-                                                    qWarning() << "Error. Failed to refresh access token, giving up after " << TIMES_TO_REFRESH_TOKEN_BEFORE_GIVEUP << " attempts";
+                                                    qWarning() << "Error. Failed to refresh access token, giving up after "
+                                                               << TIMES_TO_REFRESH_TOKEN_BEFORE_GIVEUP << " attempts";
                                                      if (failed_callback != nullptr)
                                                          {
                                                              std::string errorInfo = prepareErrorInfo(status_code, url, data).toStdString();
                                                              std::unique_ptr<GoogleException> ex(new GoogleException(errorInfo,
                                                                                                                      status_code,
-                                                                                                                     ""));
+                                                                                                                     "Failed to refresh access token"));
                                                              failed_callback(std::move(ex));
                                                          }
                                                  }
@@ -314,13 +318,17 @@ namespace googleQt{
                                      default:
                                          {
                                              if (failed_callback != nullptr) {
+                                                 std::string summary;
+                                                 if(status_code == 403){
+                                                     summary = "Invalid access token. You have to get new access token.";
+                                                 }
                                                  QByteArray exception_data = reply->readAll();
                                                  std::string errorInfo = prepareErrorInfo(status_code,
                                                                                           url,
                                                                                           exception_data).toStdString();
                                                  std::unique_ptr<GoogleException> ex(new GoogleException(errorInfo,
                                                                                                          status_code,
-                                                                                                         ""));
+                                                                                                         summary));
                                                  failed_callback(std::move(ex));
                                              }
                                          }break;
