@@ -8,10 +8,23 @@ class GdriveCommands
 {
 public:
     GdriveCommands(GoogleClient& c);
-
+    ///get account information
     void about(QString);
+    ///list folder content
     void ls(QString);
+    ///get file or folder meta information
     void get(QString fileId);
+    ///download file media data to local folder,
+    ///required fileID and local file name separated
+    ///by space
+    void download(QString fileId_space_localFileName);
+    ///download and print file content on the screen, good for text files
+    void cat(QString fileId);
+    ///upload file, fileName - local filename to upload
+    void put(QString fileName);
+    ///delete file or folder on gdrive
+    void rm(QString fileId);
+    ///create folder
     void mkdir(QString title_Space_parentFolderId);
 
     void ls_comments(QString fileId);

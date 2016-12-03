@@ -60,6 +60,10 @@ int main(int argc, char *argv[])
     t.addAction("about",            "About",          [&](QString arg) {cmd.about(arg); });
     t.addAction("ls",               "List",           [&](QString arg) {cmd.ls(arg); });
     t.addAction("get",              "Get File Info",  [&](QString arg) {cmd.get(arg); });
+    t.addAction("download",         "Download file",  [&](QString arg) {cmd.download(arg); });
+    t.addAction("cat",              "Print file content on screen", [&](QString arg) {cmd.cat(arg); });
+    t.addAction("put",              "Upload file", [&](QString arg) {cmd.put(arg); });
+    t.addAction("rm",               "Delete file or folder", [&](QString arg) {cmd.rm(arg); });
     t.addAction("------------",     "-------------",  [&](QString ) {});
     t.addAction("ls_comments",      "List comments",  [&](QString arg) {cmd.ls_comments(arg); });
     t.addAction("get_comment",      "Get comment",    [&](QString arg) {cmd.get_comment(arg); });
