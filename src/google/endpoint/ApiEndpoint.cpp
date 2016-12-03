@@ -38,8 +38,10 @@ void ApiEndpoint::cancelAll()
     });
 };
 
-void ApiEndpoint::registerReply(QNetworkReply* r, std::shared_ptr<FINISHED_REQ> finishedLambda)
+void ApiEndpoint::registerReply(std::shared_ptr<requester>& rb, QNetworkReply* r, std::shared_ptr<FINISHED_REQ> finishedLambda)
 {
+    Q_UNUSED(rb);
+
     QObject::connect(r, &QNetworkReply::downloadProgress, [&](qint64 bytesProcessed, qint64 total) {
         emit m_client->downloadProgress(bytesProcessed, total);
     });

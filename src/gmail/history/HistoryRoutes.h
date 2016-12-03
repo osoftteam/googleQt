@@ -19,7 +19,8 @@ namespace history{
     public:
         HistoryRoutes(Endpoint* ep):GoogleRouteBase(ep){};
         std::unique_ptr<HistoryRecordList> list(const gmail::HistoryListArg& arg);
-        void list_Async(
+        GoogleTask<HistoryRecordList>* list_Async(const gmail::HistoryListArg& arg);
+        void list_AsyncCB(
             const gmail::HistoryListArg&,
             std::function<void(std::unique_ptr<HistoryRecordList>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);

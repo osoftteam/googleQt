@@ -27,7 +27,8 @@ namespace messages{
 
             */
         void deleteOperation(const gmail::IdArg& );
-        void deleteOperation_Async(
+        GoogleVoidTask* deleteOperation_Async(const gmail::IdArg& arg);
+        void deleteOperation_AsyncCB(
             const gmail::IdArg&,
             std::function<void()> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
@@ -40,7 +41,8 @@ namespace messages{
 
             */
         std::unique_ptr<MessageResource> get(const gmail::IdArg& arg);
-        void get_Async(
+        GoogleTask<MessageResource>* get_Async(const gmail::IdArg& arg);
+        void get_AsyncCB(
             const gmail::IdArg&,
             std::function<void(std::unique_ptr<MessageResource>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
@@ -55,7 +57,8 @@ namespace messages{
 
             */
         std::unique_ptr<MessageResource> importMessage(const gmail::ImportMessageArg& arg, const MessageResource& body);
-        void importMessage_Async(
+        GoogleTask<MessageResource>* importMessage_Async(const gmail::ImportMessageArg& arg, const MessageResource& body);
+        void importMessage_AsyncCB(
             const gmail::ImportMessageArg&,
             const MessageResource& body,
             std::function<void(std::unique_ptr<MessageResource>)> completed_callback = nullptr,
@@ -70,7 +73,8 @@ namespace messages{
 
             */
         std::unique_ptr<MessageResource> insert(const gmail::InsertMessageArg& arg, const MessageResource& body);
-        void insert_Async(
+        GoogleTask<MessageResource>* insert_Async(const gmail::InsertMessageArg& arg, const MessageResource& body);
+        void insert_AsyncCB(
             const gmail::InsertMessageArg&,
             const MessageResource& body,
             std::function<void(std::unique_ptr<MessageResource>)> completed_callback = nullptr,
@@ -84,7 +88,8 @@ namespace messages{
 
             */
         std::unique_ptr<MessageListRes> list(const gmail::ListArg& arg);
-        void list_Async(
+        GoogleTask<MessageListRes>* list_Async(const gmail::ListArg& arg);
+        void list_AsyncCB(
             const gmail::ListArg&,
             std::function<void(std::unique_ptr<MessageListRes>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
@@ -98,7 +103,8 @@ namespace messages{
 
             */
         std::unique_ptr<MessageResource> send(const gmail::SendMessageArg& arg, const MessageResource& body);
-        void send_Async(
+        GoogleTask<MessageResource>* send_Async(const gmail::SendMessageArg& arg, const MessageResource& body);
+        void send_AsyncCB(
             const gmail::SendMessageArg&,
             const MessageResource& body,
             std::function<void(std::unique_ptr<MessageResource>)> completed_callback = nullptr,
@@ -112,7 +118,8 @@ namespace messages{
 
             */
         void trash(const gmail::TrashMessageArg& );
-        void trash_Async(
+        GoogleVoidTask* trash_Async(const gmail::TrashMessageArg& arg);
+        void trash_AsyncCB(
             const gmail::TrashMessageArg&,
             std::function<void()> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
@@ -125,7 +132,8 @@ namespace messages{
 
             */
         void untrash(const gmail::UntrashMessageArg& );
-        void untrash_Async(
+        GoogleVoidTask* untrash_Async(const gmail::UntrashMessageArg& arg);
+        void untrash_AsyncCB(
             const gmail::UntrashMessageArg&,
             std::function<void()> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);

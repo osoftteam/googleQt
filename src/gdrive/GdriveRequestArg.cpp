@@ -12,27 +12,12 @@ AboutArg::AboutArg()
 
 };
 
-void AboutArg::addResponseField(QString name)
-{
-    m_partResponseFields.insert(name);
-};
-
-void AboutArg::clearResponseFields()
-{
-    m_partResponseFields.clear();
-};
 
 void AboutArg::build(const QString& link_path, QUrl& url)const
 {
     UrlBuilder b(link_path + QString("/%1").arg(path_about::path()), url);
-    if(!m_partResponseFields.empty()){
-        QString fields = "";
-        for(QString f : m_partResponseFields){
-            fields += f;
-            fields += ",";
-        }
-        fields = fields.left(fields.length() - 1);
-        b.add("fields", fields);
+    if(!m_Fields.isEmpty()){
+        b.add("fields", m_Fields);
     }
 };
 
@@ -40,9 +25,10 @@ void AboutArg::build(const QString& link_path, QUrl& url)const
 /**
     FileListArg
 */
-FileListArg::FileListArg():
+FileListArg::FileListArg(QString pageToken):
     m_corpus("user"),
-    m_pageSize(100)
+    m_pageSize(100),
+    m_pageToken(pageToken)
 {
 
 };
@@ -75,6 +61,23 @@ void GetFileArg::build(const QString& link_path, QUrl& url)const
 }
 
 /**
+    DownloadFileArg
+*/
+DownloadFileArg::DownloadFileArg(QString fileId)
+    :m_fileId(fileId)
+{
+
+};
+
+void DownloadFileArg::build(const QString& link_path, QUrl& url)const
+{
+    UrlBuilder b(link_path + QString("/files/%2").arg(m_fileId), url);
+    b.add("alt", "media");
+    ResponseFields2Builder(b);
+}
+
+
+/**
     CopyFileArg
 */
 CopyFileArg::CopyFileArg()
@@ -93,7 +96,8 @@ void CopyFileArg::build(const QString& link_path, QUrl& url)const
         .add("ocrLanguage", m_ocrLanguage);
 }
 
-DeleteFileArg::DeleteFileArg()
+DeleteFileArg::DeleteFileArg(QString fileId)
+    :m_fileId(fileId)
 {
 
 }
@@ -274,6 +278,14 @@ std::unique_ptr<GetFileArg> GetFileArg::EXAMPLE()
     rv->setFileId("file1");
     return rv;
 };
+
+std::unique_ptr<DownloadFileArg> DownloadFileArg::EXAMPLE()
+{
+    std::unique_ptr<DownloadFileArg> rv(new DownloadFileArg);
+    rv->setFileId("file1");
+    return rv;
+};
+
 
 std::unique_ptr<CopyFileArg> CopyFileArg::EXAMPLE()
 {

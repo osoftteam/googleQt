@@ -28,7 +28,8 @@ namespace files{
 
             */
         std::unique_ptr<FileResource> copy(const gdrive::CopyFileArg& arg, const FileResource& body);
-        void copy_Async(
+        GoogleTask<FileResource>* copy_Async(const gdrive::CopyFileArg& arg, const FileResource& body);
+        void copy_AsyncCB(
             const gdrive::CopyFileArg&,
             const FileResource& body,
             std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
@@ -42,7 +43,8 @@ namespace files{
 
             */
         std::unique_ptr<FileResource> create(const gdrive::CreateFileArg& arg, const FileResource& body);
-        void create_Async(
+        GoogleTask<FileResource>* create_Async(const gdrive::CreateFileArg& arg, const FileResource& body);
+        void create_AsyncCB(
             const gdrive::CreateFileArg&,
             const FileResource& body,
             std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
@@ -58,8 +60,24 @@ namespace files{
 
             */
         void deleteOperation(const gdrive::DeleteFileArg& );
-        void deleteOperation_Async(
+        GoogleVoidTask* deleteOperation_Async(const gdrive::DeleteFileArg& arg);
+        void deleteOperation_AsyncCB(
             const gdrive::DeleteFileArg&,
+            std::function<void()> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
+
+            /**
+            ApiRoute('downloadFile')
+
+
+            Get file media content.
+
+            */
+        void downloadFile(const gdrive::DownloadFileArg& , QIODevice* writeTo);
+        GoogleVoidTask* downloadFile_Async(const gdrive::DownloadFileArg& arg, QIODevice* data);
+        void downloadFile_AsyncCB(
+            const gdrive::DownloadFileArg&,
+            QIODevice* data,
             std::function<void()> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
@@ -73,7 +91,8 @@ namespace files{
 
             */
         void emptyTrash(const gdrive::EmptyTrashArg& );
-        void emptyTrash_Async(
+        GoogleVoidTask* emptyTrash_Async(const gdrive::EmptyTrashArg& arg);
+        void emptyTrash_AsyncCB(
             const gdrive::EmptyTrashArg&,
             std::function<void()> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
@@ -86,7 +105,8 @@ namespace files{
 
             */
         std::unique_ptr<FileResource> get(const gdrive::GetFileArg& arg);
-        void get_Async(
+        GoogleTask<FileResource>* get_Async(const gdrive::GetFileArg& arg);
+        void get_AsyncCB(
             const gdrive::GetFileArg&,
             std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
@@ -99,9 +119,25 @@ namespace files{
 
             */
         std::unique_ptr<FileResourcesCollection> list(const gdrive::FileListArg& arg);
-        void list_Async(
+        GoogleTask<FileResourcesCollection>* list_Async(const gdrive::FileListArg& arg);
+        void list_AsyncCB(
             const gdrive::FileListArg&,
             std::function<void(std::unique_ptr<FileResourcesCollection>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
+
+            /**
+            ApiRoute('uploadFile')
+
+
+            Upload file content and metadata.
+
+            */
+        std::unique_ptr<FileResource> uploadFile(const FileResource& body, QIODevice* readFrom);
+        GoogleTask<FileResource>* uploadFile_Async(const FileResource& body, QIODevice* data);
+        void uploadFile_AsyncCB(
+            const FileResource& body,
+            QIODevice* data,
+            std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
     protected:

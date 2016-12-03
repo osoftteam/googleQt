@@ -20,26 +20,26 @@ namespace files{
     public:
         VideoMediaMetadata(){};
 
-        VideoMediaMetadata(const int& arg){ m_width = arg; };
+        VideoMediaMetadata(const int64_t& arg){ m_width = arg; };
 
     public:
             /**
                 The width of the video in pixels.
             */
-        int width()const{return m_width;};
-        VideoMediaMetadata& setWidth(const int& arg){m_width=arg;return *this;};
+        int64_t width()const{return m_width;};
+        VideoMediaMetadata& setWidth(const int64_t& arg){m_width=arg;return *this;};
 
             /**
                 The height of the video in pixels.
             */
-        int height()const{return m_height;};
-        VideoMediaMetadata& setHeight(const int& arg){m_height=arg;return *this;};
+        int64_t height()const{return m_height;};
+        VideoMediaMetadata& setHeight(const int64_t& arg){m_height=arg;return *this;};
 
             /**
                 The duration of the video in milliseconds.
             */
-        int durationmillis()const{return m_durationMillis;};
-        VideoMediaMetadata& setDurationmillis(const int& arg){m_durationMillis=arg;return *this;};
+        int64_t durationmillis()const{return m_durationMillis;};
+        VideoMediaMetadata& setDurationmillis(const int64_t& arg){m_durationMillis=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -64,17 +64,17 @@ namespace files{
             /**
                 The width of the video in pixels.
             */
-        int m_width = {0};
+        int64_t m_width = {0};
 
             /**
                 The height of the video in pixels.
             */
-        int m_height = {0};
+        int64_t m_height = {0};
 
             /**
                 The duration of the video in milliseconds.
             */
-        int m_durationMillis = {0};
+        int64_t m_durationMillis = {0};
 
     };//VideoMediaMetadata
 

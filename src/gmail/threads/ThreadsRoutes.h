@@ -27,13 +27,15 @@ namespace threads{
 
             */
         std::unique_ptr<ThreadResource> get(const gmail::IdArg& arg);
-        void get_Async(
+        GoogleTask<ThreadResource>* get_Async(const gmail::IdArg& arg);
+        void get_AsyncCB(
             const gmail::IdArg&,
             std::function<void(std::unique_ptr<ThreadResource>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
         std::unique_ptr<ThreadListRes> list(const gmail::ListArg& arg);
-        void list_Async(
+        GoogleTask<ThreadListRes>* list_Async(const gmail::ListArg& arg);
+        void list_AsyncCB(
             const gmail::ListArg&,
             std::function<void(std::unique_ptr<ThreadListRes>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);

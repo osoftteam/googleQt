@@ -65,8 +65,8 @@ namespace messages{
             /**
                 The ID of the last history record that modified this message.
             */
-        int historyid()const{return m_historyId;};
-        MessageResource& setHistoryid(const int& arg){m_historyId=arg;return *this;};
+        int64_t historyid()const{return m_historyId;};
+        MessageResource& setHistoryid(const int64_t& arg){m_historyId=arg;return *this;};
 
             /**
                 The internal message creation timestamp (epoch ms), which
@@ -76,8 +76,8 @@ namespace messages{
                 However, for API-migrated mail, it can be configured by client
                 to be based on the Date header.
             */
-        int internaldate()const{return m_internalDate;};
-        MessageResource& setInternaldate(const int& arg){m_internalDate=arg;return *this;};
+        int64_t internaldate()const{return m_internalDate;};
+        MessageResource& setInternaldate(const int64_t& arg){m_internalDate=arg;return *this;};
 
             /**
                 The parsed email structure in the message parts.
@@ -88,8 +88,8 @@ namespace messages{
             /**
                 Estimated size in bytes of the message.
             */
-        int sizeestimate()const{return m_sizeEstimate;};
-        MessageResource& setSizeestimate(const int& arg){m_sizeEstimate=arg;return *this;};
+        int64_t sizeestimate()const{return m_sizeEstimate;};
+        MessageResource& setSizeestimate(const int64_t& arg){m_sizeEstimate=arg;return *this;};
 
             /**
                 The entire email message in an RFC 2822 formatted and base64url
@@ -142,7 +142,7 @@ namespace messages{
             /**
                 The ID of the last history record that modified this message.
             */
-        int m_historyId = {0};
+        int64_t m_historyId = {0};
 
             /**
                 The internal message creation timestamp (epoch ms), which
@@ -152,7 +152,7 @@ namespace messages{
                 However, for API-migrated mail, it can be configured by client
                 to be based on the Date header.
             */
-        int m_internalDate = {0};
+        int64_t m_internalDate = {0};
 
             /**
                 The parsed email structure in the message parts.
@@ -162,7 +162,7 @@ namespace messages{
             /**
                 Estimated size in bytes of the message.
             */
-        int m_sizeEstimate = {0};
+        int64_t m_sizeEstimate = {0};
 
             /**
                 The entire email message in an RFC 2822 formatted and base64url

@@ -11,16 +11,28 @@ using namespace googleQt;
 using namespace users;
 
 std::unique_ptr<GetProfileResponse> UsersRoutes::profile(void){
-    VOID_ARG_GBC(profile_Async, GetProfileResponse);
+    VOID_ARG_GBC(profile_AsyncCB, GetProfileResponse);
 }
 
-void UsersRoutes::profile_Async(
+GoogleTask<GetProfileResponse>* UsersRoutes::profile_Async()
+{
+    GoogleTask<GetProfileResponse>* t = new GoogleTask<GetProfileResponse>();
+    m_end_point->getStyle<
+        GetProfileResponse,
+        GetProfileResponse::factory
+        >
+        (m_end_point->buildGmailUrl("users", VoidType::instance()),
+        t);
+    return t;
+}
+
+void UsersRoutes::profile_AsyncCB(
     std::function<void(std::unique_ptr<GetProfileResponse>)> completed_callback ,
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
 {
     m_end_point->getStyle
         <
-        std::unique_ptr<GetProfileResponse>,
+        GetProfileResponse,
         GetProfileResponse::factory
         >
         (m_end_point->buildGmailUrl("users", VoidType::instance()),

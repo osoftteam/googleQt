@@ -27,7 +27,8 @@ namespace comments{
 
             */
         std::unique_ptr<Comment> create(const gdrive::CreateCommentArg& arg, const Comment& body);
-        void create_Async(
+        GoogleTask<Comment>* create_Async(const gdrive::CreateCommentArg& arg, const Comment& body);
+        void create_AsyncCB(
             const gdrive::CreateCommentArg&,
             const Comment& body,
             std::function<void(std::unique_ptr<Comment>)> completed_callback = nullptr,
@@ -41,7 +42,8 @@ namespace comments{
 
             */
         void deleteOperation(const gdrive::DeleteCommentArg& );
-        void deleteOperation_Async(
+        GoogleVoidTask* deleteOperation_Async(const gdrive::DeleteCommentArg& arg);
+        void deleteOperation_AsyncCB(
             const gdrive::DeleteCommentArg&,
             std::function<void()> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
@@ -54,7 +56,8 @@ namespace comments{
 
             */
         std::unique_ptr<Comment> get(const gdrive::GetCommentArg& arg);
-        void get_Async(
+        GoogleTask<Comment>* get_Async(const gdrive::GetCommentArg& arg);
+        void get_AsyncCB(
             const gdrive::GetCommentArg&,
             std::function<void(std::unique_ptr<Comment>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
@@ -67,7 +70,8 @@ namespace comments{
 
             */
         std::unique_ptr<CommentListResult> list(const gdrive::CommentListArg& arg);
-        void list_Async(
+        GoogleTask<CommentListResult>* list_Async(const gdrive::CommentListArg& arg);
+        void list_AsyncCB(
             const gdrive::CommentListArg&,
             std::function<void(std::unique_ptr<CommentListResult>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);

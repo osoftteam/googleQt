@@ -71,6 +71,14 @@ static void call_deleteOperation_from_Files(){
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
+static void call_downloadFile_from_Files(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("downloadFile");
+    std::unique_ptr<gdrive::DownloadFileArg> arg = gdrive::DownloadFileArg::EXAMPLE();
+    QIODevice* io = nullptr;
+    cl->getFiles()->downloadFile(*(arg.get()) , io);
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
 static void call_emptyTrash_from_Files(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("emptyTrash");
     std::unique_ptr<gdrive::EmptyTrashArg> arg = gdrive::EmptyTrashArg::EXAMPLE();
@@ -89,6 +97,13 @@ static void call_list_from_Files(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("list");
     std::unique_ptr<gdrive::FileListArg> arg = gdrive::FileListArg::EXAMPLE();
     cl->getFiles()->list(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
+static void call_uploadFile_from_Files(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("uploadFile");
+    std::unique_ptr<files::FileResource> arg = files::FileResource::EXAMPLE();
+    cl->getFiles()->uploadFile(*(arg.get()) );
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
@@ -137,9 +152,11 @@ static void test_call_FilesRoutes(){
     call_copy_from_Files();
     call_create_from_Files();
     call_deleteOperation_from_Files();
+    call_downloadFile_from_Files();
     call_emptyTrash_from_Files();
     call_get_from_Files();
     call_list_from_Files();
+    call_uploadFile_from_Files();
 }
 
 static void test_call_PermissionsRoutes(){

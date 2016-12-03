@@ -10,17 +10,28 @@
 #include "GoogleClient.h"
 #include "gmail/errors/ErrorsErrorInfo.h"
 
+
 namespace googleQt{
     class Endpoint: public googleQt::ApiEndpoint
     {
     public:
-        Endpoint(googleQt::ApiClient* c);
+        Endpoint(googleQt::ApiClient* c);       
 
-        template <class RES, 
-            class RESULT_FACTORY>
+		/**
+			let compiler bind right endpoint function
+		*/
+        DECL_STD_BOUND_TASK_CB		(postStyle);
+        DECL_STD_BOUND_TASK_CB		(putStyle);
+        DECL_STD_BOUND_TASK_CB		(rfc822UploadStyle);
+        DECL_BODYLESS_BOUND_TASK_CB	(getStyle);
+        DECL_BODYLESS_BOUND_TASK_CB	(postStyle);
+		DECL_VOID_BOUND_TASK_CB		(postStyle);
+		DECL_VOID_BOUND_TASK_CB		(deleteStyle);
+
+        template <class RES, class RESULT_FACTORY>
         void getStyle(QUrl url,
-            std::function<void(RES)> completed_callback = nullptr,
-            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr)
+            std::function<void(std::unique_ptr<RES>)> completed_callback,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
         {
             std::shared_ptr<requester> rb(new GET_requester(*this));
             runRequest<RES, RESULT_FACTORY>
@@ -29,14 +40,15 @@ namespace googleQt{
                  completed_callback,
                  failed_callback);
         }
+        
 
         template <class RES, 
             class RESULT_FACTORY, 
             class BODY>
         void postStyle(QUrl url, 
             const BODY& body,
-            std::function<void(RES)> completed_callback = nullptr,
-            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr)
+            std::function<void(std::unique_ptr<RES>)> completed_callback,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
         {
             QJsonObject js = body;
             std::shared_ptr<requester> rb(new POST_requester(*this, js));
@@ -51,8 +63,8 @@ namespace googleQt{
         template <class RES, 
             class RESULT_FACTORY>
         void postStyle(QUrl url,
-            std::function<void(RES)> completed_callback = nullptr,
-            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr)
+            std::function<void(std::unique_ptr<RES>)> completed_callback,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
         {
             QJsonObject js = QJsonObject();
             std::shared_ptr<requester> rb(new POST_requester(*this, js));
@@ -65,8 +77,8 @@ namespace googleQt{
         }
 
         void postStyle(QUrl url,
-            std::function<void(void)> completed_callback = nullptr,
-            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr)
+            std::function<void(void)> completed_callback,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
         {
             QJsonObject js = QJsonObject();
             std::function<void(std::unique_ptr<googleQt::VoidType>)> completed_with_type = nullptr;
@@ -79,17 +91,18 @@ namespace googleQt{
             }
 
             std::shared_ptr<requester> rb(new POST_requester(*this, js));
-            runRequest<std::unique_ptr<VoidType>,VoidType>
+            runRequest<VoidType,VoidType>
                 (url,
                  std::move(rb),
                  completed_with_type,
                  failed_callback);
         }
 
+
         template <class RES, class RESULT_FACTORY, class BODY>
         void putStyle(QUrl url, const BODY& body,
-            std::function<void(RES)> completed_callback = nullptr,
-            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr)
+            std::function<void(std::unique_ptr<RES>)> completed_callback,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
         {
             QJsonObject js = body;
             std::shared_ptr<requester> rb(new PUT_requester(*this, js));
@@ -115,7 +128,7 @@ namespace googleQt{
             }
 
             std::shared_ptr<requester> rb(new DELETE_requester(*this));
-            runRequest<std::unique_ptr<VoidType>, VoidType>
+            runRequest<VoidType, VoidType>
                 (url,
                  std::move(rb),
                  completed_with_type,
@@ -123,12 +136,36 @@ namespace googleQt{
                     
         }
 
-        template <class RES, class RESULT_FACTORY>
-        void uploadStyle(QUrl url, QIODevice* readFrom,
-            std::function<void(RES)> completed_callback = nullptr,
+        template <class RES, class RESULT_FACTORY, class BODY>
+        void mpartUploadStyle(QUrl url,
+            const BODY& body,
+            QIODevice* readFrom, 
+            GoogleTask<RES>* t)
+        {
+            std::function<void(std::unique_ptr<RES>)> completed_callback =
+                [=](std::unique_ptr<RES> r)
+            {
+                t->completed_callback(std::move(r));
+            };
+
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback =
+                [=](std::unique_ptr<GoogleException> ex)
+            {
+                t->failed_callback(std::move(ex));
+            };
+
+            mpartUploadStyle<RES, RESULT_FACTORY, BODY>(url, body, readFrom, completed_callback, failed_callback);
+        }
+
+        template <class RES, class RESULT_FACTORY, class BODY>
+        void mpartUploadStyle(QUrl url, 
+            const BODY& body,
+            QIODevice* readFrom,
+            std::function<void(std::unique_ptr<RES>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr)
         {
-            std::shared_ptr<requester> rb(new UPLOAD_requester(*this, readFrom));
+            QJsonObject js = body;
+            std::shared_ptr<requester> rb(new MPartUpload_requester(*this, js, readFrom));
             runRequest<RES, RESULT_FACTORY>
                 (url,
                  std::move(rb),
@@ -136,9 +173,49 @@ namespace googleQt{
                  failed_callback);
         }
 
+        void downloadStyle(QUrl url, QIODevice* writeTo, GoogleVoidTask* t)
+        {
+            std::function<void(void)> completed_callback =
+                [=](void)
+            {
+                t->completed_callback();
+            };
+
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback =
+                [=](std::unique_ptr<GoogleException> ex)
+            {
+                t->failed_callback(std::move(ex));
+            };
+            downloadStyle(url, writeTo, completed_callback, failed_callback);
+        };
+
+        void downloadStyle(QUrl url,
+            QIODevice* writeTo,
+            std::function<void(void)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr)
+        {
+            std::function<void(std::unique_ptr<googleQt::VoidType>)> completed_with_type = nullptr;
+            if (completed_callback != nullptr)
+            {
+                completed_with_type = [=](std::unique_ptr<googleQt::VoidType>)
+                {
+                    completed_callback();
+                };
+            }
+
+            std::shared_ptr<requester> rb(new DOWNLOAD_requester(*this, writeTo));
+            runRequest<VoidType, VoidType>
+                (url,
+                    std::move(rb),
+                    completed_with_type,
+                    failed_callback);
+        }
+
+
+
         template <class RES, class RESULT_FACTORY, class BODY>
         void rfc822UploadStyle(QUrl url, const BODY& body,
-            std::function<void(RES)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<RES>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr)
         {
             QJsonObject js = body;
@@ -196,10 +273,10 @@ namespace googleQt{
         }
 
         template <class ARG>
-        QUrl buildGdriveUploadUrl(const QString&, const ARG& a)const
+        QUrl buildGdriveMPartUploadUrl(const QString&, const ARG&)const
         {
-            QUrl url;
-            a.build("https://www.googleapis.com/upload/drive/v3/", url);
+            QUrl url("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart");
+            //a.build("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", url);
             addAppKeyParameter(url);
             return url;
         }
@@ -214,10 +291,11 @@ namespace googleQt{
         QString prepareErrorInfo(int status_code, const QUrl& url, const QByteArray& data);
         void addAppKeyParameter(QUrl& url)const;
 
+
         template <class RES, class RESULT_FACTORY>
         void runRequest(QUrl url, 
                         std::shared_ptr<requester> firstBuilder,
-                        std::function<void(RES)> completed_callback = nullptr, 
+                        std::function<void(std::unique_ptr<RES>)> completed_callback = nullptr,
                         std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr)
         {
             QNetworkRequest firstRequest(url);
@@ -287,7 +365,7 @@ namespace googleQt{
                                                             if (i != m_replies_in_progress.end() && i->second != nullptr)
                                                             {
                                                                 std::shared_ptr<FINISHED_REQ> cb2 = i->second;
-                                                                registerReply(secondaryReply, cb2);
+                                                                registerReply(rb, secondaryReply, cb2);
                                                                 
                                                                 QObject::connect(secondaryReply,
                                                                     &QNetworkReply::finished,
@@ -295,10 +373,8 @@ namespace googleQt{
                                                                         rb,
                                                                         req,
                                                                         secondaryReply,
-                                                                        authErrorsLimit));
-                                                                        
-                                                            }
-                                                             
+                                                                        authErrorsLimit));                                                                        
+                                                            }                                                             
                                                          }
                                                  }
                                              else
@@ -336,7 +412,7 @@ namespace googleQt{
                                  unregisterReply(reply);
                              }));//finished - lambda
 
-            registerReply(firstReply, finishedRequest);         
+            registerReply(firstBuilder, firstReply, finishedRequest);
             QObject::connect(firstReply,
                              &QNetworkReply::finished,
                              std::bind(*(finishedRequest.get()),

@@ -40,8 +40,8 @@ namespace threads{
             /**
                 Estimated total number of results.
             */
-        int resultsizeestimate()const{return m_resultSizeEstimate;};
-        ThreadListRes& setResultsizeestimate(const int& arg){m_resultSizeEstimate=arg;return *this;};
+        int64_t resultsizeestimate()const{return m_resultSizeEstimate;};
+        ThreadListRes& setResultsizeestimate(const int64_t& arg){m_resultSizeEstimate=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -76,7 +76,7 @@ namespace threads{
             /**
                 Estimated total number of results.
             */
-        int m_resultSizeEstimate = {0};
+        int64_t m_resultSizeEstimate = {0};
 
     };//ThreadListRes
 

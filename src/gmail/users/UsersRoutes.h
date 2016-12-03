@@ -26,7 +26,8 @@ namespace users{
 
             */
         std::unique_ptr<GetProfileResponse> profile(void);
-        void profile_Async(
+        GoogleTask<GetProfileResponse>* profile_Async();
+        void profile_AsyncCB(
             std::function<void(std::unique_ptr<GetProfileResponse>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 

@@ -11,10 +11,23 @@ using namespace googleQt;
 using namespace permissions;
 
 std::unique_ptr<ResourcePermission> PermissionsRoutes::create(const gdrive::CreatePermissionArg& arg, const ResourcePermission& body){
-    BODY_ARG_GBC(create_Async, ResourcePermission, arg, body);
+    BODY_ARG_GBC(create_AsyncCB, ResourcePermission, arg, body);
 }
 
-void PermissionsRoutes::create_Async(
+GoogleTask<ResourcePermission>* PermissionsRoutes::create_Async(const gdrive::CreatePermissionArg& arg, const ResourcePermission& body)
+{
+    GoogleTask<ResourcePermission>* t = new GoogleTask<ResourcePermission>();
+    m_end_point->postStyle<
+        ResourcePermission,
+        ResourcePermission::factory,
+        ResourcePermission>
+        (m_end_point->buildGdriveUrl("permissions", arg),
+        body,
+        t);
+    return t;
+}
+
+void PermissionsRoutes::create_AsyncCB(
     const gdrive::CreatePermissionArg& arg,
     const ResourcePermission& body,
     std::function<void(std::unique_ptr<ResourcePermission>)> completed_callback ,
@@ -22,7 +35,7 @@ void PermissionsRoutes::create_Async(
 {
     m_end_point->postStyle
         <
-        std::unique_ptr<ResourcePermission>,
+        ResourcePermission,
         ResourcePermission::factory,
         ResourcePermission
         >
@@ -33,10 +46,19 @@ void PermissionsRoutes::create_Async(
 }
 
 void PermissionsRoutes::deleteOperation(const gdrive::PermissionArg& arg ){
-    VOID_RESULT_GBC(deleteOperation_Async, arg);
+    VOID_RESULT_GBC(deleteOperation_AsyncCB, arg);
 }
 
-void PermissionsRoutes::deleteOperation_Async(
+GoogleVoidTask* PermissionsRoutes::deleteOperation_Async(const gdrive::PermissionArg& arg)
+{
+    GoogleVoidTask* t = new GoogleVoidTask();
+    m_end_point->deleteStyle
+        (m_end_point->buildGdriveUrl("permissions", arg),
+        t);
+    return t;
+}
+
+void PermissionsRoutes::deleteOperation_AsyncCB(
     const gdrive::PermissionArg& arg,
     std::function<void()> completed_callback ,
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
@@ -48,17 +70,29 @@ void PermissionsRoutes::deleteOperation_Async(
 }
 
 std::unique_ptr<ResourcePermission> PermissionsRoutes::get(const gdrive::PermissionArg& arg){
-    GOOGLE_BLOCKING_CALL(get_Async, ResourcePermission, arg);
+    GOOGLE_BLOCKING_CALL(get_AsyncCB, ResourcePermission, arg);
 }
 
-void PermissionsRoutes::get_Async(
+GoogleTask<ResourcePermission>* PermissionsRoutes::get_Async(const gdrive::PermissionArg& arg)
+{
+    GoogleTask<ResourcePermission>* t = new GoogleTask<ResourcePermission>();
+    m_end_point->getStyle<
+        ResourcePermission,
+        ResourcePermission::factory
+        >
+        (m_end_point->buildGdriveUrl("permissions", arg),
+        t);
+    return t;
+}
+
+void PermissionsRoutes::get_AsyncCB(
     const gdrive::PermissionArg& arg,
     std::function<void(std::unique_ptr<ResourcePermission>)> completed_callback ,
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
 {
     m_end_point->getStyle
         <
-        std::unique_ptr<ResourcePermission>,
+        ResourcePermission,
         ResourcePermission::factory
         >
         (m_end_point->buildGdriveUrl("permissions", arg),
@@ -67,17 +101,29 @@ void PermissionsRoutes::get_Async(
 }
 
 std::unique_ptr<PermissionResourcesCollection> PermissionsRoutes::list(const gdrive::PermissionListArg& arg){
-    GOOGLE_BLOCKING_CALL(list_Async, PermissionResourcesCollection, arg);
+    GOOGLE_BLOCKING_CALL(list_AsyncCB, PermissionResourcesCollection, arg);
 }
 
-void PermissionsRoutes::list_Async(
+GoogleTask<PermissionResourcesCollection>* PermissionsRoutes::list_Async(const gdrive::PermissionListArg& arg)
+{
+    GoogleTask<PermissionResourcesCollection>* t = new GoogleTask<PermissionResourcesCollection>();
+    m_end_point->getStyle<
+        PermissionResourcesCollection,
+        PermissionResourcesCollection::factory
+        >
+        (m_end_point->buildGdriveUrl("permissions", arg),
+        t);
+    return t;
+}
+
+void PermissionsRoutes::list_AsyncCB(
     const gdrive::PermissionListArg& arg,
     std::function<void(std::unique_ptr<PermissionResourcesCollection>)> completed_callback ,
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
 {
     m_end_point->getStyle
         <
-        std::unique_ptr<PermissionResourcesCollection>,
+        PermissionResourcesCollection,
         PermissionResourcesCollection::factory
         >
         (m_end_point->buildGdriveUrl("permissions", arg),

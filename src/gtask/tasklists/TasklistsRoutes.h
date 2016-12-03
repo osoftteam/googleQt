@@ -27,7 +27,8 @@ namespace tasklists{
 
             */
         void deleteOperation(const gtask::TaskListContainerIdArg& );
-        void deleteOperation_Async(
+        GoogleVoidTask* deleteOperation_Async(const gtask::TaskListContainerIdArg& arg);
+        void deleteOperation_AsyncCB(
             const gtask::TaskListContainerIdArg&,
             std::function<void()> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
@@ -40,7 +41,8 @@ namespace tasklists{
 
             */
         std::unique_ptr<TaskListResource> get(const gtask::TaskListContainerIdArg& arg);
-        void get_Async(
+        GoogleTask<TaskListResource>* get_Async(const gtask::TaskListContainerIdArg& arg);
+        void get_AsyncCB(
             const gtask::TaskListContainerIdArg&,
             std::function<void(std::unique_ptr<TaskListResource>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
@@ -54,7 +56,8 @@ namespace tasklists{
 
             */
         std::unique_ptr<TaskListResource> insert(const TaskListResource& body);
-        void insert_Async(
+        GoogleTask<TaskListResource>* insert_Async(const TaskListResource& body);
+        void insert_AsyncCB(
             const TaskListResource& body,
             std::function<void(std::unique_ptr<TaskListResource>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
@@ -67,7 +70,8 @@ namespace tasklists{
 
             */
         std::unique_ptr<TaskListCollectionRes> list(const gtask::TasklistsListArg& arg);
-        void list_Async(
+        GoogleTask<TaskListCollectionRes>* list_Async(const gtask::TasklistsListArg& arg);
+        void list_AsyncCB(
             const gtask::TasklistsListArg&,
             std::function<void(std::unique_ptr<TaskListCollectionRes>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
@@ -80,7 +84,8 @@ namespace tasklists{
 
             */
         std::unique_ptr<TaskListResource> update(const gtask::TaskListContainerIdArg& arg, const TaskListResource& body);
-        void update_Async(
+        GoogleTask<TaskListResource>* update_Async(const gtask::TaskListContainerIdArg& arg, const TaskListResource& body);
+        void update_AsyncCB(
             const gtask::TaskListContainerIdArg&,
             const TaskListResource& body,
             std::function<void(std::unique_ptr<TaskListResource>)> completed_callback = nullptr,

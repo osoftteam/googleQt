@@ -27,7 +27,8 @@ namespace labels{
 
             */
         std::unique_ptr<LabelResource> create(const LabelResource& body);
-        void create_Async(
+        GoogleTask<LabelResource>* create_Async(const LabelResource& body);
+        void create_AsyncCB(
             const LabelResource& body,
             std::function<void(std::unique_ptr<LabelResource>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
@@ -41,7 +42,8 @@ namespace labels{
 
             */
         void deleteOperation(const gmail::IdArg& );
-        void deleteOperation_Async(
+        GoogleVoidTask* deleteOperation_Async(const gmail::IdArg& arg);
+        void deleteOperation_AsyncCB(
             const gmail::IdArg&,
             std::function<void()> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
@@ -54,7 +56,8 @@ namespace labels{
 
             */
         std::unique_ptr<LabelResource> get(const gmail::IdArg& arg);
-        void get_Async(
+        GoogleTask<LabelResource>* get_Async(const gmail::IdArg& arg);
+        void get_AsyncCB(
             const gmail::IdArg&,
             std::function<void(std::unique_ptr<LabelResource>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
@@ -67,7 +70,8 @@ namespace labels{
 
             */
         std::unique_ptr<LabelsResultList> list(void);
-        void list_Async(
+        GoogleTask<LabelsResultList>* list_Async();
+        void list_AsyncCB(
             std::function<void(std::unique_ptr<LabelsResultList>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
@@ -79,7 +83,8 @@ namespace labels{
 
             */
         std::unique_ptr<LabelResource> update(const gmail::IdArg& arg, const LabelResource& body);
-        void update_Async(
+        GoogleTask<LabelResource>* update_Async(const gmail::IdArg& arg, const LabelResource& body);
+        void update_AsyncCB(
             const gmail::IdArg&,
             const LabelResource& body,
             std::function<void(std::unique_ptr<LabelResource>)> completed_callback = nullptr,

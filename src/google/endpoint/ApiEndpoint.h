@@ -48,7 +48,7 @@ namespace googleQt{
 
         typedef std::map<QNetworkReply*, std::shared_ptr<FINISHED_REQ>> NET_REPLIES_IN_PROGRESS;
 
-        virtual void            registerReply(QNetworkReply*, std::shared_ptr<FINISHED_REQ>);
+        virtual void            registerReply(std::shared_ptr<requester>& rb, QNetworkReply*, std::shared_ptr<FINISHED_REQ>);
         virtual void            unregisterReply(QNetworkReply*);
 
         class GET_requester: public requester
@@ -141,20 +141,71 @@ namespace googleQt{
             const QJsonObject& m_js_out;
         };
 
-        class UPLOAD_requester: public requester
+        class MPartUpload_requester : public requester
         {
         public:
-            UPLOAD_requester(ApiEndpoint& e, QIODevice* readFrom)
-                :requester(e), m_readFrom(readFrom){}
+            MPartUpload_requester(ApiEndpoint& e, const QJsonObject& js, QIODevice* readFrom)
+                :requester(e), m_js_out(js), m_readFrom(readFrom) {}
             QNetworkReply * request(QNetworkRequest& r)override
             {
-                qint64 fsize = m_readFrom ? m_readFrom->size() : 0;
-                r.setRawHeader("Content-Type", "application/octet-stream");
-                r.setRawHeader("Content-Length", QString("%1").arg(fsize).toStdString().c_str());
-                return m_ep.postData(r, m_readFrom ? m_readFrom->readAll() : QByteArray());
+                QByteArray meta_bytes;
+                QJsonDocument doc(m_js_out);
+                if (m_js_out.isEmpty()) {
+                    meta_bytes.append("null");
+                }
+                else {
+                    QJsonDocument doc(m_js_out);
+                    meta_bytes = doc.toJson(QJsonDocument::Compact);
+                }
+
+                QString delimiter("foo_bar_baz12321");
+                QByteArray bytes2post = QString("\n--%1\n").arg(delimiter).toStdString().c_str();
+                bytes2post += QString("Content - Type: application/json; charset = UTF-8\n").toStdString().c_str();             
+                bytes2post += "\n";
+                bytes2post += meta_bytes;
+                bytes2post += "\n";
+                bytes2post += "\n";
+                bytes2post += QString("--%1\n").arg(delimiter).toStdString().c_str();
+                bytes2post += QString("Content-Type: application/octet-stream").toStdString().c_str();
+                bytes2post += "\n";
+                if (m_readFrom) {
+                    bytes2post += m_readFrom->readAll();
+                }
+                bytes2post += "\n";
+                bytes2post += QString("--%1--").arg(delimiter).toStdString().c_str();
+
+                QString content_str = QString("multipart/related; boundary = %1").arg(delimiter);
+                r.setRawHeader("Content-Type", content_str.toStdString().c_str());
+                r.setRawHeader("Content-Length", QString("%1").arg(bytes2post.size()).toStdString().c_str());
+                return m_ep.postData(r, bytes2post);
             }
         protected:
+            const QJsonObject& m_js_out;
             QIODevice* m_readFrom;
+        };
+
+        class DOWNLOAD_requester : public requester
+        {
+        public:
+            DOWNLOAD_requester(ApiEndpoint& e, QIODevice* writeTo) 
+                :requester(e), m_writeTo(writeTo){}
+            QNetworkReply * request(QNetworkRequest& r)override
+            {
+                QNetworkReply* reply = m_ep.getData(r);
+                if (reply != nullptr) {
+                    QObject::connect(reply, &QNetworkReply::readyRead, [=]()
+                    {
+                        qint64 sz = reply->bytesAvailable();
+                        if (sz > 0 && m_writeTo != NULL) {
+                            QByteArray data = reply->read(sz);
+                            m_writeTo->write(data);
+                        }
+                    });
+                }
+                return reply;
+            }
+        protected:
+            QIODevice* m_writeTo;
         };
 
     protected:

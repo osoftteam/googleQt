@@ -10,18 +10,18 @@ namespace googleQt {
         {
         public:
             AboutArg();
-            void addResponseField(QString name);
-            void clearResponseFields();
+            void setFields(QString val) { m_Fields = val; };
+            void clearFields() { m_Fields = ""; };
             void build(const QString& link_path, QUrl& url)const override;
         protected:
-            FIELDS m_partResponseFields;
+            QString m_Fields;
         };
 
         class FileListArg : public QParamArg
         {
         public:
-            FileListArg();
-            //virtual QString arg()const override;
+            FileListArg(QString pageToken = "");
+            
             void build(const QString& link_path, QUrl& url)const override;
 
             /**
@@ -113,6 +113,26 @@ namespace googleQt {
             QString m_fileId;
             bool    m_acknowledgeAbuse;
         };//FileIdArg
+        
+        class DownloadFileArg : public QParamArg
+        {
+        public:
+            DownloadFileArg(QString fileId = "");
+            void build(const QString& link_path, QUrl& url)const override;
+
+            /**
+            The ID of the file.
+            */
+            QString getFileId()const { return m_fileId; }
+            void    setFileId(QString val) { m_fileId = val; }
+
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<DownloadFileArg> EXAMPLE();
+#endif //API_QT_AUTOTEST
+
+        protected:
+            QString m_fileId;
+        };      
 
         class CopyFileArg : public QParamArg
         {
@@ -163,7 +183,7 @@ namespace googleQt {
         class DeleteFileArg: public QParamArg
         {
         public:
-            DeleteFileArg();
+            DeleteFileArg(QString fileId = "");
             void build(const QString& link_path, QUrl& url)const override;
 
             /**

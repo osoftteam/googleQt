@@ -11,17 +11,30 @@ using namespace googleQt;
 using namespace labels;
 
 std::unique_ptr<LabelResource> LabelsRoutes::create(const LabelResource& body){
-    BODY_NO_ARG_ARG_GBC(create_Async, LabelResource, body);
+    BODY_NO_ARG_ARG_GBC(create_AsyncCB, LabelResource, body);
 }
 
-void LabelsRoutes::create_Async(
+GoogleTask<LabelResource>* LabelsRoutes::create_Async(const LabelResource& body)
+{
+    GoogleTask<LabelResource>* t = new GoogleTask<LabelResource>();
+    m_end_point->postStyle<
+        LabelResource,
+        LabelResource::factory,
+        LabelResource>
+        (m_end_point->buildGmailUrl("labels", VoidType::instance()),
+        body,
+        t);
+    return t;
+}
+
+void LabelsRoutes::create_AsyncCB(
     const LabelResource& body,
     std::function<void(std::unique_ptr<LabelResource>)> completed_callback ,
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
 {
     m_end_point->postStyle
         <
-        std::unique_ptr<LabelResource>,
+        LabelResource,
         LabelResource::factory,
         LabelResource
         >
@@ -32,10 +45,19 @@ void LabelsRoutes::create_Async(
 }
 
 void LabelsRoutes::deleteOperation(const gmail::IdArg& arg ){
-    VOID_RESULT_GBC(deleteOperation_Async, arg);
+    VOID_RESULT_GBC(deleteOperation_AsyncCB, arg);
 }
 
-void LabelsRoutes::deleteOperation_Async(
+GoogleVoidTask* LabelsRoutes::deleteOperation_Async(const gmail::IdArg& arg)
+{
+    GoogleVoidTask* t = new GoogleVoidTask();
+    m_end_point->deleteStyle
+        (m_end_point->buildGmailUrl("labels", arg),
+        t);
+    return t;
+}
+
+void LabelsRoutes::deleteOperation_AsyncCB(
     const gmail::IdArg& arg,
     std::function<void()> completed_callback ,
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
@@ -47,17 +69,29 @@ void LabelsRoutes::deleteOperation_Async(
 }
 
 std::unique_ptr<LabelResource> LabelsRoutes::get(const gmail::IdArg& arg){
-    GOOGLE_BLOCKING_CALL(get_Async, LabelResource, arg);
+    GOOGLE_BLOCKING_CALL(get_AsyncCB, LabelResource, arg);
 }
 
-void LabelsRoutes::get_Async(
+GoogleTask<LabelResource>* LabelsRoutes::get_Async(const gmail::IdArg& arg)
+{
+    GoogleTask<LabelResource>* t = new GoogleTask<LabelResource>();
+    m_end_point->getStyle<
+        LabelResource,
+        LabelResource::factory
+        >
+        (m_end_point->buildGmailUrl("labels", arg),
+        t);
+    return t;
+}
+
+void LabelsRoutes::get_AsyncCB(
     const gmail::IdArg& arg,
     std::function<void(std::unique_ptr<LabelResource>)> completed_callback ,
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
 {
     m_end_point->getStyle
         <
-        std::unique_ptr<LabelResource>,
+        LabelResource,
         LabelResource::factory
         >
         (m_end_point->buildGmailUrl("labels", arg),
@@ -66,16 +100,28 @@ void LabelsRoutes::get_Async(
 }
 
 std::unique_ptr<LabelsResultList> LabelsRoutes::list(void){
-    VOID_ARG_GBC(list_Async, LabelsResultList);
+    VOID_ARG_GBC(list_AsyncCB, LabelsResultList);
 }
 
-void LabelsRoutes::list_Async(
+GoogleTask<LabelsResultList>* LabelsRoutes::list_Async()
+{
+    GoogleTask<LabelsResultList>* t = new GoogleTask<LabelsResultList>();
+    m_end_point->getStyle<
+        LabelsResultList,
+        LabelsResultList::factory
+        >
+        (m_end_point->buildGmailUrl("labels", VoidType::instance()),
+        t);
+    return t;
+}
+
+void LabelsRoutes::list_AsyncCB(
     std::function<void(std::unique_ptr<LabelsResultList>)> completed_callback ,
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
 {
     m_end_point->getStyle
         <
-        std::unique_ptr<LabelsResultList>,
+        LabelsResultList,
         LabelsResultList::factory
         >
         (m_end_point->buildGmailUrl("labels", VoidType::instance()),
@@ -84,10 +130,23 @@ void LabelsRoutes::list_Async(
 }
 
 std::unique_ptr<LabelResource> LabelsRoutes::update(const gmail::IdArg& arg, const LabelResource& body){
-    BODY_ARG_GBC(update_Async, LabelResource, arg, body);
+    BODY_ARG_GBC(update_AsyncCB, LabelResource, arg, body);
 }
 
-void LabelsRoutes::update_Async(
+GoogleTask<LabelResource>* LabelsRoutes::update_Async(const gmail::IdArg& arg, const LabelResource& body)
+{
+    GoogleTask<LabelResource>* t = new GoogleTask<LabelResource>();
+    m_end_point->putStyle<
+        LabelResource,
+        LabelResource::factory,
+        LabelResource>
+        (m_end_point->buildGmailUrl("labels", arg),
+        body,
+        t);
+    return t;
+}
+
+void LabelsRoutes::update_AsyncCB(
     const gmail::IdArg& arg,
     const LabelResource& body,
     std::function<void(std::unique_ptr<LabelResource>)> completed_callback ,
@@ -95,7 +154,7 @@ void LabelsRoutes::update_Async(
 {
     m_end_point->putStyle
         <
-        std::unique_ptr<LabelResource>,
+        LabelResource,
         LabelResource::factory,
         LabelResource
         >

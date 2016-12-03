@@ -15,13 +15,12 @@
 #include <QStringList>
 #include <QUrlQuery>
 #include "ApiException.h"
+#include "GoogleTask.h"
 #ifdef API_QT_AUTOTEST
 #include "ApiAutotest.h"
 #endif
 
 namespace googleQt{
-
-    typedef std::set<QString> FIELDS;
     
     bool loadJsonFromFile(QString path, QJsonObject& js);
     bool storeJsonToFile(QString path, const QJsonObject js);
@@ -196,12 +195,12 @@ namespace googleQt{
     {
     public:
         virtual void build(const QString& link_path, QUrl& url)const = 0;
-        void addResponseField(QString name){m_partResponseFields.insert(name);};
-        void clearResponseFields(){m_partResponseFields.clear();};
+        void setFields(QString fields){ m_Fields = fields;};
+        void clearFields(){ m_Fields = "";};
     protected:
         void ResponseFields2Builder(UrlBuilder& b)const;
     protected:
-        FIELDS m_partResponseFields;
+        QString m_Fields;
     };
 
     template <class P, class D>
@@ -213,9 +212,9 @@ namespace googleQt{
             url.setUrl(link_path + QString("/%1").arg(P::path()));
         }
 
-        #ifdef API_QT_AUTOTEST
+#ifdef API_QT_AUTOTEST
         static std::unique_ptr<D> EXAMPLE(){std::unique_ptr<D> rv(new D);return rv;};
-        #endif //API_QT_AUTOTEST        
+#endif //API_QT_AUTOTEST        
     };
 
     template <class P, class D>
@@ -243,6 +242,7 @@ namespace googleQt{
         virtual ~UrlBuilder();
 
         UrlBuilder& add(QString name, QString value);
+        UrlBuilder& add(QString name, const char* value);
         UrlBuilder& add(QString name, bool value);
         UrlBuilder& add(QString name, int value);
         UrlBuilder& add(QString name, const QDateTime& value);
@@ -258,158 +258,227 @@ namespace googleQt{
 
     //........
     /**
-    GOOGLE_BLOCKING_CALL or GBC - macross converts 2 async callbacks into one blocking call
-    that returns value of the first callback and throws exception in case of second callback.
+       GOOGLE_BLOCKING_CALL or GBC - macross converts 2 async callbacks into one blocking call
+       that returns value of the first callback and throws exception in case of second callback.
     */
 
-#define GOOGLE_BLOCKING_CALL(AFUNC, REST, ARGV)    \
-        std::unique_ptr<GoogleException> ex;   \
-        std::unique_ptr<REST> result;           \
-        AFUNC(ARGV,                             \
-            [this, &result](std::unique_ptr<REST> r)        \
-        {                                       \
-            result = std::move(r);              \
-            m_end_point->exitEventsLoop();      \
-        },                                          \
-            [&](std::unique_ptr<GoogleException> e)\
-        {                                       \
-            ex = std::move(e);                  \
-            m_end_point->exitEventsLoop();      \
-        }                                       \
-        );                                      \
-        if(!ex && !result)                      \
-            m_end_point->runEventsLoop();       \
-        if (ex)                                 \
-            ex->raise();                        \
-        return result;                          \
+#define GOOGLE_BLOCKING_CALL(AFUNC, REST, ARGV)     \
+    std::unique_ptr<GoogleException> ex;            \
+    std::unique_ptr<REST> result;                   \
+    AFUNC(ARGV,                                     \
+          [this, &result](std::unique_ptr<REST> r)  \
+          {                                         \
+              result = std::move(r);                \
+              m_end_point->exitEventsLoop();        \
+          },                                        \
+          [&](std::unique_ptr<GoogleException> e)   \
+          {                                         \
+              ex = std::move(e);                    \
+              m_end_point->exitEventsLoop();        \
+          }                                         \
+          );                                        \
+    if(!ex && !result)                              \
+        m_end_point->runEventsLoop();               \
+    if (ex)                                         \
+        ex->raise();                                \
+    return result;                                  \
 
-#define BODY_ARG_GBC(AFUNC, REST, ARGV, BODY_VAL)    \
-        std::unique_ptr<GoogleException> ex;   \
-        std::unique_ptr<REST> result;           \
-        AFUNC(ARGV, BODY_VAL,                   \
-            [this, &result](std::unique_ptr<REST> r)        \
-        {                                       \
-            result = std::move(r);              \
-            m_end_point->exitEventsLoop();      \
-        },                                          \
-            [&](std::unique_ptr<GoogleException> e)\
-        {                                       \
-            ex = std::move(e);                  \
-            m_end_point->exitEventsLoop();      \
-        }                                       \
-        );                                      \
-        if(!ex && !result)                      \
-            m_end_point->runEventsLoop();       \
-        if (ex)                                 \
-            ex->raise();                        \
-        return result;                          \
+#define BODY_ARG_GBC(AFUNC, REST, ARGV, BODY_VAL)   \
+    std::unique_ptr<GoogleException> ex;            \
+    std::unique_ptr<REST> result;                   \
+    AFUNC(ARGV, BODY_VAL,                           \
+        [this, &result](std::unique_ptr<REST> r)    \
+    {                                               \
+    result = std::move(r);                          \
+    m_end_point->exitEventsLoop();                  \
+},                                                  \
+        [&](std::unique_ptr<GoogleException> e)     \
+    {                                               \
+    ex = std::move(e);                              \
+    m_end_point->exitEventsLoop();                  \
+}                                                   \
+        );                                          \
+    if(!ex && !result)                              \
+        m_end_point->runEventsLoop();               \
+    if (ex)                                         \
+        ex->raise();                                \
+    return result;                                  \
 
-#define BODY_NO_ARG_ARG_GBC(AFUNC, REST, BODY_VAL)    \
-        std::unique_ptr<GoogleException> ex;   \
-        std::unique_ptr<REST> result;           \
-        AFUNC(BODY_VAL,                   \
-            [this, &result](std::unique_ptr<REST> r)        \
-        {                                       \
-            result = std::move(r);              \
-            m_end_point->exitEventsLoop();      \
-        },                                          \
-            [&](std::unique_ptr<GoogleException> e)\
-        {                                       \
-            ex = std::move(e);                  \
-            m_end_point->exitEventsLoop();      \
-        }                                       \
-        );                                      \
-        if(!ex && !result)                      \
-            m_end_point->runEventsLoop();       \
-        if (ex)                                 \
-            ex->raise();                        \
-        return result;                          \
-
-
-#define DATA_GBC(AFUNC, REST, ARGV, DATA)   \
-        std::unique_ptr<GoogleException> ex;   \
-        std::unique_ptr<REST> result;           \
-        AFUNC(ARGV,                             \
-            DATA,                               \
-            [this, &result](std::unique_ptr<REST> r)        \
-        {                                       \
-            result = std::move(r);              \
-            m_end_point->exitEventsLoop();      \
-        },                                          \
-            [&](std::unique_ptr<GoogleException> e)\
-        {                                       \
-            ex = std::move(e);                  \
-            m_end_point->exitEventsLoop();      \
-        }                                       \
-        );                                      \
-        if(!ex && !result)                      \
-            m_end_point->runEventsLoop();       \
-        if (ex)                                 \
-            ex->raise();                        \
-        return result;                          \
+#define BODY_NO_ARG_ARG_GBC(AFUNC, REST, BODY_VAL)  \
+    std::unique_ptr<GoogleException> ex;            \
+    std::unique_ptr<REST> result;                   \
+    AFUNC(BODY_VAL,                                 \
+          [this, &result](std::unique_ptr<REST> r)  \
+          {                                         \
+              result = std::move(r);                \
+              m_end_point->exitEventsLoop();        \
+          },                                        \
+          [&](std::unique_ptr<GoogleException> e)   \
+          {                                         \
+              ex = std::move(e);                    \
+              m_end_point->exitEventsLoop();        \
+          }                                         \
+          );                                        \
+    if(!ex && !result)                              \
+        m_end_point->runEventsLoop();               \
+    if (ex)                                         \
+        ex->raise();                                \
+    return result;                                  \
 
 
+#define DATA_GBC(AFUNC, REST, ARGV, DATA)           \
+    std::unique_ptr<GoogleException> ex;            \
+    std::unique_ptr<REST> result;                   \
+    AFUNC(ARGV,                                     \
+        DATA,                                       \
+        [this, &result](std::unique_ptr<REST> r)    \
+    {                                               \
+    result = std::move(r);                          \
+    m_end_point->exitEventsLoop();                  \
+},                                                  \
+        [&](std::unique_ptr<GoogleException> e)     \
+    {                                               \
+    ex = std::move(e);                              \
+    m_end_point->exitEventsLoop();                  \
+}                                                   \
+        );                                          \
+    if(!ex && !result)                              \
+        m_end_point->runEventsLoop();               \
+    if (ex)                                         \
+        ex->raise();                                \
+    return result;                                  \
 
-#define VOID_ARG_GBC(AFUNC, REST)           \
-        std::unique_ptr<GoogleException> ex;   \
-        std::unique_ptr<REST> result;           \
-        AFUNC([this, &result](std::unique_ptr<REST> r)      \
-        {                                       \
-            result = std::move(r);              \
-            m_end_point->exitEventsLoop();      \
-        },                                          \
-            [&](std::unique_ptr<GoogleException> e)\
-        {                                       \
-            ex = std::move(e);                  \
-            m_end_point->exitEventsLoop();      \
-        }                                       \
-        );                                      \
-        if(!ex && !result)                      \
-            m_end_point->runEventsLoop();       \
-        if (ex)                                 \
-            ex->raise();                        \
-        return result;                          \
+
+#define VOID_RESULT_ARG_WITH_DATA_GBC(AFUNC, ARGV, DATA)    \
+    std::unique_ptr<GoogleException> ex;                    \
+    bool completed = false;                                 \
+    AFUNC(ARGV,                                             \
+          DATA,                                             \
+          [this, &completed](void)                          \
+          {                                                 \
+              completed = true;;                            \
+              m_end_point->exitEventsLoop();                \
+          },                                                \
+          [&](std::unique_ptr<GoogleException> e)           \
+          {                                                 \
+              ex = std::move(e);                            \
+              m_end_point->exitEventsLoop();                \
+          }                                                 \
+          );                                                \
+    if(!ex && !completed)                                   \
+        m_end_point->runEventsLoop();                       \
+    if (ex)                                                 \
+        ex->raise();                                        \
+
+
+#define VOID_ARG_GBC(AFUNC, REST)                   \
+    std::unique_ptr<GoogleException> ex;            \
+    std::unique_ptr<REST> result;                   \
+    AFUNC([this, &result](std::unique_ptr<REST> r)  \
+    {                                               \
+    result = std::move(r);                          \
+    m_end_point->exitEventsLoop();                  \
+},                                                  \
+        [&](std::unique_ptr<GoogleException> e)     \
+    {                                               \
+    ex = std::move(e);                              \
+    m_end_point->exitEventsLoop();                  \
+}                                                   \
+        );                                          \
+    if(!ex && !result)                              \
+        m_end_point->runEventsLoop();               \
+    if (ex)                                         \
+        ex->raise();                                \
+    return result;                                  \
 
 
 #define VOID_RESULT_GBC(AFUNC, ARGV)                \
-        std::unique_ptr<GoogleException> ex;   \
-        bool completed = false;                 \
-        AFUNC(ARGV,                             \
-            [this, &completed](void)            \
-        {                                       \
-            completed = true;                   \
-            m_end_point->exitEventsLoop();      \
-        },                                          \
-            [&](std::unique_ptr<GoogleException> e)\
-        {                                       \
-            ex = std::move(e);                  \
-            m_end_point->exitEventsLoop();      \
-        }                                       \
-        );                                      \
-        if(!ex && !completed)                   \
-            m_end_point->runEventsLoop();       \
-        if (ex)                                 \
-            ex->raise();                        \
+    std::unique_ptr<GoogleException> ex;            \
+    bool completed = false;                         \
+    AFUNC(ARGV,                                     \
+          [this, &completed](void)                  \
+          {                                         \
+              completed = true;                     \
+              m_end_point->exitEventsLoop();        \
+          },                                        \
+          [&](std::unique_ptr<GoogleException> e)   \
+          {                                         \
+              ex = std::move(e);                    \
+              m_end_point->exitEventsLoop();        \
+          }                                         \
+          );                                        \
+    if(!ex && !completed)                           \
+        m_end_point->runEventsLoop();               \
+    if (ex)                                         \
+        ex->raise();                                \
 
-/*
-#define VOID_RESULT_GBC(AFUNC, ARGV)                \
-        std::unique_ptr<GoogleException> ex;   \
-        AFUNC(ARGV,                             \
-            [this](void)                        \
-        {                                       \         
-                            \
-            m_end_point->exitEventsLoop();      \
-        },                                       \
-            [&](std::unique_ptr<GoogleException> e)\
-        {                                       \
-            ex = std::move(e);                  \
-            m_end_point->exitEventsLoop();      \
-        }                                       \
-        );                                      \
-        if(!ex && !processed)                       \
-            m_end_point->runEventsLoop();       \
-        if (ex)                                 \
-            ex->raise();                        \
-            */
 }
+
+
+#define DECL_STD_BOUND_TASK_CB(ENDP_FUNC)                               \
+    template <class RES,                                                \
+              class RESULT_FACTORY,                                     \
+              class BODY>                                               \
+    void ENDP_FUNC(QUrl url,                                            \
+        const BODY& body,                                               \
+        GoogleTask<RES>* t)                                             \
+    {                                                                   \
+    std::function<void(std::unique_ptr<RES>)> completed_CB =            \
+        [=](std::unique_ptr<RES> r)                                     \
+    {                                                                   \
+    t->completed_callback(std::move(r));                                \
+};                                                                      \
+                                                                        \
+    std::function<void(std::unique_ptr<GoogleException>)> failed_CB =   \
+        [=](std::unique_ptr<GoogleException> ex)                        \
+    {                                                                   \
+    t->failed_callback(std::move(ex));                                  \
+};                                                                      \
+                                                                        \
+    ENDP_FUNC<RES, RESULT_FACTORY, BODY>                                \
+    (url, body, completed_CB, failed_CB);                               \
+}                                                                       \
+
+
+#define DECL_BODYLESS_BOUND_TASK_CB(ENDP_FUNC)                          \
+    template <class RES,                                                \
+              class RESULT_FACTORY>                                     \
+    void ENDP_FUNC(QUrl url,                                            \
+                   GoogleTask<RES>* t)                                  \
+    {                                                                   \
+        std::function<void(std::unique_ptr<RES>)> completed_CB =        \
+            [=](std::unique_ptr<RES> r)                                 \
+            {                                                           \
+                t->completed_callback(std::move(r));                    \
+            };                                                          \
+                                                                        \
+        std::function<void(std::unique_ptr<GoogleException>)> failed_CB = \
+            [=](std::unique_ptr<GoogleException> ex)                    \
+            {                                                           \
+                t->failed_callback(std::move(ex));                      \
+            };                                                          \
+                                                                        \
+        ENDP_FUNC<RES, RESULT_FACTORY>									\
+            (url, completed_CB, failed_CB);                             \
+    }                                                                   \
+
+#define DECL_VOID_BOUND_TASK_CB(ENDP_FUNC)                              \
+    void ENDP_FUNC(QUrl url,                                            \
+                   GoogleVoidTask* t)                                   \
+    {                                                                   \
+        std::function<void(void)> completed_CB =                        \
+            [=](void)                                                   \
+            {                                                           \
+                t->completed_callback();                                \
+            };                                                          \
+                                                                        \
+        std::function<void(std::unique_ptr<GoogleException>)> failed_CB = \
+            [=](std::unique_ptr<GoogleException> ex)                    \
+            {                                                           \
+                t->failed_callback(std::move(ex));                      \
+            };                                                          \
+                                                                        \
+        ENDP_FUNC(url, completed_CB, failed_CB);                        \
+    }                                                                   \
+
 

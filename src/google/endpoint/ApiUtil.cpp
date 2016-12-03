@@ -66,6 +66,14 @@ UrlBuilder& UrlBuilder::add(QString name, QString value)
     return *this;
 };
 
+UrlBuilder& UrlBuilder::add(QString name, const char* value) 
+{
+    if (value != nullptr) {
+        return add(name, QString(value));
+    }
+    return *this;
+};
+
 UrlBuilder& UrlBuilder::add(QString name, bool value) 
 {
     m_q.addQueryItem(name, value ? "true" : "false");
@@ -87,13 +95,15 @@ UrlBuilder& UrlBuilder::add(QString name, const QDateTime& value)
 
 void QParamArg::ResponseFields2Builder(UrlBuilder& b)const
 {
-    if(!m_partResponseFields.empty()){
+    if(!m_Fields.isEmpty()){
+        /*
         QString fields = "";
         for(QString f : m_partResponseFields){
             fields += f;
             fields += ",";
         }
         fields = fields.left(fields.length() - 1);
-        b.add("fields", fields);
+        */
+        b.add("fields", m_Fields);
     }
 };

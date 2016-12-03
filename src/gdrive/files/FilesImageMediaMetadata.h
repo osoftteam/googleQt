@@ -45,27 +45,27 @@ namespace files{
     public:
         ImageMediaMetadata(){};
 
-        ImageMediaMetadata(const int& arg){ m_width = arg; };
+        ImageMediaMetadata(const int64_t& arg){ m_width = arg; };
 
     public:
             /**
                 The width of the image in pixels.
             */
-        int width()const{return m_width;};
-        ImageMediaMetadata& setWidth(const int& arg){m_width=arg;return *this;};
+        int64_t width()const{return m_width;};
+        ImageMediaMetadata& setWidth(const int64_t& arg){m_width=arg;return *this;};
 
             /**
                 The height of the image in pixels.
             */
-        int height()const{return m_height;};
-        ImageMediaMetadata& setHeight(const int& arg){m_height=arg;return *this;};
+        int64_t height()const{return m_height;};
+        ImageMediaMetadata& setHeight(const int64_t& arg){m_height=arg;return *this;};
 
             /**
                 The rotation in clockwise degrees from the image's original
                 orientation.
             */
-        int rotation()const{return m_rotation;};
-        ImageMediaMetadata& setRotation(const int& arg){m_rotation=arg;return *this;};
+        int64_t rotation()const{return m_rotation;};
+        ImageMediaMetadata& setRotation(const int64_t& arg){m_rotation=arg;return *this;};
 
             /**
                 Geographic location information stored in the image.
@@ -112,8 +112,8 @@ namespace files{
             /**
                 The ISO speed used to create the photo.
             */
-        int isospeed()const{return m_isoSpeed;};
-        ImageMediaMetadata& setIsospeed(const int& arg){m_isoSpeed=arg;return *this;};
+        int64_t isospeed()const{return m_isoSpeed;};
+        ImageMediaMetadata& setIsospeed(const int64_t& arg){m_isoSpeed=arg;return *this;};
 
             /**
                 The metering mode used to create the photo.
@@ -161,8 +161,8 @@ namespace files{
             /**
                 The distance to the subject of the photo, in meters.
             */
-        int subjectdistance()const{return m_subjectDistance;};
-        ImageMediaMetadata& setSubjectdistance(const int& arg){m_subjectDistance=arg;return *this;};
+        int64_t subjectdistance()const{return m_subjectDistance;};
+        ImageMediaMetadata& setSubjectdistance(const int64_t& arg){m_subjectDistance=arg;return *this;};
 
             /**
                 The lens used to create the photo.
@@ -193,18 +193,18 @@ namespace files{
             /**
                 The width of the image in pixels.
             */
-        int m_width = {0};
+        int64_t m_width = {0};
 
             /**
                 The height of the image in pixels.
             */
-        int m_height = {0};
+        int64_t m_height = {0};
 
             /**
                 The rotation in clockwise degrees from the image's original
                 orientation.
             */
-        int m_rotation = {0};
+        int64_t m_rotation = {0};
 
             /**
                 Geographic location information stored in the image.
@@ -244,7 +244,7 @@ namespace files{
             /**
                 The ISO speed used to create the photo.
             */
-        int m_isoSpeed = {0};
+        int64_t m_isoSpeed = {0};
 
             /**
                 The metering mode used to create the photo.
@@ -285,7 +285,7 @@ namespace files{
             /**
                 The distance to the subject of the photo, in meters.
             */
-        int m_subjectDistance = {0};
+        int64_t m_subjectDistance = {0};
 
             /**
                 The lens used to create the photo.

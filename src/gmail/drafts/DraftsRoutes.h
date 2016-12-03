@@ -27,7 +27,8 @@ namespace drafts{
 
             */
         std::unique_ptr<DraftResource> get(const gmail::IdArg& arg);
-        void get_Async(
+        GoogleTask<DraftResource>* get_Async(const gmail::IdArg& arg);
+        void get_AsyncCB(
             const gmail::IdArg&,
             std::function<void(std::unique_ptr<DraftResource>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
@@ -40,7 +41,8 @@ namespace drafts{
 
             */
         std::unique_ptr<DraftListRes> list(const gmail::DraftListArg& arg);
-        void list_Async(
+        GoogleTask<DraftListRes>* list_Async(const gmail::DraftListArg& arg);
+        void list_AsyncCB(
             const gmail::DraftListArg&,
             std::function<void(std::unique_ptr<DraftListRes>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);

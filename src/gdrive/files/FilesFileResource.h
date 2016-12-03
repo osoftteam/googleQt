@@ -197,8 +197,8 @@ namespace files{
                 reflects every change made to the file on the server, even those
                 not visible to the user.
             */
-        int version()const{return m_version;};
-        FileResource& setVersion(const int& arg){m_version=arg;return *this;};
+        int64_t version()const{return m_version;};
+        FileResource& setVersion(const int64_t& arg){m_version=arg;return *this;};
 
             /**
                 A link for downloading the content of the file in a browser.
@@ -361,16 +361,16 @@ namespace files{
                 The size of the file's content in bytes. This is only applicable
                 to files with binary content in Drive.
             */
-        int size()const{return m_size;};
-        FileResource& setSize(const int& arg){m_size=arg;return *this;};
+        int64_t size()const{return m_size;};
+        FileResource& setSize(const int64_t& arg){m_size=arg;return *this;};
 
             /**
                 The number of storage quota bytes used by the file. This
                 includes the head revision as well as previous revisions with
                 keepForever enabled.
             */
-        int quotabytesused()const{return m_quotaBytesUsed;};
-        FileResource& setQuotabytesused(const int& arg){m_quotaBytesUsed=arg;return *this;};
+        int64_t quotabytesused()const{return m_quotaBytesUsed;};
+        FileResource& setQuotabytesused(const int64_t& arg){m_quotaBytesUsed=arg;return *this;};
 
             /**
                 The ID of the file's head revision. This is currently only
@@ -491,7 +491,7 @@ namespace files{
                 reflects every change made to the file on the server, even those
                 not visible to the user.
             */
-        int m_version = {0};
+        int64_t m_version = {0};
 
             /**
                 A link for downloading the content of the file in a browser.
@@ -632,14 +632,14 @@ namespace files{
                 The size of the file's content in bytes. This is only applicable
                 to files with binary content in Drive.
             */
-        int m_size = {0};
+        int64_t m_size = {0};
 
             /**
                 The number of storage quota bytes used by the file. This
                 includes the head revision as well as previous revisions with
                 keepForever enabled.
             */
-        int m_quotaBytesUsed = {0};
+        int64_t m_quotaBytesUsed = {0};
 
             /**
                 The ID of the file's head revision. This is currently only
