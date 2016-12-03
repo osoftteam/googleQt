@@ -17,16 +17,16 @@ namespace googleQt{
     public:
         Endpoint(googleQt::ApiClient* c);       
 
-		/**
-			let compiler bind right endpoint function
-		*/
-        DECL_STD_BOUND_TASK_CB		(postStyle);
-        DECL_STD_BOUND_TASK_CB		(putStyle);
-        DECL_STD_BOUND_TASK_CB		(rfc822UploadStyle);
-        DECL_BODYLESS_BOUND_TASK_CB	(getStyle);
-        DECL_BODYLESS_BOUND_TASK_CB	(postStyle);
-		DECL_VOID_BOUND_TASK_CB		(postStyle);
-		DECL_VOID_BOUND_TASK_CB		(deleteStyle);
+        /**
+            let compiler bind right endpoint function
+        */
+        DECL_STD_BOUND_TASK_CB      (postStyle);
+        DECL_STD_BOUND_TASK_CB      (putStyle);
+        DECL_STD_BOUND_TASK_CB      (rfc822UploadStyle);
+        DECL_BODYLESS_BOUND_TASK_CB (getStyle);
+        DECL_BODYLESS_BOUND_TASK_CB (postStyle);
+        DECL_VOID_BOUND_TASK_CB     (postStyle);
+        DECL_VOID_BOUND_TASK_CB     (deleteStyle);
 
         template <class RES, class RESULT_FACTORY>
         void getStyle(QUrl url,

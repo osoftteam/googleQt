@@ -287,6 +287,27 @@ namespace googleQt{
     std::unique_ptr<GoogleException> ex;            \
     std::unique_ptr<REST> result;                   \
     AFUNC(ARGV, BODY_VAL,                           \
+          [this, &result](std::unique_ptr<REST> r)  \
+          {                                         \
+              result = std::move(r);                \
+              m_end_point->exitEventsLoop();        \
+          },                                        \
+          [&](std::unique_ptr<GoogleException> e)   \
+          {                                         \
+              ex = std::move(e);                    \
+              m_end_point->exitEventsLoop();        \
+          }                                         \
+          );                                        \
+    if(!ex && !result)                              \
+        m_end_point->runEventsLoop();               \
+    if (ex)                                         \
+        ex->raise();                                \
+    return result;                                  \
+
+#define BODY_NO_ARG_ARG_GBC(AFUNC, REST, BODY_VAL)  \
+    std::unique_ptr<GoogleException> ex;            \
+    std::unique_ptr<REST> result;                   \
+    AFUNC(BODY_VAL,                                 \
         [this, &result](std::unique_ptr<REST> r)    \
     {                                               \
     result = std::move(r);                          \
@@ -304,10 +325,12 @@ namespace googleQt{
         ex->raise();                                \
     return result;                                  \
 
-#define BODY_NO_ARG_ARG_GBC(AFUNC, REST, BODY_VAL)  \
+
+#define DATA_GBC(AFUNC, REST, ARGV, DATA)           \
     std::unique_ptr<GoogleException> ex;            \
     std::unique_ptr<REST> result;                   \
-    AFUNC(BODY_VAL,                                 \
+    AFUNC(ARGV,                                     \
+          DATA,                                     \
           [this, &result](std::unique_ptr<REST> r)  \
           {                                         \
               result = std::move(r);                \
@@ -326,45 +349,22 @@ namespace googleQt{
     return result;                                  \
 
 
-#define DATA_GBC(AFUNC, REST, ARGV, DATA)           \
-    std::unique_ptr<GoogleException> ex;            \
-    std::unique_ptr<REST> result;                   \
-    AFUNC(ARGV,                                     \
-        DATA,                                       \
-        [this, &result](std::unique_ptr<REST> r)    \
-    {                                               \
-    result = std::move(r);                          \
-    m_end_point->exitEventsLoop();                  \
-},                                                  \
-        [&](std::unique_ptr<GoogleException> e)     \
-    {                                               \
-    ex = std::move(e);                              \
-    m_end_point->exitEventsLoop();                  \
-}                                                   \
-        );                                          \
-    if(!ex && !result)                              \
-        m_end_point->runEventsLoop();               \
-    if (ex)                                         \
-        ex->raise();                                \
-    return result;                                  \
-
-
 #define VOID_RESULT_ARG_WITH_DATA_GBC(AFUNC, ARGV, DATA)    \
     std::unique_ptr<GoogleException> ex;                    \
     bool completed = false;                                 \
     AFUNC(ARGV,                                             \
-          DATA,                                             \
-          [this, &completed](void)                          \
-          {                                                 \
-              completed = true;;                            \
-              m_end_point->exitEventsLoop();                \
-          },                                                \
-          [&](std::unique_ptr<GoogleException> e)           \
-          {                                                 \
-              ex = std::move(e);                            \
-              m_end_point->exitEventsLoop();                \
-          }                                                 \
-          );                                                \
+        DATA,                                               \
+        [this, &completed](void)                            \
+    {                                                       \
+    completed = true;;                                      \
+    m_end_point->exitEventsLoop();                          \
+},                                                          \
+        [&](std::unique_ptr<GoogleException> e)             \
+    {                                                       \
+    ex = std::move(e);                                      \
+    m_end_point->exitEventsLoop();                          \
+}                                                           \
+        );                                                  \
     if(!ex && !completed)                                   \
         m_end_point->runEventsLoop();                       \
     if (ex)                                                 \
@@ -407,10 +407,10 @@ namespace googleQt{
               m_end_point->exitEventsLoop();        \
           }                                         \
           );                                        \
-    if(!ex && !completed)                           \
-        m_end_point->runEventsLoop();               \
-    if (ex)                                         \
-        ex->raise();                                \
+          if(!ex && !completed)                     \
+              m_end_point->runEventsLoop();         \
+          if (ex)                                   \
+              ex->raise();                          \
 
 }
 
@@ -458,7 +458,7 @@ namespace googleQt{
                 t->failed_callback(std::move(ex));                      \
             };                                                          \
                                                                         \
-        ENDP_FUNC<RES, RESULT_FACTORY>									\
+        ENDP_FUNC<RES, RESULT_FACTORY>                                  \
             (url, completed_CB, failed_CB);                             \
     }                                                                   \
 
