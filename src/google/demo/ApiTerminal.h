@@ -76,7 +76,7 @@ std::cout << " " << m_prompt << "> ";
                     }
             };
 
-            std::string pad(std::string s, const size_t num, const char paddingChar = ' ')
+            static std::string pad(std::string s, size_t num, char paddingChar = ' ')
             {
                 std::string str = s;
                 if(num > str.size())
@@ -84,6 +84,16 @@ std::cout << " " << m_prompt << "> ";
                 return str;
             }
 
+            static QString pad(QString s, size_t num, char paddingChar = ' ')
+            {
+                return s.leftJustified(num, paddingChar, false);
+            }
+            static QString pad_trunc(QString s, size_t num, char paddingChar = ' ')
+            {
+                return s.leftJustified(num, paddingChar, true);
+            }
+
+            
         protected:
             SELECTION_LIST  m_sel;
             SELECTION_MAP   m_sel_map;

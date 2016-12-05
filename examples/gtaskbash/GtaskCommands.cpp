@@ -12,6 +12,7 @@
 
 using namespace googleQt;
 using namespace gtask;
+using namespace demo;
 
 GtaskCommands::GtaskCommands(GoogleClient& c):m_c(c)
 {
@@ -52,16 +53,18 @@ void GtaskCommands::ls(QString tasklist_arg)
         arg.setShowDeleted(showDeleted);
         arg.setShowHidden(showHidden);
         auto tasks_col = m_gt->getTasks()->list(arg);
-        std::cout << "total tasks in list: " << tasks_col->items().size() << std::endl;
+        std::cout << tasklist << " [" << tasks_col->items().size() << "]" << std::endl;
         int idx = 1;
         for (auto t : tasks_col->items())
         {
             tasks::TaskResource& r = t;
-            std::cout << idx++ << ". id=" << r.id() << " etag=" << r.etag() << " title=" << r.title();
+            std::cout << idx++ << ". " << Terminal::pad_trunc(r.title(), 20)
+                      << " " << Terminal::pad(r.id(), 50)
+                      << " " << Terminal::pad(r.etag(), 60);
+            std::cout << " [" << t.updated().toString(Qt::SystemLocaleShortDate) << "] ";
             if(r.deleted()){
                 std::cout << " [deleted]";
-            }
-            std::cout << " updated=" << t.updated().toString();
+            }            
             std::cout << std::endl;
         }
         QString nextToken = tasks_col->nextpagetoken();
@@ -237,10 +240,26 @@ void GtaskCommands::ls_tlist(QString pageToken)
 
         auto task_lists_col = m_gt->getTasklists()->list(arg);
         int idx = 1;
+        std::cout << "tasklists [" << task_lists_col->items().size() << "]" << std::endl;
+        std::cout << Terminal::pad(QString(""), 150, '-') << std::endl;
+        if(task_lists_col->items().size() > 0)
+            {
+                std::cout << "#" << " " << Terminal::pad_trunc(QString("title"), 20)
+                          << " " << Terminal::pad(QString("id"), 50)
+                          << " " << Terminal::pad(QString("etag"), 60)
+                          << "  " << "updated"
+                          << std::endl;
+            }
+        std::cout << Terminal::pad(QString(""), 150, '-') << std::endl;
+
         for (auto t : task_lists_col->items())
         {
             tasklists::TaskListResource& r = t;
-            std::cout << idx++ << ". id=" << r.id() << " etag=" << r.etag() << " title=" << t.title() << " " << t.updated().toString() << std::endl;
+            std::cout << idx++ << ". " << Terminal::pad_trunc(r.title(), 20)
+                      << " " << Terminal::pad(r.id(), 50)
+                      << " " << Terminal::pad(r.etag(), 60);
+            std::cout << " [" << t.updated().toString(Qt::SystemLocaleShortDate) << "] ";
+            std::cout << std::endl;
         }
         QString nextToken = task_lists_col->nextpagetoken();
         if (!nextToken.isEmpty()) {
