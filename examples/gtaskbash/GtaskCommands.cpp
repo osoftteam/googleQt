@@ -54,18 +54,14 @@ void GtaskCommands::ls(QString tasklist_arg)
         arg.setShowHidden(showHidden);
         auto tasks_col = m_gt->getTasks()->list(arg);
         std::cout << tasklist << " [" << tasks_col->items().size() << "]" << std::endl;
+        std::cout << Terminal::pad(QString(""), 80, '-') << std::endl;
         int idx = 1;
         for (auto t : tasks_col->items())
         {
             tasks::TaskResource& r = t;
-            std::cout << idx++ << ". " << Terminal::pad_trunc(r.title(), 20)
+            std::cout << idx++ << ". " << Terminal::pad_trunc(r.title(), 30)
                       << " " << Terminal::pad(r.id(), 50)
-                      << " " << Terminal::pad(r.etag(), 60);
-            std::cout << " [" << t.updated().toString(Qt::SystemLocaleShortDate) << "] ";
-            if(r.deleted()){
-                std::cout << " [deleted]";
-            }            
-            std::cout << std::endl;
+                      << std::endl;
         }
         QString nextToken = tasks_col->nextpagetoken();
         if (!nextToken.isEmpty()) {
@@ -241,25 +237,21 @@ void GtaskCommands::ls_tlist(QString pageToken)
         auto task_lists_col = m_gt->getTasklists()->list(arg);
         int idx = 1;
         std::cout << "tasklists [" << task_lists_col->items().size() << "]" << std::endl;
-        std::cout << Terminal::pad(QString(""), 150, '-') << std::endl;
+        std::cout << Terminal::pad(QString(""), 80, '-') << std::endl;
         if(task_lists_col->items().size() > 0)
             {
-                std::cout << "#" << " " << Terminal::pad_trunc(QString("title"), 20)
+                std::cout << "#" << " " << Terminal::pad_trunc(QString("title"), 30)
                           << " " << Terminal::pad(QString("id"), 50)
-                          << " " << Terminal::pad(QString("etag"), 60)
-                          << "  " << "updated"
                           << std::endl;
             }
-        std::cout << Terminal::pad(QString(""), 150, '-') << std::endl;
+        std::cout << Terminal::pad(QString(""), 80, '-') << std::endl;
 
         for (auto t : task_lists_col->items())
         {
             tasklists::TaskListResource& r = t;
-            std::cout << idx++ << ". " << Terminal::pad_trunc(r.title(), 20)
+            std::cout << idx++ << ". " << Terminal::pad_trunc(r.title(), 30)
                       << " " << Terminal::pad(r.id(), 50)
-                      << " " << Terminal::pad(r.etag(), 60);
-            std::cout << " [" << t.updated().toString(Qt::SystemLocaleShortDate) << "] ";
-            std::cout << std::endl;
+                      << std::endl;
         }
         QString nextToken = task_lists_col->nextpagetoken();
         if (!nextToken.isEmpty()) {
@@ -346,27 +338,28 @@ void GtaskCommands::update_tlist(QString tlistid_space_title)
     }
 };
 
-void GtaskCommands::printTask(tasks::TaskResource* t) 
+void GtaskCommands::printTask(tasks::TaskResource* r) 
 {
-    std::cout << t->id() << " title=" << t->title() << " updated=" << t->updated().toString() << std::endl;
-    std::cout << "etag=" << t->etag() << std::endl;
-    std::cout << "selflink=" << t->selflink() << std::endl;
-    std::cout << "parent=" << t->parent() << std::endl;
-    std::cout << "position=" << t->position() << std::endl;
-    std::cout << "notes=" << t->notes() << std::endl;
-    std::cout << "status=" << t->status() << std::endl;
-    std::cout << "due=" << t->due().toString() << std::endl;
-    std::cout << "completed=" << t->completed().toString() << std::endl;
-    std::cout << "deleted=" << (t->deleted() ? "true" : "false") << std::endl;
-    std::cout << "hidden=" << (t->hidden() ? "true" : "false") << std::endl;
-    if (t->links().size() > 0)
-    {
-        std::cout << "links-count" << t->links().size() << std::endl;
-    }
+    std::cout << Terminal::pad("id", 15) << r->id() << std::endl
+              << Terminal::pad("title", 15) << r->title() << std::endl
+              << Terminal::pad("etag", 15) << r->etag() << std::endl
+              << Terminal::pad("updated", 15) << r->updated().toString(Qt::SystemLocaleShortDate) << std::endl
+              << Terminal::pad("selflink", 15) << r->selflink() << std::endl
+              << Terminal::pad("parent", 15) << r->parent() << std::endl
+              << Terminal::pad("notes", 15) << r->notes() << std::endl
+              << Terminal::pad("due", 15) << r->due().toString() << std::endl
+              << Terminal::pad("completed", 15) << r->completed().toString() << std::endl
+              << Terminal::pad("deleted", 15) << (r->deleted() ? "true" : "false") << std::endl
+              << Terminal::pad("completed", 15) << "hidden=" << (r->hidden() ? "true" : "false") << std::endl
+              << std::endl;
 };
+
 
 void GtaskCommands::printTaskList(tasklists::TaskListResource* r)
 {
-    std::cout << r->id() << " title=" << r->title() << " " << r->updated().toString() << std::endl;
-    std::cout << "selflink=" << r->selflink() << std::endl;
+    std::cout << Terminal::pad("id", 15) << r->id() << std::endl
+              << Terminal::pad("title", 15) << r->title() << std::endl
+              << Terminal::pad("etag", 15) << r->etag() << std::endl
+              << Terminal::pad("updated", 15) << r->updated().toString(Qt::SystemLocaleShortDate) << std::endl
+              << Terminal::pad("selflink", 15) << r->selflink() << std::endl;
 };

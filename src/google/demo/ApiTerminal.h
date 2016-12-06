@@ -88,11 +88,16 @@ std::cout << " " << m_prompt << "> ";
             {
                 return s.leftJustified(num, paddingChar, false);
             }
+            
+            static QString pad(const char* s, size_t num, char paddingChar = ' ')
+            {
+                return pad(QString(s), num, paddingChar);
+            }
+            
             static QString pad_trunc(QString s, size_t num, char paddingChar = ' ')
             {
                 return s.leftJustified(num, paddingChar, true);
             }
-
             
         protected:
             SELECTION_LIST  m_sel;

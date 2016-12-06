@@ -34,6 +34,8 @@ void GmailCommands::listMessages(QString nextToken, QString labelIds)
             for(auto m : mlist->messages())
                 {
                     msgID.setId(m.id());
+                    std::cout << n << ". " << m.id() << std::endl;
+                    /*
                     auto msg_resource = m_gm->getMessages()->get(msgID);
                     auto payload = msg_resource->payload();
                     auto header_list = payload.headers();
@@ -44,6 +46,7 @@ void GmailCommands::listMessages(QString nextToken, QString labelIds)
                                       << " ";
                         }
                     std::cout << std::endl;
+                    */
                     
                     n++;
                 }
