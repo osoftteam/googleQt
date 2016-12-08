@@ -283,7 +283,27 @@ void GmailCommands::get(QString msg_id)
     
     try
         {
-            auto r = m_gm->getMessages()->get(msg_id);
+            auto r = m_gm->getMessages()->get(gmail::IdArg(msg_id));
+            printMessage(r.get());
+            m_c.printLastApiCall();
+        }
+    catch(GoogleException& e)
+        {
+            std::cout << "Exception: " << e.what() << std::endl;
+        }            
+};
+
+void GmailCommands::get_raw(QString msg_id)
+{
+    if(msg_id.isEmpty())
+        {
+            std::cout << "Missing parameters, expected <message_id>" << std::endl;
+            return;
+        }
+    
+    try
+        {
+            auto r = m_gm->getMessages()->get(gmail::IdArg(msg_id, "raw"));
             printMessage(r.get());
             m_c.printLastApiCall();
         }
@@ -463,4 +483,10 @@ void GmailCommands::get_draft(QString draft_id)
     {
         std::cout << "Exception: " << e.what() << std::endl;
     }
+};
+
+
+void GmailCommands::export_last_result(QString fileName)
+{
+    m_c.exportLast200Response(fileName);
 };

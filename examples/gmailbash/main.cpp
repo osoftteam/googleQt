@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
     t.addAction("ls",               "List Mesages", [&](QString arg) {cmd.ls(arg);} );
     t.addAction("ls_by_labels",     "List Mesages by label ID", [&](QString arg) {cmd.ls_by_labels(arg);} );
     t.addAction("get",              "Get Mesage by ID", [&](QString arg) {cmd.get(arg);} );
+    t.addAction("get_raw",          "Get Mesage by ID using raw format", [&](QString arg) {cmd.get(arg);} );
     t.addAction("trash",            "Trash Mesage by ID", [&](QString arg) {cmd.trash(arg); });
     t.addAction("untrash",          "Untrash Mesage by ID", [&](QString arg) {cmd.untrash(arg); });
     t.addAction("send",             "Send Mesage", [&](QString arg) {cmd.send(arg); });
@@ -77,7 +78,10 @@ int main(int argc, char *argv[])
     t.addAction("ls_drafts",        "List Drafts", [&](QString arg) {cmd.ls_drafts(arg); });
     t.addAction("get_draft",        "Get Draft Info", [&](QString arg) {cmd.get_draft(arg); });
     t.addAction("history",          "Get Mailbox History", [&](QString arg) {cmd.history(arg); });
+    t.addAction("------------", "-------------", [&](QString ) {});
+    t.addAction("export_last_result",   "Export last response to a file", [&](QString arg) {cmd.export_last_result(arg); });
 
+    
     t.start();
     return 0;
 }

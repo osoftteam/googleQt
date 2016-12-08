@@ -31,10 +31,15 @@ public:
     void ls_by_labels(QString labelIds);
     
     /**
-       get - get message by id
+       get - get message by id using default (full) format
     */
     void get    (QString message_id);
 
+    /**
+       get_raw - get message by id using raw format
+    */
+    void get_raw    (QString message_id);
+    
     /**
         send - send new message, the body of the message should be stored
         in a text file
@@ -113,6 +118,8 @@ public:
     */
     void history(QString startHistoryIdStr);
 
+    void export_last_result(QString fileName);
+    
 protected:
     void listMessages(QString nextToken, QString labelIds);
     void listThreads(QString nextToken, QString labelIds);
