@@ -5,8 +5,9 @@ using namespace googleQt;
 using namespace gmail;
 
 
-IdArg::IdArg(QString idValue)
-    :m_id(idValue)
+IdArg::IdArg(QString idValue, QString format)
+    :m_id(idValue),
+     m_format(format)
 {
 
 };

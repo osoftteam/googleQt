@@ -11,12 +11,12 @@ using namespace googleQt;
 using namespace permissions;
 
 std::unique_ptr<ResourcePermission> PermissionsRoutes::create(const gdrive::CreatePermissionArg& arg, const ResourcePermission& body){
-    BODY_ARG_GBC(create_AsyncCB, ResourcePermission, arg, body);
+    return create_Async(arg, body)->waitForResultAndRelease();
 }
 
 GoogleTask<ResourcePermission>* PermissionsRoutes::create_Async(const gdrive::CreatePermissionArg& arg, const ResourcePermission& body)
 {
-    GoogleTask<ResourcePermission>* t = new GoogleTask<ResourcePermission>();
+    GoogleTask<ResourcePermission>* t = m_end_point->produceTask<ResourcePermission>();
     m_end_point->postStyle<
         ResourcePermission,
         ResourcePermission::factory,
@@ -46,12 +46,12 @@ void PermissionsRoutes::create_AsyncCB(
 }
 
 void PermissionsRoutes::deleteOperation(const gdrive::PermissionArg& arg ){
-    VOID_RESULT_GBC(deleteOperation_AsyncCB, arg);
+    deleteOperation_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleVoidTask* PermissionsRoutes::deleteOperation_Async(const gdrive::PermissionArg& arg)
 {
-    GoogleVoidTask* t = new GoogleVoidTask();
+    GoogleVoidTask* t = m_end_point->produceVoidTask();
     m_end_point->deleteStyle
         (m_end_point->buildGdriveUrl("permissions", arg),
         t);
@@ -70,12 +70,12 @@ void PermissionsRoutes::deleteOperation_AsyncCB(
 }
 
 std::unique_ptr<ResourcePermission> PermissionsRoutes::get(const gdrive::PermissionArg& arg){
-    GOOGLE_BLOCKING_CALL(get_AsyncCB, ResourcePermission, arg);
+    return get_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<ResourcePermission>* PermissionsRoutes::get_Async(const gdrive::PermissionArg& arg)
 {
-    GoogleTask<ResourcePermission>* t = new GoogleTask<ResourcePermission>();
+    GoogleTask<ResourcePermission>* t = m_end_point->produceTask<ResourcePermission>();
     m_end_point->getStyle<
         ResourcePermission,
         ResourcePermission::factory
@@ -101,12 +101,12 @@ void PermissionsRoutes::get_AsyncCB(
 }
 
 std::unique_ptr<PermissionResourcesCollection> PermissionsRoutes::list(const gdrive::PermissionListArg& arg){
-    GOOGLE_BLOCKING_CALL(list_AsyncCB, PermissionResourcesCollection, arg);
+    return list_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<PermissionResourcesCollection>* PermissionsRoutes::list_Async(const gdrive::PermissionListArg& arg)
 {
-    GoogleTask<PermissionResourcesCollection>* t = new GoogleTask<PermissionResourcesCollection>();
+    GoogleTask<PermissionResourcesCollection>* t = m_end_point->produceTask<PermissionResourcesCollection>();
     m_end_point->getStyle<
         PermissionResourcesCollection,
         PermissionResourcesCollection::factory

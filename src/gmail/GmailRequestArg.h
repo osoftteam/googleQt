@@ -158,13 +158,25 @@ namespace googleQt{
         {
         public:
             IdArg(){};
-            IdArg(QString idValue);
-            //virtual QString arg()const;
+            IdArg(QString idValue, QString format = "full");
+
             void build(const QString& link_path, QUrl& url)const override;
 
             QString getId()const { return m_id; }
             void    setId(QString id) { m_id = id; };
 
+            /**
+               "full": Returns the full email message data with body content 
+               parsed in the payload field; the raw field is not used. (default)
+               "metadata": Returns only email message ID, labels, and email 
+               headers.
+               "minimal": Returns only email message ID and labels; does not
+               return the email headers, body, or payload.
+               "raw": Returns the full email message data with body content 
+               in the raw field as a base64url encoded string; the payload 
+               field is not used.
+             */
+            
             QString      getFormat()const{return m_format;}
             void         setFormat(QString f){m_format = f;}
             QStringList& headers(){return m_headers;}

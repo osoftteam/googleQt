@@ -11,12 +11,12 @@ using namespace googleQt;
 using namespace tasks;
 
 void TasksRoutes::clear(const gtask::TaskListClearArg& arg ){
-    VOID_RESULT_GBC(clear_AsyncCB, arg);
+    clear_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleVoidTask* TasksRoutes::clear_Async(const gtask::TaskListClearArg& arg)
 {
-    GoogleVoidTask* t = new GoogleVoidTask();
+    GoogleVoidTask* t = m_end_point->produceVoidTask();
     m_end_point->postStyle
         (m_end_point->buildGtaskUrl("tasks", arg),
         t);
@@ -35,12 +35,12 @@ void TasksRoutes::clear_AsyncCB(
 }
 
 void TasksRoutes::deleteOperation(const gtask::TaskIdArg& arg ){
-    VOID_RESULT_GBC(deleteOperation_AsyncCB, arg);
+    deleteOperation_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleVoidTask* TasksRoutes::deleteOperation_Async(const gtask::TaskIdArg& arg)
 {
-    GoogleVoidTask* t = new GoogleVoidTask();
+    GoogleVoidTask* t = m_end_point->produceVoidTask();
     m_end_point->deleteStyle
         (m_end_point->buildGtaskUrl("tasks", arg),
         t);
@@ -59,12 +59,12 @@ void TasksRoutes::deleteOperation_AsyncCB(
 }
 
 std::unique_ptr<TaskResource> TasksRoutes::get(const gtask::TaskIdArg& arg){
-    GOOGLE_BLOCKING_CALL(get_AsyncCB, TaskResource, arg);
+    return get_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<TaskResource>* TasksRoutes::get_Async(const gtask::TaskIdArg& arg)
 {
-    GoogleTask<TaskResource>* t = new GoogleTask<TaskResource>();
+    GoogleTask<TaskResource>* t = m_end_point->produceTask<TaskResource>();
     m_end_point->getStyle<
         TaskResource,
         TaskResource::factory
@@ -90,12 +90,12 @@ void TasksRoutes::get_AsyncCB(
 }
 
 std::unique_ptr<TaskResource> TasksRoutes::insert(const gtask::TaskListIdArg& arg, const TaskResource& body){
-    BODY_ARG_GBC(insert_AsyncCB, TaskResource, arg, body);
+    return insert_Async(arg, body)->waitForResultAndRelease();
 }
 
 GoogleTask<TaskResource>* TasksRoutes::insert_Async(const gtask::TaskListIdArg& arg, const TaskResource& body)
 {
-    GoogleTask<TaskResource>* t = new GoogleTask<TaskResource>();
+    GoogleTask<TaskResource>* t = m_end_point->produceTask<TaskResource>();
     m_end_point->postStyle<
         TaskResource,
         TaskResource::factory,
@@ -125,12 +125,12 @@ void TasksRoutes::insert_AsyncCB(
 }
 
 std::unique_ptr<TaskCollectionRes> TasksRoutes::list(const gtask::TaskListArg& arg){
-    GOOGLE_BLOCKING_CALL(list_AsyncCB, TaskCollectionRes, arg);
+    return list_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<TaskCollectionRes>* TasksRoutes::list_Async(const gtask::TaskListArg& arg)
 {
-    GoogleTask<TaskCollectionRes>* t = new GoogleTask<TaskCollectionRes>();
+    GoogleTask<TaskCollectionRes>* t = m_end_point->produceTask<TaskCollectionRes>();
     m_end_point->getStyle<
         TaskCollectionRes,
         TaskCollectionRes::factory
@@ -156,12 +156,12 @@ void TasksRoutes::list_AsyncCB(
 }
 
 std::unique_ptr<TaskResource> TasksRoutes::move(const gtask::TaskMoveArg& arg){
-    GOOGLE_BLOCKING_CALL(move_AsyncCB, TaskResource, arg);
+    return move_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<TaskResource>* TasksRoutes::move_Async(const gtask::TaskMoveArg& arg)
 {
-    GoogleTask<TaskResource>* t = new GoogleTask<TaskResource>();
+    GoogleTask<TaskResource>* t = m_end_point->produceTask<TaskResource>();
     m_end_point->postStyle<
         TaskResource,
         TaskResource::factory
@@ -187,12 +187,12 @@ void TasksRoutes::move_AsyncCB(
 }
 
 std::unique_ptr<TaskResource> TasksRoutes::update(const gtask::TaskIdArg& arg, const TaskResource& body){
-    BODY_ARG_GBC(update_AsyncCB, TaskResource, arg, body);
+    return update_Async(arg, body)->waitForResultAndRelease();
 }
 
 GoogleTask<TaskResource>* TasksRoutes::update_Async(const gtask::TaskIdArg& arg, const TaskResource& body)
 {
-    GoogleTask<TaskResource>* t = new GoogleTask<TaskResource>();
+    GoogleTask<TaskResource>* t = m_end_point->produceTask<TaskResource>();
     m_end_point->putStyle<
         TaskResource,
         TaskResource::factory,

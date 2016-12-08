@@ -11,12 +11,12 @@ using namespace googleQt;
 using namespace labels;
 
 std::unique_ptr<LabelResource> LabelsRoutes::create(const LabelResource& body){
-    BODY_NO_ARG_ARG_GBC(create_AsyncCB, LabelResource, body);
+    return create_Async(body)->waitForResultAndRelease();
 }
 
 GoogleTask<LabelResource>* LabelsRoutes::create_Async(const LabelResource& body)
 {
-    GoogleTask<LabelResource>* t = new GoogleTask<LabelResource>();
+    GoogleTask<LabelResource>* t = m_end_point->produceTask<LabelResource>();
     m_end_point->postStyle<
         LabelResource,
         LabelResource::factory,
@@ -45,12 +45,12 @@ void LabelsRoutes::create_AsyncCB(
 }
 
 void LabelsRoutes::deleteOperation(const gmail::IdArg& arg ){
-    VOID_RESULT_GBC(deleteOperation_AsyncCB, arg);
+    deleteOperation_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleVoidTask* LabelsRoutes::deleteOperation_Async(const gmail::IdArg& arg)
 {
-    GoogleVoidTask* t = new GoogleVoidTask();
+    GoogleVoidTask* t = m_end_point->produceVoidTask();
     m_end_point->deleteStyle
         (m_end_point->buildGmailUrl("labels", arg),
         t);
@@ -69,12 +69,12 @@ void LabelsRoutes::deleteOperation_AsyncCB(
 }
 
 std::unique_ptr<LabelResource> LabelsRoutes::get(const gmail::IdArg& arg){
-    GOOGLE_BLOCKING_CALL(get_AsyncCB, LabelResource, arg);
+    return get_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<LabelResource>* LabelsRoutes::get_Async(const gmail::IdArg& arg)
 {
-    GoogleTask<LabelResource>* t = new GoogleTask<LabelResource>();
+    GoogleTask<LabelResource>* t = m_end_point->produceTask<LabelResource>();
     m_end_point->getStyle<
         LabelResource,
         LabelResource::factory
@@ -100,12 +100,12 @@ void LabelsRoutes::get_AsyncCB(
 }
 
 std::unique_ptr<LabelsResultList> LabelsRoutes::list(void){
-    VOID_ARG_GBC(list_AsyncCB, LabelsResultList);
+    return list_Async()->waitForResultAndRelease();
 }
 
 GoogleTask<LabelsResultList>* LabelsRoutes::list_Async()
 {
-    GoogleTask<LabelsResultList>* t = new GoogleTask<LabelsResultList>();
+    GoogleTask<LabelsResultList>* t = m_end_point->produceTask<LabelsResultList>();
     m_end_point->getStyle<
         LabelsResultList,
         LabelsResultList::factory
@@ -130,12 +130,12 @@ void LabelsRoutes::list_AsyncCB(
 }
 
 std::unique_ptr<LabelResource> LabelsRoutes::update(const gmail::IdArg& arg, const LabelResource& body){
-    BODY_ARG_GBC(update_AsyncCB, LabelResource, arg, body);
+    return update_Async(arg, body)->waitForResultAndRelease();
 }
 
 GoogleTask<LabelResource>* LabelsRoutes::update_Async(const gmail::IdArg& arg, const LabelResource& body)
 {
-    GoogleTask<LabelResource>* t = new GoogleTask<LabelResource>();
+    GoogleTask<LabelResource>* t = m_end_point->produceTask<LabelResource>();
     m_end_point->putStyle<
         LabelResource,
         LabelResource::factory,

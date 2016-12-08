@@ -11,12 +11,12 @@ using namespace googleQt;
 using namespace threads;
 
 std::unique_ptr<ThreadResource> ThreadsRoutes::get(const gmail::IdArg& arg){
-    GOOGLE_BLOCKING_CALL(get_AsyncCB, ThreadResource, arg);
+    return get_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<ThreadResource>* ThreadsRoutes::get_Async(const gmail::IdArg& arg)
 {
-    GoogleTask<ThreadResource>* t = new GoogleTask<ThreadResource>();
+    GoogleTask<ThreadResource>* t = m_end_point->produceTask<ThreadResource>();
     m_end_point->getStyle<
         ThreadResource,
         ThreadResource::factory
@@ -42,12 +42,12 @@ void ThreadsRoutes::get_AsyncCB(
 }
 
 std::unique_ptr<ThreadListRes> ThreadsRoutes::list(const gmail::ListArg& arg){
-    GOOGLE_BLOCKING_CALL(list_AsyncCB, ThreadListRes, arg);
+    return list_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<ThreadListRes>* ThreadsRoutes::list_Async(const gmail::ListArg& arg)
 {
-    GoogleTask<ThreadListRes>* t = new GoogleTask<ThreadListRes>();
+    GoogleTask<ThreadListRes>* t = m_end_point->produceTask<ThreadListRes>();
     m_end_point->getStyle<
         ThreadListRes,
         ThreadListRes::factory

@@ -11,12 +11,12 @@ using namespace googleQt;
 using namespace files;
 
 std::unique_ptr<FileResource> FilesRoutes::copy(const gdrive::CopyFileArg& arg, const FileResource& body){
-    BODY_ARG_GBC(copy_AsyncCB, FileResource, arg, body);
+    return copy_Async(arg, body)->waitForResultAndRelease();
 }
 
 GoogleTask<FileResource>* FilesRoutes::copy_Async(const gdrive::CopyFileArg& arg, const FileResource& body)
 {
-    GoogleTask<FileResource>* t = new GoogleTask<FileResource>();
+    GoogleTask<FileResource>* t = m_end_point->produceTask<FileResource>();
     m_end_point->postStyle<
         FileResource,
         FileResource::factory,
@@ -46,12 +46,12 @@ void FilesRoutes::copy_AsyncCB(
 }
 
 std::unique_ptr<FileResource> FilesRoutes::create(const gdrive::CreateFileArg& arg, const FileResource& body){
-    BODY_ARG_GBC(create_AsyncCB, FileResource, arg, body);
+    return create_Async(arg, body)->waitForResultAndRelease();
 }
 
 GoogleTask<FileResource>* FilesRoutes::create_Async(const gdrive::CreateFileArg& arg, const FileResource& body)
 {
-    GoogleTask<FileResource>* t = new GoogleTask<FileResource>();
+    GoogleTask<FileResource>* t = m_end_point->produceTask<FileResource>();
     m_end_point->postStyle<
         FileResource,
         FileResource::factory,
@@ -81,12 +81,12 @@ void FilesRoutes::create_AsyncCB(
 }
 
 void FilesRoutes::deleteOperation(const gdrive::DeleteFileArg& arg ){
-    VOID_RESULT_GBC(deleteOperation_AsyncCB, arg);
+    deleteOperation_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleVoidTask* FilesRoutes::deleteOperation_Async(const gdrive::DeleteFileArg& arg)
 {
-    GoogleVoidTask* t = new GoogleVoidTask();
+    GoogleVoidTask* t = m_end_point->produceVoidTask();
     m_end_point->deleteStyle
         (m_end_point->buildGdriveUrl("files", arg),
         t);
@@ -105,12 +105,12 @@ void FilesRoutes::deleteOperation_AsyncCB(
 }
 
 void FilesRoutes::downloadFile(const gdrive::DownloadFileArg& arg , QIODevice* data){
-    VOID_RESULT_ARG_WITH_DATA_GBC(downloadFile_AsyncCB, arg, data);
+    downloadFile_Async(arg, data)->waitForResultAndRelease();
 }
 
 GoogleVoidTask* FilesRoutes::downloadFile_Async(const gdrive::DownloadFileArg& arg, QIODevice* data)
 {
-    GoogleVoidTask* t = new GoogleVoidTask();
+    GoogleVoidTask* t = m_end_point->produceVoidTask();
     m_end_point->downloadStyle
         (m_end_point->buildGdriveUrl("files", arg),
         data,
@@ -132,12 +132,12 @@ void FilesRoutes::downloadFile_AsyncCB(
 }
 
 void FilesRoutes::emptyTrash(const gdrive::EmptyTrashArg& arg ){
-    VOID_RESULT_GBC(emptyTrash_AsyncCB, arg);
+    emptyTrash_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleVoidTask* FilesRoutes::emptyTrash_Async(const gdrive::EmptyTrashArg& arg)
 {
-    GoogleVoidTask* t = new GoogleVoidTask();
+    GoogleVoidTask* t = m_end_point->produceVoidTask();
     m_end_point->deleteStyle
         (m_end_point->buildGdriveUrl("files", arg),
         t);
@@ -156,12 +156,12 @@ void FilesRoutes::emptyTrash_AsyncCB(
 }
 
 std::unique_ptr<FileResource> FilesRoutes::get(const gdrive::GetFileArg& arg){
-    GOOGLE_BLOCKING_CALL(get_AsyncCB, FileResource, arg);
+    return get_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<FileResource>* FilesRoutes::get_Async(const gdrive::GetFileArg& arg)
 {
-    GoogleTask<FileResource>* t = new GoogleTask<FileResource>();
+    GoogleTask<FileResource>* t = m_end_point->produceTask<FileResource>();
     m_end_point->getStyle<
         FileResource,
         FileResource::factory
@@ -187,12 +187,12 @@ void FilesRoutes::get_AsyncCB(
 }
 
 std::unique_ptr<FileResourcesCollection> FilesRoutes::list(const gdrive::FileListArg& arg){
-    GOOGLE_BLOCKING_CALL(list_AsyncCB, FileResourcesCollection, arg);
+    return list_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<FileResourcesCollection>* FilesRoutes::list_Async(const gdrive::FileListArg& arg)
 {
-    GoogleTask<FileResourcesCollection>* t = new GoogleTask<FileResourcesCollection>();
+    GoogleTask<FileResourcesCollection>* t = m_end_point->produceTask<FileResourcesCollection>();
     m_end_point->getStyle<
         FileResourcesCollection,
         FileResourcesCollection::factory
@@ -218,12 +218,12 @@ void FilesRoutes::list_AsyncCB(
 }
 
 std::unique_ptr<FileResource> FilesRoutes::uploadFile(const FileResource& body, QIODevice* data){
-    DATA_GBC(uploadFile_AsyncCB, FileResource, body, data);
+    return uploadFile_Async(body, data)->waitForResultAndRelease();
 }
 
 GoogleTask<FileResource>* FilesRoutes::uploadFile_Async(const FileResource& body, QIODevice* data)
 {
-    GoogleTask<FileResource>* t = new GoogleTask<FileResource>();
+    GoogleTask<FileResource>* t = m_end_point->produceTask<FileResource>();
     m_end_point->mpartUploadStyle<
         FileResource,
         FileResource::factory,

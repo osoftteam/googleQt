@@ -11,12 +11,12 @@ using namespace googleQt;
 using namespace about;
 
 std::unique_ptr<AboutResource> AboutRoutes::get(const gdrive::AboutArg& arg){
-    GOOGLE_BLOCKING_CALL(get_AsyncCB, AboutResource, arg);
+    return get_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<AboutResource>* AboutRoutes::get_Async(const gdrive::AboutArg& arg)
 {
-    GoogleTask<AboutResource>* t = new GoogleTask<AboutResource>();
+    GoogleTask<AboutResource>* t = m_end_point->produceTask<AboutResource>();
     m_end_point->getStyle<
         AboutResource,
         AboutResource::factory

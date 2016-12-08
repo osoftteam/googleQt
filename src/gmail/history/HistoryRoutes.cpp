@@ -11,12 +11,12 @@ using namespace googleQt;
 using namespace history;
 
 std::unique_ptr<HistoryRecordList> HistoryRoutes::list(const gmail::HistoryListArg& arg){
-    GOOGLE_BLOCKING_CALL(list_AsyncCB, HistoryRecordList, arg);
+    return list_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<HistoryRecordList>* HistoryRoutes::list_Async(const gmail::HistoryListArg& arg)
 {
-    GoogleTask<HistoryRecordList>* t = new GoogleTask<HistoryRecordList>();
+    GoogleTask<HistoryRecordList>* t = m_end_point->produceTask<HistoryRecordList>();
     m_end_point->getStyle<
         HistoryRecordList,
         HistoryRecordList::factory

@@ -33,20 +33,20 @@ namespace users{
             /**
                 The total number of messages in the mailbox.
             */
-        int64_t messagestotal()const{return m_messagesTotal;};
-        GetProfileResponse& setMessagestotal(const int64_t& arg){m_messagesTotal=arg;return *this;};
+        int messagestotal()const{return m_messagesTotal;};
+        GetProfileResponse& setMessagestotal(const int& arg){m_messagesTotal=arg;return *this;};
 
             /**
                 The total number of threads in the mailbox.
             */
-        int64_t threadstotal()const{return m_threadsTotal;};
-        GetProfileResponse& setThreadstotal(const int64_t& arg){m_threadsTotal=arg;return *this;};
+        int threadstotal()const{return m_threadsTotal;};
+        GetProfileResponse& setThreadstotal(const int& arg){m_threadsTotal=arg;return *this;};
 
             /**
                 The ID of the mailbox's current history record.
             */
-        int64_t historyid()const{return m_historyId;};
-        GetProfileResponse& setHistoryid(const int64_t& arg){m_historyId=arg;return *this;};
+        int historyid()const{return m_historyId;};
+        GetProfileResponse& setHistoryid(const int& arg){m_historyId=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -76,17 +76,17 @@ namespace users{
             /**
                 The total number of messages in the mailbox.
             */
-        int64_t m_messagesTotal = {0};
+        int m_messagesTotal = {0};
 
             /**
                 The total number of threads in the mailbox.
             */
-        int64_t m_threadsTotal = {0};
+        int m_threadsTotal = {0};
 
             /**
                 The ID of the mailbox's current history record.
             */
-        int64_t m_historyId = {0};
+        int m_historyId = {0};
 
     };//GetProfileResponse
 

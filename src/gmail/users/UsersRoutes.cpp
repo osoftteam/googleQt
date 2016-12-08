@@ -11,12 +11,12 @@ using namespace googleQt;
 using namespace users;
 
 std::unique_ptr<GetProfileResponse> UsersRoutes::profile(void){
-    VOID_ARG_GBC(profile_AsyncCB, GetProfileResponse);
+    return profile_Async()->waitForResultAndRelease();
 }
 
 GoogleTask<GetProfileResponse>* UsersRoutes::profile_Async()
 {
-    GoogleTask<GetProfileResponse>* t = new GoogleTask<GetProfileResponse>();
+    GoogleTask<GetProfileResponse>* t = m_end_point->produceTask<GetProfileResponse>();
     m_end_point->getStyle<
         GetProfileResponse,
         GetProfileResponse::factory

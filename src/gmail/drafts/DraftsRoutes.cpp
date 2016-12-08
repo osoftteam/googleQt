@@ -11,12 +11,12 @@ using namespace googleQt;
 using namespace drafts;
 
 std::unique_ptr<DraftResource> DraftsRoutes::get(const gmail::IdArg& arg){
-    GOOGLE_BLOCKING_CALL(get_AsyncCB, DraftResource, arg);
+    return get_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<DraftResource>* DraftsRoutes::get_Async(const gmail::IdArg& arg)
 {
-    GoogleTask<DraftResource>* t = new GoogleTask<DraftResource>();
+    GoogleTask<DraftResource>* t = m_end_point->produceTask<DraftResource>();
     m_end_point->getStyle<
         DraftResource,
         DraftResource::factory
@@ -42,12 +42,12 @@ void DraftsRoutes::get_AsyncCB(
 }
 
 std::unique_ptr<DraftListRes> DraftsRoutes::list(const gmail::DraftListArg& arg){
-    GOOGLE_BLOCKING_CALL(list_AsyncCB, DraftListRes, arg);
+    return list_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<DraftListRes>* DraftsRoutes::list_Async(const gmail::DraftListArg& arg)
 {
-    GoogleTask<DraftListRes>* t = new GoogleTask<DraftListRes>();
+    GoogleTask<DraftListRes>* t = m_end_point->produceTask<DraftListRes>();
     m_end_point->getStyle<
         DraftListRes,
         DraftListRes::factory

@@ -40,8 +40,8 @@ namespace threads{
             /**
                 The ID of the last history record that modified this thread.
             */
-        int64_t historyid()const{return m_historyId;};
-        ThreadResource& setHistoryid(const int64_t& arg){m_historyId=arg;return *this;};
+        int historyid()const{return m_historyId;};
+        ThreadResource& setHistoryid(const int& arg){m_historyId=arg;return *this;};
 
         const std::list <messages::MessageResource>& messages()const{return m_messages;};
         ThreadResource& setMessages(const std::list <messages::MessageResource>& arg){m_messages=arg;return *this;};
@@ -79,7 +79,7 @@ namespace threads{
             /**
                 The ID of the last history record that modified this thread.
             */
-        int64_t m_historyId = {0};
+        int m_historyId = {0};
 
         std::list <messages::MessageResource> m_messages;
 

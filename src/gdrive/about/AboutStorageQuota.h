@@ -26,39 +26,39 @@ namespace about{
     public:
         StorageQuota(){};
 
-        StorageQuota(const float& arg){ m_limit = arg; };
+        StorageQuota(const int& arg){ m_limit = arg; };
 
     public:
             /**
                 The usage limit, if applicable. This will not be present if the
                 user has unlimited storage.
             */
-        float limit()const{return m_limit;};
-        StorageQuota& setLimit(const float& arg){m_limit=arg;return *this;};
+        int limit()const{return m_limit;};
+        StorageQuota& setLimit(const int& arg){m_limit=arg;return *this;};
 
             /**
                 The total usage across all services.
             */
-        float usage()const{return m_usage;};
-        StorageQuota& setUsage(const float& arg){m_usage=arg;return *this;};
+        int usage()const{return m_usage;};
+        StorageQuota& setUsage(const int& arg){m_usage=arg;return *this;};
 
             /**
                 The usage by all files in Google Drive.
             */
-        int64_t usageindrive()const{return m_usageInDrive;};
-        StorageQuota& setUsageindrive(const int64_t& arg){m_usageInDrive=arg;return *this;};
+        int usageindrive()const{return m_usageInDrive;};
+        StorageQuota& setUsageindrive(const int& arg){m_usageInDrive=arg;return *this;};
 
             /**
                 The usage by trashed files in Google Drive.
             */
-        int64_t usageindrivetrash()const{return m_usageInDriveTrash;};
-        StorageQuota& setUsageindrivetrash(const int64_t& arg){m_usageInDriveTrash=arg;return *this;};
+        int usageindrivetrash()const{return m_usageInDriveTrash;};
+        StorageQuota& setUsageindrivetrash(const int& arg){m_usageInDriveTrash=arg;return *this;};
 
             /**
                 The maximum upload size in bytes.
             */
-        int64_t maxuploadsize()const{return m_maxUploadSize;};
-        StorageQuota& setMaxuploadsize(const int64_t& arg){m_maxUploadSize=arg;return *this;};
+        int maxuploadsize()const{return m_maxUploadSize;};
+        StorageQuota& setMaxuploadsize(const int& arg){m_maxUploadSize=arg;return *this;};
 
             /**
                 Whether the user has installed the requesting app.
@@ -90,27 +90,27 @@ namespace about{
                 The usage limit, if applicable. This will not be present if the
                 user has unlimited storage.
             */
-        float m_limit;
+        int m_limit = {0};
 
             /**
                 The total usage across all services.
             */
-        float m_usage;
+        int m_usage = {0};
 
             /**
                 The usage by all files in Google Drive.
             */
-        int64_t m_usageInDrive = {0};
+        int m_usageInDrive = {0};
 
             /**
                 The usage by trashed files in Google Drive.
             */
-        int64_t m_usageInDriveTrash = {0};
+        int m_usageInDriveTrash = {0};
 
             /**
                 The maximum upload size in bytes.
             */
-        int64_t m_maxUploadSize = {0};
+        int m_maxUploadSize = {0};
 
             /**
                 Whether the user has installed the requesting app.

@@ -11,12 +11,12 @@ using namespace googleQt;
 using namespace messages;
 
 void MessagesRoutes::deleteOperation(const gmail::IdArg& arg ){
-    VOID_RESULT_GBC(deleteOperation_AsyncCB, arg);
+    deleteOperation_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleVoidTask* MessagesRoutes::deleteOperation_Async(const gmail::IdArg& arg)
 {
-    GoogleVoidTask* t = new GoogleVoidTask();
+    GoogleVoidTask* t = m_end_point->produceVoidTask();
     m_end_point->deleteStyle
         (m_end_point->buildGmailUrl("messages", arg),
         t);
@@ -35,12 +35,12 @@ void MessagesRoutes::deleteOperation_AsyncCB(
 }
 
 std::unique_ptr<MessageResource> MessagesRoutes::get(const gmail::IdArg& arg){
-    GOOGLE_BLOCKING_CALL(get_AsyncCB, MessageResource, arg);
+    return get_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<MessageResource>* MessagesRoutes::get_Async(const gmail::IdArg& arg)
 {
-    GoogleTask<MessageResource>* t = new GoogleTask<MessageResource>();
+    GoogleTask<MessageResource>* t = m_end_point->produceTask<MessageResource>();
     m_end_point->getStyle<
         MessageResource,
         MessageResource::factory
@@ -66,12 +66,12 @@ void MessagesRoutes::get_AsyncCB(
 }
 
 std::unique_ptr<MessageResource> MessagesRoutes::importMessage(const gmail::ImportMessageArg& arg, const MessageResource& body){
-    BODY_ARG_GBC(importMessage_AsyncCB, MessageResource, arg, body);
+    return importMessage_Async(arg, body)->waitForResultAndRelease();
 }
 
 GoogleTask<MessageResource>* MessagesRoutes::importMessage_Async(const gmail::ImportMessageArg& arg, const MessageResource& body)
 {
-    GoogleTask<MessageResource>* t = new GoogleTask<MessageResource>();
+    GoogleTask<MessageResource>* t = m_end_point->produceTask<MessageResource>();
     m_end_point->rfc822UploadStyle<
         MessageResource,
         MessageResource::factory,
@@ -101,12 +101,12 @@ void MessagesRoutes::importMessage_AsyncCB(
 }
 
 std::unique_ptr<MessageResource> MessagesRoutes::insert(const gmail::InsertMessageArg& arg, const MessageResource& body){
-    BODY_ARG_GBC(insert_AsyncCB, MessageResource, arg, body);
+    return insert_Async(arg, body)->waitForResultAndRelease();
 }
 
 GoogleTask<MessageResource>* MessagesRoutes::insert_Async(const gmail::InsertMessageArg& arg, const MessageResource& body)
 {
-    GoogleTask<MessageResource>* t = new GoogleTask<MessageResource>();
+    GoogleTask<MessageResource>* t = m_end_point->produceTask<MessageResource>();
     m_end_point->rfc822UploadStyle<
         MessageResource,
         MessageResource::factory,
@@ -136,12 +136,12 @@ void MessagesRoutes::insert_AsyncCB(
 }
 
 std::unique_ptr<MessageListRes> MessagesRoutes::list(const gmail::ListArg& arg){
-    GOOGLE_BLOCKING_CALL(list_AsyncCB, MessageListRes, arg);
+    return list_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<MessageListRes>* MessagesRoutes::list_Async(const gmail::ListArg& arg)
 {
-    GoogleTask<MessageListRes>* t = new GoogleTask<MessageListRes>();
+    GoogleTask<MessageListRes>* t = m_end_point->produceTask<MessageListRes>();
     m_end_point->getStyle<
         MessageListRes,
         MessageListRes::factory
@@ -167,12 +167,12 @@ void MessagesRoutes::list_AsyncCB(
 }
 
 std::unique_ptr<MessageResource> MessagesRoutes::send(const gmail::SendMessageArg& arg, const MessageResource& body){
-    BODY_ARG_GBC(send_AsyncCB, MessageResource, arg, body);
+    return send_Async(arg, body)->waitForResultAndRelease();
 }
 
 GoogleTask<MessageResource>* MessagesRoutes::send_Async(const gmail::SendMessageArg& arg, const MessageResource& body)
 {
-    GoogleTask<MessageResource>* t = new GoogleTask<MessageResource>();
+    GoogleTask<MessageResource>* t = m_end_point->produceTask<MessageResource>();
     m_end_point->rfc822UploadStyle<
         MessageResource,
         MessageResource::factory,
@@ -202,12 +202,12 @@ void MessagesRoutes::send_AsyncCB(
 }
 
 void MessagesRoutes::trash(const gmail::TrashMessageArg& arg ){
-    VOID_RESULT_GBC(trash_AsyncCB, arg);
+    trash_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleVoidTask* MessagesRoutes::trash_Async(const gmail::TrashMessageArg& arg)
 {
-    GoogleVoidTask* t = new GoogleVoidTask();
+    GoogleVoidTask* t = m_end_point->produceVoidTask();
     m_end_point->postStyle
         (m_end_point->buildGmailUrl("messages", arg),
         t);
@@ -226,12 +226,12 @@ void MessagesRoutes::trash_AsyncCB(
 }
 
 void MessagesRoutes::untrash(const gmail::UntrashMessageArg& arg ){
-    VOID_RESULT_GBC(untrash_AsyncCB, arg);
+    untrash_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleVoidTask* MessagesRoutes::untrash_Async(const gmail::UntrashMessageArg& arg)
 {
-    GoogleVoidTask* t = new GoogleVoidTask();
+    GoogleVoidTask* t = m_end_point->produceVoidTask();
     m_end_point->postStyle
         (m_end_point->buildGmailUrl("messages", arg),
         t);

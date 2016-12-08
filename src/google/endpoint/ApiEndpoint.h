@@ -8,6 +8,7 @@
 #include <QDebug>
 #include <QJsonObject>
 #include <QEventLoop>
+#include <QHttpMultiPart>
 #include "ApiException.h"
 #include "ApiClient.h"
 
@@ -18,16 +19,18 @@ namespace googleQt{
     {
     public:
         ApiEndpoint(ApiClient* c);
-        QString       lastRequestInfo()const{return m_last_req_info;}
         void          cancelAll();
         void          runEventsLoop()const;
         void          exitEventsLoop()const;
 
+		QString       lastRequestInfo()const { return m_last_req_info; }
+		QByteArray	  last200Response()const { return m_last_200_response; };
     protected:
         virtual void addAuthHeader(QNetworkRequest& request);
         
         virtual QNetworkReply*  getData(const QNetworkRequest &request);
         virtual QNetworkReply*  postData(const QNetworkRequest &request, const QByteArray& data);
+		virtual QNetworkReply*  postData(const QNetworkRequest &request, QHttpMultiPart* mpart);
         virtual QNetworkReply*  putData(const QNetworkRequest &request, const QByteArray& data);
         virtual QNetworkReply*  deleteData(const QNetworkRequest &request);
 
@@ -157,7 +160,23 @@ namespace googleQt{
                     QJsonDocument doc(m_js_out);
                     meta_bytes = doc.toJson(QJsonDocument::Compact);
                 }
+				QHttpMultiPart *mpart = new QHttpMultiPart(QHttpMultiPart::RelatedType);
 
+				QHttpPart metaPart;
+				metaPart.setRawHeader("Content-Type", "application/json; charset = UTF-8");
+				metaPart.setBody(meta_bytes);
+
+				QHttpPart dataPart;
+				dataPart.setRawHeader("Content-Type", "application/octet-stream");
+				dataPart.setBodyDevice(m_readFrom);
+
+				mpart->append(metaPart);
+				mpart->append(dataPart);
+
+				QNetworkReply* reply = m_ep.postData(r, mpart);
+				mpart->setParent(reply);
+				return reply;
+				/*
                 QString delimiter("foo_bar_baz12321");
                 QByteArray bytes2post = QString("\n--%1\n").arg(delimiter).toStdString().c_str();
                 bytes2post += QString("Content - Type: application/json; charset = UTF-8\n").toStdString().c_str();             
@@ -178,6 +197,7 @@ namespace googleQt{
                 r.setRawHeader("Content-Type", content_str.toStdString().c_str());
                 r.setRawHeader("Content-Length", QString("%1").arg(bytes2post.size()).toStdString().c_str());
                 return m_ep.postData(r, bytes2post);
+				*/
             }
         protected:
             const QJsonObject& m_js_out;
@@ -217,5 +237,6 @@ namespace googleQt{
         ApiClient*            m_client;
         NET_REPLIES_IN_PROGRESS m_replies_in_progress;
         QString               m_last_req_info;
+		QByteArray			  m_last_200_response;
     };
 }

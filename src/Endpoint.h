@@ -287,6 +287,19 @@ namespace googleQt{
         GoogleClient* client();
         const GoogleClient* client()const;
 
+		template <class T>
+		GoogleTask<T>* produceTask()
+		{
+			GoogleTask<T>* rv = new GoogleTask<T>(*this);
+			return rv;
+		};
+
+		GoogleVoidTask* produceVoidTask()
+		{
+			return new GoogleVoidTask(*this);
+		}
+
+
     protected:
         QString prepareErrorInfo(int status_code, const QUrl& url, const QByteArray& data);
         void addAppKeyParameter(QUrl& url)const;
@@ -335,9 +348,11 @@ namespace googleQt{
                                          {
                                              if (completed_callback != nullptr)
                                                  {
-                                                     QByteArray data = reply->readAll();
-                                                     std::cout << "200-data:" << data.data() << std::endl;
-                                                     completed_callback(factory.create(data));
+													m_last_200_response = reply->readAll();													  
+                                                    std::cout << "===begin-200-data" << std::endl
+                                                               << m_last_200_response.data() << std::endl
+                                                               << "===end-200-data" << std::endl;
+                                                     completed_callback(factory.create(m_last_200_response));
                                                  }
                                          }break;
                                      case 202:

@@ -11,12 +11,12 @@ using namespace googleQt;
 using namespace comments;
 
 std::unique_ptr<Comment> CommentsRoutes::create(const gdrive::CreateCommentArg& arg, const Comment& body){
-    BODY_ARG_GBC(create_AsyncCB, Comment, arg, body);
+    return create_Async(arg, body)->waitForResultAndRelease();
 }
 
 GoogleTask<Comment>* CommentsRoutes::create_Async(const gdrive::CreateCommentArg& arg, const Comment& body)
 {
-    GoogleTask<Comment>* t = new GoogleTask<Comment>();
+    GoogleTask<Comment>* t = m_end_point->produceTask<Comment>();
     m_end_point->postStyle<
         Comment,
         Comment::factory,
@@ -46,12 +46,12 @@ void CommentsRoutes::create_AsyncCB(
 }
 
 void CommentsRoutes::deleteOperation(const gdrive::DeleteCommentArg& arg ){
-    VOID_RESULT_GBC(deleteOperation_AsyncCB, arg);
+    deleteOperation_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleVoidTask* CommentsRoutes::deleteOperation_Async(const gdrive::DeleteCommentArg& arg)
 {
-    GoogleVoidTask* t = new GoogleVoidTask();
+    GoogleVoidTask* t = m_end_point->produceVoidTask();
     m_end_point->deleteStyle
         (m_end_point->buildGdriveUrl("comments", arg),
         t);
@@ -70,12 +70,12 @@ void CommentsRoutes::deleteOperation_AsyncCB(
 }
 
 std::unique_ptr<Comment> CommentsRoutes::get(const gdrive::GetCommentArg& arg){
-    GOOGLE_BLOCKING_CALL(get_AsyncCB, Comment, arg);
+    return get_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<Comment>* CommentsRoutes::get_Async(const gdrive::GetCommentArg& arg)
 {
-    GoogleTask<Comment>* t = new GoogleTask<Comment>();
+    GoogleTask<Comment>* t = m_end_point->produceTask<Comment>();
     m_end_point->getStyle<
         Comment,
         Comment::factory
@@ -101,12 +101,12 @@ void CommentsRoutes::get_AsyncCB(
 }
 
 std::unique_ptr<CommentListResult> CommentsRoutes::list(const gdrive::CommentListArg& arg){
-    GOOGLE_BLOCKING_CALL(list_AsyncCB, CommentListResult, arg);
+    return list_Async(arg)->waitForResultAndRelease();
 }
 
 GoogleTask<CommentListResult>* CommentsRoutes::list_Async(const gdrive::CommentListArg& arg)
 {
-    GoogleTask<CommentListResult>* t = new GoogleTask<CommentListResult>();
+    GoogleTask<CommentListResult>* t = m_end_point->produceTask<CommentListResult>();
     m_end_point->getStyle<
         CommentListResult,
         CommentListResult::factory

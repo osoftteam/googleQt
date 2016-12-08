@@ -1,3 +1,4 @@
+#include <QFile>
 #include "GoogleClient.h"
 #include "Endpoint.h"
 #include "google/endpoint/GoogleWebAuth.h"
@@ -19,16 +20,44 @@ GoogleClient::~GoogleClient(){
 
 };
 
+void GoogleClient::cancelAllRequests() 
+{
+	m_endpoint->cancelAll();
+};
+
 QString GoogleClient::lastApiCall()
 {
     return m_endpoint->lastRequestInfo();
 }
+
+QByteArray GoogleClient::last200Response()
+{
+	return m_endpoint->last200Response();
+};
 
 void GoogleClient::printLastApiCall()
 {
     std::cout << "-----------------------------------------" << std::endl;
     std::cout << "API call" << std::endl;
     std::cout << lastApiCall().toStdString() << std::endl;
+};
+
+void GoogleClient::printLast200Response() 
+{
+	std::cout << "-----------------------------------------" << std::endl;
+	std::cout << "200 (OK) response" << std::endl;
+	std::cout << last200Response().toStdString() << std::endl;
+};
+
+void GoogleClient::exportLast200Response(QString fileName) 
+{
+	QFile file_in(fileName);
+	if (!file_in.open(QFile::WriteOnly)) {
+		qWarning() << "Error opening file: " << fileName;
+		return;
+	}
+	file_in.write(last200Response());
+	file_in.close();
 };
 
 GmailRoutes* GoogleClient::gmail()

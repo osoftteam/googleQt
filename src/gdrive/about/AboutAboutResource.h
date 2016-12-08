@@ -8,7 +8,6 @@
 #include "google/endpoint/ApiUtil.h"
 #include "gdrive/GdriveRequestArg.h"
 #include "gdrive/about/AboutUserInfo.h"
-#include "gdrive/about/AboutStorageQuota.h"
 
 namespace googleQt{
 namespace about{
@@ -16,7 +15,6 @@ namespace about{
         /**
             field: kind: This is always drive#about.
             field: user: The authenticated user.
-            field: storage_quota: Usage/Limit quotas
         */
 
     public:
@@ -40,12 +38,6 @@ namespace about{
             */
         const UserInfo& user()const{return m_user;};
         AboutResource& setUser(const UserInfo& arg){m_user=arg;return *this;};
-
-            /**
-                Usage/Limit quotas
-            */
-        const StorageQuota& storagequota()const{return m_storageQuota;};
-        AboutResource& setStoragequota(const StorageQuota& arg){m_storageQuota=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -76,11 +68,6 @@ namespace about{
                 The authenticated user.
             */
         UserInfo m_user;
-
-            /**
-                Usage/Limit quotas
-            */
-        StorageQuota m_storageQuota;
 
     };//AboutResource
 

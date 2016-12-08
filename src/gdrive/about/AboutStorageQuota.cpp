@@ -31,8 +31,8 @@ void StorageQuota::toJson(QJsonObject& js)const{
 
 void StorageQuota::fromJson(const QJsonObject& js){
 
-    m_limit = js["limit"].toVariant().toFloat();
-    m_usage = js["usage"].toVariant().toFloat();
+    m_limit = js["limit"].toVariant().toInt();
+    m_usage = js["usage"].toVariant().toInt();
     m_usageInDrive = js["usageInDrive"].toVariant().toInt();
     m_usageInDriveTrash = js["usageInDriveTrash"].toVariant().toInt();
     m_maxUploadSize = js["maxUploadSize"].toVariant().toInt();
