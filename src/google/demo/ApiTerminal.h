@@ -32,6 +32,11 @@ Terminal(QString prompt):m_prompt(prompt){};
                 m_sel_map[name.toLower()] = s;
             };
 
+            void addSeparator()
+            {
+                addAction("       ", "        ", [](QString){});
+            };
+            
             void start()
             {
                 std::string exit_option("exit");
@@ -43,7 +48,7 @@ Terminal(QString prompt):m_prompt(prompt){};
 
                         for(SELECTION_LIST::iterator i = m_sel.begin(); i != m_sel.end(); i++){
                             QString name = i->name;
-                            if (name.indexOf("-----") == 0)
+                            if (name.indexOf("    ") == 0)
                                 {
                                     std::cout << std::endl;
                                     continue;

@@ -24,7 +24,7 @@ namespace googleQt{
         void          exitEventsLoop()const;
 
 		QString       lastRequestInfo()const { return m_last_req_info; }
-		QByteArray	  last200Response()const { return m_last_200_response; };
+		QByteArray	  lastResponse()const { return m_last_response; };
     protected:
         virtual void addAuthHeader(QNetworkRequest& request);
         
@@ -160,6 +160,7 @@ namespace googleQt{
                     QJsonDocument doc(m_js_out);
                     meta_bytes = doc.toJson(QJsonDocument::Compact);
                 }
+                /*
 				QHttpMultiPart *mpart = new QHttpMultiPart(QHttpMultiPart::RelatedType);
 
 				QHttpPart metaPart;
@@ -176,12 +177,14 @@ namespace googleQt{
 				QNetworkReply* reply = m_ep.postData(r, mpart);
 				mpart->setParent(reply);
 				return reply;
-				/*
+                */
+				
                 QString delimiter("foo_bar_baz12321");
                 QByteArray bytes2post = QString("\n--%1\n").arg(delimiter).toStdString().c_str();
                 bytes2post += QString("Content - Type: application/json; charset = UTF-8\n").toStdString().c_str();             
-                bytes2post += "\n";
+                //bytes2post += "\n";
                 bytes2post += meta_bytes;
+                
                 bytes2post += "\n";
                 bytes2post += "\n";
                 bytes2post += QString("--%1\n").arg(delimiter).toStdString().c_str();
@@ -193,11 +196,10 @@ namespace googleQt{
                 bytes2post += "\n";
                 bytes2post += QString("--%1--").arg(delimiter).toStdString().c_str();
 
-                QString content_str = QString("multipart/related; boundary = %1").arg(delimiter);
+                QString content_str = QString("multipart/related; boundary=%1").arg(delimiter);
                 r.setRawHeader("Content-Type", content_str.toStdString().c_str());
                 r.setRawHeader("Content-Length", QString("%1").arg(bytes2post.size()).toStdString().c_str());
-                return m_ep.postData(r, bytes2post);
-				*/
+                return m_ep.postData(r, bytes2post);				
             }
         protected:
             const QJsonObject& m_js_out;
@@ -237,6 +239,6 @@ namespace googleQt{
         ApiClient*            m_client;
         NET_REPLIES_IN_PROGRESS m_replies_in_progress;
         QString               m_last_req_info;
-		QByteArray			  m_last_200_response;
+		QByteArray			  m_last_response;
     };
 }

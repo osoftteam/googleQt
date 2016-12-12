@@ -24,12 +24,14 @@ void AboutResource::toJson(QJsonObject& js)const{
     if(!m_kind.isEmpty())
         js["kind"] = QString(m_kind);
     js["user"] = (QJsonObject)m_user;
+    js["storageQuota"] = (QJsonObject)m_storageQuota;
 }
 
 void AboutResource::fromJson(const QJsonObject& js){
 
     m_kind = js["kind"].toString();
     m_user.fromJson(js["user"].toObject());
+    m_storageQuota.fromJson(js["storageQuota"].toObject());
 }
 
 QString AboutResource::toString(bool multiline)const
@@ -63,6 +65,7 @@ std::unique_ptr<AboutResource> AboutResource::EXAMPLE(){
     std::unique_ptr<AboutResource> rv(new AboutResource);
     rv->m_kind = "test1value";
     rv->m_user = *(about::UserInfo::EXAMPLE().get());
+    rv->m_storageQuota = *(about::StorageQuota::EXAMPLE().get());
     return rv;
 }
 #endif //API_QT_AUTOTEST

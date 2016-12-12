@@ -70,20 +70,20 @@ namespace labels{
             /**
                 The total number of messages with the label.
             */
-        int messagestotal()const{return m_messagesTotal;};
-        LabelResource& setMessagestotal(const int& arg){m_messagesTotal=arg;return *this;};
+        qint64 messagestotal()const{return m_messagesTotal;};
+        LabelResource& setMessagestotal(const qint64& arg){m_messagesTotal=arg;return *this;};
 
             /**
                 The number of unread messages with the label.
             */
-        int messagesunread()const{return m_messagesUnread;};
-        LabelResource& setMessagesunread(const int& arg){m_messagesUnread=arg;return *this;};
+        qint64 messagesunread()const{return m_messagesUnread;};
+        LabelResource& setMessagesunread(const qint64& arg){m_messagesUnread=arg;return *this;};
 
             /**
                 The number of unread threads with the label.
             */
-        int threadstotal()const{return m_threadsTotal;};
-        LabelResource& setThreadstotal(const int& arg){m_threadsTotal=arg;return *this;};
+        qint64 threadstotal()const{return m_threadsTotal;};
+        LabelResource& setThreadstotal(const qint64& arg){m_threadsTotal=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -136,17 +136,17 @@ namespace labels{
             /**
                 The total number of messages with the label.
             */
-        int m_messagesTotal = {0};
+        qint64 m_messagesTotal = {0};
 
             /**
                 The number of unread messages with the label.
             */
-        int m_messagesUnread = {0};
+        qint64 m_messagesUnread = {0};
 
             /**
                 The number of unread threads with the label.
             */
-        int m_threadsTotal = {0};
+        qint64 m_threadsTotal = {0};
 
     };//LabelResource
 

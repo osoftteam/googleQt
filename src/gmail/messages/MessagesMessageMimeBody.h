@@ -41,8 +41,8 @@ namespace messages{
             /**
                 Total number of bytes in the body of the message part.
             */
-        int size()const{return m_size;};
-        MessageMimeBody& setSize(const int& arg){m_size=arg;return *this;};
+        qint64 size()const{return m_size;};
+        MessageMimeBody& setSize(const qint64& arg){m_size=arg;return *this;};
 
             /**
                 The body data of a MIME message part. May be empty for MIME
@@ -84,7 +84,7 @@ namespace messages{
             /**
                 Total number of bytes in the body of the message part.
             */
-        int m_size = {0};
+        qint64 m_size = {0};
 
             /**
                 The body data of a MIME message part. May be empty for MIME

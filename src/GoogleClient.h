@@ -50,10 +50,10 @@ public:
 		future release
 	*/
     QString lastApiCall();
-	QByteArray last200Response();
+	QByteArray lastResponse();
     void printLastApiCall();
-	void printLast200Response();
-	void exportLast200Response(QString fileName);    
+	void printLastResponse();
+	void exportLastResponse(QString fileName);    
     
 protected:
     std::unique_ptr<GmailRoutes>           m_gmail_routes;

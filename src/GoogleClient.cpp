@@ -30,9 +30,9 @@ QString GoogleClient::lastApiCall()
     return m_endpoint->lastRequestInfo();
 }
 
-QByteArray GoogleClient::last200Response()
+QByteArray GoogleClient::lastResponse()
 {
-	return m_endpoint->last200Response();
+	return m_endpoint->lastResponse();
 };
 
 void GoogleClient::printLastApiCall()
@@ -42,21 +42,26 @@ void GoogleClient::printLastApiCall()
     std::cout << lastApiCall().toStdString() << std::endl;
 };
 
-void GoogleClient::printLast200Response() 
+void GoogleClient::printLastResponse() 
 {
+    std::cout << "-----------------------------------------" << std::endl;
+    std::cout << "API call" << std::endl;
+    std::cout << lastApiCall().toStdString() << std::endl;    
 	std::cout << "-----------------------------------------" << std::endl;
-	std::cout << "200 (OK) response" << std::endl;
-	std::cout << last200Response().toStdString() << std::endl;
+	std::cout << "response" << std::endl;
+	std::cout << lastResponse().toStdString() << std::endl;
 };
 
-void GoogleClient::exportLast200Response(QString fileName) 
+void GoogleClient::exportLastResponse(QString fileName) 
 {
 	QFile file_in(fileName);
 	if (!file_in.open(QFile::WriteOnly)) {
 		qWarning() << "Error opening file: " << fileName;
 		return;
 	}
-	file_in.write(last200Response());
+    file_in.write(lastApiCall().toStdString().c_str());
+    file_in.write("\n-----------------------------------------\n");
+	file_in.write(lastResponse());
 	file_in.close();
 };
 

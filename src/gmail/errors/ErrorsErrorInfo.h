@@ -33,8 +33,8 @@ namespace errors{
             /**
                 HTTP response code
             */
-        int code()const{return m_code;};
-        ErrorInfo& setCode(const int& arg){m_code=arg;return *this;};
+        qint64 code()const{return m_code;};
+        ErrorInfo& setCode(const qint64& arg){m_code=arg;return *this;};
 
             /**
                 Details of the error.
@@ -70,7 +70,7 @@ namespace errors{
             /**
                 HTTP response code
             */
-        int m_code = {0};
+        qint64 m_code = {0};
 
             /**
                 Details of the error.
