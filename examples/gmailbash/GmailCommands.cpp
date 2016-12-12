@@ -8,6 +8,22 @@
 #include "google/demo/ApiTerminal.h"
 #include "gmail/GmailRoutes.h"
 
+static QString size_human(qreal num)
+{
+    QStringList list;
+    list << "KB" << "MB" << "GB" << "TB";
+
+    QStringListIterator i(list);
+    QString unit("bytes");
+
+    while(num >= 1024.0 && i.hasNext())
+        {
+            unit = i.next();
+            num /= 1024.0;
+        }
+    return QString().setNum(num, 'f', 2) + " " + unit;
+}
+
 GmailCommands::GmailCommands(GoogleClient& c):m_c(c)
 {
     m_gm = m_c.gmail();
@@ -34,8 +50,8 @@ void GmailCommands::listMessages(QString nextToken, QString labelIds)
             for(auto m : mlist->messages())
                 {
                     msgID.setId(m.id());
-                    std::cout << n << ". " << m.id() << std::endl;
-                    /*
+                    //std::cout << n << ". " << m.id() << std::endl;
+                    
                     auto msg_resource = m_gm->getMessages()->get(msgID);
                     auto payload = msg_resource->payload();
                     auto header_list = payload.headers();
@@ -45,14 +61,13 @@ void GmailCommands::listMessages(QString nextToken, QString labelIds)
                             std::cout << h.value()
                                       << " ";
                         }
-                    std::cout << std::endl;
-                    */
+                    std::cout << std::endl;                    
                     
                     n++;
                 }
             nextToken = mlist->nextpagetoken();
             std::cout << "next-token: " << nextToken << std::endl;
-            m_c.printLastApiCall();   
+            //            m_c.printLastApiCall();   
         }
     catch(GoogleException& e)
         {
@@ -80,7 +95,7 @@ void GmailCommands::listThreads(QString nextToken, QString labelIds)
 
         nextToken = threads_list->nextpagetoken();
         std::cout << "next-token: " << nextToken << std::endl;
-        m_c.printLastApiCall();
+        //        m_c.printLastApiCall();
     }
     catch (GoogleException& e)
     {
@@ -107,7 +122,7 @@ void GmailCommands::listDrafts(QString nextToken)
         if(!nextToken.isEmpty()){
             std::cout << "next-token: " << nextToken << std::endl;
         }
-        m_c.printLastApiCall();
+        //        m_c.printLastApiCall();
     }
     catch (GoogleException& e)
     {
@@ -226,7 +241,11 @@ void GmailCommands::untrash(QString message_id)
 
 void GmailCommands::printMessage(messages::MessageResource* r)
 {
-    std::cout << "rid="<< r->id() << " tid=" << r->threadid() << " snippet=" << r->snippet() << std::endl;
+    std::set<QString> headers_to_print = {"From", "To", "Subject"};
+    
+    std::cout << "rid="<< r->id() << std::endl
+              << "tid=" << r->threadid() << std::endl
+              << "snippet=" << r->snippet() << std::endl;
     const std::list <QString>& labels = r->labelids();
     if(labels.size() > 0){
         std::cout << "labels=";
@@ -241,36 +260,71 @@ void GmailCommands::printMessage(messages::MessageResource* r)
     std::cout << "headers count: " << header_list.size() << std::endl;
     for(auto h : header_list)
         {
-            std::cout << h.name().leftJustified(20, ' ') << h.value() << std::endl;
+            if(headers_to_print.find(h.name()) != headers_to_print.end())
+                std::cout << h.name().leftJustified(20, ' ') << h.value() << std::endl;
         }
-    const messages::MessageMimeBody& b = p.body();
-    std::cout << "body-size: " << b.size() << std::endl;
-    std::cout << "body-data: " << QByteArray::fromBase64(b.data()).constData() << std::endl;
+
     auto parts = p.parts();
     std::cout << "parts count: " << parts.size() << std::endl;
     for(auto pt : parts)
         {
             const messages::MessagePartBody& pt_body = pt.body();
             QString partID = pt.partid();
-            std::cout << "part "<< partID << " " << pt.mimetype() << " body-size:" << pt_body.size() << std::endl;
+            std::cout << "------------------------------------------------"
+                      << "part" << partID << "---------------------------------"
+                      << std::endl;            
+            std::cout << pt.mimetype() << " body-size:" << pt_body.size() << std::endl;
             bool is_plain_text = false;
+            bool is_html_text = false;
             auto pt_headers = pt.headers();
             for(auto h : pt_headers)
                 {
                     if(h.name() == "Content-Type"){
                         is_plain_text = (h.value().indexOf("text/plain") == 0);
+                        is_html_text = (h.value().indexOf("text/html") == 0);
                     }
-                    if(!is_plain_text)
-                        break;
-                    std::cout << "n="<< h.name().leftJustified(20, ' ') << " v=" << h.value() << " as-plain:" << (is_plain_text ? "[true]" : "[false]") << std::endl;
+                    std::cout << ""<< h.name().leftJustified(20, ' ') << " " << h.value() << std::endl;
                 }
-            if(is_plain_text)
+            if(is_plain_text || is_html_text)
                 {
-                    std::cout << QByteArray::fromBase64(pt_body.data()).constData() << std::endl;
+                    std::cout << QByteArray::fromBase64(pt_body.data(), QByteArray::Base64UrlEncoding).constData() << std::endl;
                 }
-            if(!is_plain_text)
-                break;
         }
+};
+
+void GmailCommands::exportMessageBody(messages::MessageResource* r, QString fileName)
+{
+    auto p = r->payload();
+    auto parts = p.parts();
+    for(auto pt : parts)
+        {
+            for(auto pt : parts)
+                {
+                    const messages::MessagePartBody& pt_body = pt.body();            
+                    auto pt_headers = pt.headers();
+                    for(auto h : pt_headers)
+                        {
+                            bool is_html_text = false;
+                            if(h.name() == "Content-Type"){
+                                is_html_text = (h.value().indexOf("text/html") == 0);
+                            }
+                            if(is_html_text){
+                                QByteArray body_part = QByteArray::fromBase64(pt_body.data(), QByteArray::Base64UrlEncoding);
+                                QFile file_in(fileName);
+                                if (!file_in.open(QFile::WriteOnly)) {
+                                    qWarning() << "Error opening file: " << fileName;
+                                    return;
+                                }
+                                file_in.write(body_part);
+                                file_in.close();
+                                std::cout << "exported: " << fileName << " " << size_human(body_part.size()) << std::endl;
+                                return;
+                            }
+                        }//headers
+                }//parts
+        }
+
+    std::cout << "HTML body not found" << std::endl;
 };
 
 void GmailCommands::get(QString msg_id)
@@ -285,7 +339,6 @@ void GmailCommands::get(QString msg_id)
         {
             auto r = m_gm->getMessages()->get(gmail::IdArg(msg_id));
             printMessage(r.get());
-            m_c.printLastApiCall();
         }
     catch(GoogleException& e)
         {
@@ -305,7 +358,6 @@ void GmailCommands::get_raw(QString msg_id)
         {
             auto r = m_gm->getMessages()->get(gmail::IdArg(msg_id, "raw"));
             printMessage(r.get());
-            m_c.printLastApiCall();
         }
     catch(GoogleException& e)
         {
@@ -313,6 +365,29 @@ void GmailCommands::get_raw(QString msg_id)
         }            
 };
 
+void GmailCommands::get_html(QString message_id_space_fileName)
+{
+    QStringList arg_list = message_id_space_fileName.split(" ",
+                                                           QString::SkipEmptyParts);
+    if(arg_list.size() < 2)
+        {
+            std::cout << "Invalid parameters, expected <message_id> <file_name>" << std::endl;
+            return;
+        }
+
+    QString msg_id = arg_list[0];
+    QString fileName = arg_list[1];
+    
+    try
+        {
+            auto r = m_gm->getMessages()->get(gmail::IdArg(msg_id));
+            exportMessageBody(r.get(), fileName);
+        }
+    catch(GoogleException& e)
+        {
+            std::cout << "Exception: " << e.what() << std::endl;
+        }
+};
 
 void GmailCommands::ls_labels(QString )
 {
@@ -403,8 +478,6 @@ void GmailCommands::update_label(QString labelid_space_name)
         lbl.setName(name).setMessagelistvisibility("show").setLabellistvisibility("labelShow");
         auto new_label = m_gm->getLabels()->update(l_id, lbl);
         printLabel(new_label.get());
-        //        labels::LabelResource lbl;
-        //        m_gm->getLabels()->deleteOperation(l_id);
     }
     catch (GoogleException& e)
     {
@@ -489,4 +562,9 @@ void GmailCommands::get_draft(QString draft_id)
 void GmailCommands::export_last_result(QString fileName)
 {
     m_c.exportLast200Response(fileName);
+};
+
+void GmailCommands::print_last_result(QString )
+{
+    m_c.printLast200Response();
 };

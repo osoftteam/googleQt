@@ -39,6 +39,12 @@ public:
        get_raw - get message by id using raw format
     */
     void get_raw    (QString message_id);
+
+    /**
+       export_html_body - export message body as html file
+    */
+    void get_html    (QString message_id_space_fileName);
+
     
     /**
         send - send new message, the body of the message should be stored
@@ -119,12 +125,14 @@ public:
     void history(QString startHistoryIdStr);
 
     void export_last_result(QString fileName);
+    void print_last_result(QString );
     
 protected:
     void listMessages(QString nextToken, QString labelIds);
     void listThreads(QString nextToken, QString labelIds);
     void listDrafts(QString nextToken);
     void printMessage(messages::MessageResource*);
+    void exportMessageBody(messages::MessageResource* r, QString fileName);
     void printLabel(labels::LabelResource*);
     bool loadMessageFile(QString fileName, messages::MessageResource*);
 

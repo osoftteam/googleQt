@@ -33,7 +33,6 @@ static QString size_human(qreal num)
     return QString().setNum(num, 'f', 2) + " " + unit;
 }
 
-
 void GdriveCommands::about(QString)
 {    
     try
@@ -46,6 +45,7 @@ void GdriveCommands::about(QString)
         std::cout << "name=" << u.displayname()
                   << " email=" << u.emailaddress()
                   << std::endl;
+        
         std::cout << "used=" << size_human(q.usage())
                   << " limit=" << size_human(q.limit())
                   << std::endl;
@@ -394,4 +394,9 @@ void GdriveCommands::get_permission(QString fileId_Space_permissionId)
     {
         std::cout << "Exception: " << e.what() << std::endl;
     }
+};
+
+void GdriveCommands::print_last_result(QString )
+{
+    m_c.printLastResponse();
 };

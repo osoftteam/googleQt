@@ -34,6 +34,7 @@ public:
 
     void ls_permissions(QString fileId);
     void get_permission(QString fileId_Space_permissionId);
+    void print_last_result(QString );
 protected:
     GoogleClient& m_c;
     GdriveRoutes*  m_gd;

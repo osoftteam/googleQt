@@ -64,14 +64,19 @@ int main(int argc, char *argv[])
     t.addAction("cat",              "Print file content on screen", [&](QString arg) {cmd.cat(arg); });
     t.addAction("put",              "Upload file", [&](QString arg) {cmd.put(arg); });
     t.addAction("rm",               "Delete file or folder", [&](QString arg) {cmd.rm(arg); });
-    t.addAction("------------",     "-------------",  [&](QString ) {});
+    t.addSeparator();
+    //    t.addAction("            ",     "             ",  [&](QString ) {});
     t.addAction("ls_comments",      "List comments",  [&](QString arg) {cmd.ls_comments(arg); });
     t.addAction("get_comment",      "Get comment",    [&](QString arg) {cmd.get_comment(arg); });
     t.addAction("new_comment",      "Create comment", [&](QString arg) {cmd.new_comment(arg); });
     t.addAction("rm_comment",       "Remove comment", [&](QString arg) {cmd.rm_comment(arg); });
-    t.addAction("------------",     "-------------",  [&](QString ) {});
+    t.addSeparator();
+    //    t.addAction("            ",     "             ",  [&](QString ) {});
     t.addAction("ls_permissions",   "List permissions",  [&](QString arg) {cmd.ls_permissions(arg); });
     t.addAction("get_permission",   "Get permission",    [&](QString arg) {cmd.get_permission(arg); });
+    t.addSeparator();
+    //    t.addAction("            ",     "             ",  [&](QString ) {});
+    t.addAction("print_last_result", "Print last response",    [&](QString arg) {cmd.print_last_result(arg); });
     t.start();
     return 0;
 }
