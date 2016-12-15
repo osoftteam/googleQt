@@ -173,6 +173,44 @@ namespace googleQt{
                  failed_callback);
         }
 
+		//...
+		template <class RES, class RESULT_FACTORY>
+		void simpleUploadStyle(QUrl url,
+			QIODevice* readFrom,
+			GoogleTask<RES>* t)
+		{
+			std::function<void(std::unique_ptr<RES>)> completed_callback =
+				[=](std::unique_ptr<RES> r)
+			{
+				t->completed_callback(std::move(r));
+			};
+
+			std::function<void(std::unique_ptr<GoogleException>)> failed_callback =
+				[=](std::unique_ptr<GoogleException> ex)
+			{
+				t->failed_callback(std::move(ex));
+			};
+
+			simpleUploadStyle<RES, RESULT_FACTORY>(url, readFrom, completed_callback, failed_callback);
+		}
+
+
+		template <class RES, class RESULT_FACTORY>
+		void simpleUploadStyle(QUrl url,
+			QIODevice* readFrom,
+			std::function<void(std::unique_ptr<RES>)> completed_callback = nullptr,
+			std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr)
+		{
+			std::shared_ptr<requester> rb(new SimpleUpload_requester(*this, readFrom));
+			runRequest<RES, RESULT_FACTORY>
+				(url,
+					std::move(rb),
+					completed_callback,
+					failed_callback);
+		}
+
+		//...
+
         void downloadStyle(QUrl url, QIODevice* writeTo, GoogleVoidTask* t)
         {
             std::function<void(void)> completed_callback =
