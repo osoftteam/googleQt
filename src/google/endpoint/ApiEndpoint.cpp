@@ -120,21 +120,21 @@ QNetworkReply* ApiEndpoint::postData(const QNetworkRequest &req, const QByteArra
 
 QNetworkReply* ApiEndpoint::postData(const QNetworkRequest &req, QHttpMultiPart* mpart)
 {
-	QString rinfo = "POST " + req.url().toString() + "\n";
-	QList<QByteArray> lst = req.rawHeaderList();
-	for (QList<QByteArray>::iterator i = lst.begin(); i != lst.end(); i++)
-		rinfo += QString("--header %1 : %2 \n").arg(i->constData()).arg(req.rawHeader(*i).constData());
-	rinfo += QString("--data %1").arg("multipart");
+    QString rinfo = "POST " + req.url().toString() + "\n";
+    QList<QByteArray> lst = req.rawHeaderList();
+    for (QList<QByteArray>::iterator i = lst.begin(); i != lst.end(); i++)
+        rinfo += QString("--header %1 : %2 \n").arg(i->constData()).arg(req.rawHeader(*i).constData());
+    rinfo += QString("--data %1").arg("multipart");
 
-	updateLastRequestInfo(rinfo);
+    updateLastRequestInfo(rinfo);
 
 #ifdef API_QT_AUTOTEST
-	Q_UNUSED(mpart);
-	LOG_REQUEST;
-	return nullptr;
+    Q_UNUSED(mpart);
+    LOG_REQUEST;
+    return nullptr;
 #else
-	QNetworkReply *r = m_con_mgr.post(req, mpart);
-	return r;
+    QNetworkReply *r = m_con_mgr.post(req, mpart);
+    return r;
 #endif
 };
 
