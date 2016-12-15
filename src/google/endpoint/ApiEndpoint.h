@@ -144,6 +144,23 @@ namespace googleQt{
             const QJsonObject& m_js_out;
         };
 
+		//.........
+		class SimpleUpload_requester : public requester
+		{
+		public:
+			SimpleUpload_requester(ApiEndpoint& e, QIODevice* readFrom)
+				:requester(e), m_readFrom(readFrom) {}
+			QNetworkReply * request(QNetworkRequest& r)override
+			{
+				r.setRawHeader("Content-Type", "application/octet-stream");
+				r.setRawHeader("Content-Length", QString("%1").arg(m_readFrom ? 0 : m_readFrom->size()).toStdString().c_str());
+				return m_ep.postData(r, m_readFrom ? m_readFrom->readAll() : QByteArray());
+			}
+		protected:
+			QIODevice* m_readFrom;
+		};
+		///........
+
         class MPartUpload_requester : public requester
         {
         public:
