@@ -571,87 +571,87 @@ void GmailCommands::print_last_result(QString )
 
 static std::list<QString> split_string(QString s)
 {
-	QStringList s_list = s.split(" ", QString::SkipEmptyParts);
-	std::list<QString> rv;
-	for (QStringList::iterator i = s_list.begin(); i != s_list.end(); i++)
-	{
-		rv.push_back(*i);
-	}
-	return rv;
+    QStringList s_list = s.split(" ", QString::SkipEmptyParts);
+    std::list<QString> rv;
+    for (QStringList::iterator i = s_list.begin(); i != s_list.end(); i++)
+    {
+        rv.push_back(*i);
+    }
+    return rv;
 }
 
 void GmailCommands::get_batch_snippets(QString id_list) 
 {
-	std::list<QString> arg_list = split_string(id_list);
-	if (arg_list.empty()) 
-	{
-		std::cout << "Space separated messages ID list required" << std::endl;
-		return;
-	}
-	std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = m_gm->getBatchMessages(GmailRoutes::MesagesReciever::replySnippet, arg_list);
-	RESULT_LIST<messages::MessageResource*> res = br->results();
-	
-	int n = 1;
-	for (auto& m : res)
-	{
-		auto& payload = m->payload();
-		auto& header_list = payload.headers();
+    std::list<QString> arg_list = split_string(id_list);
+    if (arg_list.empty()) 
+    {
+        std::cout << "Space separated messages ID list required" << std::endl;
+        return;
+    }
+    std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = m_gm->getBatchMessages(GmailRoutes::MesagesReciever::replySnippet, arg_list);
+    RESULT_LIST<messages::MessageResource*> res = br->results();
+    
+    int n = 1;
+    for (auto& m : res)
+    {
+        auto& payload = m->payload();
+        auto& header_list = payload.headers();
 
-		std::cout << n << ". " << m->id() << " ";
-		for (auto h : header_list)
-		{
-			std::cout << h.value() << " ";
-		}
-		std::cout << std::endl;
-		n++;
-	}
+        std::cout << n << ". " << m->id() << " ";
+        for (auto h : header_list)
+        {
+            std::cout << h.value() << " ";
+        }
+        std::cout << std::endl;
+        n++;
+    }
 };
 
 void GmailCommands::get_batch_details(QString id_list) 
 {
-	std::list<QString> arg_list = split_string(id_list);
-	if (arg_list.empty())
-	{
-		std::cout << "Space separated messages ID list required" << std::endl;
-		return;
-	}
+    std::list<QString> arg_list = split_string(id_list);
+    if (arg_list.empty())
+    {
+        std::cout << "Space separated messages ID list required" << std::endl;
+        return;
+    }
 
-	std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = m_gm->getBatchMessages(GmailRoutes::MesagesReciever::replyBody, arg_list);
-	RESULT_LIST<messages::MessageResource*> res = br->results();
-	int n = 1;
-	for (auto& m : res)
-	{
-		auto& payload = m->payload();
-		auto& header_list = payload.headers();
+    std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = m_gm->getBatchMessages(GmailRoutes::MesagesReciever::replyBody, arg_list);
+    RESULT_LIST<messages::MessageResource*> res = br->results();
+    int n = 1;
+    for (auto& m : res)
+    {
+        auto& payload = m->payload();
+        auto& header_list = payload.headers();
 
-		std::cout << n << ". " << m->id() << " ";
-		for (auto h : header_list)
-		{
-			std::cout << h.value() << " ";
-		}
-		std::cout << std::endl;
-		auto& parts = payload.parts();
-		for (auto pt : parts)
-		{
-			bool is_plain_text = false;
-			bool is_html_text = false;
-			auto& pt_headers = pt.headers();
-			for (auto h : pt_headers)
-			{
-				if (h.name() == "Content-Type") {
-					is_plain_text = (h.value().indexOf("text/plain") == 0);
-					is_html_text = (h.value().indexOf("text/html") == 0);
-				}
-				std::cout << "" << h.name().leftJustified(20, ' ') << " " << h.value() << std::endl;
-			}
-			if (is_plain_text || is_html_text)
-			{
-				const messages::MessagePartBody& pt_body = pt.body();
-				std::cout << QByteArray::fromBase64(pt_body.data(), QByteArray::Base64UrlEncoding).constData() << std::endl;
-			}
-		}
-		std::cout << "----------------------------------------------------------" << std::endl;
-		n++;
-	}
+        std::cout << n << ". " << m->id() << " ";
+        for (auto h : header_list)
+        {
+            std::cout << h.value() << " ";
+        }
+        std::cout << std::endl;
+        auto& parts = payload.parts();
+        for (auto pt : parts)
+        {
+            bool is_plain_text = false;
+            bool is_html_text = false;
+            auto& pt_headers = pt.headers();
+            for (auto h : pt_headers)
+            {
+                if (h.name() == "Content-Type") {
+                    is_plain_text = (h.value().indexOf("text/plain") == 0);
+                    is_html_text = (h.value().indexOf("text/html") == 0);
+                }
+                std::cout << "" << h.name().leftJustified(20, ' ') << " " << h.value() << std::endl;
+            }
+            if (is_plain_text || is_html_text)
+            {
+                const messages::MessagePartBody& pt_body = pt.body();
+                std::cout << QByteArray::fromBase64(pt_body.data(), QByteArray::Base64UrlEncoding).constData() << std::endl;
+            }
+        }
+        std::cout << "----------------------------------------------------------" << std::endl;
+        n++;
+    }
 
 };

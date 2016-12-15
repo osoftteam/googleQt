@@ -124,15 +124,15 @@ public:
     */
     void history(QString startHistoryIdStr);
 
-	/**
-		get_batch_snippets - get snippents for list of messages
-	*/
-	void get_batch_snippets(QString id_list);
+    /**
+        get_batch_snippets - get snippents for list of messages
+    */
+    void get_batch_snippets(QString id_list);
 
-	/**
-	get_batch_snippets - get email body & snippens for list of messages
-	*/
-	void get_batch_details(QString id_list);
+    /**
+    get_batch_snippets - get email body & snippens for list of messages
+    */
+    void get_batch_details(QString id_list);
 
     void export_last_result(QString fileName);
     void print_last_result(QString );

@@ -68,21 +68,21 @@ int main(int argc, char *argv[])
     t.addAction("send",             "Send Message", [&](QString arg) {cmd.send(arg); });
     t.addAction("import",           "Import Message", [&](QString arg) {cmd.importMessage(arg); });
     t.addAction("insert",           "Insert Message", [&](QString arg) {cmd.insertMessage(arg); });
-	t.addSeparator();
+    t.addSeparator();
     t.addAction("ls_labels",        "List Labels", [&](QString arg) {cmd.ls_labels(arg); });
     t.addAction("get_label",        "Get Label Info", [&](QString arg) {cmd.get_label(arg); });
     t.addAction("create_label",     "Create Label", [&](QString arg) {cmd.create_label(arg); });
     t.addAction("delete_label",     "Delete Label", [&](QString arg) {cmd.delete_label(arg); });
-	t.addSeparator();
+    t.addSeparator();
     t.addAction("ls_threads",       "List Threads", [&](QString arg) {cmd.ls_threads(arg); });
     t.addAction("get_thread",       "Get Thread Info", [&](QString arg) {cmd.get_thread(arg); });
     t.addAction("ls_drafts",        "List Drafts", [&](QString arg) {cmd.ls_drafts(arg); });
     t.addAction("get_draft",        "Get Draft Info", [&](QString arg) {cmd.get_draft(arg); });
     t.addAction("history",          "Get Mailbox History", [&](QString arg) {cmd.history(arg); });
-	t.addSeparator();
-	t.addAction("get_batch_snippets", "Get Messages snippets in batch by ID list", [&](QString arg) {cmd.get_batch_snippets(arg); });
-	t.addAction("get_batch_snippets", "Get Messages email body in batch by ID list", [&](QString arg) {cmd.get_batch_details(arg); });
-	t.addSeparator();
+    t.addSeparator();
+    t.addAction("get_batch_snippets", "Get Messages snippets in batch by ID list", [&](QString arg) {cmd.get_batch_snippets(arg); });
+    t.addAction("get_batch_snippets", "Get Messages email body in batch by ID list", [&](QString arg) {cmd.get_batch_details(arg); });
+    t.addSeparator();
     t.addAction("export_last_result",   "Export last response to a file", [&](QString arg) {cmd.export_last_result(arg); });
     t.addAction("print_last_result",   "Print last response", [&](QString arg) {cmd.print_last_result(arg); });
     
