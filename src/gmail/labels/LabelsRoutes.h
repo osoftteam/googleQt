@@ -69,7 +69,7 @@ namespace labels{
             Lists all labels in the user's mailbox.
 
             */
-        std::unique_ptr<LabelsResultList> list(void);
+        std::unique_ptr<LabelsResultList> list();
         GoogleTask<LabelsResultList>* list_Async();
         void list_AsyncCB(
             std::function<void(std::unique_ptr<LabelsResultList>)> completed_callback = nullptr,

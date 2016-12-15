@@ -25,7 +25,7 @@ namespace users{
             Returns user profile information.
 
             */
-        std::unique_ptr<GetProfileResponse> profile(void);
+        std::unique_ptr<GetProfileResponse> profile();
         GoogleTask<GetProfileResponse>* profile_Async();
         void profile_AsyncCB(
             std::function<void(std::unique_ptr<GetProfileResponse>)> completed_callback = nullptr,

@@ -254,3 +254,36 @@ void FilesRoutes::uploadFile_AsyncCB(
         failed_callback);
 }
 
+std::unique_ptr<FileResource> FilesRoutes::uploadFileSimple(QIODevice* data){
+    return uploadFileSimple_Async(data)->waitForResultAndRelease();
+}
+
+GoogleTask<FileResource>* FilesRoutes::uploadFileSimple_Async(QIODevice* data)
+{
+    GoogleTask<FileResource>* t = m_end_point->produceTask<FileResource>();
+    m_end_point->simpleUploadStyle<
+        FileResource,
+        FileResource::factory
+        >
+        (m_end_point->buildGdriveMPartUploadUrl("files", VoidType::instance()),
+        data,
+        t);
+    return t;
+}
+
+void FilesRoutes::uploadFileSimple_AsyncCB(
+    QIODevice* data,
+    std::function<void(std::unique_ptr<FileResource>)> completed_callback ,
+    std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+{
+    m_end_point->simpleUploadStyle
+        <
+        FileResource,
+        FileResource::factory
+        >
+        (m_end_point->buildGdriveMPartUploadUrl("files", VoidType::instance()),
+        data,
+        completed_callback,
+        failed_callback);
+}
+

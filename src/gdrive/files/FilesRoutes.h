@@ -140,6 +140,20 @@ namespace files{
             std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
+            /**
+            ApiRoute('uploadFileSimple')
+
+
+            Upload file content.
+
+            */
+        std::unique_ptr<FileResource> uploadFileSimple(QIODevice* readFrom);
+        GoogleTask<FileResource>* uploadFileSimple_Async(QIODevice* data);
+        void uploadFileSimple_AsyncCB(
+            QIODevice* data,
+            std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
+
     protected:
     };//FilesRoutes
 
