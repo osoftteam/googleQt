@@ -6,6 +6,8 @@
 
 #include "GdriveAutotest.h"
 #ifdef API_QT_AUTOTEST
+#include <QBuffer>
+#include <QByteArray>
 using namespace googleQt;
 using namespace googleQt;
 
@@ -74,8 +76,10 @@ static void call_deleteOperation_from_Files(){
 static void call_downloadFile_from_Files(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("downloadFile");
     std::unique_ptr<gdrive::DownloadFileArg> arg = gdrive::DownloadFileArg::EXAMPLE();
-    QIODevice* io = nullptr;
-    cl->getFiles()->downloadFile(*(arg.get()) , io);
+    QByteArray data("Hello World! 123454321 (.) :: (b -> c) -> (a -> b) -> (a -> c)");
+    QBuffer io(&data);
+    io.open(QIODevice::ReadOnly);
+    cl->getFiles()->downloadFile(*(arg.get()) , &io);
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
@@ -103,7 +107,19 @@ static void call_list_from_Files(){
 static void call_uploadFile_from_Files(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("uploadFile");
     std::unique_ptr<files::FileResource> arg = files::FileResource::EXAMPLE();
-    cl->getFiles()->uploadFile(*(arg.get()) );
+    QByteArray data("Hello World! 123454321 (.) :: (b -> c) -> (a -> b) -> (a -> c)");
+    QBuffer io(&data);
+    io.open(QIODevice::ReadOnly);
+    cl->getFiles()->uploadFile(*(arg.get()) , &io);
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
+static void call_uploadFileSimple_from_Files(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("uploadFileSimple");
+    QByteArray data("Hello World! 123454321 (.) :: (b -> c) -> (a -> b) -> (a -> c)");
+    QBuffer io(&data);
+    io.open(QIODevice::ReadOnly);
+    cl->getFiles()->uploadFileSimple(&io);
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
@@ -157,6 +173,7 @@ static void test_call_FilesRoutes(){
     call_get_from_Files();
     call_list_from_Files();
     call_uploadFile_from_Files();
+    call_uploadFileSimple_from_Files();
 }
 
 static void test_call_PermissionsRoutes(){
