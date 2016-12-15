@@ -91,7 +91,7 @@ std::cout << " " << m_prompt << "> ";
 
             static QString pad(QString s, size_t num, char paddingChar = ' ')
             {
-                return s.leftJustified(num, paddingChar, false);
+                return s.leftJustified(static_cast<int>(num), paddingChar, false);
             }
             
             static QString pad(const char* s, size_t num, char paddingChar = ' ')
@@ -101,7 +101,7 @@ std::cout << " " << m_prompt << "> ";
             
             static QString pad_trunc(QString s, size_t num, char paddingChar = ' ')
             {
-                return s.leftJustified(num, paddingChar, true);
+                return s.leftJustified(static_cast<int>(num), paddingChar, true);
             }
             
         protected:
