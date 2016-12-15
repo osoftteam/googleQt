@@ -173,43 +173,43 @@ namespace googleQt{
                  failed_callback);
         }
 
-		//...
-		template <class RES, class RESULT_FACTORY>
-		void simpleUploadStyle(QUrl url,
-			QIODevice* readFrom,
-			GoogleTask<RES>* t)
-		{
-			std::function<void(std::unique_ptr<RES>)> completed_callback =
-				[=](std::unique_ptr<RES> r)
-			{
-				t->completed_callback(std::move(r));
-			};
+        //...
+        template <class RES, class RESULT_FACTORY>
+        void simpleUploadStyle(QUrl url,
+            QIODevice* readFrom,
+            GoogleTask<RES>* t)
+        {
+            std::function<void(std::unique_ptr<RES>)> completed_callback =
+                [=](std::unique_ptr<RES> r)
+            {
+                t->completed_callback(std::move(r));
+            };
 
-			std::function<void(std::unique_ptr<GoogleException>)> failed_callback =
-				[=](std::unique_ptr<GoogleException> ex)
-			{
-				t->failed_callback(std::move(ex));
-			};
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback =
+                [=](std::unique_ptr<GoogleException> ex)
+            {
+                t->failed_callback(std::move(ex));
+            };
 
-			simpleUploadStyle<RES, RESULT_FACTORY>(url, readFrom, completed_callback, failed_callback);
-		}
+            simpleUploadStyle<RES, RESULT_FACTORY>(url, readFrom, completed_callback, failed_callback);
+        }
 
 
-		template <class RES, class RESULT_FACTORY>
-		void simpleUploadStyle(QUrl url,
-			QIODevice* readFrom,
-			std::function<void(std::unique_ptr<RES>)> completed_callback = nullptr,
-			std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr)
-		{
-			std::shared_ptr<requester> rb(new SimpleUpload_requester(*this, readFrom));
-			runRequest<RES, RESULT_FACTORY>
-				(url,
-					std::move(rb),
-					completed_callback,
-					failed_callback);
-		}
+        template <class RES, class RESULT_FACTORY>
+        void simpleUploadStyle(QUrl url,
+            QIODevice* readFrom,
+            std::function<void(std::unique_ptr<RES>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr)
+        {
+            std::shared_ptr<requester> rb(new SimpleUpload_requester(*this, readFrom));
+            runRequest<RES, RESULT_FACTORY>
+                (url,
+                    std::move(rb),
+                    completed_callback,
+                    failed_callback);
+        }
 
-		//...
+        //...
 
         void downloadStyle(QUrl url, QIODevice* writeTo, GoogleVoidTask* t)
         {
@@ -325,17 +325,17 @@ namespace googleQt{
         GoogleClient* client();
         const GoogleClient* client()const;
 
-		template <class T>
-		GoogleTask<T>* produceTask()
-		{
-			GoogleTask<T>* rv = new GoogleTask<T>(*this);
-			return rv;
-		};
+        template <class T>
+        GoogleTask<T>* produceTask()
+        {
+            GoogleTask<T>* rv = new GoogleTask<T>(*this);
+            return rv;
+        };
 
-		GoogleVoidTask* produceVoidTask()
-		{
-			return new GoogleVoidTask(*this);
-		}
+        GoogleVoidTask* produceVoidTask()
+        {
+            return new GoogleVoidTask(*this);
+        }
 
 
     protected:
@@ -386,7 +386,7 @@ namespace googleQt{
                                          {
                                              if (completed_callback != nullptr)
                                                  {
-													m_last_response = reply->readAll();
+                                                    m_last_response = reply->readAll();
                                                     completed_callback(factory.create(m_last_response));
                                                  }
                                          }break;

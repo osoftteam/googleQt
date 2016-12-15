@@ -22,7 +22,7 @@ GoogleClient::~GoogleClient(){
 
 void GoogleClient::cancelAllRequests() 
 {
-	m_endpoint->cancelAll();
+    m_endpoint->cancelAll();
 };
 
 QString GoogleClient::lastApiCall()
@@ -32,7 +32,7 @@ QString GoogleClient::lastApiCall()
 
 QByteArray GoogleClient::lastResponse()
 {
-	return m_endpoint->lastResponse();
+    return m_endpoint->lastResponse();
 };
 
 void GoogleClient::printLastApiCall()
@@ -47,22 +47,22 @@ void GoogleClient::printLastResponse()
     std::cout << "-----------------------------------------" << std::endl;
     std::cout << "API call" << std::endl;
     std::cout << lastApiCall().toStdString() << std::endl;    
-	std::cout << "-----------------------------------------" << std::endl;
-	std::cout << "response" << std::endl;
-	std::cout << lastResponse().toStdString() << std::endl;
+    std::cout << "-----------------------------------------" << std::endl;
+    std::cout << "response" << std::endl;
+    std::cout << lastResponse().toStdString() << std::endl;
 };
 
 void GoogleClient::exportLastResponse(QString fileName) 
 {
-	QFile file_in(fileName);
-	if (!file_in.open(QFile::WriteOnly)) {
-		qWarning() << "Error opening file: " << fileName;
-		return;
-	}
+    QFile file_in(fileName);
+    if (!file_in.open(QFile::WriteOnly)) {
+        qWarning() << "Error opening file: " << fileName;
+        return;
+    }
     file_in.write(lastApiCall().toStdString().c_str());
     file_in.write("\n-----------------------------------------\n");
-	file_in.write(lastResponse());
-	file_in.close();
+    file_in.write(lastResponse());
+    file_in.close();
 };
 
 GmailRoutes* GoogleClient::gmail()

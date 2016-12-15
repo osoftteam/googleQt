@@ -60,42 +60,42 @@ drafts::DraftsRoutes* GmailRoutes::getDrafts()
 
 GoogleTask<messages::MessageResource>* GmailRoutes::MesagesReciever::route(QString message_id)
 {
-	gmail::IdArg arg(message_id);
-	if (m_msg_format == replySnippet)
-	{
-		arg.setFormat("metadata");
-		arg.headers().push_back("Subject");
-		arg.headers().push_back("From");
-	}
-	else if (m_msg_format == replyBody) 
-	{
-		
-	}
+    gmail::IdArg arg(message_id);
+    if (m_msg_format == replySnippet)
+    {
+        arg.setFormat("metadata");
+        arg.headers().push_back("Subject");
+        arg.headers().push_back("From");
+    }
+    else if (m_msg_format == replyBody) 
+    {
+        
+    }
 
-	return m_r.getMessages()->get_Async(arg);
+    return m_r.getMessages()->get_Async(arg);
 }
 
 
 std::unique_ptr<BatchResult<QString, 
-	messages::MessageResource>> GmailRoutes::getBatchMessages(MesagesReciever::replyFormat f,
-							const std::list<QString>& id_list)
+    messages::MessageResource>> GmailRoutes::getBatchMessages(MesagesReciever::replyFormat f,
+                            const std::list<QString>& id_list)
 {
-	return getBatchMessages_Async(f, id_list)->waitForResultAndRelease();
+    return getBatchMessages_Async(f, id_list)->waitForResultAndRelease();
 };
 
 BatchRunner<QString,
-	GmailRoutes::MesagesReciever,
-	messages::MessageResource>* GmailRoutes::getBatchMessages_Async(MesagesReciever::replyFormat f, const std::list<QString>& id_list)
+    GmailRoutes::MesagesReciever,
+    messages::MessageResource>* GmailRoutes::getBatchMessages_Async(MesagesReciever::replyFormat f, const std::list<QString>& id_list)
 {
-	if (!m_MessagesBatchReciever) {
-		m_MessagesBatchReciever.reset(new MesagesReciever(*this, f));
-	}
+    if (!m_MessagesBatchReciever) {
+        m_MessagesBatchReciever.reset(new MesagesReciever(*this, f));
+    }
 
-	BatchRunner<QString,
-		GmailRoutes::MesagesReciever,
-		messages::MessageResource>* r = new BatchRunner<QString,
-		GmailRoutes::MesagesReciever,
-		messages::MessageResource>(id_list, m_MessagesBatchReciever.get(), *m_endpoint);
-	r->run();
-	return r;
+    BatchRunner<QString,
+        GmailRoutes::MesagesReciever,
+        messages::MessageResource>* r = new BatchRunner<QString,
+        GmailRoutes::MesagesReciever,
+        messages::MessageResource>(id_list, m_MessagesBatchReciever.get(), *m_endpoint);
+    r->run();
+    return r;
 };

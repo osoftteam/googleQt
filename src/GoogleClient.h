@@ -30,30 +30,30 @@ public:
     */
     GdriveRoutes* gdrive();
 
-	/**
-	* used by some API (gmail)
-	*/
+    /**
+    * used by some API (gmail)
+    */
     QString userId()const{return m_userId;}
 
-	/**
-	* cancell all requests and exit blocking call is any
-	*/
-	void          cancelAllRequests();
+    /**
+    * cancell all requests and exit blocking call is any
+    */
+    void          cancelAllRequests();
 
-	/**
-	* refresh access token
-	*/
-	virtual bool refreshToken();
+    /**
+    * refresh access token
+    */
+    virtual bool refreshToken();
 
-	/*
-		some debug functions, we might remove them in
-		future release
-	*/
+    /*
+        some debug functions, we might remove them in
+        future release
+    */
     QString lastApiCall();
-	QByteArray lastResponse();
+    QByteArray lastResponse();
     void printLastApiCall();
-	void printLastResponse();
-	void exportLastResponse(QString fileName);    
+    void printLastResponse();
+    void exportLastResponse(QString fileName);    
     
 protected:
     std::unique_ptr<GmailRoutes>           m_gmail_routes;
