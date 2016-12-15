@@ -6,6 +6,8 @@
 
 #include "GtaskAutotest.h"
 #ifdef API_QT_AUTOTEST
+#include <QBuffer>
+#include <QByteArray>
 using namespace googleQt;
 using namespace googleQt;
 
