@@ -69,8 +69,9 @@ namespace googleQt{
 		virtual bool isCompleted()const override { return (m_completed != nullptr); };
 
 		///this function will block execution (via event loop) and return
-		///object in case os success or raise exception in case of error
-		///also this function will schedule dispose of the object via deleteLater
+		///result object using move semantic via std::unique_ptr in case of success or 
+		///raise exception in case of error
+		///also this function will schedule dispose of the Task via deleteLater
 		std::unique_ptr<RESULT> waitForResultAndRelease()
 		{
 			std::unique_ptr<RESULT> res;
@@ -115,7 +116,7 @@ namespace googleQt{
 
 		///this function will block execution (via event loop) and return
 		///object in case os success or raise exception in case of error
-		///also this function will schedule dispose of the object via deleteLater
+		///also this function will schedule dispose of the Task via deleteLater
 		void waitForResultAndRelease();
 
 	protected:
