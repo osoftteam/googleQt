@@ -590,6 +590,7 @@ void GmailCommands::get_batch_snippets(QString id_list)
     }
     std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = m_gm->getBatchMessages(GmailRoutes::MesagesReciever::replySnippet, arg_list);
     RESULT_LIST<messages::MessageResource*> res = br->results();
+    std::cout << "batch size: " << res.size() << std::endl;
     
     int n = 1;
     for (auto& m : res)

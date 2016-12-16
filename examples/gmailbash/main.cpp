@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
     t.addAction("history",          "Get Mailbox History", [&](QString arg) {cmd.history(arg); });
     t.addSeparator();
     t.addAction("get_batch_snippets", "Get Messages snippets in batch by ID list", [&](QString arg) {cmd.get_batch_snippets(arg); });
-    t.addAction("get_batch_snippets", "Get Messages email body in batch by ID list", [&](QString arg) {cmd.get_batch_details(arg); });
+    t.addAction("get_batch_details", "Get Messages email body in batch by ID list", [&](QString arg) {cmd.get_batch_details(arg); });
     t.addSeparator();
     t.addAction("export_last_result",   "Export last response to a file", [&](QString arg) {cmd.export_last_result(arg); });
     t.addAction("print_last_result",   "Print last response", [&](QString arg) {cmd.print_last_result(arg); });
