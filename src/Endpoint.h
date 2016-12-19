@@ -23,6 +23,7 @@ namespace googleQt{
         DECL_STD_BOUND_TASK_CB      (postStyle);
         DECL_STD_BOUND_TASK_CB      (putStyle);
         DECL_STD_BOUND_TASK_CB      (rfc822UploadStyle);
+        DECL_STD_BOUND_TASK_CB      (updateStyle);
         DECL_BODYLESS_BOUND_TASK_CB (getStyle);
         DECL_BODYLESS_BOUND_TASK_CB (postStyle);
         DECL_VOID_BOUND_TASK_CB     (postStyle);
@@ -113,6 +114,22 @@ namespace googleQt{
                  completed_callback,
                  failed_callback);
         }
+
+        template <class RES, class RESULT_FACTORY, class BODY>
+        void updateStyle(QUrl url, const BODY& body,
+            std::function<void(std::unique_ptr<RES>)> completed_callback,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+        {
+            QJsonObject js = body;
+            std::shared_ptr<requester> rb(new UPDATE_requester(*this, js));
+            runRequest<RES, 
+                RESULT_FACTORY>
+                (url,
+                 std::move(rb),
+                 completed_callback,
+                 failed_callback);
+        }
+
         
         void deleteStyle(QUrl url,
             std::function<void(void)> completed_callback = nullptr,
@@ -173,7 +190,6 @@ namespace googleQt{
                  failed_callback);
         }
 
-        //...
         template <class RES, class RESULT_FACTORY>
         void simpleUploadStyle(QUrl url,
             QIODevice* readFrom,
@@ -314,7 +330,6 @@ namespace googleQt{
         QUrl buildGdriveMPartUploadUrl(const QString&, const ARG&)const
         {
             QUrl url("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart");
-            //a.build("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", url);
             addAppKeyParameter(url);
             return url;
         }
