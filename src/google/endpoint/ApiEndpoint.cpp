@@ -1,3 +1,4 @@
+#include <QBuffer>
 #include "ApiEndpoint.h"
 
 #ifdef API_QT_AUTOTEST
@@ -7,7 +8,7 @@
 
 using namespace googleQt;
 
-ApiEndpoint::ApiEndpoint(ApiClient* c):m_client(c)//, m_reply_in_progress(NULL)
+ApiEndpoint::ApiEndpoint(ApiClient* c):m_client(c)
 {
 
 }
@@ -57,7 +58,6 @@ void ApiEndpoint::registerReply(std::shared_ptr<requester>& rb, QNetworkReply* r
     }
 
     m_replies_in_progress[r] = finishedLambda;
-   // m_replies_in_progress.insert(std::make_pair(r, nullptr));
 };
 
 void ApiEndpoint::unregisterReply(QNetworkReply* r)
@@ -94,7 +94,6 @@ QNetworkReply* ApiEndpoint::getData(const QNetworkRequest &req)
     return nullptr;
 #else
     QNetworkReply *r = m_con_mgr.get(req);
-//    registerReply(r);
     return r;
 #endif
 };
@@ -152,7 +151,6 @@ QNetworkReply* ApiEndpoint::putData(const QNetworkRequest &req, const QByteArray
     return nullptr;
 #else
     QNetworkReply *r = m_con_mgr.put(req, data);
-//    registerReply(r);
     return r;
 #endif
 };
@@ -171,7 +169,26 @@ QNetworkReply* ApiEndpoint::deleteData(const QNetworkRequest &req)
     return nullptr;
 #else
     QNetworkReply *r = m_con_mgr.deleteResource(req);
-//    registerReply(r);
+    return r;
+#endif
+};
+
+QNetworkReply* ApiEndpoint::patchData(const QNetworkRequest &req, QByteArray& data)
+{
+    QString rinfo = "PATCH " + req.url().toString() + "\n";
+    QList<QByteArray> lst = req.rawHeaderList();
+    for(QList<QByteArray>::iterator i = lst.begin(); i != lst.end(); i++)
+        rinfo += QString("--header %1 : %2 \n").arg(i->constData()).arg(req.rawHeader(*i).constData());
+    rinfo += QString("--data %1").arg(data.constData());
+
+    updateLastRequestInfo(rinfo);
+#ifdef API_QT_AUTOTEST
+    LOG_REQUEST;
+    return nullptr;
+#else
+    QBuffer *buf = new QBuffer(&data);
+    buf->open(QBuffer::ReadOnly);
+    QNetworkReply *r = m_con_mgr.sendCustomRequest(req, "PATCH", buf);
     return r;
 #endif
 };

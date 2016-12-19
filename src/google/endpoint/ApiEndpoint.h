@@ -33,7 +33,8 @@ namespace googleQt{
         virtual QNetworkReply*  postData(const QNetworkRequest &request, QHttpMultiPart* mpart);
         virtual QNetworkReply*  putData(const QNetworkRequest &request, const QByteArray& data);
         virtual QNetworkReply*  deleteData(const QNetworkRequest &request);
-
+        virtual QNetworkReply*  patchData(const QNetworkRequest &request, QByteArray& data);
+        
     protected:
         class requester
         {
@@ -115,6 +116,29 @@ namespace googleQt{
                 }           
                 r.setRawHeader("Content-Type", "application/json; charset=utf-8");
                 return m_ep.putData(r, bytes2post);
+            }
+        protected:
+            const QJsonObject& m_js_out;
+        };
+
+        class UPDATE_requester: public requester
+        {
+        public:
+            UPDATE_requester(ApiEndpoint& e, const QJsonObject& js)
+                :requester(e), m_js_out(js){}
+            QNetworkReply * request(QNetworkRequest& r)override
+            {
+                QByteArray bytes2post;
+                QJsonDocument doc(m_js_out);
+                if(m_js_out.isEmpty()){
+                    bytes2post.append("null");
+                }
+                else{
+                    QJsonDocument doc(m_js_out);
+                    bytes2post = doc.toJson(QJsonDocument::Compact);
+                }           
+                r.setRawHeader("Content-Type", "application/json; charset=utf-8");
+                return m_ep.patchData(r, bytes2post);
             }
         protected:
             const QJsonObject& m_js_out;
