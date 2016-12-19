@@ -104,6 +104,13 @@ static void call_list_from_Files(){
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
+static void call_rename_from_Files(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("rename");
+    std::unique_ptr<gdrive::RenameFileArg> arg = gdrive::RenameFileArg::EXAMPLE();
+    cl->getFiles()->rename(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
 static void call_uploadFile_from_Files(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("uploadFile");
     std::unique_ptr<files::FileResource> arg = files::FileResource::EXAMPLE();
@@ -172,6 +179,7 @@ static void test_call_FilesRoutes(){
     call_emptyTrash_from_Files();
     call_get_from_Files();
     call_list_from_Files();
+    call_rename_from_Files();
     call_uploadFile_from_Files();
     call_uploadFileSimple_from_Files();
 }

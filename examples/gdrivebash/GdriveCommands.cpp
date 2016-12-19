@@ -115,6 +115,38 @@ void GdriveCommands::get(QString fileId)
     }
 };
 
+void GdriveCommands::rename(QString fileId_space_new_title) 
+{
+    QStringList arg_list = fileId_space_new_title.split(" ",
+        QString::SkipEmptyParts);
+    if (arg_list.size() < 2)
+    {
+        std::cout << "Invalid parameters, expected <fileID> <fileName>" << std::endl;
+        return;
+    }
+
+    QString fileId = arg_list[0];
+    QString fileName = arg_list[1];
+
+    try
+    {    
+        RenameFileArg arg(fileId);
+        arg.setName(fileName);
+        arg.setFields("id,name,size,mimeType,webContentLink");
+        auto f = m_gd->getFiles()->rename(arg);
+        std::cout << "id= " << f->id() << std::endl
+                  << "name= " << f->name() << std::endl
+                  << "type= " << f->mimetype() << std::endl
+                  << "size= " << f->size() << std::endl
+                  << "webLink= " << f->webcontentlink() << std::endl;
+        m_c.printLastApiCall();
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }    
+}
+
 
 void GdriveCommands::download(QString fileId_space_localFileName) 
 {
@@ -198,6 +230,37 @@ void GdriveCommands::put(QString fileName)
         files::FileResource fres;
         fres.setName(doxFileName);
         auto f = m_gd->getFiles()->uploadFile(fres, &file_in);
+        std::cout << "file uploaded" << std::endl;
+        std::cout << "id= " << f->id() << std::endl
+            << "name= " << f->name() << std::endl
+            << "type= " << f->mimetype() << std::endl
+            << "size= " << f->size() << std::endl
+            << "webLink= " << f->webcontentlink() << std::endl;
+        m_c.printLastApiCall();
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+    file_in.close();
+};
+
+void GdriveCommands::put_simple(QString fileName) 
+{
+    if (fileName.isEmpty()) {
+        std::cout << "ERROR argument reguired" << std::endl;
+        return;
+    }
+
+    QFile file_in(fileName);
+    if (!file_in.open(QFile::ReadOnly)) {
+        std::cout << "Error opening file: " << fileName.toStdString() << std::endl;
+        return;
+    }
+
+    try
+    {
+        auto f = m_gd->getFiles()->uploadFileSimple(&file_in);
         std::cout << "file uploaded" << std::endl;
         std::cout << "id= " << f->id() << std::endl
             << "name= " << f->name() << std::endl
