@@ -242,6 +242,30 @@ void GetCommentArg::build(const QString& link_path, QUrl& url)const
 };
 
 /**
+    RenameFileArg
+*/
+RenameFileArg::RenameFileArg(QString fileId)
+    :m_fileId(fileId)
+{
+
+};
+
+void RenameFileArg::build(const QString& link_path, QUrl& url)const
+{
+    UrlBuilder b(link_path + QString("/files/%2").arg(m_fileId), url);
+    ResponseFields2Builder(b);
+}
+
+void RenameFileArg::toJson(QJsonObject& js)const
+{
+    js["kind"] = QString("drive#file");
+    if(!m_fileId.isEmpty())
+        js["id"] = QString(m_fileId);
+    if(!m_name.isEmpty())
+        js["name"] = QString(m_name);
+};
+
+/**
     CommentListArg
 */
 CommentListArg::CommentListArg(QString fileId):m_fileId(fileId)

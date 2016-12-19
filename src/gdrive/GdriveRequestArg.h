@@ -113,6 +113,32 @@ namespace googleQt {
             QString m_fileId;
             bool    m_acknowledgeAbuse;
         };//FileIdArg
+
+
+        class RenameFileArg : public QParamArgWithBody<RenameFileArg>
+        {
+        public:
+            RenameFileArg(QString fileId = "");
+            void build(const QString& link_path, QUrl& url)const override;
+            void toJson(QJsonObject& js)const override;
+            
+            /**
+                The ID of the file.
+            */
+            QString getFileId()const { return m_fileId; }
+            void    setFileId(QString val) { m_fileId = val; }
+
+            /**
+                File name.
+            */
+            QString getName()const { return m_name; }
+            void    setName(QString val) { m_name = val; }
+            
+            
+        protected:
+            QString m_fileId;
+            QString m_name;
+        };
         
         class DownloadFileArg : public QParamArg
         {
