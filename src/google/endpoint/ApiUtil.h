@@ -203,6 +203,8 @@ namespace googleQt {
         QString m_Fields;
     };
 
+    
+    
     template <class P, class D>
     class PathArg : public P
     {
@@ -252,10 +254,45 @@ namespace googleQt {
         QUrl&     m_url;
     };
 
+    template <class T>
+    class JsonFactory
+    {
+    public:
+        std::unique_ptr<T>  create(const QByteArray& data)
+        {
+            QJsonDocument doc = QJsonDocument::fromJson(data);
+            QJsonObject js = doc.object();
+            return create(js);
+        }
+
+
+        std::unique_ptr<T>  create(const QJsonObject& js)
+        {
+            std::unique_ptr<T> rv(new T);
+            rv->fromJson(js);
+            return rv;
+        }        
+    };
+
+    template<class T>
+    class QParamArgWithBody: public QParamArg
+    {
+    public:
+        class factory : public JsonFactory<T>
+        {
+                
+        };
+        virtual void toJson(QJsonObject& js)const = 0;
+        operator QJsonObject()const{
+            QJsonObject js;
+            toJson(js);            
+            return js;
+        };        
+    };
 
 #define DECLARE_PATH_CLASS(P) struct path_##P{QString path()const{return #P;}}
 #define EXPECT(E, M) if(!E)qWarning() << M;
-
+    
 }
 
 #define DECL_STD_BOUND_TASK_CB(ENDP_FUNC)                               \
