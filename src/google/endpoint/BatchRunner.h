@@ -48,28 +48,15 @@ namespace googleQt{
         REQUEST_LIST<ARG_PARAM> m_requests;
     };
 
-    class BatchBaseRunner : public QObject
+    class BatchBaseRunner : public EndpointRunnable
     {
-        Q_OBJECT;
     public:
-        BatchBaseRunner(ApiEndpoint& ept):m_endpoint(ept)
+        BatchBaseRunner(ApiEndpoint& ept):EndpointRunnable(ept)
         {
             m_available_concurrent_routes_count = m_max_concurrent_routes_count;
-        }
-
-        virtual ~BatchBaseRunner()
-        {
-            //            std::cout << "~BatchBaseRunner" << std::endl;
-        }
-        
-        bool isFinished()const { return m_finished; }
-
-    signals:
-        void finished();
+        }               
 
     protected:
-        void notifyOnFinished();
-        void waitUntillFinishedOrCancelled();
         virtual void runSingleRequest() = 0;
         void afterSingleStepFinished()
         {
@@ -81,10 +68,7 @@ namespace googleQt{
     protected:
         int  m_max_concurrent_routes_count          {2};
         int  m_available_concurrent_routes_count    {0};
-        int  m_steps2complete                       {0};
-        bool m_finished                             { false };
-        bool m_in_wait_loop                         { false };
-        ApiEndpoint& m_endpoint;
+        int  m_steps2complete                       {0};        
     };
 
 
@@ -106,7 +90,7 @@ namespace googleQt{
                 m_result.reset(new BatchResult<ARG_PARAM, RESULT>);
             }
 
-            m_steps2complete = m_arg_parameters.size();
+            m_steps2complete = static_cast<int>(m_arg_parameters.size());
             while(m_arg_parameters.size() > 0 && 
                 m_available_concurrent_routes_count > 0)
                 {
@@ -114,7 +98,8 @@ namespace googleQt{
                 }
         }
 
-        BatchResult<ARG_PARAM, RESULT>* get() { return m_result.get(); }
+     //   BatchResult<ARG_PARAM, RESULT>* get() { return m_result.results(); }
+        RESULT_LIST<RESULT*> get() { return m_result->results(); }
         std::unique_ptr<BatchResult<ARG_PARAM, RESULT> > waitForResultAndRelease()
         {
             std::unique_ptr<BatchResult<ARG_PARAM, RESULT> > res;
@@ -127,7 +112,6 @@ namespace googleQt{
 
             res = std::move(m_result);
 
-            //            std::cout << "waitForResultAndRelease[deleteLater]: " << std::endl;
             deleteLater();
             return res;
         }
@@ -137,8 +121,6 @@ namespace googleQt{
         {
             if(m_steps2complete <= 0)
                 {
-                    //                    std::cout << "notify-on-complete: " << m_steps2complete << " " << m_arg_parameters.size() << std::endl;
-                    m_finished = true;
                     notifyOnFinished();
                 }
             
@@ -151,11 +133,9 @@ namespace googleQt{
             m_arg_parameters.pop_front();
             m_result->registerRequest(ap);
             GoogleTask<RESULT>* t = m_router->route(ap);
-            //            std::cout << "route-ready:" << ap.toStdString() << " " << t << std::endl;
             m_available_concurrent_routes_count--;
             connect(t, &GoogleTask<RESULT>::finished, this, [=]()
             {
-                //                std::cout << "batch-lambda: " << m_steps2complete << std::endl;
                 m_result->registerResult(ap, t);
                 afterSingleStepFinished();
             });
