@@ -1,3 +1,4 @@
+#include <iostream>
 #include <QBuffer>
 #include "ApiEndpoint.h"
 
@@ -29,6 +30,11 @@ void ApiEndpoint::exitEventsLoop()const
     m_loop.exit();
 };
 
+
+void ApiEndpoint::setProxy(const QNetworkProxy& proxy)
+{
+    m_con_mgr.setProxy(proxy);
+};
 
 void ApiEndpoint::cancelAll()
 {
@@ -106,6 +112,25 @@ QNetworkReply* ApiEndpoint::postData(const QNetworkRequest &req, const QByteArra
         rinfo += QString("--header %1 : %2 \n").arg(i->constData()).arg(req.rawHeader(*i).constData());
     rinfo += QString("--data %1").arg(data.constData());
 
+    /*
+    std::cout << "hexl-POST =====" << std::endl;
+    std::string hstr = QString(data.toHex()).toStdString();
+    int len = hstr.length();
+    int idx = 0;
+    while(idx < len)
+        {
+            for(int i = 0; i < 32; i+= 2)
+                {
+                    std::cout << hstr[idx] << hstr[idx+1] << " ";
+                    idx += 2;
+                    if(idx >= len)break;                    
+                }
+            std::cout << std::endl;
+        }
+    std::cout << std::endl;
+    std::cout << "hexl-POST =====" << std::endl;
+    */ 
+
     updateLastRequestInfo(rinfo);
     
 #ifdef API_QT_AUTOTEST
@@ -173,7 +198,7 @@ QNetworkReply* ApiEndpoint::deleteData(const QNetworkRequest &req)
 #endif
 };
 
-QNetworkReply* ApiEndpoint::patchData(const QNetworkRequest &req, QByteArray& data)
+QNetworkReply* ApiEndpoint::patchData(const QNetworkRequest &req, const QByteArray& data)
 {
     QString rinfo = "PATCH " + req.url().toString() + "\n";
     QList<QByteArray> lst = req.rawHeaderList();
@@ -186,9 +211,72 @@ QNetworkReply* ApiEndpoint::patchData(const QNetworkRequest &req, QByteArray& da
     LOG_REQUEST;
     return nullptr;
 #else
-    QBuffer *buf = new QBuffer(&data);
+    QBuffer *buf = new QBuffer();
+    buf->setData(data);
     buf->open(QBuffer::ReadOnly);
     QNetworkReply *r = m_con_mgr.sendCustomRequest(req, "PATCH", buf);
+    buf->setParent(r);
     return r;
 #endif
 };
+
+
+///MPartUpload_requester
+QNetworkReply* ApiEndpoint::MPartUpload_requester::request(QNetworkRequest& r)
+{
+    QByteArray meta_bytes;
+    QJsonDocument doc(m_js_out);
+    if (m_js_out.isEmpty()) {
+        meta_bytes.append("null");
+    }
+    else {
+        QJsonDocument doc(m_js_out);
+        meta_bytes = doc.toJson(QJsonDocument::Compact);
+    }
+
+    /*
+      QHttpMultiPart *mpart = new QHttpMultiPart(QHttpMultiPart::RelatedType);
+
+      QHttpPart metaPart;
+      metaPart.setRawHeader("Content-Type", "application/json; charset = UTF-8");
+      metaPart.setBody(meta_bytes);
+
+      QHttpPart dataPart;
+      dataPart.setRawHeader("Content-Type", "application/octet-stream");
+      dataPart.setRawHeader("Content-Transfer-Encoding", "base64");
+      if(m_readFrom){
+      dataPart.setBody(m_readFrom->readAll().toBase64(QByteArray::Base64UrlEncoding));
+      }
+
+      mpart->append(metaPart);
+      mpart->append(dataPart);
+
+      QNetworkReply* reply = m_ep.postData(r, mpart);
+      mpart->setParent(reply);
+      return reply;
+    */
+
+                
+    QString delimiter("219693286");
+    QByteArray bytes2post = QString("--%1\r\n").arg(delimiter).toStdString().c_str();
+    bytes2post += QString("Content-Type: application/json; charset=UTF-8\r\n").toStdString().c_str();             
+    bytes2post += "\r\n";
+    bytes2post += meta_bytes;
+                
+    bytes2post += "\r\n";
+    bytes2post += QString("--%1\r\n").arg(delimiter).toStdString().c_str();
+    bytes2post += QString("Content-Type: application/octet-stream\r\n").toStdString().c_str();
+    bytes2post += QString("Content-Transfer-Encoding: base64\r\n\r\n").toStdString().c_str();
+    //bytes2post += "\r\n";
+    if (m_readFrom) {
+        //        bytes2post += m_readFrom->readAll().toBase64(QByteArray::Base64UrlEncoding);
+        bytes2post += m_readFrom->readAll().toBase64(QByteArray::Base64Encoding);
+    }
+    bytes2post += "\r\n";
+    bytes2post += QString("--%1--\r\n").arg(delimiter).toStdString().c_str();
+
+    QString content_str = QString("multipart/related; boundary=%1").arg(delimiter);
+    r.setRawHeader("Content-Type", content_str.toStdString().c_str());
+    r.setRawHeader("Content-Length", QString("%1").arg(bytes2post.size()).toStdString().c_str());
+    return m_ep.postData(r, bytes2post);
+}

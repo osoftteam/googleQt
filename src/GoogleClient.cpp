@@ -94,3 +94,8 @@ bool GoogleClient::refreshToken()
     bool rv = GoogleWebAuth::refreshToken(m_app.get(), m_auth.get());
     return rv;
 };
+
+void GoogleClient::setNetworkProxy(const QNetworkProxy& proxy)
+{
+    m_endpoint->setProxy(proxy);
+};

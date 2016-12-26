@@ -54,6 +54,7 @@ public:
     void printLastApiCall();
     void printLastResponse();
     void exportLastResponse(QString fileName);    
+    void setNetworkProxy(const QNetworkProxy& proxy);
     
 protected:
     std::unique_ptr<GmailRoutes>           m_gmail_routes;
