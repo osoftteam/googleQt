@@ -135,11 +135,38 @@ namespace googleQt {
             void    setName(QString val) { m_name = val; }
             
             
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<RenameFileArg> EXAMPLE();
+#endif //API_QT_AUTOTEST
+
         protected:
             QString m_fileId;
             QString m_name;
         };
         
+        class MultipartUploadFileArg : public QParamArgWithBody<MultipartUploadFileArg>
+        {
+        public:
+            MultipartUploadFileArg(QString name = "");
+            void build(const QString& link_path, QUrl& url)const override;
+            void toJson(QJsonObject& js)const override;
+
+            /**
+            File name.
+            */
+            QString getName()const { return m_name; }
+            void    setName(QString val) { m_name = val; }
+
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<MultipartUploadFileArg> EXAMPLE();
+#endif //API_QT_AUTOTEST
+
+        protected:
+            QString m_name;
+        };
+        //...
+
+
         class DownloadFileArg : public QParamArg
         {
         public:
@@ -277,6 +304,28 @@ namespace googleQt {
             bool    m_keepRevisionForever;
             QString m_ocrLanguage;
             bool    m_useContentAsIndexableText;
+        };
+
+        class CreateFolderArg : public QParamArgWithBody<CreateFolderArg>
+        {
+        public:
+            CreateFolderArg(QString name = "");
+            void build(const QString& link_path, QUrl& url)const override;
+            void toJson(QJsonObject& js)const override;
+            
+            /**
+                File name.
+            */
+            QString getName()const { return m_name; }
+            void    setName(QString val) { m_name = val; }
+            
+            
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<CreateFolderArg> EXAMPLE();
+#endif //API_QT_AUTOTEST
+
+        protected:
+            QString m_name;
         };
         
         class EmptyTrashArg: public PathArg<path_trash, EmptyTrashArg>

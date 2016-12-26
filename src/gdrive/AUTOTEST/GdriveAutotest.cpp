@@ -66,6 +66,13 @@ static void call_create_from_Files(){
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
+static void call_createFolder_from_Files(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("createFolder");
+    std::unique_ptr<gdrive::CreateFolderArg> arg = gdrive::CreateFolderArg::EXAMPLE();
+    cl->getFiles()->createFolder(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
 static void call_deleteOperation_from_Files(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("deleteOperation");
     std::unique_ptr<gdrive::DeleteFileArg> arg = gdrive::DeleteFileArg::EXAMPLE();
@@ -111,13 +118,13 @@ static void call_rename_from_Files(){
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
-static void call_uploadFile_from_Files(){
-    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("uploadFile");
-    std::unique_ptr<files::FileResource> arg = files::FileResource::EXAMPLE();
+static void call_uploadFileMultipart_from_Files(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("uploadFileMultipart");
+    std::unique_ptr<gdrive::MultipartUploadFileArg> arg = gdrive::MultipartUploadFileArg::EXAMPLE();
     QByteArray data("Hello World! 123454321 (.) :: (b -> c) -> (a -> b) -> (a -> c)");
     QBuffer io(&data);
     io.open(QIODevice::ReadOnly);
-    cl->getFiles()->uploadFile(*(arg.get()) , &io);
+    cl->getFiles()->uploadFileMultipart(*(arg.get()) , &io);
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
@@ -174,13 +181,14 @@ static void test_call_CommentsRoutes(){
 static void test_call_FilesRoutes(){
     call_copy_from_Files();
     call_create_from_Files();
+    call_createFolder_from_Files();
     call_deleteOperation_from_Files();
     call_downloadFile_from_Files();
     call_emptyTrash_from_Files();
     call_get_from_Files();
     call_list_from_Files();
     call_rename_from_Files();
-    call_uploadFile_from_Files();
+    call_uploadFileMultipart_from_Files();
     call_uploadFileSimple_from_Files();
 }
 

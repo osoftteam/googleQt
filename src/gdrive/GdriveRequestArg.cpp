@@ -61,6 +61,27 @@ void GetFileArg::build(const QString& link_path, QUrl& url)const
 }
 
 /**
+    MultipartUploadFileArg
+*/
+MultipartUploadFileArg::MultipartUploadFileArg(QString name /*= ""*/) 
+    :m_name(name)
+{
+
+};
+
+void MultipartUploadFileArg::build(const QString&, QUrl& )const 
+{
+    ///we don't really build anything, the mpart link should be good enough
+};
+
+void MultipartUploadFileArg::toJson(QJsonObject& js)const
+{
+    if (!m_name.isEmpty())
+        js["name"] = QString(m_name);
+};
+
+
+/**
     DownloadFileArg
 */
 DownloadFileArg::DownloadFileArg(QString fileId)
@@ -104,8 +125,7 @@ DeleteFileArg::DeleteFileArg(QString fileId)
 
 void DeleteFileArg::build(const QString& link_path, QUrl& url)const
 {
-    UrlBuilder b(link_path + "/files", url);
-    b.add("fileId", m_fileId);
+    url = link_path + QString("/files/%1").arg(m_fileId);
 }
 
 /**
@@ -113,7 +133,6 @@ void DeleteFileArg::build(const QString& link_path, QUrl& url)const
 */
 CreateFileArg::CreateFileArg()
 {
-    //m_uploadType = "media";
     m_ignoreDefaultVisibility = false;
     m_keepRevisionForever = false;
     m_useContentAsIndexableText = false;
@@ -122,13 +141,31 @@ CreateFileArg::CreateFileArg()
 void CreateFileArg::build(const QString& link_path, QUrl& url)const
 {
     UrlBuilder b(link_path + "/files", url);
-    // b.add("uploadType", m_uploadType)
     b.add("ignoreDefaultVisibility", m_ignoreDefaultVisibility)
         .add("keepRevisionForever", m_keepRevisionForever)
         .add("ocrLanguage", m_ocrLanguage)
         .add("useContentAsIndexableText", m_useContentAsIndexableText);
 }
 
+/**
+   CreateFolderArg
+*/
+CreateFolderArg::CreateFolderArg(QString name):m_name(name)
+{
+
+};
+
+void CreateFolderArg::build(const QString& link_path, QUrl& url)const
+{
+    url = link_path + QString("/files");
+}
+
+void CreateFolderArg::toJson(QJsonObject& js)const
+{
+    if(!m_name.isEmpty())
+        js["name"] = QString(m_name);
+    js["mimeType"] = QString("application/vnd.google-apps.folder");
+};
 
 
 /**
@@ -258,9 +295,6 @@ void RenameFileArg::build(const QString& link_path, QUrl& url)const
 
 void RenameFileArg::toJson(QJsonObject& js)const
 {
-    js["kind"] = QString("drive#file");
-    if(!m_fileId.isEmpty())
-        js["id"] = QString(m_fileId);
     if(!m_name.isEmpty())
         js["name"] = QString(m_name);
 };
@@ -384,6 +418,22 @@ std::unique_ptr<CommentListArg> CommentListArg::EXAMPLE()
     rv->setPageToken("page-token");
     return rv;
 };
+
+std::unique_ptr<RenameFileArg> RenameFileArg::EXAMPLE()
+{
+    std::unique_ptr<RenameFileArg> rv(new RenameFileArg);
+    rv->setFileId("file1");
+    rv->setName("myFile");
+    return rv;
+};
+
+std::unique_ptr<MultipartUploadFileArg> MultipartUploadFileArg::EXAMPLE()
+{
+    std::unique_ptr<MultipartUploadFileArg> rv(new MultipartUploadFileArg);
+    rv->setName("myFile");
+    return rv;
+};
+
 
 #endif //API_QT_AUTOTEST
 

@@ -17,3 +17,4 @@ QString ApiClient::getAppKey()const
 {
     return m_app->getKey();
 };
+

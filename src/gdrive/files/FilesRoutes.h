@@ -51,6 +51,20 @@ namespace files{
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
+            ApiRoute('createFolder')
+
+
+            Creates a new folder.
+
+            */
+        std::unique_ptr<FileResource> createFolder(const gdrive::CreateFolderArg& arg);
+        GoogleTask<FileResource>* createFolder_Async(const gdrive::CreateFolderArg& arg);
+        void createFolder_AsyncCB(
+            const gdrive::CreateFolderArg&,
+            std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
+
+            /**
             ApiRoute('delete')
 
 
@@ -140,16 +154,16 @@ namespace files{
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
-            ApiRoute('uploadFile')
+            ApiRoute('uploadFileMultipart')
 
 
             Upload file content and metadata.
 
             */
-        std::unique_ptr<FileResource> uploadFile(const FileResource& body, QIODevice* readFrom);
-        GoogleTask<FileResource>* uploadFile_Async(const FileResource& body, QIODevice* data);
-        void uploadFile_AsyncCB(
-            const FileResource& body,
+        std::unique_ptr<FileResource> uploadFileMultipart(const gdrive::MultipartUploadFileArg& arg, QIODevice* readFrom);
+        GoogleTask<FileResource>* uploadFileMultipart_Async(const gdrive::MultipartUploadFileArg& arg, QIODevice* data);
+        void uploadFileMultipart_AsyncCB(
+            const gdrive::MultipartUploadFileArg&,
             QIODevice* data,
             std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);

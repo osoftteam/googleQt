@@ -80,6 +80,40 @@ void FilesRoutes::create_AsyncCB(
         failed_callback);
 }
 
+std::unique_ptr<FileResource> FilesRoutes::createFolder(const gdrive::CreateFolderArg& arg){
+    return createFolder_Async(arg)->waitForResultAndRelease();
+}
+
+GoogleTask<FileResource>* FilesRoutes::createFolder_Async(const gdrive::CreateFolderArg& arg)
+{
+    GoogleTask<FileResource>* t = m_end_point->produceTask<FileResource>();
+    m_end_point->postStyleB<
+        FileResource,
+        FileResource::factory
+        ,gdrive::CreateFolderArg>
+        (m_end_point->buildGdriveUrl("files", arg),
+        arg,
+        t);
+    return t;
+}
+
+void FilesRoutes::createFolder_AsyncCB(
+    const gdrive::CreateFolderArg& arg,
+    std::function<void(std::unique_ptr<FileResource>)> completed_callback ,
+    std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+{
+    m_end_point->postStyleB
+        <
+        FileResource,
+        FileResource::factory
+        , gdrive::CreateFolderArg
+        >
+        (m_end_point->buildGdriveUrl("files", arg),
+        arg,
+        completed_callback,
+        failed_callback);
+}
+
 void FilesRoutes::deleteOperation(const gdrive::DeleteFileArg& arg ){
     deleteOperation_Async(arg)->waitForResultAndRelease();
 }
@@ -251,26 +285,26 @@ void FilesRoutes::rename_AsyncCB(
         failed_callback);
 }
 
-std::unique_ptr<FileResource> FilesRoutes::uploadFile(const FileResource& body, QIODevice* data){
-    return uploadFile_Async(body, data)->waitForResultAndRelease();
+std::unique_ptr<FileResource> FilesRoutes::uploadFileMultipart(const gdrive::MultipartUploadFileArg& arg, QIODevice* data){
+    return uploadFileMultipart_Async(arg, data)->waitForResultAndRelease();
 }
 
-GoogleTask<FileResource>* FilesRoutes::uploadFile_Async(const FileResource& body, QIODevice* data)
+GoogleTask<FileResource>* FilesRoutes::uploadFileMultipart_Async(const gdrive::MultipartUploadFileArg& arg, QIODevice* data)
 {
     GoogleTask<FileResource>* t = m_end_point->produceTask<FileResource>();
     m_end_point->mpartUploadStyle<
         FileResource,
-        FileResource::factory,
-        FileResource>
-        (m_end_point->buildGdriveMPartUploadUrl("files", VoidType::instance()),
-        body,
+        FileResource::factory
+        ,gdrive::MultipartUploadFileArg>
+        (m_end_point->buildGdriveMPartUploadUrl("files", arg),
+        arg,
         data,
         t);
     return t;
 }
 
-void FilesRoutes::uploadFile_AsyncCB(
-    const FileResource& body,
+void FilesRoutes::uploadFileMultipart_AsyncCB(
+    const gdrive::MultipartUploadFileArg& arg,
     QIODevice* data,
     std::function<void(std::unique_ptr<FileResource>)> completed_callback ,
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
@@ -278,11 +312,11 @@ void FilesRoutes::uploadFile_AsyncCB(
     m_end_point->mpartUploadStyle
         <
         FileResource,
-        FileResource::factory,
-        FileResource
+        FileResource::factory
+        , gdrive::MultipartUploadFileArg
         >
-        (m_end_point->buildGdriveMPartUploadUrl("files", VoidType::instance()),
-        body,
+        (m_end_point->buildGdriveMPartUploadUrl("files", arg),
+        arg,
         data,
         completed_callback,
         failed_callback);
@@ -299,7 +333,7 @@ GoogleTask<FileResource>* FilesRoutes::uploadFileSimple_Async(QIODevice* data)
         FileResource,
         FileResource::factory
         >
-        (m_end_point->buildGdriveMPartUploadUrl("files", VoidType::instance()),
+        (m_end_point->buildGdriveSimpleMediaUploadUrl("files", VoidType::instance()),
         data,
         t);
     return t;
@@ -315,7 +349,7 @@ void FilesRoutes::uploadFileSimple_AsyncCB(
         FileResource,
         FileResource::factory
         >
-        (m_end_point->buildGdriveMPartUploadUrl("files", VoidType::instance()),
+        (m_end_point->buildGdriveSimpleMediaUploadUrl("files", VoidType::instance()),
         data,
         completed_callback,
         failed_callback);

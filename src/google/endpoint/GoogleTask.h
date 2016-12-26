@@ -9,9 +9,28 @@ namespace googleQt{
     class ApiEndpoint;
     class Endpoint;
 
-    class GoogleBaseTask : public QObject
+    class EndpointRunnable : public QObject
     {
         Q_OBJECT;
+    public:
+        EndpointRunnable(ApiEndpoint& ept) :m_endpoint(ept) {}
+        bool isFinished()const { return m_finished; }
+
+    signals:
+        void finished();
+
+    protected:
+        void notifyOnFinished();
+        void waitUntillFinishedOrCancelled();
+
+    protected:
+        ApiEndpoint& m_endpoint;
+        bool m_finished{ false };
+        mutable bool m_in_wait_loop{ false };
+    };
+
+    class GoogleBaseTask : public EndpointRunnable
+    {
         friend class Endpoint;
     public:
         virtual ~GoogleBaseTask() {};
@@ -31,11 +50,8 @@ namespace googleQt{
 
         bool waitForResult()const;
 
-    signals:
-        void finished();
-
     protected:
-        GoogleBaseTask(ApiEndpoint& ept) :m_endpoint(ept) {};
+        GoogleBaseTask(ApiEndpoint& ept) :EndpointRunnable(ept) {};
 
         void failed_callback(std::unique_ptr<GoogleException> ex)
         {
@@ -43,12 +59,8 @@ namespace googleQt{
             notifyOnFinished();
         };
 
-        void notifyOnFinished();
-        void waitUntillFinishedOrCancelled();
     protected:
         std::unique_ptr<GoogleException> m_failed;
-        ApiEndpoint& m_endpoint;
-        mutable bool m_in_wait_loop{ false };
     };
 
     template <class RESULT>

@@ -3,6 +3,8 @@
 #include "ApiAuthInfo.h"
 #include "ApiAppInfo.h"
 
+class QNetworkProxy;
+
 namespace googleQt{
     class ApiClient: public QObject{
         Q_OBJECT
@@ -13,7 +15,6 @@ namespace googleQt{
         QString getAppKey()const;
         virtual bool refreshToken() = 0;
         virtual QString userId()const = 0;
-        
     signals:
         void downloadProgress(qint64 bytesProcessed, qint64 total);
         void uploadProgress(qint64 bytesProcessed, qint64 total);

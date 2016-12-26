@@ -3,6 +3,22 @@
 
 using namespace googleQt;
 
+///EndpointRunnable
+void EndpointRunnable::notifyOnFinished()
+{
+    m_finished = true;
+    emit finished();
+    if (m_in_wait_loop)
+    {
+        m_endpoint.exitEventsLoop();
+    }
+};
+
+void EndpointRunnable::waitUntillFinishedOrCancelled()
+{
+    m_endpoint.runEventsLoop();
+};
+
 ///GoogleBaseTask
 bool GoogleBaseTask::waitForResult()const
 {
@@ -14,20 +30,6 @@ bool GoogleBaseTask::waitForResult()const
 
     return isCompleted();
 };
-
-void GoogleBaseTask::notifyOnFinished()
-{
-    emit finished();
-    if (m_in_wait_loop)
-    {
-        m_endpoint.exitEventsLoop();
-    }
-};
-
-void GoogleBaseTask::waitUntillFinishedOrCancelled()
-{
-    m_endpoint.runEventsLoop();
-}
 
 void GoogleVoidTask::waitForResultAndRelease()
 {
