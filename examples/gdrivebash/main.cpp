@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
         std::cin.ignore();
         return 0;
     }
-
+    
     QString argAppFile = argv[1];
     QString argAuthFile = argv[2];
 
@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
         std::cerr << "Error reading <app-info-file>" << std::endl;
         return 0;
     };    
+
     
     std::unique_ptr<ApiAuthInfo> authInfo(new ApiAuthInfo(argAuthFile));
     if(!authInfo->reload()){
@@ -60,12 +61,13 @@ int main(int argc, char *argv[])
     t.addAction("about",            "About",          [&](QString arg) {cmd.about(arg); });
     t.addAction("ls",               "List",           [&](QString arg) {cmd.ls(arg); });
     t.addAction("get",              "Get File Info",  [&](QString arg) {cmd.get(arg); });
+    t.addAction("mkdir",            "Create New Folder",[&](QString arg) {cmd.mkdir(arg); });
     t.addAction("rename",           "Rename File",  [&](QString arg) {cmd.rename(arg); });    
     t.addAction("download",         "Download file",  [&](QString arg) {cmd.download(arg); });
     t.addAction("cat",              "Print file content on screen", [&](QString arg) {cmd.cat(arg); });
-    t.addAction("put_simple",       "Upload file using 'simple' method", [&](QString arg) {cmd.put_simple(arg); });
-    t.addAction("put",              "Upload file", [&](QString arg) {cmd.put(arg); });
-    t.addAction("rm",               "Delete file or folder", [&](QString arg) {cmd.rm(arg); });
+    t.addAction("upload_simple",    "Upload file using 'simple' method", [&](QString arg) {cmd.upload_simple(arg); });
+    t.addAction("upload_mpart",     "Upload file using 'multipart' method", [&](QString arg) {cmd.upload_mpart(arg); });
+    t.addAction("rm",               "Delete file or folder", [&](QString arg) {cmd.rm(arg); });    
     t.addSeparator();
     t.addAction("ls_comments",      "List comments",  [&](QString arg) {cmd.ls_comments(arg); });
     t.addAction("get_comment",      "Get comment",    [&](QString arg) {cmd.get_comment(arg); });
@@ -76,6 +78,7 @@ int main(int argc, char *argv[])
     t.addAction("get_permission",   "Get permission",    [&](QString arg) {cmd.get_permission(arg); });
     t.addSeparator();
     t.addAction("print_last_result", "Print last response",    [&](QString arg) {cmd.print_last_result(arg); });
+    t.addAction("set_local_proxy",  "Setup Local Proxy connection",    [&](QString arg) {cmd.set_local_proxy(arg); });
     t.start();
     return 0;
 }

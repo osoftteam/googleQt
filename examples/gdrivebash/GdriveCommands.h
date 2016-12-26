@@ -23,9 +23,9 @@ public:
     ///download and print file content on the screen, good for text files
     void cat(QString fileId);
     ///upload file using 'simple' method without metadata, fileName - local filename to upload
-    void put_simple(QString fileName);    
+    void upload_simple(QString fileName);    
     ///upload file, fileName - local filename to upload
-    void put(QString fileName);
+    void upload_mpart(QString fileName);
     ///delete file or folder on gdrive
     void rm(QString fileId);
     ///create folder
@@ -39,6 +39,7 @@ public:
     void ls_permissions(QString fileId);
     void get_permission(QString fileId_Space_permissionId);
     void print_last_result(QString );
+    void set_local_proxy(QString port);
 protected:
     GoogleClient& m_c;
     GdriveRoutes*  m_gd;

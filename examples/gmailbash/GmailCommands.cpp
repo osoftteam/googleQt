@@ -39,35 +39,17 @@ void GmailCommands::listMessages(QString nextToken, QString labelIds)
             if(!labelIds.isEmpty()){
                 listArg.labels() = labelIds.split(" ");
             }
-            
-            gmail::IdArg msgID;
-            msgID.setFormat("metadata");
-            msgID.headers().push_back("Subject");
-            msgID.headers().push_back("From");
-            
-            int n = 1;
+
             auto mlist = m_gm->getMessages()->list(listArg);
+            QString id_list;
             for(auto m : mlist->messages())
                 {
-                    msgID.setId(m.id());
-                    //std::cout << n << ". " << m.id() << std::endl;
-                    
-                    auto msg_resource = m_gm->getMessages()->get(msgID);
-                    auto payload = msg_resource->payload();
-                    auto header_list = payload.headers();
-                    std::cout << n << ". " << msg_resource->id() << " ";
-                    for(auto h : header_list)
-                        {
-                            std::cout << h.value()
-                                      << " ";
-                        }
-                    std::cout << std::endl;                    
-                    
-                    n++;
+                    id_list += m.id();
+                    id_list += " ";
                 }
+            get_batch_snippets(id_list);
             nextToken = mlist->nextpagetoken();
             std::cout << "next-token: " << nextToken << std::endl;
-            //            m_c.printLastApiCall();   
         }
     catch(GoogleException& e)
         {
@@ -588,7 +570,7 @@ void GmailCommands::get_batch_snippets(QString id_list)
         std::cout << "Space separated messages ID list required" << std::endl;
         return;
     }
-    std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = m_gm->getBatchMessages(GmailRoutes::MesagesReciever::replySnippet, arg_list);
+    std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = m_gm->getBatchMessages(EDataState::partialyLoaded, arg_list);
     RESULT_LIST<messages::MessageResource*> res = br->results();
     std::cout << "batch size: " << res.size() << std::endl;
     
@@ -617,7 +599,7 @@ void GmailCommands::get_batch_details(QString id_list)
         return;
     }
 
-    std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = m_gm->getBatchMessages(GmailRoutes::MesagesReciever::replyBody, arg_list);
+    std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = m_gm->getBatchMessages(EDataState::completlyLoaded, arg_list);
     RESULT_LIST<messages::MessageResource*> res = br->results();
     int n = 1;
     for (auto& m : res)
