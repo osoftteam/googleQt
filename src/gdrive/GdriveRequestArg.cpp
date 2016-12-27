@@ -465,6 +465,29 @@ std::unique_ptr<RenameFileArg> RenameFileArg::EXAMPLE()
     return rv;
 };
 
+std::unique_ptr<MoveFileArg> MoveFileArg::EXAMPLE()
+{
+    std::unique_ptr<MoveFileArg> rv(new MoveFileArg);
+    rv->setFileId("file1");
+    rv->setName("myFile");
+    std::list<QString> lstFrom, lstTo;
+    for(int i = 0; i < 5;i++)
+        {
+            lstFrom.push_back(QString("from%1").arg(i));
+            lstTo.push_back(QString("to%1").arg(i));
+        }
+    rv->setRemoveParents(lstFrom);
+    rv->setAddParents(lstTo);
+    return rv;
+};
+
+std::unique_ptr<CreateFolderArg> CreateFolderArg::EXAMPLE()
+{
+    std::unique_ptr<CreateFolderArg> rv(new CreateFolderArg);
+    rv->setName("myNewFolder");
+    return rv;
+};
+
 std::unique_ptr<MultipartUploadFileArg> MultipartUploadFileArg::EXAMPLE()
 {
     std::unique_ptr<MultipartUploadFileArg> rv(new MultipartUploadFileArg);

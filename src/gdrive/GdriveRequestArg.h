@@ -144,7 +144,6 @@ namespace googleQt {
             QString m_name;
         };
 
-        //...
         class MoveFileArg : public QParamArgWithBody<MoveFileArg>
         {
         public:
@@ -186,7 +185,6 @@ namespace googleQt {
             QString m_name;
             std::list<QString> m_addParents, m_removeParents;
         };
-        //...
 
         
         class MultipartUploadFileArg : public QParamArgWithBody<MultipartUploadFileArg>
