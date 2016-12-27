@@ -58,11 +58,12 @@ int main(int argc, char *argv[])
 
     GdriveCommands cmd(c);
     demo::Terminal t("gdrive");
-    t.addAction("about",            "About",          [&](QString arg) {cmd.about(arg); });
+    t.addAction("about",            "About (Information about account - limits etc.)",          [&](QString arg) {cmd.about(arg); });
     t.addAction("ls",               "List",           [&](QString arg) {cmd.ls(arg); });
     t.addAction("get",              "Get File Info",  [&](QString arg) {cmd.get(arg); });
     t.addAction("mkdir",            "Create New Folder",[&](QString arg) {cmd.mkdir(arg); });
-    t.addAction("rename",           "Rename File",  [&](QString arg) {cmd.rename(arg); });    
+    t.addAction("rename",           "Rename File",  [&](QString arg) {cmd.rename(arg); });
+    t.addAction("move",             "Move File (Add/Remove parents)",  [&](QString arg) {cmd.move_file(arg); });
     t.addAction("download",         "Download file",  [&](QString arg) {cmd.download(arg); });
     t.addAction("cat",              "Print file content on screen", [&](QString arg) {cmd.cat(arg); });
     t.addAction("upload_simple",    "Upload file using 'simple' method", [&](QString arg) {cmd.upload_simple(arg); });

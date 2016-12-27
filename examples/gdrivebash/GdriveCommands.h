@@ -4,6 +4,15 @@
 
 using namespace googleQt;
 
+namespace googleQt
+{
+    namespace files
+    {
+        class FileResource;
+    };
+}
+
+
 class GdriveCommands
 {
 public:
@@ -15,7 +24,9 @@ public:
     ///get file or folder meta information
     void get(QString fileId);
     ///rename file or folder
-    void rename(QString fileId_space_new_title);    
+    void rename(QString fileId_space_new_title);
+    ///move file or folder
+    void move_file(QString fileId);
     ///download file media data to local folder,
     ///required fileID and local file name separated
     ///by space
@@ -40,6 +51,9 @@ public:
     void get_permission(QString fileId_Space_permissionId);
     void print_last_result(QString );
     void set_local_proxy(QString port);
+protected:
+    void print_status(files::FileResource* f, const char* status);
+    void print_status(files::FileResource* f, QString status);
 protected:
     GoogleClient& m_c;
     GdriveRoutes*  m_gd;

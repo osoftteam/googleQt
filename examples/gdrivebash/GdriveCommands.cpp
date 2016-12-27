@@ -18,22 +18,6 @@ GdriveCommands::GdriveCommands(GoogleClient& c):m_c(c)
     m_gd = m_c.gdrive();
 };
 
-static QString size_human(qreal num)
-{
-    QStringList list;
-    list << "KB" << "MB" << "GB" << "TB";
-
-    QStringListIterator i(list);
-    QString unit("bytes");
-
-    while(num >= 1024.0 && i.hasNext())
-        {
-            unit = i.next();
-            num /= 1024.0;
-        }
-    return QString().setNum(num, 'f', 2) + " " + unit;
-}
-
 void GdriveCommands::about(QString)
 {    
     try
@@ -103,8 +87,11 @@ void GdriveCommands::get(QString fileId)
         std::cout << "id= " << f->id() << std::endl
                   << "name= " << f->name() << std::endl
                   << "type= " << f->mimetype() << std::endl
-                  << "size= " << f->size() << std::endl
-                  << "webLink= " << f->webcontentlink() << std::endl;
+                  << "size= " << f->size() << std::endl;
+        if(!f->webcontentlink().isEmpty())
+            {
+                std::cout << "webLink= " << f->webcontentlink() << std::endl;
+            }
     }
     catch (GoogleException& e)
     {
@@ -131,11 +118,7 @@ void GdriveCommands::rename(QString fileId_space_new_title)
         arg.setName(fileName);
         arg.setFields("id,name,size,mimeType,webContentLink");
         auto f = m_gd->getFiles()->rename(arg);
-        std::cout << "id= " << f->id() << std::endl
-                  << "name= " << f->name() << std::endl
-                  << "type= " << f->mimetype() << std::endl
-                  << "size= " << f->size() << std::endl
-                  << "webLink= " << f->webcontentlink() << std::endl;
+        print_status(f.get(), "renamed");
     }    
     catch (GoogleException& e)
     {
@@ -143,6 +126,39 @@ void GdriveCommands::rename(QString fileId_space_new_title)
     }    
 }
 
+void GdriveCommands::move_file(QString fileId)
+{
+    if(fileId.isEmpty())
+        {
+            std::cout << "fileId required" << std::endl;
+            return;
+        }
+    
+    std::string tmp;
+    std::cout << "Enter parents ID(space separated) from which object will be removed (or SPACE to none)" << std::endl;
+    std::cout << "from>";
+    getline(std::cin, tmp);
+    std::list<QString> remove_list = split_string(QString(tmp.c_str()));
+
+    std::cout << "Enter parents ID(space separated) of destination folders (or SPACE to none)" << std::endl;
+    std::cout << "to>";
+    getline(std::cin, tmp);
+    std::list<QString> add_list = split_string(QString(tmp.c_str()));
+    
+    try
+    {
+        MoveFileArg arg(fileId);
+        arg.setFields("id,name,size,mimeType,webContentLink");
+        arg.setRemoveParents(remove_list);
+        arg.setAddParents(add_list);
+        auto f = m_gd->getFiles()->moveFile(arg);
+        print_status(f.get(), "moved");
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
 
 void GdriveCommands::download(QString fileId_space_localFileName) 
 {
@@ -167,7 +183,9 @@ void GdriveCommands::download(QString fileId_space_localFileName)
     {
         DownloadFileArg arg(fileId);
         m_gd->getFiles()->downloadFile(arg, &out);
-        std::cout << "file downloaded" << std::endl;
+        out.flush();
+        std::cout << "=== file downloaded ===" << std::endl;
+        std::cout << size_human(out.size()) << std::endl;
     }
     catch (GoogleException& e)
     {
@@ -193,6 +211,7 @@ void GdriveCommands::cat(QString fileId)
     {
         DownloadFileArg arg(fileId);
         m_gd->getFiles()->downloadFile(arg, &buffer);
+        std::cout << "=== file content " << size_human(buffer.size()) << " ===" << std::endl;
         std::cout << byteArray.constData();
     }
     catch (GoogleException& e)
@@ -222,12 +241,7 @@ void GdriveCommands::upload_mpart(QString fileName)
     {
         gdrive::MultipartUploadFileArg arg(fi.fileName());
         auto f = m_gd->getFiles()->uploadFileMultipart(arg, &file_in);
-        std::cout << "file uploaded" << std::endl;
-        std::cout << "id= " << f->id() << std::endl
-            << "name= " << f->name() << std::endl
-            << "type= " << f->mimetype() << std::endl
-            << "size= " << f->size() << std::endl
-            << "webLink= " << f->webcontentlink() << std::endl;
+        print_status(f.get(), QString("uploaded %1").arg(file_in.size()));
     }
     catch (GoogleException& e)
     {
@@ -252,12 +266,7 @@ void GdriveCommands::upload_simple(QString fileName)
     try
     {
         auto f = m_gd->getFiles()->uploadFileSimple(&file_in);
-        std::cout << "file uploaded" << std::endl;
-        std::cout << "id= " << f->id() << std::endl
-            << "name= " << f->name() << std::endl
-            << "type= " << f->mimetype() << std::endl
-            << "size= " << f->size() << std::endl
-            << "webLink= " << f->webcontentlink() << std::endl;
+        print_status(f.get(), QString("uploaded %1").arg(file_in.size()));
     }
     catch (GoogleException& e)
     {
@@ -278,7 +287,7 @@ void GdriveCommands::rm(QString fileId)
     {
         DeleteFileArg arg(fileId);
         m_gd->getFiles()->deleteOperation(arg);
-        std::cout << "deleted" << std::endl;
+        std::cout << "=== deleted ===" << std::endl;
     }
     catch (GoogleException& e)
     {
@@ -305,13 +314,9 @@ void GdriveCommands::mkdir(QString title_Space_parentFolderId)
     try
         {
             CreateFolderArg arg(title);
-            arg.setFields("id,name,size,mimeType,webContentLink");
+            arg.setFields("id,name,mimeType");
             auto f = m_gd->getFiles()->createFolder(arg);
-            std::cout << "id= " << f->id() << std::endl
-                      << "name= " << f->name() << std::endl
-                      << "type= " << f->mimetype() << std::endl
-                      << "size= " << f->size() << std::endl
-                      << "webLink= " << f->webcontentlink() << std::endl;
+            print_status(f.get(), "folder created");
         }
     catch (GoogleException& e)
         {
@@ -395,15 +400,6 @@ void GdriveCommands::get_comment(QString fileId_Space_commentId)
 
 void GdriveCommands::new_comment(QString fileId_Space_content)
 {
-    /*
-    QStringList arg_list = fileId_Space_content.split(" ",
-                                                        QString::SkipEmptyParts);
-    if(arg_list.size() < 2)
-        {
-            std::cout << "Invalid parameters, expected <file_id> <comment_id>" << std::endl;
-            return;
-        }
-    */
     int spaceIdx = fileId_Space_content.indexOf(" ");
     if(spaceIdx == -1)
         {
@@ -491,4 +487,22 @@ void GdriveCommands::set_local_proxy(QString port)
     QNetworkProxy proxy(QNetworkProxy::Socks5Proxy, "localhost", proxyPort);
     std::cout << "Proxy:" << proxy.hostName().toStdString() << ":" << proxy.port() << std::endl;
     m_c.setNetworkProxy(proxy);
+};
+
+void GdriveCommands::print_status(files::FileResource* f, QString status)
+{
+    print_status(f, status.toStdString().c_str());
+};
+
+void GdriveCommands::print_status(files::FileResource* f, const char* status)
+{
+    std::cout << "=== " << status << " ===" << std::endl;
+    std::cout << "id= " << f->id() << std::endl
+              << "name= " << f->name() << std::endl
+              << "type= " << f->mimetype() << std::endl
+              << "size= " << f->size() << " ("<< size_human(f->size()) << ")" << std::endl;
+    if(!f->webcontentlink().isEmpty())
+        {
+            std::cout << "webLink= " << f->webcontentlink() << std::endl;
+        }
 };
