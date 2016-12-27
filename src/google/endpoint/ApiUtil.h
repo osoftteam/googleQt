@@ -147,6 +147,14 @@ namespace googleQt {
         }
     };
 
+    /// converts std::list of strings -> comma separated list
+    QString slist2commalist(const std::list<QString>& lst);
+    /// converts space separated strings -> std::list of strings
+    std::list<QString> split_string(QString s);
+    /// converts size to string with KB, MB or GB suffix
+    QString size_human(qreal num);
+
+    
     class VoidType
     {
     public:

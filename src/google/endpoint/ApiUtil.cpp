@@ -107,3 +107,47 @@ void QParamArg::ResponseFields2Builder(UrlBuilder& b)const
         b.add("fields", m_Fields);
     }
 };
+
+QString googleQt::slist2commalist(const std::list<QString>& lst)
+{
+    QString rv = "";
+    if(!lst.empty())
+        {
+            for(std::list<QString>::const_iterator i = lst.begin();
+                i != lst.end();
+                i++)
+                {
+                    rv += *i;
+                    rv += ",";
+                }
+            rv = rv.left(rv.length() - 1);
+        }
+    return rv;
+};
+
+std::list<QString> googleQt::split_string(QString s)
+{
+    QStringList s_list = s.split(" ", QString::SkipEmptyParts);
+    std::list<QString> rv;
+    for (QStringList::iterator i = s_list.begin(); i != s_list.end(); i++)
+    {
+        rv.push_back(*i);
+    }
+    return rv;
+};
+
+QString googleQt::size_human(qreal num)
+{
+    QStringList list;
+    list << "KB" << "MB" << "GB" << "TB";
+
+    QStringListIterator i(list);
+    QString unit("bytes");
+
+    while(num >= 1024.0 && i.hasNext())
+        {
+            unit = i.next();
+            num /= 1024.0;
+        }
+    return QString().setNum(num, 'f', 2) + " " + unit;
+}
