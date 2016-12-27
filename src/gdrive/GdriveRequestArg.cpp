@@ -300,6 +300,44 @@ void RenameFileArg::toJson(QJsonObject& js)const
 };
 
 /**
+   MoveFileArg
+*/
+MoveFileArg::MoveFileArg(QString fileId)
+    :m_fileId(fileId)
+{
+
+};
+
+void MoveFileArg::build(const QString& link_path, QUrl& url)const
+{
+    QString parents2add = slist2commalist(m_addParents);
+    QString parents2remove = slist2commalist(m_removeParents);
+    
+    UrlBuilder b(link_path + QString("/files/%2").arg(m_fileId), url);
+    if(!parents2add.isEmpty())
+        b.add("addParents", parents2add);
+    if(!parents2remove.isEmpty())
+        b.add("removeParents", parents2remove);
+    ResponseFields2Builder(b);
+}
+
+void MoveFileArg::toJson(QJsonObject& js)const
+{
+    if(!m_name.isEmpty())
+        js["name"] = QString(m_name);
+};
+
+void MoveFileArg::setAddParents(const std::list<QString>& newParents)
+{
+    m_addParents = newParents;
+};
+
+void MoveFileArg::setRemoveParents(const std::list<QString>& Parents2Remove)
+{
+    m_removeParents = Parents2Remove;
+};
+
+/**
     CommentListArg
 */
 CommentListArg::CommentListArg(QString fileId):m_fileId(fileId)

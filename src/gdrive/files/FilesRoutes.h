@@ -140,6 +140,20 @@ namespace files{
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
+            ApiRoute('moveFile')
+
+
+            Move file.
+
+            */
+        std::unique_ptr<FileResource> moveFile(const gdrive::MoveFileArg& arg);
+        GoogleTask<FileResource>* moveFile_Async(const gdrive::MoveFileArg& arg);
+        void moveFile_AsyncCB(
+            const gdrive::MoveFileArg&,
+            std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
+
+            /**
             ApiRoute('rename')
 
 

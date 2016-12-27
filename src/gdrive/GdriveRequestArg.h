@@ -143,6 +143,51 @@ namespace googleQt {
             QString m_fileId;
             QString m_name;
         };
+
+        //...
+        class MoveFileArg : public QParamArgWithBody<MoveFileArg>
+        {
+        public:
+            MoveFileArg(QString fileId = "");
+            void build(const QString& link_path, QUrl& url)const override;
+            void toJson(QJsonObject& js)const override;
+            
+            /**
+                The ID of the file.
+            */
+            QString getFileId()const { return m_fileId; }
+            void    setFileId(QString val) { m_fileId = val; }
+
+            /**
+                File name.
+            */
+            QString getName()const { return m_name; }
+            void    setName(QString val) { m_name = val; }
+            
+
+            /**
+               A list of parent IDs to add.
+             */
+            const std::list<QString>& getAddParents()const{return m_addParents;}
+            void setAddParents(const std::list<QString>& newParents);
+
+            /**
+               A list of parent IDs to remove.
+             */            
+            const std::list<QString>& getRemoveParents()const{return m_removeParents;}
+            void setRemoveParents(const std::list<QString>& Parents2Remove);
+            
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<MoveFileArg> EXAMPLE();
+#endif //API_QT_AUTOTEST
+
+        protected:
+            QString m_fileId;
+            QString m_name;
+            std::list<QString> m_addParents, m_removeParents;
+        };
+        //...
+
         
         class MultipartUploadFileArg : public QParamArgWithBody<MultipartUploadFileArg>
         {
