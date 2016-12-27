@@ -8,22 +8,6 @@
 #include "google/demo/ApiTerminal.h"
 #include "gmail/GmailRoutes.h"
 
-static QString size_human(qreal num)
-{
-    QStringList list;
-    list << "KB" << "MB" << "GB" << "TB";
-
-    QStringListIterator i(list);
-    QString unit("bytes");
-
-    while(num >= 1024.0 && i.hasNext())
-        {
-            unit = i.next();
-            num /= 1024.0;
-        }
-    return QString().setNum(num, 'f', 2) + " " + unit;
-}
-
 GmailCommands::GmailCommands(GoogleClient& c):m_c(c)
 {
     m_gm = m_c.gmail();
@@ -77,7 +61,6 @@ void GmailCommands::listThreads(QString nextToken, QString labelIds)
 
         nextToken = threads_list->nextpagetoken();
         std::cout << "next-token: " << nextToken << std::endl;
-        //        m_c.printLastApiCall();
     }
     catch (GoogleException& e)
     {
@@ -104,7 +87,6 @@ void GmailCommands::listDrafts(QString nextToken)
         if(!nextToken.isEmpty()){
             std::cout << "next-token: " << nextToken << std::endl;
         }
-        //        m_c.printLastApiCall();
     }
     catch (GoogleException& e)
     {
@@ -550,17 +532,6 @@ void GmailCommands::print_last_result(QString )
 {
     m_c.printLastResponse();
 };
-
-static std::list<QString> split_string(QString s)
-{
-    QStringList s_list = s.split(" ", QString::SkipEmptyParts);
-    std::list<QString> rv;
-    for (QStringList::iterator i = s_list.begin(); i != s_list.end(); i++)
-    {
-        rv.push_back(*i);
-    }
-    return rv;
-}
 
 void GmailCommands::get_batch_snippets(QString id_list) 
 {
