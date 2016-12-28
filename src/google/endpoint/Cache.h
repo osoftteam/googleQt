@@ -66,7 +66,7 @@ namespace googleQt {
 
                 if (!missed_cache.empty()) 
                 {
-                    rv->fetchFromCloud(missed_cache);
+                    rv->fetchFromCloud_Async(missed_cache);
                 }
             }
             return rv;

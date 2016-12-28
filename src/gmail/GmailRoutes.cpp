@@ -145,6 +145,13 @@ void GmailRoutes::GMailCacheQueryResult::fetchFromCloud_Async(const std::list<QS
         {
             auto& payload = m->payload();
             auto& header_list = payload.headers();
+
+            switch (m_load)
+                {
+                case googleQt::EDataState::partialyLoaded:break;
+                }
+            
+            notifyOnFinished();
         }
 
         par_runner->deleteLater();

@@ -64,13 +64,9 @@ namespace googleQt{
 
     class GMailCacheQueryResult: public CacheQueryResult<MessageData>
     {
-        //Q_OBJECT
     public:
         GMailCacheQueryResult(EDataState load, ApiEndpoint& ept, GmailRoutes* gm);
         void fetchFromCloud_Async(const std::list<QString>& id_list)override;
-
-        protected slots:
-        void batchRunnerFinished();
 
     protected:
         GmailRoutes*  m_gm;
