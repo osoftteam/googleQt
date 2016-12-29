@@ -38,7 +38,7 @@ Resumable gdrive upload will be implemeted later, concurrent parallel requests i
 - request OAuth2 token
 - autorefresh access tokem
 - functions & classes to work with API
-- methods for concurrent parralel requests
+- methods for concurrent parallel requests
 - caching cloud data for selected services
 
 
