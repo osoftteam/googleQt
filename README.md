@@ -19,6 +19,15 @@ T* get()
 ```
 The object of GoogleTask<T> type should be deleted from 'finished' slots via 'deleteLater', similiar to QNetworkRepy.
 
+###Requirement.
+Qt 5.xx and C++11 compiler - VS2015, GCC 5.xx, clang from XCode 6.xx or newer versions.
+
+###Installation
+Run qmake in 'prj' folder to generate Makefile, compile, see generated static library googleQt.
+To create sample project, cd in 'examples' and run qmake for each subfolder. There is shell script to open IDE
+on windows and generate project files - see folder 'bin' and win-configure-open-ide.bat
+You have to add googleQt to your LIB list (as shown in sample) and add path to cprj/src to the INCLUDE list.
+
 
 ###Current status
 Work in progress, getting ready for beta.
