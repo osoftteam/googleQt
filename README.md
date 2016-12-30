@@ -35,14 +35,14 @@ You have to add googleQt to your LIB list (as shown in sample) and add path to c
 
 ###Current status
 Work in progress, getting ready for beta.
-Resumable gdrive upload will be implemeted later, concurrent requests implemented for Gmail. Caching for GMail not completed.
+Resumable uploads will be implemeted later also handling slow connections, concurrent requests partially implemented for Gmail. Caching of GMail messages under development.
 
 ###Features
 - connect to Gdrive, Gmail, GTask Google API.
-- request OAuth2 token
-- autorefresh access tokem
-- functions & classes to work with API
-- methods for parallel requests for selected services
+- request and autorefresh OAuth2 token
+- asynchronous and blocking interfaces
+- specialized exceptions for blocking calls
+- parallel requests for selected services
 - caching cloud data for selected services
 
 
