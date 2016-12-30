@@ -17,7 +17,11 @@ and two function to get access to Result class or Exception object in case of fa
 GoogleException* error()
 T* get()
 ```
-The object of GoogleTask<T> type should be deleted from 'finished' slots via 'deleteLater', similiar to QNetworkRepy.
+The object of GoogleTask<T> type should be deleted from 'finished' slots via 'deleteLater', similiar to QNetworkRepy. It is easy to wait for asynchronous task to complete using
+```
+std::unique_ptr<RESULT> waitForResultAndRelease();
+```
+The function makes call blocking, auto releases Task object and moves result to caller, if available. In case error function will capture failed callback and raise GoogleException (or derived).
 
 ###Requirement.
 Qt 5.xx and C++11 compiler - VS2015, GCC 5.xx, clang from XCode 6.xx or newer versions.
@@ -31,14 +35,14 @@ You have to add googleQt to your LIB list (as shown in sample) and add path to c
 
 ###Current status
 Work in progress, getting ready for beta.
-Resumable gdrive upload will be implemeted later, concurrent parallel requests implemented for Gmail. Caching for GMail not completed.
+Resumable gdrive upload will be implemeted later, concurrent requests implemented for Gmail. Caching for GMail not completed.
 
 ###Features
 - connect to Gdrive, Gmail, GTask Google API.
 - request OAuth2 token
 - autorefresh access tokem
 - functions & classes to work with API
-- methods for concurrent parallel requests
+- methods for parallel requests for selected services
 - caching cloud data for selected services
 
 
