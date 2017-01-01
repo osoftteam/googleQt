@@ -19,9 +19,9 @@ namespace googleQt{
     signals:
         void finished();
 
-    protected:
-        void notifyOnFinished();
-        void waitUntillFinishedOrCancelled();
+	protected:
+		void notifyOnFinished();
+		void waitUntillFinishedOrCancelled();
 
     protected:
         ApiEndpoint& m_endpoint;

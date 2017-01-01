@@ -80,7 +80,7 @@ namespace googleQt{
             :BatchBaseRunner(ept)
         {
             m_arg_parameters = arg_params;
-            m_router = r;
+            m_router.reset(r);
         }
 
         void run()
@@ -98,7 +98,6 @@ namespace googleQt{
                 }
         }
 
-     //   BatchResult<ARG_PARAM, RESULT>* get() { return m_result.results(); }
         RESULT_LIST<RESULT*> get() { return m_result->results(); }
         std::unique_ptr<BatchResult<ARG_PARAM, RESULT> > waitForResultAndRelease()
         {
@@ -143,7 +142,7 @@ namespace googleQt{
 
     protected:
         std::list<ARG_PARAM>            m_arg_parameters;
-        ROUTER*                         m_router        {nullptr};
+        std::unique_ptr<ROUTER>         m_router        {nullptr};
         std::unique_ptr<BatchResult<ARG_PARAM,RESULT> > m_result;
     };
 

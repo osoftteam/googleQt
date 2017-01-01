@@ -1,5 +1,6 @@
 #include "GmailRoutes.h"
 #include "Endpoint.h"
+//#include "GmailBatch.h"
 
 
 using namespace googleQt;
@@ -58,22 +59,6 @@ drafts::DraftsRoutes* GmailRoutes::getDrafts()
     return m_DraftsRoutes.get();
 };
 
-GoogleTask<messages::MessageResource>* GmailRoutes::MesagesReciever::route(QString message_id)
-{
-    gmail::IdArg arg(message_id);
-    if (m_msg_format == EDataState::partialyLoaded)
-        {
-            arg.setFormat("metadata");
-            arg.headers().push_back("Subject");
-            arg.headers().push_back("From");
-        }
-    else if (m_msg_format == EDataState::completlyLoaded)
-        {
-        
-        }
-
-    return m_r.getMessages()->get_Async(arg);
-}
 
 
 std::unique_ptr<BatchResult<QString, 
@@ -84,76 +69,38 @@ std::unique_ptr<BatchResult<QString,
 };
 
 BatchRunner<QString,
-            GmailRoutes::MesagesReciever,
+            mail_batch::MesagesReciever,
             messages::MessageResource>* GmailRoutes::getBatchMessages_Async(EDataState f, const std::list<QString>& id_list)
 {
+    /*
     if (!m_MessagesBatchReciever) {
-        m_MessagesBatchReciever.reset(new MesagesReciever(*this, f));
+        m_MessagesBatchReciever.reset(new mail_batch::MesagesReciever(*this));
     }
+    */
 
+    mail_batch::MesagesReciever* mr = new mail_batch::MesagesReciever(*this, f);
+    
     BatchRunner<QString,
-                GmailRoutes::MesagesReciever,
+                mail_batch::MesagesReciever,
                 messages::MessageResource>* r = new BatchRunner<QString,
-                                                                GmailRoutes::MesagesReciever,
-                                                                messages::MessageResource>(id_list, m_MessagesBatchReciever.get(), *m_endpoint);
+                                                                mail_batch::MesagesReciever,
+                                                                messages::MessageResource>(id_list, mr, *m_endpoint);
     r->run();
     return r;
 };
 
-///MessageData
-GmailRoutes::MessageData::MessageData(QString id, QString from, QString to, QString subject, QString snippet)
-    :CacheData(EDataState::partialyLoaded, id), m_from(from), m_to(to), m_subject(subject), m_snippet(snippet)
+std::map<QString, std::shared_ptr<mail_batch::MessageData>> GmailRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
 {
+	return getCacheMessages_Async(state, id_list)->waitForResultAndRelease();
 };
 
-///GMailCacheQueryResult
-GmailRoutes::GMailCacheQueryResult::GMailCacheQueryResult(EDataState load, ApiEndpoint& ept, GmailRoutes* gm) 
-    :CacheQueryResult<MessageData>(load, ept), m_gm(gm)
+std::unique_ptr<mail_batch::GMailCacheQueryResult> GmailRoutes::getCacheMessages_Async(EDataState state,
+                                                                                       const std::list<QString>& id_list)
 {
-
+    if (!m_GMailCache) {
+		m_GMailCache.reset(new mail_batch::GMailCache(*m_endpoint, *this));
+    }
+	return m_GMailCache->query_Async(state, id_list);
 };
 
-void GmailRoutes::GMailCacheQueryResult::fetchFromCloud_Async(const std::list<QString>& id_list)
-{
-    if (id_list.empty())
-        return;
 
-    BatchRunner<QString,
-                GmailRoutes::MesagesReciever,
-                messages::MessageResource>* par_runner = NULL;
-
-    switch (m_load)
-        {
-        case googleQt::EDataState::partialyLoaded:
-            {
-                par_runner = m_gm->getBatchMessages_Async(EDataState::partialyLoaded, id_list);
-            }
-            break;
-        case googleQt::EDataState::completlyLoaded: 
-            {
-                par_runner = m_gm->getBatchMessages_Async(EDataState::completlyLoaded, id_list);
-            }
-            break;
-        default:
-            break;
-        }
-
-    connect(par_runner, &EndpointRunnable::finished, [=]() 
-    {
-        RESULT_LIST<messages::MessageResource*> res = par_runner->get();
-        for (auto& m : res)
-        {
-            auto& payload = m->payload();
-            auto& header_list = payload.headers();
-
-            switch (m_load)
-                {
-                case googleQt::EDataState::partialyLoaded:break;
-                }
-            
-            notifyOnFinished();
-        }
-
-        par_runner->deleteLater();
-    });
-};

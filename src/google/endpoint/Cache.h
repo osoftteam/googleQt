@@ -5,76 +5,151 @@
 #include <iostream>
 #include <QCache>
 #include "GoogleTask.h"
+#include "google/endpoint/ApiEndpoint.h"
 
 namespace googleQt {
 
+	template<class O>
+	using CACHE_QUERY_RESULT_MAP = std::map<QString, std::shared_ptr<O>>;
+
     enum class EDataState
     {
-        partialyLoaded,
-        completlyLoaded
+        snippet	= 1,
+        body = 2
     };
 
     class CacheData 
     {
     public:
-        CacheData(EDataState state, QString id) :m_state(state), m_id(id) {};
+		CacheData(EDataState state, QString id);
 
-        virtual bool isLoaded(EDataState st)const { return (m_state == st); };
-
-        QString         id()const { return m_id; }
-        EDataState      state()const { return   m_state; }
+		virtual bool  isLoaded(EDataState st)const;
+        virtual void  merge(CacheData* other) = 0;
+        QString       id()const { return m_id; }
     protected:
-        EDataState      m_state;
-        QString         m_id;
+        int			m_state_agg;
+        QString     m_id;
     };
+
+	template<class O>
+	class GoogleCacheBase
+	{
+	public:
+        virtual std::shared_ptr<O>* mem_object(QString id) = 0;
+        virtual bool mem_insert(QString id, std::shared_ptr<O>*) = 0;
+        
+		void merge(CACHE_QUERY_RESULT_MAP<O>& r) 
+		{
+            
+			for (typename CACHE_QUERY_RESULT_MAP<O>::iterator i = r.begin();
+                 i != r.end(); i++) 
+                {
+                    QString id = i->first;
+                    std::shared_ptr<O> new_obj = i->second;
+                    std::shared_ptr<O>* cache_obj = mem_object(id);
+                    if (cache_obj != nullptr)
+                        {
+                            (*cache_obj)->merge(new_obj.get());
+                        }
+                    else
+                        {
+                            std::shared_ptr<O>* ptr = new std::shared_ptr<O>(new_obj);
+                            mem_insert(id, ptr);
+                        }
+                }
+		}
+	};
 
     template <class O>
     class CacheQueryResult : public EndpointRunnable 
     {
     public:
-        CacheQueryResult(EDataState load, ApiEndpoint& ept) :EndpointRunnable(ept), m_load(load) {};
+        CacheQueryResult(EDataState load, ApiEndpoint& ept, GoogleCacheBase<O>* c) 
+			:EndpointRunnable(ept), m_load(load), m_cache(c){};
 
         virtual void fetchFromCloud_Async(const std::list<QString>& id_list) = 0;
-    //protected:
-        std::map<QString, O*> m_results;
+		void notifyOnCompletedFromCache() { notifyOnFinished(); };
+		void notifyFetchCompleted(CACHE_QUERY_RESULT_MAP<O>& r) 
+		{
+			m_cache->merge(r);
+			notifyOnFinished();
+		}
+
+		std::map<QString, std::shared_ptr<O>> waitForResultAndRelease()
+		{
+			if (!isFinished())
+			{
+				m_in_wait_loop = true;
+				waitUntillFinishedOrCancelled();
+			}
+
+			deleteLater();
+			return m_result;
+		}
+
+		void add(QString id, std::shared_ptr<O> obj) { m_result[id] = obj; };
+
+    protected:
+		CACHE_QUERY_RESULT_MAP<O> m_result;
         EDataState m_load;
+		GoogleCacheBase<O>* m_cache;
     };
 
-    template <class O>
-    class GoogleCache //: public EndpointRunnable
+    template <class O, class R>
+    class GoogleCache : public GoogleCacheBase<O>
     {
     public:
-        GoogleCache(ApiEndpoint& ept) :m_endpoint(ept) {};
+        GoogleCache(ApiEndpoint& ept, int maxSize = 1000): m_endpoint(ept), m_mem_cache(maxSize){};
 
-        CacheQueryResult<O>* query_Async(EDataState load, const std::list<QString>& id_list)
+		virtual std::unique_ptr<R> produceCloudResultFetcher(EDataState load, ApiEndpoint& ept) = 0;
+
+        std::shared_ptr<O>* mem_object(QString id)override
         {
-            CacheQueryResult<O>* rv = new CacheQueryResult<O>(load, m_endpoint);
+            return m_mem_cache.object(id);
+        }
+        bool mem_insert(QString id, std::shared_ptr<O>* o)override
+        {
+            bool rv = m_mem_cache.insert(id, o);
+            if(!rv)
+                {
+                    qWarning() << "cache insert failed" << m_mem_cache.size() << m_mem_cache.maxCost() << id;
+                    delete o;
+                }
+            return rv;
+        }
+        
+        
+        std::unique_ptr<R> query_Async(EDataState load, const std::list<QString>& id_list)
+        {
+			std::unique_ptr<R> rv = produceCloudResultFetcher(load, m_endpoint);
 
             std::list<QString> missed_cache;
             for (std::list<QString>::const_iterator i = id_list.begin(); i != id_list.end(); i++)
             {
                 QString id = *i;
-                O* obj = m_mem_cache.object(id);
-                if (obj != NULL && obj->isLoaded(load))
+				std::shared_ptr<O>* obj = m_mem_cache.object(id);
+                if (obj != NULL && (*obj)->isLoaded(load))
                 {
-                    rv->m_results[id] = obj;
+                    rv->add(id, *obj);
                 }
                 else 
                 {
                     missed_cache.push_back(id);
                 }
-
-                if (!missed_cache.empty()) 
+            }//swipping cache
+            
+            if (!missed_cache.empty()) 
                 {
                     rv->fetchFromCloud_Async(missed_cache);
                 }
-            }
+            else 
+				{
+					rv->notifyOnCompletedFromCache();
+				}            
             return rv;
         };
-        //CacheQueryResult<O>* queryComplete_Async(const std::list<QString>& id_list);
-
     protected:
-        QCache<QString, O> m_mem_cache;
         ApiEndpoint& m_endpoint;
+        QCache<QString, std::shared_ptr<O>> m_mem_cache;
     };
 };

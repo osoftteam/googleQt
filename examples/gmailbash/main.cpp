@@ -83,6 +83,9 @@ int main(int argc, char *argv[])
     t.addAction("get_batch_snippets", "Get Messages snippets in batch by ID list", [&](QString arg) {cmd.get_batch_snippets(arg); });
     t.addAction("get_batch_details", "Get Messages email body in batch by ID list", [&](QString arg) {cmd.get_batch_details(arg); });
     t.addSeparator();
+    t.addAction("get_cache_snippets", "Get Messages snippets by ID list from cache if available, if not query cloud", [&](QString arg) {cmd.get_cache_snippets(arg); });
+    t.addAction("get_cache_details", "Get Messages email body by ID list from cache if available, if not query cloud", [&](QString arg) {cmd.get_cache_details(arg); });    
+    t.addSeparator();
     t.addAction("export_last_result",   "Export last response to a file", [&](QString arg) {cmd.export_last_result(arg); });
     t.addAction("print_last_result",   "Print last response", [&](QString arg) {cmd.print_last_result(arg); });
     

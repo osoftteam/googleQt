@@ -541,7 +541,7 @@ void GmailCommands::get_batch_snippets(QString id_list)
         std::cout << "Space separated messages ID list required" << std::endl;
         return;
     }
-    std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = m_gm->getBatchMessages(EDataState::partialyLoaded, arg_list);
+    std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = m_gm->getBatchMessages(EDataState::snippet, arg_list);
     RESULT_LIST<messages::MessageResource*> res = br->results();
     std::cout << "batch size: " << res.size() << std::endl;
     
@@ -551,10 +551,10 @@ void GmailCommands::get_batch_snippets(QString id_list)
         auto& payload = m->payload();
         auto& header_list = payload.headers();
 
-        std::cout << n << ". " << m->id() << " ";
+        std::cout << n << ". " << m->id() << "|";
         for (auto h : header_list)
         {
-            std::cout << h.value() << " ";
+            std::cout << h.value() << "|";
         }
         std::cout << std::endl;
         n++;
@@ -570,7 +570,7 @@ void GmailCommands::get_batch_details(QString id_list)
         return;
     }
 
-    std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = m_gm->getBatchMessages(EDataState::completlyLoaded, arg_list);
+    std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = m_gm->getBatchMessages(EDataState::body, arg_list);
     RESULT_LIST<messages::MessageResource*> res = br->results();
     int n = 1;
     for (auto& m : res)
@@ -578,10 +578,10 @@ void GmailCommands::get_batch_details(QString id_list)
         auto& payload = m->payload();
         auto& header_list = payload.headers();
 
-        std::cout << n << ". " << m->id() << " ";
+        std::cout << n << ". " << m->id() << "|";
         for (auto h : header_list)
         {
-            std::cout << h.value() << " ";
+            std::cout << h.value() << "|";
         }
         std::cout << std::endl;
         auto& parts = payload.parts();
@@ -608,4 +608,56 @@ void GmailCommands::get_batch_details(QString id_list)
         n++;
     }
 
+};
+
+void GmailCommands::get_cache_snippets(QString id_list)
+{
+	std::list<QString> arg_list = split_string(id_list);
+	if (arg_list.empty())
+	{
+		std::cout << "Space separated messages ID list required" << std::endl;
+		return;
+	}
+
+	std::map<QString, std::shared_ptr<mail_batch::MessageData>>mm = m_gm->getCacheMessages(EDataState::snippet, arg_list);
+	std::cout << "loaded from cache: " << mm.size() << std::endl;
+
+	int n = 1;
+	for (auto& i : mm)
+	{
+		mail_batch::MessageData* m = i.second.get();
+		std::cout << n << ". " << m->id() << "|";
+		std::cout << m->from() << "|";
+		std::cout << m->subject() << "|";
+		std::cout << m->snippet() << "|" << std::endl;
+		n++;
+	}
+};
+
+void GmailCommands::get_cache_details(QString id_list) 
+{
+	std::list<QString> arg_list = split_string(id_list);
+	if (arg_list.empty())
+	{
+		std::cout << "Space separated messages ID list required" << std::endl;
+		return;
+	}
+
+	std::map<QString, std::shared_ptr<mail_batch::MessageData>>mm = m_gm->getCacheMessages(EDataState::body, arg_list);
+	std::cout << "loaded from cache: " << mm.size() << std::endl;
+
+	int n = 1;
+	for (auto& i : mm)
+	{
+		mail_batch::MessageData* m = i.second.get();
+		std::cout << n << ". " << m->id() << "|";
+		std::cout << m->from() << "|";
+		std::cout << m->subject() << "|";
+		std::cout << m->snippet() << "|" << std::endl;
+		std::cout << "------------- plain text --------------" << std::endl;
+		std::cout << m->plain() << std::endl;
+		std::cout << "------------- html text --------------" << std::endl;
+		std::cout << m->html() << std::endl;
+		n++;
+	}
 };

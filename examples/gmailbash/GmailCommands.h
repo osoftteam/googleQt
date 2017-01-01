@@ -130,9 +130,19 @@ public:
     void get_batch_snippets(QString id_list);
 
     /**
-    get_batch_snippets - get email body & snippens for list of messages
+    get_batch_details - get email body & snippens for list of messages
     */
     void get_batch_details(QString id_list);
+
+	/**
+	get_cache_snippets - get snippents for list of messages
+	*/
+	void get_cache_snippets(QString id_list);
+
+	/**
+	get_cache_details - get email body & snippens for list of messages
+	*/
+	void get_cache_details(QString id_list);
 
     void export_last_result(QString fileName);
     void print_last_result(QString );
