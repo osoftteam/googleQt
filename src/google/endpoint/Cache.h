@@ -37,6 +37,7 @@ namespace googleQt {
 	public:
         virtual std::shared_ptr<O>* mem_object(QString id) = 0;
         virtual bool mem_insert(QString id, std::shared_ptr<O>*) = 0;
+        virtual void update_persistent_storage(CACHE_QUERY_RESULT_MAP<O>& r) = 0;
         
 		void merge(CACHE_QUERY_RESULT_MAP<O>& r) 
 		{
@@ -94,13 +95,24 @@ namespace googleQt {
         EDataState m_load;
 		GoogleCacheBase<O>* m_cache;
     };
-
+    
+    template <class O, class R>
+    class LocalPersistentStorage
+    {
+    public:
+        //        LocalPersistentStorage(GoogleCacheBase<O> c){}
+        virtual std::list<QString> load(const std::list<QString>& id_list,
+                                        std::unique_ptr<R>& cr) = 0;
+        virtual void update(CACHE_QUERY_RESULT_MAP<O>& r) = 0;
+        virtual bool isValid()const = 0;
+    };
+    
     template <class O, class R>
     class GoogleCache : public GoogleCacheBase<O>
     {
     public:
         GoogleCache(ApiEndpoint& ept, int maxSize = 1000): m_endpoint(ept), m_mem_cache(maxSize){};
-
+        void setupLocalStorage(LocalPersistentStorage<O, R>* localDB){m_localDB = localDB;};
 		virtual std::unique_ptr<R> produceCloudResultFetcher(EDataState load, ApiEndpoint& ept) = 0;
 
         std::shared_ptr<O>* mem_object(QString id)override
@@ -117,7 +129,16 @@ namespace googleQt {
                 }
             return rv;
         }
-        
+
+        void update_persistent_storage(CACHE_QUERY_RESULT_MAP<O>& r)override
+        {
+            if(m_localDB != nullptr &&
+               m_localDB->isValid() &&
+               !r.empty())
+                {
+                    m_localDB->update(r);
+                }            
+        }
         
         std::unique_ptr<R> query_Async(EDataState load, const std::list<QString>& id_list)
         {
@@ -137,8 +158,15 @@ namespace googleQt {
                     missed_cache.push_back(id);
                 }
             }//swipping cache
+
+            if(m_localDB != nullptr &&
+               m_localDB->isValid() &&
+               !missed_cache.empty())
+                {
+                    missed_cache = m_localDB->load(missed_cache, rv);
+                }
             
-            if (!missed_cache.empty()) 
+            if (!missed_cache.empty())
                 {
                     rv->fetchFromCloud_Async(missed_cache);
                 }
@@ -151,5 +179,6 @@ namespace googleQt {
     protected:
         ApiEndpoint& m_endpoint;
         QCache<QString, std::shared_ptr<O>> m_mem_cache;
+        LocalPersistentStorage<O, R>* m_localDB {nullptr};
     };
 };

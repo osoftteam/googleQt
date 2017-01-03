@@ -1,5 +1,6 @@
 #include "GmailBatch.h"
 #include "GmailRoutes.h"
+#include <QSqlError>
 
 using namespace googleQt;
 
@@ -129,7 +130,6 @@ void mail_batch::GMailCacheQueryResult::fetchFromCloud_Async(const std::list<QSt
                         fetchMessage(m);
                     }
 
-                //                notifyOnFinished();
                 notifyFetchCompleted(m_result);
                 par_runner->deleteLater();
             });
@@ -222,3 +222,99 @@ void mail_batch::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
         }
 };
 
+///GMailSQLiteStorage
+std::list<QString> mail_batch::GMailSQLiteStorage::load(const std::list<QString>& id_list,
+                                                        std::unique_ptr<GMailCacheQueryResult>& cr)
+{
+    std::list<QString> rv;
+    if(isValid())
+        {
+            QString sql = QString("SELECT * FROM %1gmail_msg WHERE msg_id IN").arg(m_db_meta_prefix);
+            QSqlQuery* q = selectQuery(sql);
+            if(!q)
+                return rv;
+        }
+    return rv;
+};
+
+
+bool mail_batch::GMailSQLiteStorage::init(QString dbName, QString dbPath, QString db_meta_prefix)
+{
+    m_db_meta_prefix = db_meta_prefix;
+    m_initialized = false;
+    
+    m_db = QSqlDatabase::addDatabase("QSQLITE", dbName);
+    m_db.setDatabaseName(dbPath);
+    if(!m_db.open()){
+        qWarning() << "Failed to connect" << dbName << dbPath;
+        return false;
+    }
+
+    m_query.reset(new QSqlQuery(m_db));
+
+    QString sql = QString("CREATE TABLE IF NOT EXISTS %1gmail_msg(msg_id INTEGER PRIMARY KEY, msg_from TEXT, msg_subject TEXT, msg_snippet TEXT, msg_plain TEXT, msg_html TEXT, state INTEGER)").arg(m_db_meta_prefix);
+
+    if(!execQuery(sql))
+        return false;
+
+    sql = QString("SELECT * FROM %1gmail_msg").arg(m_db_meta_prefix);
+    QSqlQuery* q = selectQuery(sql);
+    if(!q)
+        return false;
+
+    while(q->next())
+        {
+            
+        }
+    
+    m_initialized = true;
+    return m_initialized;
+};
+
+bool mail_batch::GMailSQLiteStorage::execQuery(QString sql)
+{
+    if(!m_query)
+        {
+            qWarning() << "Expected internal query";
+            return false;
+        }
+    
+    if(!m_query->prepare(sql))
+        {
+            QString error = m_query->lastError().text();
+            qWarning() << "Failed to prepare sql query" << error << sql;
+            return false;
+        };    
+    if(!m_query->exec(sql))
+        {
+            QString error = m_query->lastError().text();
+            qWarning() << "Failed to execute query" << error << sql;
+            return false;
+        };
+
+    return true;
+};
+
+QSqlQuery* mail_batch::GMailSQLiteStorage::selectQuery(QString sql)
+{
+    if(!m_query)
+        {
+            qWarning() << "Expected internal query";
+            return nullptr;
+        }
+    
+    if(!m_query->prepare(sql))
+        {
+            QString error = m_query->lastError().text();
+            qWarning() << "Failed to prepare sql query" << error << sql;
+            return nullptr;
+        };    
+    if(!m_query->exec(sql))
+        {
+            QString error = m_query->lastError().text();
+            qWarning() << "Failed to execute query" << error << sql;
+            return nullptr;
+        };
+
+    return m_query.get();
+};

@@ -3,7 +3,8 @@
 #include "google/endpoint/BatchRunner.h"
 #include "google/endpoint/Cache.h"
 #include "gmail/messages/MessagesRoutes.h"
-
+#include <QSqlDatabase>
+#include <QSqlQuery>
 
 namespace googleQt{
 	class Endpoint;
@@ -58,7 +59,7 @@ namespace googleQt{
         protected:
             GmailRoutes&  m_r;
         };
-
+        
         class GMailCache : public GoogleCache<MessageData, GMailCacheQueryResult>
         {
         public:
@@ -67,5 +68,25 @@ namespace googleQt{
         protected:
             GmailRoutes&    m_r;
         };
+
+        class GMailSQLiteStorage: public LocalPersistentStorage<MessageData, GMailCacheQueryResult>
+        {
+        public:
+            GMailSQLiteStorage(GMailCache* c):m_mem_cache(c){};
+            bool init(QString dbName, QString dbPath, QString db_meta_prefix);
+            std::list<QString> load(const std::list<QString>& id_list,
+                                    std::unique_ptr<GMailCacheQueryResult>& cr)override;
+            void update(CACHE_QUERY_RESULT_MAP<MessageData>& r)override;
+            virtual bool isValid()const override{return m_initialized;};
+        protected:
+            bool execQuery(QString sql);
+            QSqlQuery* selectQuery(QString sql);
+        protected:
+            bool m_initialized {false};
+            QSqlDatabase     m_db;
+            std::unique_ptr<QSqlQuery>   m_query{nullptr};
+            QString m_db_meta_prefix;
+            GMailCache*      m_mem_cache;
+        };//GMailSQLiteStorage
     };
 };

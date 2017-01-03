@@ -72,12 +72,6 @@ BatchRunner<QString,
             mail_batch::MesagesReciever,
             messages::MessageResource>* GmailRoutes::getBatchMessages_Async(EDataState f, const std::list<QString>& id_list)
 {
-    /*
-    if (!m_MessagesBatchReciever) {
-        m_MessagesBatchReciever.reset(new mail_batch::MesagesReciever(*this));
-    }
-    */
-
     mail_batch::MesagesReciever* mr = new mail_batch::MesagesReciever(*this, f);
     
     BatchRunner<QString,
