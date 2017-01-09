@@ -1,4 +1,4 @@
-QT       += core network
+QT       += core network sql
 QT       -= gui
 CONFIG   += console
 CONFIG   -= app_bundle
