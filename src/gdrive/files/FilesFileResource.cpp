@@ -154,36 +154,59 @@ std::unique_ptr<FileResource>  FileResource::factory::create(const QJsonObject& 
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<FileResource> FileResource::EXAMPLE(){
+std::unique_ptr<FileResource> FileResource::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<FileResource> rv(new FileResource);
-    rv->m_id = "test1value";
-    rv->m_kind = "test2value";
-    rv->m_name = "test3value";
-    rv->m_mimeType = "test4value";
-    rv->m_description = "test5value";
+    rv->m_id = QString("test1value_%1").arg(example_idx);
+    rv->m_kind = QString("test2value_%1").arg(example_idx);
+    rv->m_name = QString("test3value_%1").arg(example_idx);
+    rv->m_mimeType = QString("test4value_%1").arg(example_idx);
+    rv->m_description = QString("test5value_%1").arg(example_idx);
+    std::list<QString> list_of_parent;
+    for(int i = 0; i < 3; i++){
+        rv->m_parent.push_back(QString("_%1_%2").arg(i).arg(example_idx));
+    }
+    std::list<QString> list_of_spaces;
+    for(int i = 0; i < 3; i++){
+        rv->m_spaces.push_back(QString("_%1_%2").arg(i).arg(example_idx));
+    }
     rv->m_version = 11;
-    rv->m_webContentLink = "test12value";
-    rv->m_webViewLink = "test13value";
-    rv->m_iconLink = "test14value";
-    rv->m_thumbnailLink = "test15value";
+    rv->m_webContentLink = QString("test12value_%1").arg(example_idx);
+    rv->m_webViewLink = QString("test13value_%1").arg(example_idx);
+    rv->m_iconLink = QString("test14value_%1").arg(example_idx);
+    rv->m_thumbnailLink = QString("test15value_%1").arg(example_idx);
     rv->m_viewedByMeTime = QDateTime::currentDateTime();
     rv->m_createdTime = QDateTime::currentDateTime();
     rv->m_modifiedTime = QDateTime::currentDateTime();
     rv->m_modifiedByMeTime = QDateTime::currentDateTime();
     rv->m_sharedWithMeTime = QDateTime::currentDateTime();
-    rv->m_sharingUser = *(about::UserInfo::EXAMPLE().get());
-    rv->m_lastModifyingUser = *(about::UserInfo::EXAMPLE().get());
-    rv->m_folderColorRgb = "test29value";
-    rv->m_originalFilename = "test30value";
-    rv->m_fullFileExtension = "test31value";
-    rv->m_fileExtension = "test32value";
-    rv->m_md5Checksum = "test33value";
+    rv->m_sharingUser = *(about::UserInfo::EXAMPLE(0).get());
+    std::list<about::UserInfo> list_of_owners;
+    for(int i = 0; i < 3; i++){
+        about::UserInfo p = *(about::UserInfo::EXAMPLE(i).get());
+        ApiAutotest::INSTANCE().prepareAutoTestObj("files::FileResource", "about::UserInfo", &p, i, context_index);
+        rv->m_owners.push_back(p);
+    }
+    rv->m_lastModifyingUser = *(about::UserInfo::EXAMPLE(0).get());
+    std::list<permissions::ResourcePermission> list_of_permissions;
+    for(int i = 0; i < 3; i++){
+        permissions::ResourcePermission p = *(permissions::ResourcePermission::EXAMPLE(i).get());
+        ApiAutotest::INSTANCE().prepareAutoTestObj("files::FileResource", "permissions::ResourcePermission", &p, i, context_index);
+        rv->m_permissions.push_back(p);
+    }
+    rv->m_folderColorRgb = QString("test29value_%1").arg(example_idx);
+    rv->m_originalFilename = QString("test30value_%1").arg(example_idx);
+    rv->m_fullFileExtension = QString("test31value_%1").arg(example_idx);
+    rv->m_fileExtension = QString("test32value_%1").arg(example_idx);
+    rv->m_md5Checksum = QString("test33value_%1").arg(example_idx);
     rv->m_size = 34;
     rv->m_quotaBytesUsed = 35;
-    rv->m_headRevisionId = "test36value";
-    rv->m_contentHints = *(files::ContentHints::EXAMPLE().get());
-    rv->m_imageMediaMetadata = *(files::ImageMediaMetadata::EXAMPLE().get());
-    rv->m_videoMediaMetadata = *(files::VideoMediaMetadata::EXAMPLE().get());
+    rv->m_headRevisionId = QString("test36value_%1").arg(example_idx);
+    rv->m_contentHints = *(files::ContentHints::EXAMPLE(0).get());
+    rv->m_imageMediaMetadata = *(files::ImageMediaMetadata::EXAMPLE(0).get());
+    rv->m_videoMediaMetadata = *(files::VideoMediaMetadata::EXAMPLE(0).get());
     return rv;
 }
 #endif //API_QT_AUTOTEST

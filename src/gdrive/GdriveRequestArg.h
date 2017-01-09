@@ -74,7 +74,7 @@ namespace googleQt {
             void    setSpaces(QString val) { m_spaces = val; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<FileListArg> EXAMPLE();
+            static std::unique_ptr<FileListArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -106,7 +106,7 @@ namespace googleQt {
             void    setAcknowledgeAbuse(bool val) { m_acknowledgeAbuse = val; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<GetFileArg> EXAMPLE();
+            static std::unique_ptr<GetFileArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -136,7 +136,7 @@ namespace googleQt {
             
             
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<RenameFileArg> EXAMPLE();
+            static std::unique_ptr<RenameFileArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -177,7 +177,7 @@ namespace googleQt {
             void setRemoveParents(const std::list<QString>& Parents2Remove);
             
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<MoveFileArg> EXAMPLE();
+            static std::unique_ptr<MoveFileArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -201,7 +201,7 @@ namespace googleQt {
             void    setName(QString val) { m_name = val; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<MultipartUploadFileArg> EXAMPLE();
+            static std::unique_ptr<MultipartUploadFileArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -223,7 +223,7 @@ namespace googleQt {
             void    setFileId(QString val) { m_fileId = val; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<DownloadFileArg> EXAMPLE();
+            static std::unique_ptr<DownloadFileArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -266,7 +266,7 @@ namespace googleQt {
             void    setOcrLanguage(QString val) { m_ocrLanguage = val; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<CopyFileArg> EXAMPLE();
+            static std::unique_ptr<CopyFileArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -289,7 +289,7 @@ namespace googleQt {
             void    setFileId(QString val) { m_fileId = val; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<DeleteFileArg> EXAMPLE();
+            static std::unique_ptr<DeleteFileArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -338,7 +338,7 @@ namespace googleQt {
             void    setUseContentAsIndexableText(bool val) { m_useContentAsIndexableText = val; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<CreateFileArg> EXAMPLE();
+            static std::unique_ptr<CreateFileArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -364,7 +364,7 @@ namespace googleQt {
             
             
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<CreateFolderArg> EXAMPLE();
+            static std::unique_ptr<CreateFolderArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -397,7 +397,7 @@ namespace googleQt {
             void    setPermissionId(QString val) { m_permissionId = val; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<PermissionArg> EXAMPLE();
+            static std::unique_ptr<PermissionArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -440,7 +440,7 @@ namespace googleQt {
             void    setTransferOwnership(bool val) { m_transferOwnership = val; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<CreatePermissionArg> EXAMPLE();
+            static std::unique_ptr<CreatePermissionArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -463,7 +463,7 @@ namespace googleQt {
             void    setFileId(QString val) { m_fileId = val; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<PermissionListArg> EXAMPLE();
+            static std::unique_ptr<PermissionListArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -485,7 +485,7 @@ namespace googleQt {
             void    setFileId(QString val) { m_fileId = val; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<CreateCommentArg> EXAMPLE();
+            static std::unique_ptr<CreateCommentArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -512,7 +512,7 @@ namespace googleQt {
             void    setCommentId(QString val) { m_commentId = val; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<DeleteCommentArg> EXAMPLE();
+            static std::unique_ptr<DeleteCommentArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -547,7 +547,7 @@ namespace googleQt {
             void setIncludeDeleted(bool val) { m_includeDeleted = val; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<GetCommentArg> EXAMPLE();
+            static std::unique_ptr<GetCommentArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -595,7 +595,7 @@ namespace googleQt {
             void      setStartModifiedTime(const QDateTime& val) { m_startModifiedTime = val; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<CommentListArg> EXAMPLE();
+            static std::unique_ptr<CommentListArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:

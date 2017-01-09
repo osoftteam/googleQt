@@ -387,10 +387,17 @@ namespace googleQt{
             if (!firstReply)
                 {
 #ifdef API_QT_AUTOTEST
+                if (completed_callback != nullptr)
+                {
+                    completed_callback(RES::EXAMPLE(0));
+                }
+
+                /*
                     if (completed_callback != nullptr)
                         {
                             completed_callback(factory.create(QByteArray()));
                         }
+                        */
 #else
                     if (failed_callback != nullptr)
                         {

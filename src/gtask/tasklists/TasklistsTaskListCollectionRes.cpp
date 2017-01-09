@@ -65,11 +65,20 @@ std::unique_ptr<TaskListCollectionRes>  TaskListCollectionRes::factory::create(c
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<TaskListCollectionRes> TaskListCollectionRes::EXAMPLE(){
+std::unique_ptr<TaskListCollectionRes> TaskListCollectionRes::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<TaskListCollectionRes> rv(new TaskListCollectionRes);
-    rv->m_kind = "test1value";
-    rv->m_etag = "test2value";
-    rv->m_nextPageToken = "test3value";
+    rv->m_kind = QString("test1value_%1").arg(example_idx);
+    rv->m_etag = QString("test2value_%1").arg(example_idx);
+    rv->m_nextPageToken = QString("test3value_%1").arg(example_idx);
+    std::list<tasklists::TaskListResource> list_of_items;
+    for(int i = 0; i < 3; i++){
+        tasklists::TaskListResource p = *(tasklists::TaskListResource::EXAMPLE(i).get());
+        ApiAutotest::INSTANCE().prepareAutoTestObj("tasklists::TaskListCollectionRes", "tasklists::TaskListResource", &p, i, context_index);
+        rv->m_items.push_back(p);
+    }
     return rv;
 }
 #endif //API_QT_AUTOTEST

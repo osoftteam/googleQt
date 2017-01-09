@@ -27,6 +27,7 @@ namespace googleQt{
             friend class GMailCacheQueryResult;
         public:
 			MessageData(QString id, QString from, QString subject, QString snippet);
+			MessageData(QString id, QString from, QString subject, QString snippet, QString plain, QString html);
 
             void  merge(CacheData* other);
             
@@ -35,6 +36,9 @@ namespace googleQt{
             QString snippet()const { return m_snippet; }
             QString plain()const { return m_plain; }
             QString html()const { return m_html; }
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<MessageData> EXAMPLE(EDataState st);
+#endif //API_QT_AUTOTEST
         protected:
 			void updateSnippet(QString from, QString subject, QString snippet);
             void updateBody(QString plain, QString html);
@@ -73,14 +77,16 @@ namespace googleQt{
         {
         public:
             GMailSQLiteStorage(GMailCache* c):m_mem_cache(c){};
-            bool init(QString dbName, QString dbPath, QString db_meta_prefix);
+            bool init(QString dbPath, QString dbName, QString db_meta_prefix);
             std::list<QString> load(const std::list<QString>& id_list,
                                     std::unique_ptr<GMailCacheQueryResult>& cr)override;
-            void update(CACHE_QUERY_RESULT_MAP<MessageData>& r)override;
+            void update(EDataState state, CACHE_QUERY_RESULT_LIST<MessageData>& r)override;
             virtual bool isValid()const override{return m_initialized;};
         protected:
             bool execQuery(QString sql);
+            QSqlQuery* prepareQuery(QString sql);
             QSqlQuery* selectQuery(QString sql);
+            std::shared_ptr<MessageData> loadObjFromDB(QSqlQuery* q);
         protected:
             bool m_initialized {false};
             QSqlDatabase     m_db;

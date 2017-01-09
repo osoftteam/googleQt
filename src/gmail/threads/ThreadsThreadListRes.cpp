@@ -61,9 +61,18 @@ std::unique_ptr<ThreadListRes>  ThreadListRes::factory::create(const QJsonObject
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<ThreadListRes> ThreadListRes::EXAMPLE(){
+std::unique_ptr<ThreadListRes> ThreadListRes::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<ThreadListRes> rv(new ThreadListRes);
-    rv->m_nextPageToken = "test2value";
+    std::list<threads::ThreadResource> list_of_threads;
+    for(int i = 0; i < 3; i++){
+        threads::ThreadResource p = *(threads::ThreadResource::EXAMPLE(i).get());
+        ApiAutotest::INSTANCE().prepareAutoTestObj("threads::ThreadListRes", "threads::ThreadResource", &p, i, context_index);
+        rv->m_threads.push_back(p);
+    }
+    rv->m_nextPageToken = QString("test2value_%1").arg(example_idx);
     rv->m_resultSizeEstimate = 3;
     return rv;
 }

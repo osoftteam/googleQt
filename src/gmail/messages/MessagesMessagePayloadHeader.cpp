@@ -60,10 +60,13 @@ std::unique_ptr<MessagePayloadHeader>  MessagePayloadHeader::factory::create(con
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<MessagePayloadHeader> MessagePayloadHeader::EXAMPLE(){
+std::unique_ptr<MessagePayloadHeader> MessagePayloadHeader::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<MessagePayloadHeader> rv(new MessagePayloadHeader);
-    rv->m_name = "test1value";
-    rv->m_value = "test2value";
+    rv->m_name = QString("test1value_%1").arg(example_idx);
+    rv->m_value = QString("test2value_%1").arg(example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

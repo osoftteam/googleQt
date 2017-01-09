@@ -100,7 +100,7 @@ namespace labels{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<LabelResource> EXAMPLE();
+        static std::unique_ptr<LabelResource> EXAMPLE(int context_index);
         #endif //API_QT_AUTOTEST
 
 

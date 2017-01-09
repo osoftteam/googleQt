@@ -67,12 +67,21 @@ std::unique_ptr<MessagePart>  MessagePart::factory::create(const QJsonObject& js
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<MessagePart> MessagePart::EXAMPLE(){
+std::unique_ptr<MessagePart> MessagePart::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<MessagePart> rv(new MessagePart);
-    rv->m_partId = "test1value";
-    rv->m_mimeType = "test2value";
-    rv->m_filename = "test3value";
-    rv->m_body = *(messages::MessagePartBody::EXAMPLE().get());
+    rv->m_partId = QString("test1value_%1").arg(example_idx);
+    rv->m_mimeType = QString("test2value_%1").arg(example_idx);
+    rv->m_filename = QString("test3value_%1").arg(example_idx);
+    std::list<messages::MessagePayloadHeader> list_of_headers;
+    for(int i = 0; i < 3; i++){
+        messages::MessagePayloadHeader p = *(messages::MessagePayloadHeader::EXAMPLE(i).get());
+        ApiAutotest::INSTANCE().prepareAutoTestObj("messages::MessagePart", "messages::MessagePayloadHeader", &p, i, context_index);
+        rv->m_headers.push_back(p);
+    }
+    rv->m_body = *(messages::MessagePartBody::EXAMPLE(0).get());
     return rv;
 }
 #endif //API_QT_AUTOTEST

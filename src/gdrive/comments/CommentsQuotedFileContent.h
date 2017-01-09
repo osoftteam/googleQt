@@ -51,7 +51,7 @@ namespace comments{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<QuotedFileContent> EXAMPLE();
+        static std::unique_ptr<QuotedFileContent> EXAMPLE(int context_index);
         #endif //API_QT_AUTOTEST
 
 

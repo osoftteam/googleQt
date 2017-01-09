@@ -61,9 +61,18 @@ std::unique_ptr<DraftListRes>  DraftListRes::factory::create(const QJsonObject& 
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<DraftListRes> DraftListRes::EXAMPLE(){
+std::unique_ptr<DraftListRes> DraftListRes::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<DraftListRes> rv(new DraftListRes);
-    rv->m_nextPageToken = "test2value";
+    std::list<drafts::DraftResource> list_of_drafts;
+    for(int i = 0; i < 3; i++){
+        drafts::DraftResource p = *(drafts::DraftResource::EXAMPLE(i).get());
+        ApiAutotest::INSTANCE().prepareAutoTestObj("drafts::DraftListRes", "drafts::DraftResource", &p, i, context_index);
+        rv->m_drafts.push_back(p);
+    }
+    rv->m_nextPageToken = QString("test2value_%1").arg(example_idx);
     rv->m_resultSizeEstimate = 3;
     return rv;
 }

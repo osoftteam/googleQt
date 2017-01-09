@@ -58,7 +58,7 @@ namespace threads{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<ThreadListRes> EXAMPLE();
+        static std::unique_ptr<ThreadListRes> EXAMPLE(int context_index);
         #endif //API_QT_AUTOTEST
 
 

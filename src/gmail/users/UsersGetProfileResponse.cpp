@@ -63,9 +63,12 @@ std::unique_ptr<GetProfileResponse>  GetProfileResponse::factory::create(const Q
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<GetProfileResponse> GetProfileResponse::EXAMPLE(){
+std::unique_ptr<GetProfileResponse> GetProfileResponse::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<GetProfileResponse> rv(new GetProfileResponse);
-    rv->m_emailAddress = "test1value";
+    rv->m_emailAddress = QString("test1value_%1").arg(example_idx);
     rv->m_messagesTotal = 2;
     rv->m_threadsTotal = 3;
     rv->m_historyId = 4;

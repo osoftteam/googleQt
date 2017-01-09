@@ -21,6 +21,10 @@ namespace googleQt
         about::AboutRoutes* getAbout();
         permissions::PermissionsRoutes* getPermissions();
         comments::CommentsRoutes* getComments();
+
+#ifdef API_QT_AUTOTEST
+        void autotest() {};
+#endif
     protected:
         std::unique_ptr<files::FilesRoutes> m_Files;
         std::unique_ptr<about::AboutRoutes> m_About;

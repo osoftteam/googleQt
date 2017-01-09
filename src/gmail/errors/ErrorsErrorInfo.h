@@ -57,7 +57,7 @@ namespace errors{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<ErrorInfo> EXAMPLE();
+        static std::unique_ptr<ErrorInfo> EXAMPLE(int context_index);
         #endif //API_QT_AUTOTEST
 
 

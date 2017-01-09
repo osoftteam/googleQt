@@ -56,8 +56,17 @@ std::unique_ptr<LabelsResultList>  LabelsResultList::factory::create(const QJson
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<LabelsResultList> LabelsResultList::EXAMPLE(){
+std::unique_ptr<LabelsResultList> LabelsResultList::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<LabelsResultList> rv(new LabelsResultList);
+    std::list<labels::LabelResource> list_of_labels;
+    for(int i = 0; i < 3; i++){
+        labels::LabelResource p = *(labels::LabelResource::EXAMPLE(i).get());
+        ApiAutotest::INSTANCE().prepareAutoTestObj("labels::LabelsResultList", "labels::LabelResource", &p, i, context_index);
+        rv->m_labels.push_back(p);
+    }
     return rv;
 }
 #endif //API_QT_AUTOTEST

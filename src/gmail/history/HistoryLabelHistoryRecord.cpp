@@ -58,9 +58,16 @@ std::unique_ptr<LabelHistoryRecord>  LabelHistoryRecord::factory::create(const Q
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<LabelHistoryRecord> LabelHistoryRecord::EXAMPLE(){
+std::unique_ptr<LabelHistoryRecord> LabelHistoryRecord::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<LabelHistoryRecord> rv(new LabelHistoryRecord);
-    rv->m_message = *(messages::MessageResource::EXAMPLE().get());
+    rv->m_message = *(messages::MessageResource::EXAMPLE(0).get());
+    std::list<QString> list_of_labelIds;
+    for(int i = 0; i < 3; i++){
+        rv->m_labelIds.push_back(QString("_%1_%2").arg(i).arg(example_idx));
+    }
     return rv;
 }
 #endif //API_QT_AUTOTEST

@@ -60,10 +60,13 @@ std::unique_ptr<QuotedFileContent>  QuotedFileContent::factory::create(const QJs
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<QuotedFileContent> QuotedFileContent::EXAMPLE(){
+std::unique_ptr<QuotedFileContent> QuotedFileContent::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<QuotedFileContent> rv(new QuotedFileContent);
-    rv->m_mimeType = "test1value";
-    rv->m_value = "test2value";
+    rv->m_mimeType = QString("test1value_%1").arg(example_idx);
+    rv->m_value = QString("test2value_%1").arg(example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

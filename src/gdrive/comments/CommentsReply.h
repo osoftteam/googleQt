@@ -114,7 +114,7 @@ namespace comments{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<Reply> EXAMPLE();
+        static std::unique_ptr<Reply> EXAMPLE(int context_index);
         #endif //API_QT_AUTOTEST
 
 

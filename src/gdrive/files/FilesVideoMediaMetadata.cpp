@@ -60,7 +60,10 @@ std::unique_ptr<VideoMediaMetadata>  VideoMediaMetadata::factory::create(const Q
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<VideoMediaMetadata> VideoMediaMetadata::EXAMPLE(){
+std::unique_ptr<VideoMediaMetadata> VideoMediaMetadata::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<VideoMediaMetadata> rv(new VideoMediaMetadata);
     rv->m_width = 1;
     rv->m_height = 2;

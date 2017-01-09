@@ -61,9 +61,12 @@ std::unique_ptr<MessageMimeBody>  MessageMimeBody::factory::create(const QJsonOb
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<MessageMimeBody> MessageMimeBody::EXAMPLE(){
+std::unique_ptr<MessageMimeBody> MessageMimeBody::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<MessageMimeBody> rv(new MessageMimeBody);
-    rv->m_attachmentId = "test1value";
+    rv->m_attachmentId = QString("test1value_%1").arg(example_idx);
     rv->m_size = 2;
     rv->m_data = QByteArray("AUTOTEST-DATA").toBase64();
     return rv;

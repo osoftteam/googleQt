@@ -75,14 +75,21 @@ std::unique_ptr<MessageResource>  MessageResource::factory::create(const QJsonOb
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<MessageResource> MessageResource::EXAMPLE(){
+std::unique_ptr<MessageResource> MessageResource::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<MessageResource> rv(new MessageResource);
-    rv->m_id = "test1value";
-    rv->m_threadId = "test2value";
-    rv->m_snippet = "test4value";
+    rv->m_id = QString("test1value_%1").arg(example_idx);
+    rv->m_threadId = QString("test2value_%1").arg(example_idx);
+    std::list<QString> list_of_labelIds;
+    for(int i = 0; i < 3; i++){
+        rv->m_labelIds.push_back(QString("_%1_%2").arg(i).arg(example_idx));
+    }
+    rv->m_snippet = QString("test4value_%1").arg(example_idx);
     rv->m_historyId = 5;
     rv->m_internalDate = 6;
-    rv->m_payload = *(messages::MessagePayload::EXAMPLE().get());
+    rv->m_payload = *(messages::MessagePayload::EXAMPLE(0).get());
     rv->m_sizeEstimate = 8;
     rv->m_raw = QByteArray("AUTOTEST-DATA").toBase64();
     return rv;

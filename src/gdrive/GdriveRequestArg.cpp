@@ -358,7 +358,7 @@ void CommentListArg::build(const QString& link_path, QUrl& url)const
 
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<FileListArg> FileListArg::EXAMPLE()
+std::unique_ptr<FileListArg> FileListArg::EXAMPLE(int)
 {
     std::unique_ptr<FileListArg> rv(new FileListArg);
     rv->setOrderBy("modifiedTime");
@@ -368,14 +368,14 @@ std::unique_ptr<FileListArg> FileListArg::EXAMPLE()
     return rv;
 };
 
-std::unique_ptr<GetFileArg> GetFileArg::EXAMPLE()
+std::unique_ptr<GetFileArg> GetFileArg::EXAMPLE(int)
 {
     std::unique_ptr<GetFileArg> rv(new GetFileArg);
     rv->setFileId("file1");
     return rv;
 };
 
-std::unique_ptr<DownloadFileArg> DownloadFileArg::EXAMPLE()
+std::unique_ptr<DownloadFileArg> DownloadFileArg::EXAMPLE(int)
 {
     std::unique_ptr<DownloadFileArg> rv(new DownloadFileArg);
     rv->setFileId("file1");
@@ -383,27 +383,27 @@ std::unique_ptr<DownloadFileArg> DownloadFileArg::EXAMPLE()
 };
 
 
-std::unique_ptr<CopyFileArg> CopyFileArg::EXAMPLE()
+std::unique_ptr<CopyFileArg> CopyFileArg::EXAMPLE(int)
 {
     std::unique_ptr<CopyFileArg> rv(new CopyFileArg);
     rv->setFileId("file1");
     return rv;
 };
 
-std::unique_ptr<DeleteFileArg> DeleteFileArg::EXAMPLE() 
+std::unique_ptr<DeleteFileArg> DeleteFileArg::EXAMPLE(int)
 {
     std::unique_ptr<DeleteFileArg> rv(new DeleteFileArg);
     rv->setFileId("file1");
     return rv;
 };
 
-std::unique_ptr<CreateFileArg> CreateFileArg::EXAMPLE() 
+std::unique_ptr<CreateFileArg> CreateFileArg::EXAMPLE(int)
 {
     std::unique_ptr<CreateFileArg> rv(new CreateFileArg);   
     return rv;
 };
 
-std::unique_ptr<PermissionArg> PermissionArg::EXAMPLE()
+std::unique_ptr<PermissionArg> PermissionArg::EXAMPLE(int)
 {
     std::unique_ptr<PermissionArg> rv(new PermissionArg);
     rv->setFileId("file1");
@@ -411,28 +411,28 @@ std::unique_ptr<PermissionArg> PermissionArg::EXAMPLE()
     return rv;
 };
 
-std::unique_ptr<CreatePermissionArg> CreatePermissionArg::EXAMPLE()
+std::unique_ptr<CreatePermissionArg> CreatePermissionArg::EXAMPLE(int)
 {
     std::unique_ptr<CreatePermissionArg> rv(new CreatePermissionArg);
     rv->setFileId("file1");
     return rv;
 };
 
-std::unique_ptr<PermissionListArg> PermissionListArg::EXAMPLE()
+std::unique_ptr<PermissionListArg> PermissionListArg::EXAMPLE(int)
 {
     std::unique_ptr<PermissionListArg> rv(new PermissionListArg);
     rv->setFileId("file1");
     return rv;
 };
 
-std::unique_ptr<CreateCommentArg> CreateCommentArg::EXAMPLE()
+std::unique_ptr<CreateCommentArg> CreateCommentArg::EXAMPLE(int)
 {
     std::unique_ptr<CreateCommentArg> rv(new CreateCommentArg);
     rv->setFileId("file1");
     return rv;
 };
 
-std::unique_ptr<DeleteCommentArg> DeleteCommentArg::EXAMPLE()
+std::unique_ptr<DeleteCommentArg> DeleteCommentArg::EXAMPLE(int)
 {
     std::unique_ptr<DeleteCommentArg> rv(new DeleteCommentArg);
     rv->setFileId("file1");
@@ -440,7 +440,7 @@ std::unique_ptr<DeleteCommentArg> DeleteCommentArg::EXAMPLE()
     return rv;
 };
 
-std::unique_ptr<GetCommentArg> GetCommentArg::EXAMPLE()
+std::unique_ptr<GetCommentArg> GetCommentArg::EXAMPLE(int)
 {
     std::unique_ptr<GetCommentArg> rv(new GetCommentArg);
     rv->setFileId("file1");
@@ -448,7 +448,7 @@ std::unique_ptr<GetCommentArg> GetCommentArg::EXAMPLE()
     return rv;
 };
 
-std::unique_ptr<CommentListArg> CommentListArg::EXAMPLE() 
+std::unique_ptr<CommentListArg> CommentListArg::EXAMPLE(int)
 {
     std::unique_ptr<CommentListArg> rv(new CommentListArg);
     rv->setFileId("file1");
@@ -457,7 +457,7 @@ std::unique_ptr<CommentListArg> CommentListArg::EXAMPLE()
     return rv;
 };
 
-std::unique_ptr<RenameFileArg> RenameFileArg::EXAMPLE()
+std::unique_ptr<RenameFileArg> RenameFileArg::EXAMPLE(int)
 {
     std::unique_ptr<RenameFileArg> rv(new RenameFileArg);
     rv->setFileId("file1");
@@ -465,7 +465,7 @@ std::unique_ptr<RenameFileArg> RenameFileArg::EXAMPLE()
     return rv;
 };
 
-std::unique_ptr<MoveFileArg> MoveFileArg::EXAMPLE()
+std::unique_ptr<MoveFileArg> MoveFileArg::EXAMPLE(int)
 {
     std::unique_ptr<MoveFileArg> rv(new MoveFileArg);
     rv->setFileId("file1");
@@ -481,14 +481,14 @@ std::unique_ptr<MoveFileArg> MoveFileArg::EXAMPLE()
     return rv;
 };
 
-std::unique_ptr<CreateFolderArg> CreateFolderArg::EXAMPLE()
+std::unique_ptr<CreateFolderArg> CreateFolderArg::EXAMPLE(int)
 {
     std::unique_ptr<CreateFolderArg> rv(new CreateFolderArg);
     rv->setName("myNewFolder");
     return rv;
 };
 
-std::unique_ptr<MultipartUploadFileArg> MultipartUploadFileArg::EXAMPLE()
+std::unique_ptr<MultipartUploadFileArg> MultipartUploadFileArg::EXAMPLE(int)
 {
     std::unique_ptr<MultipartUploadFileArg> rv(new MultipartUploadFileArg);
     rv->setName("myFile");

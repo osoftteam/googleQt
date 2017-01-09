@@ -61,10 +61,19 @@ std::unique_ptr<ErrorInfo>  ErrorInfo::factory::create(const QJsonObject& js)
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<ErrorInfo> ErrorInfo::EXAMPLE(){
+std::unique_ptr<ErrorInfo> ErrorInfo::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<ErrorInfo> rv(new ErrorInfo);
+    std::list<errors::ErrorPart> list_of_errors;
+    for(int i = 0; i < 3; i++){
+        errors::ErrorPart p = *(errors::ErrorPart::EXAMPLE(i).get());
+        ApiAutotest::INSTANCE().prepareAutoTestObj("errors::ErrorInfo", "errors::ErrorPart", &p, i, context_index);
+        rv->m_errors.push_back(p);
+    }
     rv->m_code = 2;
-    rv->m_message = "test3value";
+    rv->m_message = QString("test3value_%1").arg(example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

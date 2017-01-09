@@ -81,7 +81,7 @@ namespace about{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<StorageQuota> EXAMPLE();
+        static std::unique_ptr<StorageQuota> EXAMPLE(int context_index);
         #endif //API_QT_AUTOTEST
 
 

@@ -72,13 +72,16 @@ std::unique_ptr<TaskListResource>  TaskListResource::factory::create(const QJson
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<TaskListResource> TaskListResource::EXAMPLE(){
+std::unique_ptr<TaskListResource> TaskListResource::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<TaskListResource> rv(new TaskListResource);
-    rv->m_id = "test1value";
-    rv->m_title = "test2value";
-    rv->m_kind = "test3value";
-    rv->m_etag = "test4value";
-    rv->m_selfLink = "test5value";
+    rv->m_id = QString("test1value_%1").arg(example_idx);
+    rv->m_title = QString("test2value_%1").arg(example_idx);
+    rv->m_kind = QString("test3value_%1").arg(example_idx);
+    rv->m_etag = QString("test4value_%1").arg(example_idx);
+    rv->m_selfLink = QString("test5value_%1").arg(example_idx);
     rv->m_updated = QDateTime::currentDateTime();
     return rv;
 }

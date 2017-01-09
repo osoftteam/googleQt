@@ -71,13 +71,16 @@ std::unique_ptr<User>  User::factory::create(const QJsonObject& js)
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<User> User::EXAMPLE(){
+std::unique_ptr<User> User::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<User> rv(new User);
-    rv->m_displayName = "test1value";
-    rv->m_kind = "test2value";
-    rv->m_photoLink = "test3value";
-    rv->m_permissionId = "test5value";
-    rv->m_emailAddress = "test6value";
+    rv->m_displayName = QString("test1value_%1").arg(example_idx);
+    rv->m_kind = QString("test2value_%1").arg(example_idx);
+    rv->m_photoLink = QString("test3value_%1").arg(example_idx);
+    rv->m_permissionId = QString("test5value_%1").arg(example_idx);
+    rv->m_emailAddress = QString("test6value_%1").arg(example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

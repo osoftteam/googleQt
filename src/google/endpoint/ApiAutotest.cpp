@@ -1,4 +1,5 @@
 #include "ApiAutotest.h"
+#include "gmail/messages/MessagesMessagePayload.h"
 
 using namespace googleQt;
 
@@ -42,6 +43,49 @@ ApiAutotest& ApiAutotest::operator << (const QNetworkRequest & r){
     }
     return *this;
 }
+
+void ApiAutotest::prepareAutoTestObj(const char* context_class_name, 
+    const char* class_name, 
+    void* p, 
+    int idx,
+    int context_index)
+{
+    if (strcmp(class_name, "messages::MessagePayloadHeader") == 0)
+    {
+        if (strcmp(context_class_name, "messages::MessagePayload") == 0)
+        {
+            messages::MessagePayloadHeader* h = (messages::MessagePayloadHeader*)p;
+            switch (idx)
+            {
+            case 0: h->setName("From"); break;
+            case 1: h->setName("To"); break;
+            case 2: h->setName("Subject"); break;
+            }
+        }//messages::MessagePayload
+        if (strcmp(context_class_name, "messages::MessagePart") == 0) 
+        {
+            messages::MessagePayloadHeader* h = (messages::MessagePayloadHeader*)p;
+            switch (context_index)
+            {
+            case 0:
+                if (idx == 0)
+                {
+                    h->setName("Content-Type");
+                    h->setValue("text/plain");
+                }
+                break;
+            case 1: 
+                if (idx == 0)
+                {
+                    h->setName("Content-Type");
+                    h->setValue("text/html");
+                }
+                break;            
+            }
+        }
+    }
+};
+
 #endif //API_QT_AUTOTEST
 
 ApiAutotest::ApiAutotest()

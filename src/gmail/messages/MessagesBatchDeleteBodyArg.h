@@ -36,7 +36,7 @@ namespace messages{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<BatchDeleteBodyArg> EXAMPLE();
+        static std::unique_ptr<BatchDeleteBodyArg> EXAMPLE(int context_index);
         #endif //API_QT_AUTOTEST
 
 

@@ -61,11 +61,14 @@ std::unique_ptr<AboutResource>  AboutResource::factory::create(const QJsonObject
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<AboutResource> AboutResource::EXAMPLE(){
+std::unique_ptr<AboutResource> AboutResource::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<AboutResource> rv(new AboutResource);
-    rv->m_kind = "test1value";
-    rv->m_user = *(about::UserInfo::EXAMPLE().get());
-    rv->m_storageQuota = *(about::StorageQuota::EXAMPLE().get());
+    rv->m_kind = QString("test1value_%1").arg(example_idx);
+    rv->m_user = *(about::UserInfo::EXAMPLE(0).get());
+    rv->m_storageQuota = *(about::StorageQuota::EXAMPLE(0).get());
     return rv;
 }
 #endif //API_QT_AUTOTEST

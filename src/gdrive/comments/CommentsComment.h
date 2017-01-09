@@ -149,7 +149,7 @@ namespace comments{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<Comment> EXAMPLE();
+        static std::unique_ptr<Comment> EXAMPLE(int context_index);
         #endif //API_QT_AUTOTEST
 
 

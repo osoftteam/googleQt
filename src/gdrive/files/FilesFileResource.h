@@ -420,7 +420,7 @@ namespace files{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<FileResource> EXAMPLE();
+        static std::unique_ptr<FileResource> EXAMPLE(int context_index);
         #endif //API_QT_AUTOTEST
 
 

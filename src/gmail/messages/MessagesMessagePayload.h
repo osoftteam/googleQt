@@ -90,7 +90,7 @@ namespace messages{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<MessagePayload> EXAMPLE();
+        static std::unique_ptr<MessagePayload> EXAMPLE(int context_index);
         #endif //API_QT_AUTOTEST
 
 

@@ -147,8 +147,35 @@ namespace googleQt {
         }
     };
 
+	template<class T>
+	bool chunk_list_execution(const std::list<T>& inputList, 
+        std::function<bool (const std::list<T>&)> chank_processor, 
+        size_t chank_size = 40)
+	{
+		typedef typename std::list<T>::const_iterator ITR;
+		std::list<T> subList;
+		for (ITR i = inputList.cbegin(); i != inputList.cend(); i++)
+            {
+                T o = *i;
+                subList.push_back(o);
+                if (subList.size() == chank_size)
+                    {
+                        if (!chank_processor(subList))
+                            return false;
+                        subList.clear();
+                    }
+            }
+		if (!subList.empty())
+            {
+                if (!chank_processor(subList))
+                    return false;
+            }
+		return true;
+	}
+
     /// converts std::list of strings -> comma separated list
     QString slist2commalist(const std::list<QString>& lst);
+    QString slist2commalist_decorated(const std::list<QString>& lst, char deco = '\'');
     /// converts space separated strings -> std::list of strings
     std::list<QString> split_string(QString s);
     /// converts size to string with KB, MB or GB suffix
@@ -170,6 +197,11 @@ namespace googleQt {
         {
             url.setUrl(link);
         }
+
+#ifdef API_QT_AUTOTEST
+        static std::unique_ptr<VoidType> EXAMPLE(int ) { return std::unique_ptr<VoidType>(new VoidType()); };
+#endif //API_QT_AUTOTEST
+
     };
 
     class NotAnException
@@ -188,12 +220,12 @@ namespace googleQt {
             QJsonDocument doc = QJsonDocument::fromJson(data);
             QJsonArray arr = doc.array();
             foreach(const QJsonValue & val, arr)
-            {
-                QJsonObject js = val.toObject();
-                D o;
-                o.fromJson(js);
-                res.push_back(o);
-            }
+                {
+                    QJsonObject js = val.toObject();
+                    D o;
+                    o.fromJson(js);
+                    res.push_back(o);
+                }
             return std::move(res);
         }
     };
@@ -223,7 +255,7 @@ namespace googleQt {
         }
 
 #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<D> EXAMPLE() { std::unique_ptr<D> rv(new D); return rv; };
+        static std::unique_ptr<D> EXAMPLE(int ) { std::unique_ptr<D> rv(new D); return rv; };
 #endif //API_QT_AUTOTEST        
     };
 
@@ -239,7 +271,7 @@ namespace googleQt {
         }
 
 #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<D> EXAMPLE() { std::unique_ptr<D> rv(new D("100")); return rv; };
+        static std::unique_ptr<D> EXAMPLE(int ) { std::unique_ptr<D> rv(new D("100")); return rv; };
 #endif //API_QT_AUTOTEST
     protected:
         QString m_id;
@@ -308,30 +340,7 @@ namespace googleQt {
               class RESULT_FACTORY,                                     \
               class BODY>                                               \
     void ENDP_FUNC(QUrl url,                                            \
-        const BODY& body,                                               \
-        GoogleTask<RES>* t)                                             \
-    {                                                                   \
-    std::function<void(std::unique_ptr<RES>)> completed_CB =            \
-        [=](std::unique_ptr<RES> r)                                     \
-    {                                                                   \
-    t->completed_callback(std::move(r));                                \
-};                                                                      \
-                                                                        \
-    std::function<void(std::unique_ptr<GoogleException>)> failed_CB =   \
-        [=](std::unique_ptr<GoogleException> ex)                        \
-    {                                                                   \
-    t->failed_callback(std::move(ex));                                  \
-};                                                                      \
-                                                                        \
-    ENDP_FUNC<RES, RESULT_FACTORY, BODY>                                \
-    (url, body, completed_CB, failed_CB);                               \
-}                                                                       \
-
-
-#define DECL_BODYLESS_BOUND_TASK_CB(ENDP_FUNC)                          \
-    template <class RES,                                                \
-              class RESULT_FACTORY>                                     \
-    void ENDP_FUNC(QUrl url,                                            \
+                   const BODY& body,                                    \
                    GoogleTask<RES>* t)                                  \
     {                                                                   \
         std::function<void(std::unique_ptr<RES>)> completed_CB =        \
@@ -346,13 +355,36 @@ namespace googleQt {
                 t->failed_callback(std::move(ex));                      \
             };                                                          \
                                                                         \
-        ENDP_FUNC<RES, RESULT_FACTORY>                                  \
-            (url, completed_CB, failed_CB);                             \
+        ENDP_FUNC<RES, RESULT_FACTORY, BODY>                            \
+            (url, body, completed_CB, failed_CB);                       \
     }                                                                   \
+
+
+#define DECL_BODYLESS_BOUND_TASK_CB(ENDP_FUNC)                          \
+    template <class RES,                                                \
+              class RESULT_FACTORY>                                     \
+    void ENDP_FUNC(QUrl url,                                            \
+                       GoogleTask<RES>* t)                              \
+    {                                                                   \
+     std::function<void(std::unique_ptr<RES>)> completed_CB =           \
+         [=](std::unique_ptr<RES> r)                                    \
+     {                                                                  \
+      t->completed_callback(std::move(r));                              \
+      };                                                                \
+                                                                        \
+     std::function<void(std::unique_ptr<GoogleException>)> failed_CB =  \
+         [=](std::unique_ptr<GoogleException> ex)                       \
+     {                                                                  \
+      t->failed_callback(std::move(ex));                                \
+      };                                                                \
+                                                                        \
+     ENDP_FUNC<RES, RESULT_FACTORY>                                     \
+     (url, completed_CB, failed_CB);                                    \
+     }                                                                  \
 
 #define DECL_VOID_BOUND_TASK_CB(ENDP_FUNC)                              \
     void ENDP_FUNC(QUrl url,                                            \
-                   GoogleVoidTask* t)                                   \
+                       GoogleVoidTask* t)                               \
     {                                                                   \
         std::function<void(void)> completed_CB =                        \
             [=](void)                                                   \

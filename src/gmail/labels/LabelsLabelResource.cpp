@@ -75,13 +75,16 @@ std::unique_ptr<LabelResource>  LabelResource::factory::create(const QJsonObject
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<LabelResource> LabelResource::EXAMPLE(){
+std::unique_ptr<LabelResource> LabelResource::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<LabelResource> rv(new LabelResource);
-    rv->m_id = "test1value";
-    rv->m_name = "test2value";
-    rv->m_messageListVisibility = "test3value";
-    rv->m_labelListVisibility = "test4value";
-    rv->m_type = "test5value";
+    rv->m_id = QString("test1value_%1").arg(example_idx);
+    rv->m_name = QString("test2value_%1").arg(example_idx);
+    rv->m_messageListVisibility = QString("test3value_%1").arg(example_idx);
+    rv->m_labelListVisibility = QString("test4value_%1").arg(example_idx);
+    rv->m_type = QString("test5value_%1").arg(example_idx);
     rv->m_messagesTotal = 6;
     rv->m_messagesUnread = 7;
     rv->m_threadsTotal = 8;

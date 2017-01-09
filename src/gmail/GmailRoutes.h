@@ -44,6 +44,11 @@ namespace googleQt{
 
 	std::map<QString, std::shared_ptr<mail_batch::MessageData>> getCacheMessages(EDataState, const std::list<QString>& id_list);
 	std::unique_ptr<mail_batch::GMailCacheQueryResult> getCacheMessages_Async(EDataState, const std::list<QString>& id_list);
+    bool setupSQLiteCache(QString dbPath, QString dbName = "googleqt", QString dbprefix = "api");
+
+#ifdef API_QT_AUTOTEST
+    void autotest();
+#endif
   protected:
     std::unique_ptr<messages::MessagesRoutes>       m_MessagesRoutes;
     std::unique_ptr<labels::LabelsRoutes>           m_LabelsRoutes;
@@ -51,7 +56,6 @@ namespace googleQt{
     std::unique_ptr<threads::ThreadsRoutes>         m_ThreadsRoutes;
     std::unique_ptr<history::HistoryRoutes>         m_HistoryRoutes;
     std::unique_ptr<drafts::DraftsRoutes>           m_DraftsRoutes;
-      //    std::unique_ptr<mail_batch::MesagesReciever>    m_MessagesBatchReciever;
 	std::unique_ptr<mail_batch::GMailCache>			m_GMailCache;
     Endpoint*  m_endpoint;
   };

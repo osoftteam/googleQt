@@ -66,7 +66,10 @@ std::unique_ptr<StorageQuota>  StorageQuota::factory::create(const QJsonObject& 
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<StorageQuota> StorageQuota::EXAMPLE(){
+std::unique_ptr<StorageQuota> StorageQuota::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<StorageQuota> rv(new StorageQuota);
     rv->m_limit = 1;
     rv->m_usage = 2;

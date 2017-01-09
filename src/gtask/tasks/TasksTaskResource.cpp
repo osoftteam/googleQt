@@ -96,20 +96,29 @@ std::unique_ptr<TaskResource>  TaskResource::factory::create(const QJsonObject& 
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<TaskResource> TaskResource::EXAMPLE(){
+std::unique_ptr<TaskResource> TaskResource::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<TaskResource> rv(new TaskResource);
-    rv->m_id = "test1value";
-    rv->m_title = "test2value";
-    rv->m_kind = "test3value";
-    rv->m_etag = "test4value";
+    rv->m_id = QString("test1value_%1").arg(example_idx);
+    rv->m_title = QString("test2value_%1").arg(example_idx);
+    rv->m_kind = QString("test3value_%1").arg(example_idx);
+    rv->m_etag = QString("test4value_%1").arg(example_idx);
     rv->m_updated = QDateTime::currentDateTime();
-    rv->m_selfLink = "test6value";
-    rv->m_parent = "test7value";
-    rv->m_position = "test8value";
-    rv->m_notes = "test9value";
-    rv->m_status = "test10value";
+    rv->m_selfLink = QString("test6value_%1").arg(example_idx);
+    rv->m_parent = QString("test7value_%1").arg(example_idx);
+    rv->m_position = QString("test8value_%1").arg(example_idx);
+    rv->m_notes = QString("test9value_%1").arg(example_idx);
+    rv->m_status = QString("test10value_%1").arg(example_idx);
     rv->m_due = QDateTime::currentDateTime();
     rv->m_completed = QDateTime::currentDateTime();
+    std::list<tasks::TaskLink> list_of_links;
+    for(int i = 0; i < 3; i++){
+        tasks::TaskLink p = *(tasks::TaskLink::EXAMPLE(i).get());
+        ApiAutotest::INSTANCE().prepareAutoTestObj("tasks::TaskResource", "tasks::TaskLink", &p, i, context_index);
+        rv->m_links.push_back(p);
+    }
     return rv;
 }
 #endif //API_QT_AUTOTEST

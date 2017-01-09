@@ -61,9 +61,18 @@ std::unique_ptr<MessageListRes>  MessageListRes::factory::create(const QJsonObje
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<MessageListRes> MessageListRes::EXAMPLE(){
+std::unique_ptr<MessageListRes> MessageListRes::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<MessageListRes> rv(new MessageListRes);
-    rv->m_nextPageToken = "test2value";
+    std::list<messages::MessageResource> list_of_messages;
+    for(int i = 0; i < 3; i++){
+        messages::MessageResource p = *(messages::MessageResource::EXAMPLE(i).get());
+        ApiAutotest::INSTANCE().prepareAutoTestObj("messages::MessageListRes", "messages::MessageResource", &p, i, context_index);
+        rv->m_messages.push_back(p);
+    }
+    rv->m_nextPageToken = QString("test2value_%1").arg(example_idx);
     rv->m_resultSizeEstimate = 3;
     return rv;
 }

@@ -21,7 +21,9 @@ namespace googleQt{
         ApiAutotest& operator << (const QString & string);
         ApiAutotest& operator << (const QByteArray & array);
         ApiAutotest& operator << (const QNetworkRequest & req);
-        #endif //API_QT_AUTOTEST
+
+        void prepareAutoTestObj(const char* context_class_name, const char* class_name, void* p, int idx, int context_index);
+        #endif //API_QT_AUTOTEST        
 
     protected:
         QFile m_f;

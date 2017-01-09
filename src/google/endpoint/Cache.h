@@ -10,7 +10,9 @@
 namespace googleQt {
 
 	template<class O>
-	using CACHE_QUERY_RESULT_MAP = std::map<QString, std::shared_ptr<O>>;
+	using CACHE_QUERY_RESULT_MAP  = std::map<QString, std::shared_ptr<O>>;
+    template<class O>
+    using CACHE_QUERY_RESULT_LIST = std::list<std::shared_ptr<O>>;
 
     enum class EDataState
     {
@@ -35,29 +37,30 @@ namespace googleQt {
 	class GoogleCacheBase
 	{
 	public:
-        virtual std::shared_ptr<O>* mem_object(QString id) = 0;
-        virtual bool mem_insert(QString id, std::shared_ptr<O>*) = 0;
-        virtual void update_persistent_storage(CACHE_QUERY_RESULT_MAP<O>& r) = 0;
+        virtual std::shared_ptr<O> mem_object(QString id) = 0;
+        virtual bool mem_insert(QString id, std::shared_ptr<O>) = 0;
+        virtual void update_persistent_storage(EDataState state, CACHE_QUERY_RESULT_MAP<O>& r) = 0;
         
-		void merge(CACHE_QUERY_RESULT_MAP<O>& r) 
-		{
-            
+		void merge(EDataState state, CACHE_QUERY_RESULT_MAP<O>& r)
+		{            
 			for (typename CACHE_QUERY_RESULT_MAP<O>::iterator i = r.begin();
                  i != r.end(); i++) 
                 {
                     QString id = i->first;
                     std::shared_ptr<O> new_obj = i->second;
-                    std::shared_ptr<O>* cache_obj = mem_object(id);
-                    if (cache_obj != nullptr)
+                    std::shared_ptr<O> cache_obj = mem_object(id);
+                    if (cache_obj)
                         {
-                            (*cache_obj)->merge(new_obj.get());
+                            cache_obj->merge(new_obj.get());
                         }
                     else
                         {
-                            std::shared_ptr<O>* ptr = new std::shared_ptr<O>(new_obj);
-                            mem_insert(id, ptr);
+                            //std::shared_ptr<O>* ptr = new std::shared_ptr<O>(new_obj);
+                       // std::shared_ptr<O> ptr = std::make_shared();
+                            mem_insert(id, new_obj);
                         }
                 }
+            update_persistent_storage(state, r);
 		}
 	};
 
@@ -66,13 +69,13 @@ namespace googleQt {
     {
     public:
         CacheQueryResult(EDataState load, ApiEndpoint& ept, GoogleCacheBase<O>* c) 
-			:EndpointRunnable(ept), m_load(load), m_cache(c){};
+			:EndpointRunnable(ept), m_state(load), m_cache(c){};
 
         virtual void fetchFromCloud_Async(const std::list<QString>& id_list) = 0;
 		void notifyOnCompletedFromCache() { notifyOnFinished(); };
 		void notifyFetchCompleted(CACHE_QUERY_RESULT_MAP<O>& r) 
 		{
-			m_cache->merge(r);
+			m_cache->merge(m_state, r);
 			notifyOnFinished();
 		}
 
@@ -92,7 +95,7 @@ namespace googleQt {
 
     protected:
 		CACHE_QUERY_RESULT_MAP<O> m_result;
-        EDataState m_load;
+        EDataState m_state;
 		GoogleCacheBase<O>* m_cache;
     };
     
@@ -103,7 +106,17 @@ namespace googleQt {
         //        LocalPersistentStorage(GoogleCacheBase<O> c){}
         virtual std::list<QString> load(const std::list<QString>& id_list,
                                         std::unique_ptr<R>& cr) = 0;
-        virtual void update(CACHE_QUERY_RESULT_MAP<O>& r) = 0;
+        virtual void update(EDataState state, CACHE_QUERY_RESULT_LIST<O>& r) = 0;
+        virtual void update(EDataState state, CACHE_QUERY_RESULT_MAP<O>& r)
+        {
+            CACHE_QUERY_RESULT_LIST<O> lst;
+            typedef typename CACHE_QUERY_RESULT_MAP<O>::iterator ITR;
+            for (ITR i = r.begin(); i != r.end(); i++) 
+            {
+                lst.push_back(i->second);
+            }
+            update(state, lst);
+        };
         virtual bool isValid()const = 0;
     };
     
@@ -111,32 +124,42 @@ namespace googleQt {
     class GoogleCache : public GoogleCacheBase<O>
     {
     public:
-        GoogleCache(ApiEndpoint& ept, int maxSize = 1000): m_endpoint(ept), m_mem_cache(maxSize){};
-        void setupLocalStorage(LocalPersistentStorage<O, R>* localDB){m_localDB = localDB;};
+        GoogleCache(ApiEndpoint& ept, size_t maxSize = 1000): m_endpoint(ept), m_maxSize(maxSize){};
+        void setupLocalStorage(LocalPersistentStorage<O, R>* localDB){m_localDB .reset(localDB);};
+        bool hasLocalPersistentStorate()const { return(m_localDB.get() != nullptr); };
 		virtual std::unique_ptr<R> produceCloudResultFetcher(EDataState load, ApiEndpoint& ept) = 0;
 
-        std::shared_ptr<O>* mem_object(QString id)override
+        std::shared_ptr<O> mem_object(QString id)override
         {
-            return m_mem_cache.object(id);
+            std::shared_ptr<O> rv;
+            auto i = m_mem_cache.find(id);
+            if (i != m_mem_cache.end())
+                rv = i->second;
+            return rv;
+            //return m_mem_cache.object(id);
         }
-        bool mem_insert(QString id, std::shared_ptr<O>* o)override
+        bool mem_insert(QString id, std::shared_ptr<O> o)override
         {
+            m_mem_cache[id] = o;
+            return true;
+            /*
             bool rv = m_mem_cache.insert(id, o);
             if(!rv)
                 {
-                    qWarning() << "cache insert failed" << m_mem_cache.size() << m_mem_cache.maxCost() << id;
+                    qWarning() << "cache insert failed" << m_maxSize << id;
                     delete o;
                 }
             return rv;
+            */
         }
 
-        void update_persistent_storage(CACHE_QUERY_RESULT_MAP<O>& r)override
+        void update_persistent_storage(EDataState state, CACHE_QUERY_RESULT_MAP<O>& r)override
         {
             if(m_localDB != nullptr &&
                m_localDB->isValid() &&
                !r.empty())
                 {
-                    m_localDB->update(r);
+                    m_localDB->update(state, r);
                 }            
         }
         
@@ -148,10 +171,10 @@ namespace googleQt {
             for (std::list<QString>::const_iterator i = id_list.begin(); i != id_list.end(); i++)
             {
                 QString id = *i;
-				std::shared_ptr<O>* obj = m_mem_cache.object(id);
-                if (obj != NULL && (*obj)->isLoaded(load))
+				std::shared_ptr<O> obj = mem_object(id);
+                if (obj && obj->isLoaded(load))
                 {
-                    rv->add(id, *obj);
+                    rv->add(id, obj);
                 }
                 else 
                 {
@@ -159,7 +182,7 @@ namespace googleQt {
                 }
             }//swipping cache
 
-            if(m_localDB != nullptr &&
+            if(m_localDB &&
                m_localDB->isValid() &&
                !missed_cache.empty())
                 {
@@ -178,7 +201,9 @@ namespace googleQt {
         };
     protected:
         ApiEndpoint& m_endpoint;
-        QCache<QString, std::shared_ptr<O>> m_mem_cache;
-        LocalPersistentStorage<O, R>* m_localDB {nullptr};
+        //QCache<QString, std::shared_ptr<O>> m_mem_cache;
+        CACHE_QUERY_RESULT_MAP<O>  m_mem_cache;
+        size_t                  m_maxSize;
+        std::unique_ptr<LocalPersistentStorage<O, R>> m_localDB;
     };
 };

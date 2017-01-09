@@ -125,6 +125,24 @@ QString googleQt::slist2commalist(const std::list<QString>& lst)
     return rv;
 };
 
+QString googleQt::slist2commalist_decorated(const std::list<QString>& lst, char deco)
+{
+    QString rv = "";
+    if (!lst.empty())
+    {
+        for (std::list<QString>::const_iterator i = lst.begin();
+            i != lst.end();
+            i++)
+        {
+            rv += QString("%1%2%3").arg(deco).arg(*i).arg(deco);
+            rv += ",";
+        }
+        rv = rv.left(rv.length() - 1);
+    }
+    return rv;
+};
+
+
 std::list<QString> googleQt::split_string(QString s)
 {
     QStringList s_list = s.split(" ", QString::SkipEmptyParts);

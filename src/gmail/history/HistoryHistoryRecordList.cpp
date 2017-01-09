@@ -62,10 +62,19 @@ std::unique_ptr<HistoryRecordList>  HistoryRecordList::factory::create(const QJs
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<HistoryRecordList> HistoryRecordList::EXAMPLE(){
+std::unique_ptr<HistoryRecordList> HistoryRecordList::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<HistoryRecordList> rv(new HistoryRecordList);
-    rv->m_nextPageToken = "test2value";
-    rv->m_historyId = "test3value";
+    std::list<history::HistoryRecord> list_of_history;
+    for(int i = 0; i < 3; i++){
+        history::HistoryRecord p = *(history::HistoryRecord::EXAMPLE(i).get());
+        ApiAutotest::INSTANCE().prepareAutoTestObj("history::HistoryRecordList", "history::HistoryRecord", &p, i, context_index);
+        rv->m_history.push_back(p);
+    }
+    rv->m_nextPageToken = QString("test2value_%1").arg(example_idx);
+    rv->m_historyId = QString("test3value_%1").arg(example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

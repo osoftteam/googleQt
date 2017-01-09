@@ -68,7 +68,7 @@ namespace messages{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<MessageMimeBody> EXAMPLE();
+        static std::unique_ptr<MessageMimeBody> EXAMPLE(int context_index);
         #endif //API_QT_AUTOTEST
 
 

@@ -50,7 +50,7 @@ namespace googleQt{
             void build(const QString& link_path, QUrl& url)const override;
             
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<ListArg> EXAMPLE();
+            static std::unique_ptr<ListArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
 
@@ -100,7 +100,7 @@ namespace googleQt{
 
             void build(const QString& link_path, QUrl& url)const override;
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<HistoryListArg> EXAMPLE();
+            static std::unique_ptr<HistoryListArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -143,7 +143,7 @@ namespace googleQt{
             void build(const QString& link_path, QUrl& url)const override;
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<DraftListArg> EXAMPLE();
+            static std::unique_ptr<DraftListArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -182,7 +182,7 @@ namespace googleQt{
             QStringList& headers(){return m_headers;}
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<IdArg> EXAMPLE();
+            static std::unique_ptr<IdArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -214,7 +214,7 @@ namespace googleQt{
             void    setUploadType(QString val) { m_uploadType = val; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<SendMessageArg> EXAMPLE();
+            static std::unique_ptr<SendMessageArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -254,7 +254,7 @@ namespace googleQt{
             void setInternalDateSource(QString s) { m_internalDateSource = s; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<InsertMessageArg> EXAMPLE();
+            static std::unique_ptr<InsertMessageArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -322,7 +322,7 @@ namespace googleQt{
             void    setProcessForCalendar(bool v) { m_processForCalendar = v; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<ImportMessageArg> EXAMPLE();
+            static std::unique_ptr<ImportMessageArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:

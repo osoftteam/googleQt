@@ -56,8 +56,15 @@ std::unique_ptr<BatchDeleteBodyArg>  BatchDeleteBodyArg::factory::create(const Q
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<BatchDeleteBodyArg> BatchDeleteBodyArg::EXAMPLE(){
+std::unique_ptr<BatchDeleteBodyArg> BatchDeleteBodyArg::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<BatchDeleteBodyArg> rv(new BatchDeleteBodyArg);
+    std::list<QString> list_of_ids;
+    for(int i = 0; i < 3; i++){
+        rv->m_ids.push_back(QString("_%1_%2").arg(i).arg(example_idx));
+    }
     return rv;
 }
 #endif //API_QT_AUTOTEST

@@ -55,7 +55,7 @@ namespace messages{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<MessagePartBody> EXAMPLE();
+        static std::unique_ptr<MessagePartBody> EXAMPLE(int context_index);
         #endif //API_QT_AUTOTEST
 
 

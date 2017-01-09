@@ -1,7 +1,5 @@
 #include "GmailRoutes.h"
 #include "Endpoint.h"
-//#include "GmailBatch.h"
-
 
 using namespace googleQt;
 
@@ -97,4 +95,46 @@ std::unique_ptr<mail_batch::GMailCacheQueryResult> GmailRoutes::getCacheMessages
 	return m_GMailCache->query_Async(state, id_list);
 };
 
+bool GmailRoutes::setupSQLiteCache(QString dbPath, QString dbName /*= "googleqt"*/, QString dbprefix /*= "api"*/) 
+{
+    if (!m_GMailCache) {
+        m_GMailCache.reset(new mail_batch::GMailCache(*m_endpoint, *this));
+    }
 
+    if (m_GMailCache->hasLocalPersistentStorate()) 
+    {
+        qWarning() << "Local SQLite storage already setup";
+        return false;
+    }
+
+    std::unique_ptr<mail_batch::GMailSQLiteStorage> st(new mail_batch::GMailSQLiteStorage(m_GMailCache.get()));
+    if (!st->init(dbPath, dbName, dbprefix)) 
+    {
+        qWarning() << "Failed to initialize SQLite storage" << dbPath << dbName << dbprefix;
+        return false;
+    }
+
+    m_GMailCache->setupLocalStorage(st.release());
+    return true;
+};
+
+#ifdef API_QT_AUTOTEST
+void GmailRoutes::autotest()
+{
+    if (!setupSQLiteCache("gmail_autotest.sqlite")) 
+    {
+        ApiAutotest::INSTANCE() << "Failed to setup SQL database";
+        return;
+    };
+    std::list<QString> id_list;
+    for (int i = 1; i <= 1000; i++) 
+    {
+        QString id = QString("id_%1").arg(i);
+        id_list.push_back(id);
+    };
+    getCacheMessages(EDataState::snippet, id_list);
+    getCacheMessages(EDataState::body, id_list);
+    getCacheMessages(EDataState::snippet, id_list);
+    getCacheMessages(EDataState::body, id_list);
+};
+#endif

@@ -18,6 +18,10 @@ namespace googleQt
         tasklists::TasklistsRoutes* getTasklists();
         tasks::TasksRoutes* getTasks();
 
+#ifdef API_QT_AUTOTEST
+        void autotest() {};
+#endif
+
     protected:
         std::unique_ptr<tasklists::TasklistsRoutes> m_TaskLists;
         std::unique_ptr<tasks::TasksRoutes> m_Tasks;

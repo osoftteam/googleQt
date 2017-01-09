@@ -79,16 +79,19 @@ std::unique_ptr<Reply>  Reply::factory::create(const QJsonObject& js)
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<Reply> Reply::EXAMPLE(){
+std::unique_ptr<Reply> Reply::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<Reply> rv(new Reply);
-    rv->m_id = "test1value";
-    rv->m_kind = "test2value";
+    rv->m_id = QString("test1value_%1").arg(example_idx);
+    rv->m_kind = QString("test2value_%1").arg(example_idx);
     rv->m_createdTime = QDateTime::currentDateTime();
     rv->m_modifiedTime = QDateTime::currentDateTime();
-    rv->m_author = *(comments::User::EXAMPLE().get());
-    rv->m_htmlContent = "test6value";
-    rv->m_content = "test7value";
-    rv->m_action = "test9value";
+    rv->m_author = *(comments::User::EXAMPLE(0).get());
+    rv->m_htmlContent = QString("test6value_%1").arg(example_idx);
+    rv->m_content = QString("test7value_%1").arg(example_idx);
+    rv->m_action = QString("test9value_%1").arg(example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

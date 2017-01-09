@@ -63,11 +63,14 @@ std::unique_ptr<TaskLink>  TaskLink::factory::create(const QJsonObject& js)
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<TaskLink> TaskLink::EXAMPLE(){
+std::unique_ptr<TaskLink> TaskLink::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<TaskLink> rv(new TaskLink);
-    rv->m_type = "test1value";
-    rv->m_description = "test2value";
-    rv->m_link = "test3value";
+    rv->m_type = QString("test1value_%1").arg(example_idx);
+    rv->m_description = QString("test2value_%1").arg(example_idx);
+    rv->m_link = QString("test3value_%1").arg(example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

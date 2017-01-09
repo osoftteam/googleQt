@@ -125,7 +125,7 @@ void ImportMessageArg::build(const QString& link_path, QUrl& url)const
 
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<IdArg> IdArg::EXAMPLE()
+std::unique_ptr<IdArg> IdArg::EXAMPLE(int)
 {
     std::unique_ptr<IdArg> rv(new IdArg);
     rv->setId("id123");
@@ -135,7 +135,7 @@ std::unique_ptr<IdArg> IdArg::EXAMPLE()
     return rv;
 };
 
-std::unique_ptr<ListArg> ListArg::EXAMPLE()
+std::unique_ptr<ListArg> ListArg::EXAMPLE(int)
 { 
     std::unique_ptr<ListArg> rv(new ListArg); 
     rv->setMaxResults(10);
@@ -144,7 +144,7 @@ std::unique_ptr<ListArg> ListArg::EXAMPLE()
     return rv; 
 };
 
-std::unique_ptr<HistoryListArg> HistoryListArg::EXAMPLE()
+std::unique_ptr<HistoryListArg> HistoryListArg::EXAMPLE(int)
 { 
     std::unique_ptr<HistoryListArg> rv(new HistoryListArg); 
     rv->setMaxResults(10);
@@ -153,7 +153,7 @@ std::unique_ptr<HistoryListArg> HistoryListArg::EXAMPLE()
     return rv; 
 };
 
-std::unique_ptr<DraftListArg> DraftListArg::EXAMPLE()
+std::unique_ptr<DraftListArg> DraftListArg::EXAMPLE(int)
 { 
     std::unique_ptr<DraftListArg> rv(new DraftListArg); 
     rv->setMaxResults(10);
@@ -162,21 +162,21 @@ std::unique_ptr<DraftListArg> DraftListArg::EXAMPLE()
     return rv; 
 };
 
-std::unique_ptr<SendMessageArg> SendMessageArg::EXAMPLE() 
+std::unique_ptr<SendMessageArg> SendMessageArg::EXAMPLE(int)
 {
     std::unique_ptr<SendMessageArg> rv(new SendMessageArg);
     rv->setUploadType("media");
     return rv;
 };
 
-std::unique_ptr<InsertMessageArg> InsertMessageArg::EXAMPLE()
+std::unique_ptr<InsertMessageArg> InsertMessageArg::EXAMPLE(int)
 {
     std::unique_ptr<InsertMessageArg> rv(new InsertMessageArg);
     rv->setUploadType("media");
     return rv;
 };
 
-std::unique_ptr<ImportMessageArg> ImportMessageArg::EXAMPLE()
+std::unique_ptr<ImportMessageArg> ImportMessageArg::EXAMPLE(int)
 {
     std::unique_ptr<ImportMessageArg> rv(new ImportMessageArg);
     rv->setUploadType("media");

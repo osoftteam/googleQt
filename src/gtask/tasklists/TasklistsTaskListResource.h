@@ -85,7 +85,7 @@ namespace tasklists{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<TaskListResource> EXAMPLE();
+        static std::unique_ptr<TaskListResource> EXAMPLE(int context_index);
         #endif //API_QT_AUTOTEST
 
 

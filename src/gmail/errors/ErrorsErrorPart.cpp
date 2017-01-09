@@ -63,11 +63,14 @@ std::unique_ptr<ErrorPart>  ErrorPart::factory::create(const QJsonObject& js)
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<ErrorPart> ErrorPart::EXAMPLE(){
+std::unique_ptr<ErrorPart> ErrorPart::EXAMPLE(int context_index){
+    Q_UNUSED(context_index);
+    static int example_idx = 0;
+    example_idx++;
     std::unique_ptr<ErrorPart> rv(new ErrorPart);
-    rv->m_domain = "test1value";
-    rv->m_reason = "test2value";
-    rv->m_message = "test3value";
+    rv->m_domain = QString("test1value_%1").arg(example_idx);
+    rv->m_reason = QString("test2value_%1").arg(example_idx);
+    rv->m_message = QString("test3value_%1").arg(example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST
