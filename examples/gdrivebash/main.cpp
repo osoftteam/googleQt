@@ -47,7 +47,8 @@ int main(int argc, char *argv[])
     
     std::unique_ptr<ApiAuthInfo> authInfo(new ApiAuthInfo(argAuthFile));
     if(!authInfo->reload()){
-        std::cout << "Error reading <auth-file>" << std::endl;
+        std::cout << "Error reading <auth-file> - token file" << std::endl;
+        std::cout << "Use 'authorize' sample to generate token file." << std::endl;
         std::cin.ignore();
         return 0;        
     }
@@ -66,6 +67,7 @@ int main(int argc, char *argv[])
     t.addAction("move",             "Move File (Add/Remove parents)",  [&](QString arg) {cmd.move_file(arg); });
     t.addAction("download",         "Download file",  [&](QString arg) {cmd.download(arg); });
     t.addAction("cat",              "Print file content on screen", [&](QString arg) {cmd.cat(arg); });
+    t.addAction("create",           "Create a new file using 'multipart' method", [&](QString arg) {cmd.create(arg); });
     t.addAction("upload_simple",    "Upload file using 'simple' method", [&](QString arg) {cmd.upload_simple(arg); });
     t.addAction("upload_mpart",     "Upload file using 'multipart' method", [&](QString arg) {cmd.upload_mpart(arg); });
     t.addAction("rm",               "Delete file or folder", [&](QString arg) {cmd.rm(arg); });    

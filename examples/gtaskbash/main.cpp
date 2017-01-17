@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
     std::unique_ptr<ApiAuthInfo> authInfo(new ApiAuthInfo(argAuthFile));
     if(!authInfo->reload()){
         std::cout << "Error reading <auth-file>" << std::endl;
+        std::cout << "Use 'authorize' sample to generate token file." << std::endl;
         std::cin.ignore();
         return 0;        
     }

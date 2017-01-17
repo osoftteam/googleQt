@@ -33,6 +33,8 @@ public:
     void download(QString fileId_space_localFileName);
     ///download and print file content on the screen, good for text files
     void cat(QString fileId);
+    ///create new file by uploading local file
+    void create(QString fileName);
     ///upload file using 'simple' method without metadata, fileName - local filename to upload
     void upload_simple(QString fileName);    
     ///upload file, fileName - local filename to upload

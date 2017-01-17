@@ -8,7 +8,7 @@
 #include "GdriveCommands.h"
 #include "google/demo/ApiTerminal.h"
 #include "gdrive/GdriveRoutes.h"
-
+#include "gdrive/files/FilesCreateFileDetails.h"
 
 using namespace googleQt;
 using namespace gdrive;
@@ -241,6 +241,36 @@ void GdriveCommands::upload_mpart(QString fileName)
     {
         gdrive::MultipartUploadFileArg arg(fi.fileName());
         auto f = m_gd->getFiles()->uploadFileMultipart(arg, &file_in);
+        print_status(f.get(), QString("uploaded %1").arg(file_in.size()));
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+    file_in.close();
+};
+
+void GdriveCommands::create(QString fileName) 
+{
+    if (fileName.isEmpty()) {
+        std::cout << "ERROR argument reguired" << std::endl;
+        return;
+    }
+
+    QFile file_in(fileName);
+    if (!file_in.open(QFile::ReadOnly)) {
+        std::cout << "Error opening file: " << fileName.toStdString() << std::endl;
+        return;
+    }
+
+    QFileInfo fi(fileName);
+
+    try
+    {
+        gdrive::CreateFileArg arg(fi.fileName());
+        files::CreateFileDetails& file_details = arg.fileDetailes();
+        file_details.setDescription("file created from googleQt API");
+        auto f = m_gd->getFiles()->create(arg, &file_in);
         print_status(f.get(), QString("uploaded %1").arg(file_in.size()));
     }
     catch (GoogleException& e)
