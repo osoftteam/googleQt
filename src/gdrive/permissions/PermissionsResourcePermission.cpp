@@ -88,14 +88,14 @@ std::unique_ptr<ResourcePermission> ResourcePermission::EXAMPLE(int context_inde
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<ResourcePermission> rv(new ResourcePermission);
-    rv->m_id = QString("test1value_%1").arg(example_idx);
-    rv->m_kind = QString("test2value_%1").arg(example_idx);
-    rv->m_type = QString("test3value_%1").arg(example_idx);
-    rv->m_emailAddress = QString("test4value_%1").arg(example_idx);
-    rv->m_domain = QString("test5value_%1").arg(example_idx);
-    rv->m_role = QString("test6value_%1").arg(example_idx);
-    rv->m_displayName = QString("test8value_%1").arg(example_idx);
-    rv->m_photoLink = QString("test9value_%1").arg(example_idx);
+    rv->m_id = ApiAutotest::INSTANCE().getId("permissions::ResourcePermission", example_idx);
+    rv->m_kind = QString("kind_%1").arg(example_idx);
+    rv->m_type = QString("type_%1").arg(example_idx);
+    rv->m_emailAddress = QString("emailAddress_%1").arg(example_idx);
+    rv->m_domain = QString("domain_%1").arg(example_idx);
+    rv->m_role = QString("role_%1").arg(example_idx);
+    rv->m_displayName = QString("displayName_%1").arg(example_idx);
+    rv->m_photoLink = QString("photoLink_%1").arg(example_idx);
     rv->m_expirationTime = QDateTime::currentDateTime();
     return rv;
 }

@@ -2,6 +2,11 @@
 #include "google/endpoint/ApiUtil.h"
 
 namespace googleQt {
+    namespace files 
+    {
+        class CreateFileDetails;
+    };
+
     namespace gdrive {
         DECLARE_PATH_CLASS(about);
         DECLARE_PATH_CLASS(trash);
@@ -296,18 +301,19 @@ namespace googleQt {
             QString m_fileId;
         };
 
-        class CreateFileArg : public QParamArg
+        class CreateFileArg : public QParamArgWithBody<CreateFileArg>
         {
         public:
-            CreateFileArg();
+            CreateFileArg(QString name = "");
+            virtual ~CreateFileArg();
             void build(const QString& link_path, QUrl& url)const override;
+            void toJson(QJsonObject& js)const override;
 
             /**
-                The type of upload request to the /upload URI. Acceptable values are:
-                media - Simple upload. Upload the media only, without any metadata.
+                A details for file.
             */
-            //            QString getUploadType()const { return m_uploadType; }
-            //void    setUploadType(QString val) { m_uploadType = val; }
+            files::CreateFileDetails& fileDetailes()const;
+
 
             /**
                 Whether to ignore the domain's default visibility settings for the created file. 
@@ -342,11 +348,11 @@ namespace googleQt {
 #endif //API_QT_AUTOTEST
 
         protected:
-            //QString m_uploadType;
             bool    m_ignoreDefaultVisibility;
             bool    m_keepRevisionForever;
             QString m_ocrLanguage;
             bool    m_useContentAsIndexableText;
+            std::unique_ptr<files::CreateFileDetails> m_create_file;
         };
 
         class CreateFolderArg : public QParamArgWithBody<CreateFolderArg>

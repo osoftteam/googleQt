@@ -45,37 +45,39 @@ void FilesRoutes::copy_AsyncCB(
         failed_callback);
 }
 
-std::unique_ptr<FileResource> FilesRoutes::create(const gdrive::CreateFileArg& arg, const FileResource& body){
-    return create_Async(arg, body)->waitForResultAndRelease();
+std::unique_ptr<FileResource> FilesRoutes::create(const gdrive::CreateFileArg& arg, QIODevice* data){
+    return create_Async(arg, data)->waitForResultAndRelease();
 }
 
-GoogleTask<FileResource>* FilesRoutes::create_Async(const gdrive::CreateFileArg& arg, const FileResource& body)
+GoogleTask<FileResource>* FilesRoutes::create_Async(const gdrive::CreateFileArg& arg, QIODevice* data)
 {
     GoogleTask<FileResource>* t = m_end_point->produceTask<FileResource>();
-    m_end_point->postStyle<
+    m_end_point->mpartUploadStyle<
         FileResource,
-        FileResource::factory,
-        FileResource>
-        (m_end_point->buildGdriveUrl("files", arg),
-        body,
+        FileResource::factory
+        ,gdrive::CreateFileArg>
+        (m_end_point->buildGdriveMPartUploadUrl("files", arg),
+        arg,
+        data,
         t);
     return t;
 }
 
 void FilesRoutes::create_AsyncCB(
     const gdrive::CreateFileArg& arg,
-    const FileResource& body,
+    QIODevice* data,
     std::function<void(std::unique_ptr<FileResource>)> completed_callback ,
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
 {
-    m_end_point->postStyle
+    m_end_point->mpartUploadStyle
         <
         FileResource,
-        FileResource::factory,
-        FileResource
+        FileResource::factory
+        , gdrive::CreateFileArg
         >
-        (m_end_point->buildGdriveUrl("files", arg),
-        body,
+        (m_end_point->buildGdriveMPartUploadUrl("files", arg),
+        arg,
+        data,
         completed_callback,
         failed_callback);
 }

@@ -65,8 +65,8 @@ std::unique_ptr<MessagePayloadHeader> MessagePayloadHeader::EXAMPLE(int context_
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<MessagePayloadHeader> rv(new MessagePayloadHeader);
-    rv->m_name = QString("test1value_%1").arg(example_idx);
-    rv->m_value = QString("test2value_%1").arg(example_idx);
+    rv->m_name = QString("name_%1").arg(example_idx);
+    rv->m_value = QString("value_%1").arg(example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

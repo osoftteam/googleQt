@@ -112,21 +112,21 @@ std::unique_ptr<ImageMediaMetadata> ImageMediaMetadata::EXAMPLE(int context_inde
     rv->m_height = 2;
     rv->m_rotation = 3;
     rv->m_location = *(files::LocationData::EXAMPLE(0).get());
-    rv->m_time = QString("test5value_%1").arg(example_idx);
-    rv->m_cameraMake = QString("test6value_%1").arg(example_idx);
-    rv->m_cameraModel = QString("test7value_%1").arg(example_idx);
+    rv->m_time = QString("time_%1").arg(example_idx);
+    rv->m_cameraMake = QString("cameraMake_%1").arg(example_idx);
+    rv->m_cameraModel = QString("cameraModel_%1").arg(example_idx);
     rv->m_exposureTime = 8;
     rv->m_focalLength = 10;
     rv->m_isoSpeed = 11;
-    rv->m_meteringMode = QString("test12value_%1").arg(example_idx);
-    rv->m_sensor = QString("test13value_%1").arg(example_idx);
-    rv->m_exposureMode = QString("test14value_%1").arg(example_idx);
-    rv->m_colorSpace = QString("test15value_%1").arg(example_idx);
-    rv->m_whiteBalance = QString("test16value_%1").arg(example_idx);
+    rv->m_meteringMode = QString("meteringMode_%1").arg(example_idx);
+    rv->m_sensor = QString("sensor_%1").arg(example_idx);
+    rv->m_exposureMode = QString("exposureMode_%1").arg(example_idx);
+    rv->m_colorSpace = QString("colorSpace_%1").arg(example_idx);
+    rv->m_whiteBalance = QString("whiteBalance_%1").arg(example_idx);
     rv->m_exposureBias = 17;
     rv->m_maxApertureValue = 18;
     rv->m_subjectDistance = 19;
-    rv->m_lens = QString("test20value_%1").arg(example_idx);
+    rv->m_lens = QString("lens_%1").arg(example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

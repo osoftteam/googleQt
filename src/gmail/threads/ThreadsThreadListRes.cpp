@@ -72,7 +72,7 @@ std::unique_ptr<ThreadListRes> ThreadListRes::EXAMPLE(int context_index){
         ApiAutotest::INSTANCE().prepareAutoTestObj("threads::ThreadListRes", "threads::ThreadResource", &p, i, context_index);
         rv->m_threads.push_back(p);
     }
-    rv->m_nextPageToken = QString("test2value_%1").arg(example_idx);
+    rv->m_nextPageToken = QString("nextPageToken_%1").arg(example_idx);
     rv->m_resultSizeEstimate = 3;
     return rv;
 }

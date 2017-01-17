@@ -67,8 +67,8 @@ std::unique_ptr<FileResourcesCollection> FileResourcesCollection::EXAMPLE(int co
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<FileResourcesCollection> rv(new FileResourcesCollection);
-    rv->m_nextPageToken = QString("test1value_%1").arg(example_idx);
-    rv->m_kind = QString("test2value_%1").arg(example_idx);
+    rv->m_nextPageToken = QString("nextPageToken_%1").arg(example_idx);
+    rv->m_kind = QString("kind_%1").arg(example_idx);
     std::list<files::FileResource> list_of_files;
     for(int i = 0; i < 3; i++){
         files::FileResource p = *(files::FileResource::EXAMPLE(i).get());

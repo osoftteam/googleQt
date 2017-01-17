@@ -48,6 +48,8 @@ namespace googleQt{
 
 #ifdef API_QT_AUTOTEST
     void autotest();
+    void autotestParLoad(EDataState state, const std::list<QString>& id_list);
+    void autotestParDBLoad(EDataState state, const std::list<QString>& id_list);
 #endif
   protected:
     std::unique_ptr<messages::MessagesRoutes>       m_MessagesRoutes;

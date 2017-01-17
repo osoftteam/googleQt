@@ -1,5 +1,6 @@
 #include <QUrlQuery>
 #include "GdriveRequestArg.h"
+#include "gdrive/files/FilesCreateFileDetails.h"
 
 using namespace googleQt;
 using namespace gdrive;
@@ -131,11 +132,21 @@ void DeleteFileArg::build(const QString& link_path, QUrl& url)const
 /**
     CreateFileArg
 */
-CreateFileArg::CreateFileArg()
+CreateFileArg::CreateFileArg(QString name /*= ""*/)
 {
     m_ignoreDefaultVisibility = false;
     m_keepRevisionForever = false;
     m_useContentAsIndexableText = false;
+    m_create_file.reset(new files::CreateFileDetails());
+    if (!name.isEmpty())
+    {
+        m_create_file->setName(name);
+    }
+};
+
+CreateFileArg::~CreateFileArg() 
+{
+
 };
 
 void CreateFileArg::build(const QString& link_path, QUrl& url)const
@@ -146,6 +157,17 @@ void CreateFileArg::build(const QString& link_path, QUrl& url)const
         .add("ocrLanguage", m_ocrLanguage)
         .add("useContentAsIndexableText", m_useContentAsIndexableText);
 }
+
+void CreateFileArg::toJson(QJsonObject& js)const
+{
+    m_create_file->toJson(js);
+};
+
+files::CreateFileDetails& CreateFileArg::fileDetailes()const 
+{
+    return *(m_create_file.get());
+};
+
 
 /**
    CreateFolderArg

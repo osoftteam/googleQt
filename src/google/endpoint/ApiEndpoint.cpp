@@ -4,7 +4,7 @@
 
 #ifdef API_QT_AUTOTEST
 #include "ApiAutotest.h"
-#define LOG_REQUEST     ApiAutotest::INSTANCE() << m_last_req_info;                        
+#define LOG_REQUEST     ApiAutotest::INSTANCE().logRequest(m_last_req_info);
 #endif
 
 using namespace googleQt;
@@ -257,7 +257,7 @@ QNetworkReply* ApiEndpoint::MPartUpload_requester::request(QNetworkRequest& r)
     */
 
                 
-    QString delimiter("219693286");
+    QString delimiter("OooOOoo17gqt");
     QByteArray bytes2post = QString("--%1\r\n").arg(delimiter).toStdString().c_str();
     bytes2post += QString("Content-Type: application/json; charset=UTF-8\r\n").toStdString().c_str();             
     bytes2post += "\r\n";

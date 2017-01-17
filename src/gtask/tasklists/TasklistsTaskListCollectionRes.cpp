@@ -70,9 +70,9 @@ std::unique_ptr<TaskListCollectionRes> TaskListCollectionRes::EXAMPLE(int contex
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<TaskListCollectionRes> rv(new TaskListCollectionRes);
-    rv->m_kind = QString("test1value_%1").arg(example_idx);
-    rv->m_etag = QString("test2value_%1").arg(example_idx);
-    rv->m_nextPageToken = QString("test3value_%1").arg(example_idx);
+    rv->m_kind = QString("kind_%1").arg(example_idx);
+    rv->m_etag = QString("etag_%1").arg(example_idx);
+    rv->m_nextPageToken = QString("nextPageToken_%1").arg(example_idx);
     std::list<tasklists::TaskListResource> list_of_items;
     for(int i = 0; i < 3; i++){
         tasklists::TaskListResource p = *(tasklists::TaskListResource::EXAMPLE(i).get());

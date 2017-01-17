@@ -80,11 +80,11 @@ std::unique_ptr<LabelResource> LabelResource::EXAMPLE(int context_index){
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<LabelResource> rv(new LabelResource);
-    rv->m_id = QString("test1value_%1").arg(example_idx);
-    rv->m_name = QString("test2value_%1").arg(example_idx);
-    rv->m_messageListVisibility = QString("test3value_%1").arg(example_idx);
-    rv->m_labelListVisibility = QString("test4value_%1").arg(example_idx);
-    rv->m_type = QString("test5value_%1").arg(example_idx);
+    rv->m_id = ApiAutotest::INSTANCE().getId("labels::LabelResource", example_idx);
+    rv->m_name = QString("name_%1").arg(example_idx);
+    rv->m_messageListVisibility = QString("messageListVisibility_%1").arg(example_idx);
+    rv->m_labelListVisibility = QString("labelListVisibility_%1").arg(example_idx);
+    rv->m_type = QString("type_%1").arg(example_idx);
     rv->m_messagesTotal = 6;
     rv->m_messagesUnread = 7;
     rv->m_threadsTotal = 8;

@@ -73,8 +73,8 @@ std::unique_ptr<HistoryRecordList> HistoryRecordList::EXAMPLE(int context_index)
         ApiAutotest::INSTANCE().prepareAutoTestObj("history::HistoryRecordList", "history::HistoryRecord", &p, i, context_index);
         rv->m_history.push_back(p);
     }
-    rv->m_nextPageToken = QString("test2value_%1").arg(example_idx);
-    rv->m_historyId = QString("test3value_%1").arg(example_idx);
+    rv->m_nextPageToken = QString("nextPageToken_%1").arg(example_idx);
+    rv->m_historyId = QString("historyId_%1").arg(example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

@@ -77,11 +77,11 @@ std::unique_ptr<TaskListResource> TaskListResource::EXAMPLE(int context_index){
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<TaskListResource> rv(new TaskListResource);
-    rv->m_id = QString("test1value_%1").arg(example_idx);
-    rv->m_title = QString("test2value_%1").arg(example_idx);
-    rv->m_kind = QString("test3value_%1").arg(example_idx);
-    rv->m_etag = QString("test4value_%1").arg(example_idx);
-    rv->m_selfLink = QString("test5value_%1").arg(example_idx);
+    rv->m_id = ApiAutotest::INSTANCE().getId("tasklists::TaskListResource", example_idx);
+    rv->m_title = QString("title_%1").arg(example_idx);
+    rv->m_kind = QString("kind_%1").arg(example_idx);
+    rv->m_etag = QString("etag_%1").arg(example_idx);
+    rv->m_selfLink = QString("selfLink_%1").arg(example_idx);
     rv->m_updated = QDateTime::currentDateTime();
     return rv;
 }

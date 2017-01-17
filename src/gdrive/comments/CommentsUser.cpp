@@ -76,11 +76,11 @@ std::unique_ptr<User> User::EXAMPLE(int context_index){
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<User> rv(new User);
-    rv->m_displayName = QString("test1value_%1").arg(example_idx);
-    rv->m_kind = QString("test2value_%1").arg(example_idx);
-    rv->m_photoLink = QString("test3value_%1").arg(example_idx);
-    rv->m_permissionId = QString("test5value_%1").arg(example_idx);
-    rv->m_emailAddress = QString("test6value_%1").arg(example_idx);
+    rv->m_displayName = QString("displayName_%1").arg(example_idx);
+    rv->m_kind = QString("kind_%1").arg(example_idx);
+    rv->m_photoLink = QString("photoLink_%1").arg(example_idx);
+    rv->m_permissionId = QString("permissionId_%1").arg(example_idx);
+    rv->m_emailAddress = QString("emailAddress_%1").arg(example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

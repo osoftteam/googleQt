@@ -90,15 +90,15 @@ std::unique_ptr<Comment> Comment::EXAMPLE(int context_index){
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<Comment> rv(new Comment);
-    rv->m_id = QString("test1value_%1").arg(example_idx);
-    rv->m_kind = QString("test2value_%1").arg(example_idx);
+    rv->m_id = ApiAutotest::INSTANCE().getId("comments::Comment", example_idx);
+    rv->m_kind = QString("kind_%1").arg(example_idx);
     rv->m_createdTime = QDateTime::currentDateTime();
     rv->m_modifiedTime = QDateTime::currentDateTime();
     rv->m_author = *(comments::User::EXAMPLE(0).get());
-    rv->m_htmlContent = QString("test6value_%1").arg(example_idx);
-    rv->m_content = QString("test7value_%1").arg(example_idx);
+    rv->m_htmlContent = QString("htmlContent_%1").arg(example_idx);
+    rv->m_content = QString("content_%1").arg(example_idx);
     rv->m_quotedFileContent = *(comments::QuotedFileContent::EXAMPLE(0).get());
-    rv->m_anchor = QString("test11value_%1").arg(example_idx);
+    rv->m_anchor = QString("anchor_%1").arg(example_idx);
     std::list<comments::Reply> list_of_replies;
     for(int i = 0; i < 3; i++){
         comments::Reply p = *(comments::Reply::EXAMPLE(i).get());

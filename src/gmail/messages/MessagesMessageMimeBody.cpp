@@ -66,7 +66,7 @@ std::unique_ptr<MessageMimeBody> MessageMimeBody::EXAMPLE(int context_index){
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<MessageMimeBody> rv(new MessageMimeBody);
-    rv->m_attachmentId = QString("test1value_%1").arg(example_idx);
+    rv->m_attachmentId = QString("attachmentId_%1").arg(example_idx);
     rv->m_size = 2;
     rv->m_data = QByteArray("AUTOTEST-DATA").toBase64();
     return rv;

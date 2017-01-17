@@ -64,7 +64,7 @@ std::unique_ptr<DraftResource> DraftResource::EXAMPLE(int context_index){
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<DraftResource> rv(new DraftResource);
-    rv->m_id = QString("test1value_%1").arg(example_idx);
+    rv->m_id = ApiAutotest::INSTANCE().getId("drafts::DraftResource", example_idx);
     rv->m_message = *(messages::MessageResource::EXAMPLE(0).get());
     return rv;
 }

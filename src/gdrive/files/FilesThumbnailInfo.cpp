@@ -65,7 +65,7 @@ std::unique_ptr<ThumbnailInfo> ThumbnailInfo::EXAMPLE(int context_index){
     example_idx++;
     std::unique_ptr<ThumbnailInfo> rv(new ThumbnailInfo);
     rv->m_image = QByteArray("AUTOTEST-DATA").toBase64();
-    rv->m_mimeType = QString("test2value_%1").arg(example_idx);
+    rv->m_mimeType = QString("mimeType_%1").arg(example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

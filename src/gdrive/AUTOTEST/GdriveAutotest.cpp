@@ -71,8 +71,10 @@ static void call_copy_from_Files(){
 static void call_create_from_Files(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("create");
     std::unique_ptr<gdrive::CreateFileArg> arg = gdrive::CreateFileArg::EXAMPLE(0);
-    std::unique_ptr<files::FileResource> arg2 = files::FileResource::EXAMPLE(0);
-    auto res = cl->getFiles()->create(*(arg.get()) , *(arg2.get()));
+    QByteArray data("Hello World! 123454321 (.) :: (b -> c) -> (a -> b) -> (a -> c)");
+    QBuffer io(&data);
+    io.open(QIODevice::ReadOnly);
+    auto res = cl->getFiles()->create(*(arg.get()) , &io);
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();
     ApiAutotest::INSTANCE() << "--------------------------";
@@ -241,6 +243,7 @@ static void test_call_PermissionsRoutes(){
 void GdriveAutotest::generateCalls(){
     ApiAutotest::INSTANCE() << "";
     ApiAutotest::INSTANCE() << "============ autotest for module: gdrive ============";
+    cl->autotest();
     test_call_AboutRoutes();
     test_call_CommentsRoutes();
     test_call_FilesRoutes();
@@ -250,7 +253,6 @@ void GdriveAutotest::generateCalls(){
 GdriveAutotest::GdriveAutotest(GoogleClient& c)
 {
     cl = c.gdrive();
-    cl->autotest();
 }
 #endif //API_QT_AUTOTEST
 

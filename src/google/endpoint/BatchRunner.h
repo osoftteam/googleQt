@@ -66,7 +66,7 @@ namespace googleQt{
         }
         
     protected:
-        int  m_max_concurrent_routes_count          {2};
+        int  m_max_concurrent_routes_count          {4};
         int  m_available_concurrent_routes_count    {0};
         int  m_steps2complete                       {0};        
     };
@@ -133,11 +133,24 @@ namespace googleQt{
             m_result->registerRequest(ap);
             GoogleTask<RESULT>* t = m_router->route(ap);
             m_available_concurrent_routes_count--;
-            connect(t, &GoogleTask<RESULT>::finished, this, [=]()
+            
+            std::function<void(void)> processFinished = [=]() 
             {
                 m_result->registerResult(ap, t);
                 afterSingleStepFinished();
-            });
+            };
+
+            if (t->isFinished())
+            {
+                processFinished();
+            }
+            else
+            {
+                connect(t, &GoogleTask<RESULT>::finished, this, [=]()
+                {
+                    processFinished();
+                });
+            }
         }
 
     protected:

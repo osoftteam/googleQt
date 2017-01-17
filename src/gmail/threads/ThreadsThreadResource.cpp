@@ -69,8 +69,8 @@ std::unique_ptr<ThreadResource> ThreadResource::EXAMPLE(int context_index){
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<ThreadResource> rv(new ThreadResource);
-    rv->m_id = QString("test1value_%1").arg(example_idx);
-    rv->m_snipped = QString("test2value_%1").arg(example_idx);
+    rv->m_id = ApiAutotest::INSTANCE().getId("threads::ThreadResource", example_idx);
+    rv->m_snipped = QString("snipped_%1").arg(example_idx);
     rv->m_historyId = 3;
     std::list<messages::MessageResource> list_of_messages;
     for(int i = 0; i < 3; i++){

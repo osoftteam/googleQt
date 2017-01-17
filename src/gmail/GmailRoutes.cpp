@@ -103,8 +103,7 @@ bool GmailRoutes::setupSQLiteCache(QString dbPath, QString dbName /*= "googleqt"
 
     if (m_GMailCache->hasLocalPersistentStorate()) 
     {
-        qWarning() << "Local SQLite storage already setup";
-        return false;
+        return true;
     }
 
     std::unique_ptr<mail_batch::GMailSQLiteStorage> st(new mail_batch::GMailSQLiteStorage(m_GMailCache.get()));
@@ -119,22 +118,88 @@ bool GmailRoutes::setupSQLiteCache(QString dbPath, QString dbName /*= "googleqt"
 };
 
 #ifdef API_QT_AUTOTEST
-void GmailRoutes::autotest()
+void GmailRoutes::autotestParLoad(EDataState state, const std::list<QString>& id_list)
 {
-    if (!setupSQLiteCache("gmail_autotest.sqlite")) 
+    /// check parallel requests ///
+    //ApiAutotest::INSTANCE() << QString("=== checking gmail/batch-load of %1 ids").arg(id_list.size());
+    std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = getBatchMessages(state, id_list);
+    RESULT_LIST<messages::MessageResource*> res = br->results();
+    /*
+    int n = 1;
+    for (auto& m : res)
+    {
+        auto& payload = m->payload();
+        auto& header_list = payload.headers();
+
+        QString s_headers;
+        for (auto h : header_list)
+        {
+            s_headers += h.value() + "|";
+        }
+        ApiAutotest::INSTANCE() << QString("%1. %2|%3").arg(n).arg(m->id()).arg(s_headers);
+        n++;
+    }
+    */
+    ApiAutotest::INSTANCE() << QString("par-loaded (avoid cache) %1 snippets").arg(res.size());
+};
+
+void GmailRoutes::autotestParDBLoad(EDataState state, const std::list<QString>& id_list) 
+{
+    /// check persistant cache update ///
+    if (!setupSQLiteCache("gmail_autotest.sqlite"))
     {
         ApiAutotest::INSTANCE() << "Failed to setup SQL database";
         return;
     };
+
+    std::unique_ptr<mail_batch::GMailCacheQueryResult> r = getCacheMessages_Async(state, id_list);
+    std::map<QString, std::shared_ptr<mail_batch::MessageData>> res = r->waitForResultAndRelease();
+    ApiAutotest::INSTANCE() << QString("loaded/cached %1 messages, mem_cache-hit: %2, db-cache-hit: %3")
+        .arg(res.size())
+        .arg(r->mem_cache_hit_count())
+        .arg(r->db_cache_hit_count());    
+};
+
+void GmailRoutes::autotest()
+{
     std::list<QString> id_list;
-    for (int i = 1; i <= 1000; i++) 
+    for (int i = 1; i <= 1000; i++)
     {
-        QString id = QString("id_%1").arg(i);
+        QString id = QString("idR_%1").arg(i);
         id_list.push_back(id);
     };
-    getCacheMessages(EDataState::snippet, id_list);
-    getCacheMessages(EDataState::body, id_list);
-    getCacheMessages(EDataState::snippet, id_list);
-    getCacheMessages(EDataState::body, id_list);
+
+    ApiAutotest::INSTANCE().enableRequestLog(false);
+    autotestParLoad(EDataState::snippet, id_list);
+    autotestParDBLoad(EDataState::snippet, id_list);
+    autotestParDBLoad(EDataState::body, id_list);
+
+    m_GMailCache->mem_clear();
+    autotestParDBLoad(EDataState::snippet, id_list);
+
+    std::function<void(void)>deleteFirst10 = [=]() 
+    {
+        std::list<QString> list2remove;
+        for (auto j = id_list.begin(); j != id_list.end(); j++)
+        {
+            list2remove.push_back(*j);
+            if (list2remove.size() >= 10)
+                break;
+        }
+
+        m_GMailCache->persistent_clear(list2remove);
+    };
+
+    deleteFirst10();
+    autotestParDBLoad(EDataState::snippet, id_list);
+    autotestParDBLoad(EDataState::body, id_list);
+    
+    deleteFirst10();
+    autotestParDBLoad(EDataState::body, id_list);
+    autotestParDBLoad(EDataState::snippet, id_list);
+    autotestParDBLoad(EDataState::snippet, id_list);
+    autotestParDBLoad(EDataState::body, id_list);
+    
+    ApiAutotest::INSTANCE().enableRequestLog(true);
 };
 #endif

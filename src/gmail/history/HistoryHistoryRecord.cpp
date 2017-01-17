@@ -72,7 +72,7 @@ std::unique_ptr<HistoryRecord> HistoryRecord::EXAMPLE(int context_index){
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<HistoryRecord> rv(new HistoryRecord);
-    rv->m_id = QString("test1value_%1").arg(example_idx);
+    rv->m_id = ApiAutotest::INSTANCE().getId("history::HistoryRecord", example_idx);
     std::list<messages::MessageResource> list_of_messages;
     for(int i = 0; i < 3; i++){
         messages::MessageResource p = *(messages::MessageResource::EXAMPLE(i).get());

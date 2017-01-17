@@ -65,7 +65,7 @@ std::unique_ptr<ContentHints> ContentHints::EXAMPLE(int context_index){
     example_idx++;
     std::unique_ptr<ContentHints> rv(new ContentHints);
     rv->m_thumbnail = *(files::ThumbnailInfo::EXAMPLE(0).get());
-    rv->m_indexableText = QString("test2value_%1").arg(example_idx);
+    rv->m_indexableText = QString("indexableText_%1").arg(example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

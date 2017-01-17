@@ -217,6 +217,7 @@ static void test_call_UsersRoutes(){
 void GmailAutotest::generateCalls(){
     ApiAutotest::INSTANCE() << "";
     ApiAutotest::INSTANCE() << "============ autotest for module: gmail ============";
+    cl->autotest();
     test_call_DraftsRoutes();
     test_call_HistoryRoutes();
     test_call_LabelsRoutes();
@@ -228,7 +229,6 @@ void GmailAutotest::generateCalls(){
 GmailAutotest::GmailAutotest(GoogleClient& c)
 {
     cl = c.gmail();
-    cl->autotest();
 }
 #endif //API_QT_AUTOTEST
 

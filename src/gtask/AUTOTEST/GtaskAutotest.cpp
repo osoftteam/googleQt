@@ -142,6 +142,7 @@ static void test_call_TasksRoutes(){
 void GtaskAutotest::generateCalls(){
     ApiAutotest::INSTANCE() << "";
     ApiAutotest::INSTANCE() << "============ autotest for module: gtask ============";
+    cl->autotest();
     test_call_TasklistsRoutes();
     test_call_TasksRoutes();
 }
@@ -149,7 +150,6 @@ void GtaskAutotest::generateCalls(){
 GtaskAutotest::GtaskAutotest(GoogleClient& c)
 {
     cl = c.gtask();
-    cl->autotest();
 }
 #endif //API_QT_AUTOTEST
 

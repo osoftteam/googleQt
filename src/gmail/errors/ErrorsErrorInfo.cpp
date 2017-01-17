@@ -73,7 +73,7 @@ std::unique_ptr<ErrorInfo> ErrorInfo::EXAMPLE(int context_index){
         rv->m_errors.push_back(p);
     }
     rv->m_code = 2;
-    rv->m_message = QString("test3value_%1").arg(example_idx);
+    rv->m_message = QString("message_%1").arg(example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

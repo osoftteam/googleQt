@@ -159,11 +159,11 @@ std::unique_ptr<FileResource> FileResource::EXAMPLE(int context_index){
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<FileResource> rv(new FileResource);
-    rv->m_id = QString("test1value_%1").arg(example_idx);
-    rv->m_kind = QString("test2value_%1").arg(example_idx);
-    rv->m_name = QString("test3value_%1").arg(example_idx);
-    rv->m_mimeType = QString("test4value_%1").arg(example_idx);
-    rv->m_description = QString("test5value_%1").arg(example_idx);
+    rv->m_id = ApiAutotest::INSTANCE().getId("files::FileResource", example_idx);
+    rv->m_kind = QString("kind_%1").arg(example_idx);
+    rv->m_name = QString("name_%1").arg(example_idx);
+    rv->m_mimeType = QString("mimeType_%1").arg(example_idx);
+    rv->m_description = QString("description_%1").arg(example_idx);
     std::list<QString> list_of_parent;
     for(int i = 0; i < 3; i++){
         rv->m_parent.push_back(QString("_%1_%2").arg(i).arg(example_idx));
@@ -173,10 +173,10 @@ std::unique_ptr<FileResource> FileResource::EXAMPLE(int context_index){
         rv->m_spaces.push_back(QString("_%1_%2").arg(i).arg(example_idx));
     }
     rv->m_version = 11;
-    rv->m_webContentLink = QString("test12value_%1").arg(example_idx);
-    rv->m_webViewLink = QString("test13value_%1").arg(example_idx);
-    rv->m_iconLink = QString("test14value_%1").arg(example_idx);
-    rv->m_thumbnailLink = QString("test15value_%1").arg(example_idx);
+    rv->m_webContentLink = QString("webContentLink_%1").arg(example_idx);
+    rv->m_webViewLink = QString("webViewLink_%1").arg(example_idx);
+    rv->m_iconLink = QString("iconLink_%1").arg(example_idx);
+    rv->m_thumbnailLink = QString("thumbnailLink_%1").arg(example_idx);
     rv->m_viewedByMeTime = QDateTime::currentDateTime();
     rv->m_createdTime = QDateTime::currentDateTime();
     rv->m_modifiedTime = QDateTime::currentDateTime();
@@ -196,14 +196,14 @@ std::unique_ptr<FileResource> FileResource::EXAMPLE(int context_index){
         ApiAutotest::INSTANCE().prepareAutoTestObj("files::FileResource", "permissions::ResourcePermission", &p, i, context_index);
         rv->m_permissions.push_back(p);
     }
-    rv->m_folderColorRgb = QString("test29value_%1").arg(example_idx);
-    rv->m_originalFilename = QString("test30value_%1").arg(example_idx);
-    rv->m_fullFileExtension = QString("test31value_%1").arg(example_idx);
-    rv->m_fileExtension = QString("test32value_%1").arg(example_idx);
-    rv->m_md5Checksum = QString("test33value_%1").arg(example_idx);
+    rv->m_folderColorRgb = QString("folderColorRgb_%1").arg(example_idx);
+    rv->m_originalFilename = QString("originalFilename_%1").arg(example_idx);
+    rv->m_fullFileExtension = QString("fullFileExtension_%1").arg(example_idx);
+    rv->m_fileExtension = QString("fileExtension_%1").arg(example_idx);
+    rv->m_md5Checksum = QString("md5Checksum_%1").arg(example_idx);
     rv->m_size = 34;
     rv->m_quotaBytesUsed = 35;
-    rv->m_headRevisionId = QString("test36value_%1").arg(example_idx);
+    rv->m_headRevisionId = QString("headRevisionId_%1").arg(example_idx);
     rv->m_contentHints = *(files::ContentHints::EXAMPLE(0).get());
     rv->m_imageMediaMetadata = *(files::ImageMediaMetadata::EXAMPLE(0).get());
     rv->m_videoMediaMetadata = *(files::VideoMediaMetadata::EXAMPLE(0).get());

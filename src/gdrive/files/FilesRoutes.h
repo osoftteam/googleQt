@@ -42,11 +42,11 @@ namespace files{
             Creates a new file or folder.
 
             */
-        std::unique_ptr<FileResource> create(const gdrive::CreateFileArg& arg, const FileResource& body);
-        GoogleTask<FileResource>* create_Async(const gdrive::CreateFileArg& arg, const FileResource& body);
+        std::unique_ptr<FileResource> create(const gdrive::CreateFileArg& arg, QIODevice* readFrom);
+        GoogleTask<FileResource>* create_Async(const gdrive::CreateFileArg& arg, QIODevice* data);
         void create_AsyncCB(
             const gdrive::CreateFileArg&,
-            const FileResource& body,
+            QIODevice* data,
             std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
