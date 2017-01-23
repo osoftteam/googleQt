@@ -133,7 +133,7 @@ public:
     get_batch_details - get email body & snippens for list of messages
     */
     void get_batch_details(QString id_list);
-
+    
 	/**
 	get_cache_snippets - get snippents for list of messages
 	*/
@@ -155,9 +155,11 @@ protected:
     void exportMessageBody(messages::MessageResource* r, QString fileName);
     void printLabel(labels::LabelResource*);
     bool loadMessageFile(QString fileName, messages::MessageResource*);
-
+    void initCache();
+    
 protected:
     GoogleClient& m_c;
     GmailRoutes*  m_gm;
+    bool          m_cache_initialized {false};
 };
 

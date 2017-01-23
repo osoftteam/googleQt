@@ -32,11 +32,11 @@ namespace files{
                 file, and other users cannot see files in the owner's trash.
             field: explicitly_trashed: Whether the file has been explicitly
                 trashed, as opposed to recursively trashed from a parent folder.
-            field: parent: The IDs of the parent folders which contain the file.
-                If not specified as part of a create request, the file will be
-                placed directly in the My Drive folder. Update requests must use
-                the addParents and removeParents parameters to modify the
-                values.
+            field: parents: The IDs of the parent folders which contain the
+                file. If not specified as part of a create request, the file
+                will be placed directly in the My Drive folder. Update requests
+                must use the addParents and removeParents parameters to modify
+                the values.
             field: spaces: The list of spaces which contain the file. The
                 currently supported values are 'drive', 'appDataFolder' and
                 'photos'.
@@ -182,8 +182,8 @@ namespace files{
                 directly in the My Drive folder. Update requests must use the
                 addParents and removeParents parameters to modify the values.
             */
-        const std::list <QString>& parent()const{return m_parent;};
-        FileResource& setParent(const std::list <QString>& arg){m_parent=arg;return *this;};
+        const std::list <QString>& parents()const{return m_parents;};
+        FileResource& setParents(const std::list <QString>& arg){m_parents=arg;return *this;};
 
             /**
                 The list of spaces which contain the file. The currently
@@ -478,7 +478,7 @@ namespace files{
                 directly in the My Drive folder. Update requests must use the
                 addParents and removeParents parameters to modify the values.
             */
-        std::list <QString> m_parent;
+        std::list <QString> m_parents;
 
             /**
                 The list of spaces which contain the file. The currently

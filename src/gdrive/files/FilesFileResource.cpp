@@ -34,7 +34,7 @@ void FileResource::toJson(QJsonObject& js)const{
     js["starred"] = m_starred;
     js["trashed"] = m_trashed;
     js["explicitlyTrashed"] = m_explicitlyTrashed;
-    js["parent"] = ingrl_list2jsonarray(m_parent);
+    js["parents"] = ingrl_list2jsonarray(m_parents);
     js["spaces"] = ingrl_list2jsonarray(m_spaces);
     js["version"] = m_version;
     if(!m_webContentLink.isEmpty())
@@ -93,7 +93,7 @@ void FileResource::fromJson(const QJsonObject& js){
     m_starred = js["starred"].toVariant().toBool();
     m_trashed = js["trashed"].toVariant().toBool();
     m_explicitlyTrashed = js["explicitlyTrashed"].toVariant().toBool();
-    jsonarray2ingrl_list(js["parent"].toArray(), m_parent);
+    jsonarray2ingrl_list(js["parents"].toArray(), m_parents);
     jsonarray2ingrl_list(js["spaces"].toArray(), m_spaces);
     m_version = js["version"].toVariant().toInt();
     m_webContentLink = js["webContentLink"].toString();
@@ -164,9 +164,9 @@ std::unique_ptr<FileResource> FileResource::EXAMPLE(int context_index){
     rv->m_name = QString("name_%1").arg(example_idx);
     rv->m_mimeType = QString("mimeType_%1").arg(example_idx);
     rv->m_description = QString("description_%1").arg(example_idx);
-    std::list<QString> list_of_parent;
+    std::list<QString> list_of_parents;
     for(int i = 0; i < 3; i++){
-        rv->m_parent.push_back(QString("_%1_%2").arg(i).arg(example_idx));
+        rv->m_parents.push_back(QString("_%1_%2").arg(i).arg(example_idx));
     }
     std::list<QString> list_of_spaces;
     for(int i = 0; i < 3; i++){

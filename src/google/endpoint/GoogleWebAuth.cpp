@@ -120,5 +120,6 @@ DEFINE_SCOPE(authScope_tasks,           "https://www.googleapis.com/auth/tasks")
 DEFINE_SCOPE(authScope_tasks_readonly,  "https://www.googleapis.com/auth/tasks.readonly");
 DEFINE_SCOPE(authScope_gdrive,          "https://www.googleapis.com/auth/drive");
 DEFINE_SCOPE(authScope_gdrive_readonly, "https://www.googleapis.com/auth/drive.readonly");
+DEFINE_SCOPE(authScope_gdrive_appdata,  "https://www.googleapis.com/auth/drive.appdata");
 
 #undef DEFINE_SCOPE

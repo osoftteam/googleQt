@@ -610,8 +610,27 @@ void GmailCommands::get_batch_details(QString id_list)
 
 };
 
+void GmailCommands::initCache()
+{
+    if(!m_cache_initialized)
+        {
+            QString dbPath = "gm-cache.sqlite";
+            if(m_gm->setupSQLiteCache(dbPath))
+                {
+                    std::cout << "Failed to initialize SQLite cache database: " << std::endl;
+                    return;
+                }
+            else
+                {
+                    m_cache_initialized = true;
+                }
+        }
+};
+
 void GmailCommands::get_cache_snippets(QString id_list)
 {
+    initCache();
+    
 	std::list<QString> arg_list = split_string(id_list);
 	if (arg_list.empty())
 	{
@@ -636,6 +655,8 @@ void GmailCommands::get_cache_snippets(QString id_list)
 
 void GmailCommands::get_cache_details(QString id_list) 
 {
+    initCache();
+    
 	std::list<QString> arg_list = split_string(id_list);
 	if (arg_list.empty())
 	{

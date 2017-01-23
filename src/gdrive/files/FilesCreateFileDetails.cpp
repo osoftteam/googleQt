@@ -32,7 +32,7 @@ void CreateFileDetails::toJson(QJsonObject& js)const{
         js["name"] = QString(m_name);
     if(!m_originalFilename.isEmpty())
         js["originalFilename"] = QString(m_originalFilename);
-    js["parent"] = ingrl_list2jsonarray(m_parent);
+    js["parents"] = ingrl_list2jsonarray(m_parents);
     js["starred"] = m_starred;
 }
 
@@ -44,7 +44,7 @@ void CreateFileDetails::fromJson(const QJsonObject& js){
     m_contentHints.fromJson(js["contentHints"].toObject());
     m_name = js["name"].toString();
     m_originalFilename = js["originalFilename"].toString();
-    jsonarray2ingrl_list(js["parent"].toArray(), m_parent);
+    jsonarray2ingrl_list(js["parents"].toArray(), m_parents);
     m_starred = js["starred"].toVariant().toBool();
 }
 
@@ -86,9 +86,9 @@ std::unique_ptr<CreateFileDetails> CreateFileDetails::EXAMPLE(int context_index)
     rv->m_contentHints = *(files::ContentHints::EXAMPLE(0).get());
     rv->m_name = QString("name_%1").arg(example_idx);
     rv->m_originalFilename = QString("originalFilename_%1").arg(example_idx);
-    std::list<QString> list_of_parent;
+    std::list<QString> list_of_parents;
     for(int i = 0; i < 3; i++){
-        rv->m_parent.push_back(QString("_%1_%2").arg(i).arg(example_idx));
+        rv->m_parents.push_back(QString("_%1_%2").arg(i).arg(example_idx));
     }
     return rv;
 }

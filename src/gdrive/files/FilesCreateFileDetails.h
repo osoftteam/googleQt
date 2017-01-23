@@ -27,11 +27,11 @@ namespace files{
                 content if available, or else the original value of the name
                 field. This is only available for files with binary content in
                 Drive.
-            field: parent: The IDs of the parent folders which contain the file.
-                If not specified as part of a create request, the file will be
-                placed directly in the My Drive folder. Update requests must use
-                the addParents and removeParents parameters to modify the
-                values.
+            field: parents: The IDs of the parent folders which contain the
+                file. If not specified as part of a create request, the file
+                will be placed directly in the My Drive folder. Update requests
+                must use the addParents and removeParents parameters to modify
+                the values.
             field: starred: Whether the user has starred the file.
         */
 
@@ -93,8 +93,8 @@ namespace files{
                 directly in the My Drive folder. Update requests must use the
                 addParents and removeParents parameters to modify the values.
             */
-        const std::list <QString>& parent()const{return m_parent;};
-        CreateFileDetails& setParent(const std::list <QString>& arg){m_parent=arg;return *this;};
+        const std::list <QString>& parents()const{return m_parents;};
+        CreateFileDetails& setParents(const std::list <QString>& arg){m_parents=arg;return *this;};
 
             /**
                 Whether the user has starred the file.
@@ -164,7 +164,7 @@ namespace files{
                 directly in the My Drive folder. Update requests must use the
                 addParents and removeParents parameters to modify the values.
             */
-        std::list <QString> m_parent;
+        std::list <QString> m_parents;
 
             /**
                 Whether the user has starred the file.

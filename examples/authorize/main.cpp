@@ -82,6 +82,7 @@ int main(int argc, char *argv[])
                     scopes.push_back(GoogleWebAuth::authScope_gmail_modify());
                     scopes.push_back(GoogleWebAuth::authScope_tasks());
                     scopes.push_back(GoogleWebAuth::authScope_gdrive());
+                    scopes.push_back(GoogleWebAuth::authScope_gdrive_appdata());
                     QUrl url = GoogleWebAuth::getCodeAuthorizeUrl(appInfo.get(), scopes);
                     std::cout << "1. Go to " << url.toString().toStdString() << std::endl;
                     std::cout << "2. Click \"Allow\" (you might have to log in first)." << std::endl;

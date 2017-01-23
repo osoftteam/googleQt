@@ -19,10 +19,18 @@ public:
     GdriveCommands(GoogleClient& c);
     ///get account information
     void about(QString);
-    ///list folder content
+    ///list root folder content
     void ls(QString);
+    ///list folders in a directory content
+    void ls_folders(QString);
+    ///list folder content
+    void ls_dir_content(QString);
+    ///list space content
+    void ls_space_content(QString);    
     ///get file or folder meta information
     void get(QString fileId);
+    ///search file by name
+    void search_by_name(QString name);
     ///rename file or folder
     void rename(QString fileId_space_new_title);
     ///move file or folder
@@ -35,6 +43,8 @@ public:
     void cat(QString fileId);
     ///create new file by uploading local file
     void create(QString fileName);
+    ///create new file in ApplicationDataFolder by uploading local file
+    void create_in_appdata(QString fileName);    
     ///upload file using 'simple' method without metadata, fileName - local filename to upload
     void upload_simple(QString fileName);    
     ///upload file, fileName - local filename to upload

@@ -77,6 +77,11 @@ namespace googleQt{
         */
         static QString authScope_gdrive_readonly();
 
+        /**
+        * AppDataFolder access
+        */
+        static QString authScope_gdrive_appdata();
+        
     protected:
         static bool updateToken(const QUrl& url, ApiAuthInfo* auth, const QString& str);
     };

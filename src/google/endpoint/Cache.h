@@ -172,7 +172,7 @@ namespace googleQt {
             m_mem_cache.clear();
         };
 
-        void persistent_clear(const std::list<QString>& ids2delete) 
+        void persistent_clear(const std::list<QString>& ids2delete) override
         {
             for (auto i = ids2delete.cbegin(); i != ids2delete.cend(); i++)
             {

@@ -71,6 +71,134 @@ void GdriveCommands::ls(QString nextToken)
     }    
 };
 
+void GdriveCommands::ls_folders(QString nextToken)
+{
+    try
+    {
+        FileListArg arg(nextToken);
+        arg.setQ("mimeType = 'application/vnd.google-apps.folder'");
+        auto lst = m_gd->getFiles()->list(arg);
+        const std::list <files::FileResource>& files = lst->files();
+        int idx = 1;
+        for(const files::FileResource& f : files){
+            QString mimeType = f.mimetype();
+            QString ftype = "[f]";
+            if(mimeType == "application/vnd.google-apps.folder"){
+                ftype = "[d]";
+            }else if(mimeType == "image/jpeg"){
+                ftype = "[i]";
+            }
+            std::cout << QString("%1").arg(idx++).leftJustified(3, ' ')
+                      << ftype << " "
+                      << f.id() << " "
+                      << f.name()<< " "
+                      << mimeType << std::endl;
+        }
+        std::cout << "next token: " << lst->nextpagetoken() << std::endl;
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }    
+};
+
+void GdriveCommands::ls_dir_content(QString folderId)
+{
+    try
+    {
+        FileListArg arg;
+        arg.setQ(QString("'%1' in parents").arg(folderId));
+        auto lst = m_gd->getFiles()->list(arg);
+        const std::list <files::FileResource>& files = lst->files();
+        int idx = 1;
+        for(const files::FileResource& f : files){
+            QString mimeType = f.mimetype();
+            QString ftype = "[f]";
+            if(mimeType == "application/vnd.google-apps.folder"){
+                ftype = "[d]";
+            }else if(mimeType == "image/jpeg"){
+                ftype = "[i]";
+            }
+            std::cout << QString("%1").arg(idx++).leftJustified(3, ' ')
+                      << ftype << " "
+                      << f.id() << " "
+                      << f.name()<< " "
+                      << mimeType << std::endl;
+        }
+        std::cout << "next token: " << lst->nextpagetoken() << std::endl;
+
+        print_last_result("");
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }    
+};
+
+void GdriveCommands::ls_space_content(QString spaceName)
+{
+    try
+    {
+        FileListArg arg;
+        arg.setSpaces(spaceName);
+        auto lst = m_gd->getFiles()->list(arg);
+        const std::list <files::FileResource>& files = lst->files();
+        int idx = 1;
+        for(const files::FileResource& f : files){
+            QString mimeType = f.mimetype();
+            QString ftype = "[f]";
+            if(mimeType == "application/vnd.google-apps.folder"){
+                ftype = "[d]";
+            }else if(mimeType == "image/jpeg"){
+                ftype = "[i]";
+            }
+            std::cout << QString("%1").arg(idx++).leftJustified(3, ' ')
+                      << ftype << " "
+                      << f.id() << " "
+                      << f.name()<< " "
+                      << mimeType << std::endl;
+        }
+        std::cout << "next token: " << lst->nextpagetoken() << std::endl;
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }    
+};
+
+void GdriveCommands::search_by_name(QString name)
+{
+    try
+    {
+        FileListArg arg;
+        arg.setQ(QString("name contains '%1'").arg(name));
+        auto lst = m_gd->getFiles()->list(arg);
+        const std::list <files::FileResource>& files = lst->files();
+        int idx = 1;
+        for(const files::FileResource& f : files){
+            QString mimeType = f.mimetype();
+            QString ftype = "[f]";
+            if(mimeType == "application/vnd.google-apps.folder"){
+                ftype = "[d]";
+            }else if(mimeType == "image/jpeg"){
+                ftype = "[i]";
+            }
+            std::cout << QString("%1").arg(idx++).leftJustified(3, ' ')
+                      << ftype << " "
+                      << f.id() << " "
+                      << f.name()<< " "
+                      << mimeType << std::endl;
+        }
+        std::cout << "next token: " << lst->nextpagetoken() << std::endl;
+
+        print_last_result("");
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }    
+};
+
 void GdriveCommands::get(QString fileId)
 {
     if(fileId.isEmpty())
@@ -82,7 +210,7 @@ void GdriveCommands::get(QString fileId)
     try
     {
         GetFileArg arg(fileId);
-        arg.setFields("id,name,size,mimeType,webContentLink");
+        arg.setFields("id,name,size,mimeType,webContentLink,parents,spaces");
         auto f = m_gd->getFiles()->get(arg);
         std::cout << "id= " << f->id() << std::endl
                   << "name= " << f->name() << std::endl
@@ -92,6 +220,22 @@ void GdriveCommands::get(QString fileId)
             {
                 std::cout << "webLink= " << f->webcontentlink() << std::endl;
             }
+        if(f->parents().size() != 0)
+            {
+                std::cout << "=== parents ===" << std::endl;
+                for(auto j = f->parents().begin(); j != f->parents().end(); j++)
+                    {
+                        std::cout << *j << std::endl;
+                    }
+            }
+        if(f->spaces().size() != 0)
+            {
+                std::cout << "=== spaces ===" << std::endl;
+                for(auto j = f->spaces().begin(); j != f->spaces().end(); j++)
+                    {
+                        std::cout << *j << std::endl;
+                    }
+            }        
     }
     catch (GoogleException& e)
     {
@@ -269,6 +413,39 @@ void GdriveCommands::create(QString fileName)
     {
         gdrive::CreateFileArg arg(fi.fileName());
         files::CreateFileDetails& file_details = arg.fileDetailes();
+        file_details.setDescription("file created from googleQt API");
+        auto f = m_gd->getFiles()->create(arg, &file_in);
+        print_status(f.get(), QString("uploaded %1").arg(file_in.size()));
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+    file_in.close();
+};
+
+void GdriveCommands::create_in_appdata(QString fileName) 
+{
+    if (fileName.isEmpty()) {
+        std::cout << "ERROR argument reguired" << std::endl;
+        return;
+    }
+
+    QFile file_in(fileName);
+    if (!file_in.open(QFile::ReadOnly)) {
+        std::cout << "Error opening file: " << fileName.toStdString() << std::endl;
+        return;
+    }
+
+    QFileInfo fi(fileName);
+
+    try
+    {
+        gdrive::CreateFileArg arg(fi.fileName());
+        files::CreateFileDetails& file_details = arg.fileDetailes();
+        std::list <QString> parent_folders;
+        parent_folders.push_back("appDataFolder");
+        file_details.setParents(parent_folders);
         file_details.setDescription("file created from googleQt API");
         auto f = m_gd->getFiles()->create(arg, &file_in);
         print_status(f.get(), QString("uploaded %1").arg(file_in.size()));
