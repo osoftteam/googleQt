@@ -82,6 +82,40 @@ void FilesRoutes::create_AsyncCB(
         failed_callback);
 }
 
+std::unique_ptr<FileResource> FilesRoutes::createEmptyFile(const gdrive::CreateFileArg& arg){
+    return createEmptyFile_Async(arg)->waitForResultAndRelease();
+}
+
+GoogleTask<FileResource>* FilesRoutes::createEmptyFile_Async(const gdrive::CreateFileArg& arg)
+{
+    GoogleTask<FileResource>* t = m_end_point->produceTask<FileResource>();
+    m_end_point->postStyleB<
+        FileResource,
+        FileResource::factory
+        ,gdrive::CreateFileArg>
+        (m_end_point->buildGdriveUrl("files", arg),
+        arg,
+        t);
+    return t;
+}
+
+void FilesRoutes::createEmptyFile_AsyncCB(
+    const gdrive::CreateFileArg& arg,
+    std::function<void(std::unique_ptr<FileResource>)> completed_callback ,
+    std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+{
+    m_end_point->postStyleB
+        <
+        FileResource,
+        FileResource::factory
+        , gdrive::CreateFileArg
+        >
+        (m_end_point->buildGdriveUrl("files", arg),
+        arg,
+        completed_callback,
+        failed_callback);
+}
+
 std::unique_ptr<FileResource> FilesRoutes::createFolder(const gdrive::CreateFolderArg& arg){
     return createFolder_Async(arg)->waitForResultAndRelease();
 }

@@ -187,6 +187,9 @@ void CreateFolderArg::toJson(QJsonObject& js)const
     if(!m_name.isEmpty())
         js["name"] = QString(m_name);
     js["mimeType"] = QString("application/vnd.google-apps.folder");
+    if (!m_description.isEmpty())
+        js["description"] = QString(m_description);
+    js["parents"] = ingrl_list2jsonarray(m_parents);
 };
 
 
@@ -421,7 +424,8 @@ std::unique_ptr<DeleteFileArg> DeleteFileArg::EXAMPLE(int)
 
 std::unique_ptr<CreateFileArg> CreateFileArg::EXAMPLE(int)
 {
-    std::unique_ptr<CreateFileArg> rv(new CreateFileArg);   
+    std::unique_ptr<CreateFileArg> rv(new CreateFileArg);  
+    rv->m_create_file.reset(files::CreateFileDetails::EXAMPLE(1).release());
     return rv;
 };
 
@@ -507,6 +511,13 @@ std::unique_ptr<CreateFolderArg> CreateFolderArg::EXAMPLE(int)
 {
     std::unique_ptr<CreateFolderArg> rv(new CreateFolderArg);
     rv->setName("myNewFolder");
+    rv->setDescription("description of myNewFolder");
+    std::list<QString> lstParents;
+    for (int i = 0; i < 5; i++)
+    {
+        lstParents.push_back(QString("parent1").arg(i));
+    }
+    rv->setParents(lstParents);
     return rv;
 };
 

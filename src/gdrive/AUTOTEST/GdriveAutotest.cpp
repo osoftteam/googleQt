@@ -80,6 +80,15 @@ static void call_create_from_Files(){
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
+static void call_createEmptyFile_from_Files(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("createEmptyFile");
+    std::unique_ptr<gdrive::CreateFileArg> arg = gdrive::CreateFileArg::EXAMPLE(0);
+    auto res = cl->getFiles()->createEmptyFile(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "------ RESULT ------------------";
+    ApiAutotest::INSTANCE() << res->toString();
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
 static void call_createFolder_from_Files(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("createFolder");
     std::unique_ptr<gdrive::CreateFolderArg> arg = gdrive::CreateFolderArg::EXAMPLE(0);
@@ -220,6 +229,7 @@ static void test_call_CommentsRoutes(){
 static void test_call_FilesRoutes(){
     call_copy_from_Files();
     call_create_from_Files();
+    call_createEmptyFile_from_Files();
     call_createFolder_from_Files();
     call_deleteOperation_from_Files();
     call_downloadFile_from_Files();

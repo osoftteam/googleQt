@@ -1,3 +1,5 @@
+#include <QFile>
+#include <QFileInfo>
 #include "GdriveRoutes.h"
 
 using namespace googleQt;
@@ -37,4 +39,308 @@ comments::CommentsRoutes* GdriveRoutes::getComments()
         m_Comments.reset(new comments::CommentsRoutes(m_endpoint));
     }
     return m_Comments.get();
+};
+
+QString GdriveRoutes::appDataFolder() 
+{
+    return "appDataFolder";
+};
+
+QString GdriveRoutes::fileExists(QString name, QString parentId)
+{
+    QString rv = "";
+
+    gdrive::FileListArg arg;
+    QString q = QString("name contains '%1' and mimeType != 'application/vnd.google-apps.folder' and trashed = false")
+        .arg(name);    
+    if (!parentId.isEmpty()) 
+    {
+        q += QString(" and '%1' in parents").arg(parentId);
+    }
+    arg.setQ(q);
+
+    try
+    {
+        auto lst = getFiles()->list(arg);
+        const std::list <files::FileResource>& files = lst->files();
+        if (files.size() > 0) 
+        {
+            rv = files.cbegin()->id();
+        }
+    }
+    catch (GoogleException& e)
+    {
+        qWarning() << "GdriveRoutes::fileExists Exception: " << e.what();
+    }
+    return rv;
+};
+
+QString GdriveRoutes::folderExists(QString name, QString parentId)
+{
+    QString rv = "";
+
+    gdrive::FileListArg arg;
+    QString q = QString("name contains '%1' and mimeType = 'application/vnd.google-apps.folder' and trashed = false")
+        .arg(name);
+    if (!parentId.isEmpty())
+    {
+        q += QString(" and '%1' in parents").arg(parentId);
+    }
+    arg.setQ(q);
+
+    try
+    {
+        auto lst = getFiles()->list(arg);
+        const std::list <files::FileResource>& files = lst->files();
+        if (files.size() > 0)
+        {
+            rv = files.cbegin()->id();
+        }
+    }
+    catch (GoogleException& e)
+    {
+        qWarning() << "GdriveRoutes::folderExists Exception: " << e.what();
+    }
+    return rv;
+};
+
+QString GdriveRoutes::createFolder(QString name, QString parentId /*= ""*/) 
+{
+    QString rv = "";
+
+    gdrive::CreateFolderArg arg(name);
+    arg.setFields("id");
+    if (!parentId.isEmpty())
+    {
+        std::list <QString> parents;
+        parents.push_back(parentId);
+        arg.setParents(parents);
+    }
+
+    try
+    {
+        auto f = getFiles()->createFolder(arg);
+        rv = f->id();
+    }
+    catch (GoogleException& e)
+    {
+        qWarning() << "GdriveRoutes::folderExists Exception: " << e.what();
+    }
+    return rv;
+};
+
+QString GdriveRoutes::ensureFolder(QString name, QString parentFolderId)
+{
+    QString fID = folderExists(name, parentFolderId);
+    if (!fID.isEmpty())
+    {
+        return fID;
+    }
+
+    return createFolder(name, parentFolderId);
+};
+
+bool GdriveRoutes::downloadFileByID(QString fileId, QString localDestinationPath)
+{
+    bool rv = false;
+
+    QFile out(localDestinationPath);
+    if (!out.open(QFile::WriteOnly | QIODevice::Truncate)) {
+        qWarning() << "Error opening file: " << localDestinationPath;
+        return false;
+    }
+
+    try
+    {
+        gdrive::DownloadFileArg arg(fileId);
+        getFiles()->downloadFile(arg, &out);
+        out.flush();
+        rv = true;
+    }
+    catch (GoogleException& e)
+    {
+        qWarning() << "GdriveRoutes::downloadFile Exception: " << e.what();
+    }
+
+    out.close();
+    return rv;
+};
+
+bool GdriveRoutes::downloadFileByName(QString name, QString parentFolderId, QString localDestinationPath)
+{
+    QString fID = fileExists(name, parentFolderId);
+    if (fID.isEmpty())
+    {
+        return false;
+    }
+    return downloadFileByID(fID, localDestinationPath);
+};
+
+bool GdriveRoutes::deleteFile(QString fileID)
+{
+    bool rv = false;
+    try
+    {
+        gdrive::DeleteFileArg arg(fileID);
+        getFiles()->deleteOperation(arg);
+        rv = true;
+    }
+    catch (GoogleException& e)
+    {
+        qWarning() << "Delete Exception: " << e.what();
+    }
+    return rv;
+};
+
+bool GdriveRoutes::renameFile(QString fileID, QString newName) 
+{
+    bool rv = false;
+    try
+    {
+        gdrive::RenameFileArg arg(fileID);
+        arg.setName(newName);
+        getFiles()->rename(arg);
+        rv = true;
+    }
+    catch (GoogleException& e)
+    {
+        qWarning() << "Rename Exception: " << e.what();
+    }
+    return rv;
+};
+
+bool GdriveRoutes::moveFile(QString fileID, const std::list<QString>& removeParentFolderIDs,
+    const std::list<QString>& addParentFolderIDs) 
+{
+    bool rv = false;
+    try
+    {
+        gdrive::MoveFileArg arg(fileID);
+        arg.setRemoveParents(removeParentFolderIDs);
+        arg.setAddParents(addParentFolderIDs);
+        getFiles()->moveFile(arg);
+        rv = true;
+    }
+    catch (GoogleException& e)
+    {
+        qWarning() << "Move Exception: " << e.what();
+    }
+    return rv;
+};
+
+bool GdriveRoutes::moveFile(QString fileID, QString removeParentFolderID, QString addParentFolderID) 
+{
+    std::list<QString> removeParentFolderIDs;
+    std::list<QString> addParentFolderIDs;
+    removeParentFolderIDs.push_back(removeParentFolderID);
+    addParentFolderIDs.push_back(addParentFolderID);
+    return moveFile(fileID, removeParentFolderIDs, addParentFolderIDs);
+};
+
+QString GdriveRoutes::uploadFile(QString localFilePath, QString destFileName, QString parentFolderId)
+{
+    QString fID = fileExists(destFileName, parentFolderId);
+    if (!fID.isEmpty()) 
+    {
+        if (!deleteFile(fID))
+            return "";
+    }
+
+    QFile file_in(localFilePath);
+    if (!file_in.open(QFile::ReadOnly)) {
+        qWarning() << "Error opening file: " << localFilePath;
+        return "";
+    }
+
+    QString rv = "";
+    QFileInfo fi(localFilePath);
+
+    try
+    {
+        gdrive::MultipartUploadFileArg arg(fi.fileName());
+        auto f = getFiles()->uploadFileMultipart(arg, &file_in);
+        rv = f->id();
+    }
+    catch (GoogleException& e)
+    {
+        qWarning() << "Exception: " << e.what();
+    }
+    file_in.close();
+    return rv;
+};
+
+QString GdriveRoutes::upgradeFile(QString localFilePath, QString destFileName, QString parentFolderId) 
+{
+    QString gdTmpFile = destFileName + "._tmp";
+    QString fTmpID = uploadFile(localFilePath, gdTmpFile, parentFolderId);
+    if (fTmpID.isEmpty()) {
+        qWarning() << "Failed to upload file" << localFilePath << destFileName << parentFolderId;
+        return "";
+    }
+
+    QString oldFileID = fileExists(destFileName, parentFolderId);
+    if (!oldFileID.isEmpty()) 
+    {
+        if (!deleteFile(oldFileID)) 
+        {   
+            qWarning() << "Failed to delete file" << destFileName << parentFolderId << oldFileID;
+            return "";
+        };
+    }
+
+    if (!renameFile(fTmpID, destFileName)) 
+    {
+        qWarning() << "Failed to rename file" << destFileName << fTmpID;
+        return "";
+    }
+
+    return fTmpID;
+};
+
+GdriveRoutes::FolderContentMap GdriveRoutes::mapFolderContent(QString parentId, QString q1 /*= "trashed = false"*/)
+{
+    FolderContentMap rv;
+
+    gdrive::FileListArg arg;
+    QString q = q1;
+    if (!parentId.isEmpty())
+    {
+        if (!q.isEmpty()) 
+        {
+            q += " and ";
+        }
+        q += QString("'%1' in parents").arg(parentId);
+    }
+    arg.setQ(q);
+    arg.setPageSize(200);
+
+    try
+    {
+        auto lst = getFiles()->list(arg);
+        const std::list <files::FileResource>& files = lst->files();
+        for (auto i = files.begin(); i != files.end(); i++)
+        {
+            QString id = i->id();
+            QString name = i->name();
+            rv.name2id[name] = id;
+            rv.id2name[id] = name;
+        }
+    }
+    catch (GoogleException& e)
+    {
+        qWarning() << "GdriveRoutes::mapFolders Exception: " << e.what();
+    }
+    return rv;
+};
+
+GdriveRoutes::FolderContentMap GdriveRoutes::mapFolders(QString parentId)
+{
+    QString q = QString("mimeType = 'application/vnd.google-apps.folder' and trashed = false");
+    return mapFolderContent(parentId, q);    
+};
+
+GdriveRoutes::FolderContentMap GdriveRoutes::mapNonFolders(QString parentId)
+{
+    QString q = QString("mimeType != 'application/vnd.google-apps.folder' and trashed = false");
+    return mapFolderContent(parentId, q);
 };

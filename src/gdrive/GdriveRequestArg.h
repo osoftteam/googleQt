@@ -366,15 +366,31 @@ namespace googleQt {
                 File name.
             */
             QString getName()const { return m_name; }
-            void    setName(QString val) { m_name = val; }
+            CreateFolderArg& setName(QString val) { m_name = val; return *this; }
             
+            /**
+            A short description of the file.
+            */
+            QString description()const { return m_description; };
+            CreateFolderArg& setDescription(const QString& arg) { m_description = arg; return *this; };
             
+            /**
+            The IDs of the parent folders which contain the file. If not
+            specified as part of a create request, the folder will be placed
+            directly in the My Drive folder. Update requests must use the
+            addParents and removeParents parameters to modify the values.
+            */
+            const std::list <QString>& parents()const { return m_parents; };
+            CreateFolderArg& setParents(const std::list <QString>& arg) { m_parents = arg; return *this; };
+
 #ifdef API_QT_AUTOTEST
             static std::unique_ptr<CreateFolderArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
         protected:
             QString m_name;
+            QString m_description;
+            std::list <QString> m_parents;            
         };
         
         class EmptyTrashArg: public PathArg<path_trash, EmptyTrashArg>

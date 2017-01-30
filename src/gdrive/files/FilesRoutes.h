@@ -51,6 +51,20 @@ namespace files{
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
+            ApiRoute('createEmptyFile')
+
+
+            Creates a new empty file providing metadata but to content.
+
+            */
+        std::unique_ptr<FileResource> createEmptyFile(const gdrive::CreateFileArg& arg);
+        GoogleTask<FileResource>* createEmptyFile_Async(const gdrive::CreateFileArg& arg);
+        void createEmptyFile_AsyncCB(
+            const gdrive::CreateFileArg&,
+            std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
+
+            /**
             ApiRoute('createFolder')
 
 
