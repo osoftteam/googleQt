@@ -5,6 +5,7 @@ namespace googleQt {
     namespace files 
     {
         class CreateFileDetails;
+        class UpdateFileDetails;
     };
 
     namespace gdrive {
@@ -355,6 +356,42 @@ namespace googleQt {
             std::unique_ptr<files::CreateFileDetails> m_create_file;
         };
 
+        class UpdateFileArg : public QParamArgWithBody<UpdateFileArg>
+        {
+        public:
+            UpdateFileArg(QString name = "");
+            virtual ~UpdateFileArg();
+            void build(const QString& link_path, QUrl& url)const override;
+            void toJson(QJsonObject& js)const override;
+
+            /**
+                A details for file.
+            */
+            files::UpdateFileDetails& fileDetailes()const;
+
+
+            /**
+                A language hint for OCR processing during image import (ISO 639-1 code).
+            */
+            QString getOcrLanguage()const { return m_ocrLanguage; }
+            void    setOcrLanguage(QString val) { m_ocrLanguage = val; }
+
+            /**
+               A list of parent IDs to remove.
+             */
+            const std::list <QString>& removeParents()const { return m_removeParents; };
+            UpdateFileArg& setRemoveParents(const std::list <QString>& arg) { m_removeParents = arg; return *this; };
+            
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<UpdateFileArg> EXAMPLE(int context_index);
+#endif //API_QT_AUTOTEST
+
+        protected:
+            QString m_ocrLanguage;
+            std::list <QString> m_removeParents;
+            std::unique_ptr<files::UpdateFileDetails> m_update_file;
+        };
+        
         class CreateFolderArg : public QParamArgWithBody<CreateFolderArg>
         {
         public:

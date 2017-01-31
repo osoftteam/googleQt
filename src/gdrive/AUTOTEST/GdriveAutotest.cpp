@@ -158,6 +158,15 @@ static void call_rename_from_Files(){
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
+static void call_updateFileMeta_from_Files(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("updateFileMeta");
+    std::unique_ptr<gdrive::UpdateFileArg> arg = gdrive::UpdateFileArg::EXAMPLE(0);
+    auto res = cl->getFiles()->updateFileMeta(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "------ RESULT ------------------";
+    ApiAutotest::INSTANCE() << res->toString();
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
 static void call_uploadFileMultipart_from_Files(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("uploadFileMultipart");
     std::unique_ptr<gdrive::MultipartUploadFileArg> arg = gdrive::MultipartUploadFileArg::EXAMPLE(0);
@@ -238,6 +247,7 @@ static void test_call_FilesRoutes(){
     call_list_from_Files();
     call_moveFile_from_Files();
     call_rename_from_Files();
+    call_updateFileMeta_from_Files();
     call_uploadFileMultipart_from_Files();
     call_uploadFileSimple_from_Files();
 }

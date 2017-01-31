@@ -124,7 +124,7 @@ QString GdriveRoutes::createFolder(QString name, QString parentId /*= ""*/)
     }
     catch (GoogleException& e)
     {
-        qWarning() << "GdriveRoutes::folderExists Exception: " << e.what();
+        qWarning() << "GdriveRoutes::createFolder Exception: " << e.what();
     }
     return rv;
 };

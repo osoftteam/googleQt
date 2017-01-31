@@ -355,6 +355,40 @@ void FilesRoutes::rename_AsyncCB(
         failed_callback);
 }
 
+std::unique_ptr<FileResource> FilesRoutes::updateFileMeta(const gdrive::UpdateFileArg& arg){
+    return updateFileMeta_Async(arg)->waitForResultAndRelease();
+}
+
+GoogleTask<FileResource>* FilesRoutes::updateFileMeta_Async(const gdrive::UpdateFileArg& arg)
+{
+    GoogleTask<FileResource>* t = m_end_point->produceTask<FileResource>();
+    m_end_point->updateStyle<
+        FileResource,
+        FileResource::factory
+        ,gdrive::UpdateFileArg>
+        (m_end_point->buildGdriveUrl("files", arg),
+        arg,
+        t);
+    return t;
+}
+
+void FilesRoutes::updateFileMeta_AsyncCB(
+    const gdrive::UpdateFileArg& arg,
+    std::function<void(std::unique_ptr<FileResource>)> completed_callback ,
+    std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+{
+    m_end_point->updateStyle
+        <
+        FileResource,
+        FileResource::factory
+        , gdrive::UpdateFileArg
+        >
+        (m_end_point->buildGdriveUrl("files", arg),
+        arg,
+        completed_callback,
+        failed_callback);
+}
+
 std::unique_ptr<FileResource> FilesRoutes::uploadFileMultipart(const gdrive::MultipartUploadFileArg& arg, QIODevice* data){
     return uploadFileMultipart_Async(arg, data)->waitForResultAndRelease();
 }

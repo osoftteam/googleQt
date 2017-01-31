@@ -1,6 +1,7 @@
 #include <QUrlQuery>
 #include "GdriveRequestArg.h"
 #include "gdrive/files/FilesCreateFileDetails.h"
+#include "gdrive/files/FilesUpdateFileDetails.h"
 
 using namespace googleQt;
 using namespace gdrive;
@@ -156,6 +157,7 @@ void CreateFileArg::build(const QString& link_path, QUrl& url)const
         .add("keepRevisionForever", m_keepRevisionForever)
         .add("ocrLanguage", m_ocrLanguage)
         .add("useContentAsIndexableText", m_useContentAsIndexableText);
+    ResponseFields2Builder(b);
 }
 
 void CreateFileArg::toJson(QJsonObject& js)const
@@ -166,6 +168,43 @@ void CreateFileArg::toJson(QJsonObject& js)const
 files::CreateFileDetails& CreateFileArg::fileDetailes()const 
 {
     return *(m_create_file.get());
+};
+
+/**
+   UpdateFileArg
+*/
+UpdateFileArg::UpdateFileArg(QString name /*= ""*/)
+{
+    m_update_file.reset(new files::UpdateFileDetails());
+    if (!name.isEmpty())
+    {
+        m_update_file->setName(name);
+    }
+};
+
+UpdateFileArg::~UpdateFileArg() 
+{
+
+};
+
+void UpdateFileArg::build(const QString& link_path, QUrl& url)const
+{
+    UrlBuilder b(link_path + "/files", url);
+    b.add("ocrLanguage", m_ocrLanguage);
+    QString parents2remove = slist2commalist(m_removeParents);
+    if(!parents2remove.isEmpty())
+        b.add("removeParents", parents2remove);
+    ResponseFields2Builder(b);
+}
+
+void UpdateFileArg::toJson(QJsonObject& js)const
+{
+    m_update_file->toJson(js);
+};
+
+files::UpdateFileDetails& UpdateFileArg::fileDetailes()const 
+{
+    return *(m_update_file.get());
 };
 
 

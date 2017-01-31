@@ -182,6 +182,20 @@ namespace files{
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
+            ApiRoute('updateFileMeta')
+
+
+            Update file meta.
+
+            */
+        std::unique_ptr<FileResource> updateFileMeta(const gdrive::UpdateFileArg& arg);
+        GoogleTask<FileResource>* updateFileMeta_Async(const gdrive::UpdateFileArg& arg);
+        void updateFileMeta_AsyncCB(
+            const gdrive::UpdateFileArg&,
+            std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
+
+            /**
             ApiRoute('uploadFileMultipart')
 
 
