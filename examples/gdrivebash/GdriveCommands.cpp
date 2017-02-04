@@ -9,6 +9,7 @@
 #include "google/demo/ApiTerminal.h"
 #include "gdrive/GdriveRoutes.h"
 #include "gdrive/files/FilesCreateFileDetails.h"
+#include "gdrive/files/FilesUpdateFileDetails.h"
 
 using namespace googleQt;
 using namespace gdrive;
@@ -270,6 +271,46 @@ void GdriveCommands::rename(QString fileId_space_new_title)
     }    
 }
 
+void GdriveCommands::change_mime(QString fileId_space_new_mimeType) 
+{
+    QStringList arg_list = fileId_space_new_mimeType.split(" ",
+        QString::SkipEmptyParts);
+    if (arg_list.size() < 2)
+    {
+        std::cout << "Invalid parameters, expected <fileID> <mimeType>" << std::endl;
+        std::cout << "png = > 'image/png'" << std::endl
+            << "gif = >'image/gif'" << std::endl
+            << "bmp = >'image/bmp'" << std::endl
+            << "txt = >'text/plain'" << std::endl
+            << "doc = >'application/msword'" << std::endl
+            << "js = >'text/js'" << std::endl
+            << "swf = >'application/x-shockwave-flash'" << std::endl
+            << "mp3 = >'audio/mpeg'" << std::endl
+            << "zip = >'application/zip'" << std::endl
+            << "rar = >'application/rar'" << std::endl
+            << "tar = >'application/tar'" << std::endl;
+        
+        return;
+    }
+
+    QString fileId = arg_list[0];
+    QString mimeType = arg_list[1];
+
+    try
+    {
+        UpdateFileArg arg(fileId);
+        files::UpdateFileDetails& file_details = arg.fileDetailes();
+        file_details.setMimetype(mimeType);
+        arg.setFields("id,name,size,mimeType,webContentLink");
+        auto f = m_gd->getFiles()->updateFileMeta(arg);
+        print_status(f.get(), "mime updated");
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
 void GdriveCommands::move_file(QString fileId)
 {
     if(fileId.isEmpty())
@@ -365,6 +406,35 @@ void GdriveCommands::cat(QString fileId)
 
     buffer.close();
 };
+
+/*
+void GdriveCommands::upload_mpart(QString fileName) 
+{
+    if (fileName.isEmpty()) {
+        std::cout << "ERROR argument reguired" << std::endl;
+        return;
+    }
+
+    QFile file_in(fileName);
+    if (!file_in.open(QFile::ReadOnly)) {
+        std::cout << "Error opening file: " << fileName.toStdString() << std::endl;
+        return;
+    }
+
+    QFileInfo fi(fileName);
+
+    try
+    {
+        gdrive::MultipartUploadFileArg arg(fi.fileName());
+        auto f = m_gd->getFiles()->uploadFileMultipart(arg, &file_in);
+        print_status(f.get(), QString("uploaded %1").arg(file_in.size()));
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+    file_in.close();
+};*/
 
 void GdriveCommands::create(QString fileName) 
 {

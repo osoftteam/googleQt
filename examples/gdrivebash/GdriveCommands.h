@@ -33,6 +33,8 @@ public:
     void search_by_name(QString name);
     ///rename file or folder
     void rename(QString fileId_space_new_title);
+    ///change mime type of a file
+    void change_mime(QString fileId_space_new_mimeType);
     ///move file or folder
     void move_file(QString fileId);
     ///download file media data to local folder,
@@ -47,6 +49,8 @@ public:
     void create_in_appdata(QString fileName);    
     ///upload file using 'simple' method without metadata, fileName - local filename to upload
     void upload_simple(QString fileName);    
+    ///upload file, fileName - local filename to upload
+    //void upload_mpart(QString fileName);
     ///delete file or folder on gdrive
     void rm(QString fileId);
     ///create folder
