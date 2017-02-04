@@ -1,4 +1,5 @@
 #include <QUrlQuery>
+#include <QFileInfo>
 #include "GdriveRequestArg.h"
 #include "gdrive/files/FilesCreateFileDetails.h"
 #include "gdrive/files/FilesUpdateFileDetails.h"
@@ -64,8 +65,16 @@ void GetFileArg::build(const QString& link_path, QUrl& url)const
 
 /**
     MultipartUploadFileArg
-*/
-MultipartUploadFileArg::MultipartUploadFileArg(QString name /*= ""*/) 
+
+    std::unique_ptr<MultipartUploadFileArg> MultipartUploadFileArg::EXAMPLE(int)
+    {
+    std::unique_ptr<MultipartUploadFileArg> rv(new MultipartUploadFileArg);
+    rv->setName("myFile");
+    return rv;
+    };
+
+
+MultipartUploadFileArg::MultipartUploadFileArg(QString name ) 
     :m_name(name)
 {
 
@@ -81,7 +90,7 @@ void MultipartUploadFileArg::toJson(QJsonObject& js)const
     if (!m_name.isEmpty())
         js["name"] = QString(m_name);
 };
-
+*/
 
 /**
     DownloadFileArg
@@ -165,21 +174,54 @@ void CreateFileArg::toJson(QJsonObject& js)const
     m_create_file->toJson(js);
 };
 
-files::CreateFileDetails& CreateFileArg::fileDetailes()const 
+files::CreateFileDetails& CreateFileArg::fileDetailes() 
 {
     return *(m_create_file.get());
+};
+
+bool CreateFileArg::calcMimeType()
+{
+    bool rv = false;
+    if (!m_create_file->name().isEmpty())
+    {
+        QFileInfo fi(m_create_file->name());
+        QString ext = fi.suffix();
+        QString mime = "";
+        if (ext.compare("png") == 0)
+        {
+            mime = "image/png";
+        }
+        else if (ext.compare("jpg") == 0) 
+        {
+            mime = "image/jpg";
+        }
+        else if (ext.compare("html") == 0)
+        {
+            mime = "text/html";
+        }
+        else if (ext.compare("mp3") == 0)
+        {
+            mime = "audio/mpeg";
+        }
+
+        rv = !mime.isEmpty();
+
+        if (rv)
+        {
+            m_create_file->setMimetype(mime);
+        }
+    }
+
+    return rv;
 };
 
 /**
    UpdateFileArg
 */
-UpdateFileArg::UpdateFileArg(QString name /*= ""*/)
+UpdateFileArg::UpdateFileArg(QString fileId /*= ""*/)
+    :m_fileId(fileId)
 {
     m_update_file.reset(new files::UpdateFileDetails());
-    if (!name.isEmpty())
-    {
-        m_update_file->setName(name);
-    }
 };
 
 UpdateFileArg::~UpdateFileArg() 
@@ -189,7 +231,7 @@ UpdateFileArg::~UpdateFileArg()
 
 void UpdateFileArg::build(const QString& link_path, QUrl& url)const
 {
-    UrlBuilder b(link_path + "/files", url);
+    UrlBuilder b(link_path + QString("/files/%2").arg(m_fileId), url);
     b.add("ocrLanguage", m_ocrLanguage);
     QString parents2remove = slist2commalist(m_removeParents);
     if(!parents2remove.isEmpty())
@@ -202,7 +244,7 @@ void UpdateFileArg::toJson(QJsonObject& js)const
     m_update_file->toJson(js);
 };
 
-files::UpdateFileDetails& UpdateFileArg::fileDetailes()const 
+files::UpdateFileDetails& UpdateFileArg::fileDetailes() 
 {
     return *(m_update_file.get());
 };
@@ -468,6 +510,14 @@ std::unique_ptr<CreateFileArg> CreateFileArg::EXAMPLE(int)
     return rv;
 };
 
+std::unique_ptr<UpdateFileArg> UpdateFileArg::EXAMPLE(int)
+{
+    std::unique_ptr<UpdateFileArg> rv(new UpdateFileArg("file1"));
+    rv->m_update_file.reset(files::UpdateFileDetails::EXAMPLE(1).release());
+    return rv;
+};
+
+
 std::unique_ptr<PermissionArg> PermissionArg::EXAMPLE(int)
 {
     std::unique_ptr<PermissionArg> rv(new PermissionArg);
@@ -557,13 +607,6 @@ std::unique_ptr<CreateFolderArg> CreateFolderArg::EXAMPLE(int)
         lstParents.push_back(QString("parent1").arg(i));
     }
     rv->setParents(lstParents);
-    return rv;
-};
-
-std::unique_ptr<MultipartUploadFileArg> MultipartUploadFileArg::EXAMPLE(int)
-{
-    std::unique_ptr<MultipartUploadFileArg> rv(new MultipartUploadFileArg);
-    rv->setName("myFile");
     return rv;
 };
 

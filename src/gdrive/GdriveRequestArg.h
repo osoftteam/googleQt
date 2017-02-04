@@ -192,7 +192,7 @@ namespace googleQt {
             std::list<QString> m_addParents, m_removeParents;
         };
 
-        
+        /*
         class MultipartUploadFileArg : public QParamArgWithBody<MultipartUploadFileArg>
         {
         public:
@@ -200,9 +200,9 @@ namespace googleQt {
             void build(const QString& link_path, QUrl& url)const override;
             void toJson(QJsonObject& js)const override;
 
-            /**
-            File name.
-            */
+            
+            //File name.
+            
             QString getName()const { return m_name; }
             void    setName(QString val) { m_name = val; }
 
@@ -213,8 +213,7 @@ namespace googleQt {
         protected:
             QString m_name;
         };
-        //...
-
+        */
 
         class DownloadFileArg : public QParamArg
         {
@@ -313,7 +312,7 @@ namespace googleQt {
             /**
                 A details for file.
             */
-            files::CreateFileDetails& fileDetailes()const;
+            files::CreateFileDetails& fileDetailes();
 
 
             /**
@@ -348,6 +347,11 @@ namespace googleQt {
             static std::unique_ptr<CreateFileArg> EXAMPLE(int context_index);
 #endif //API_QT_AUTOTEST
 
+            /**
+                Try to define mime type from name/extention and if possible
+                update mime type
+            */
+            bool    calcMimeType();
         protected:
             bool    m_ignoreDefaultVisibility;
             bool    m_keepRevisionForever;
@@ -359,15 +363,21 @@ namespace googleQt {
         class UpdateFileArg : public QParamArgWithBody<UpdateFileArg>
         {
         public:
-            UpdateFileArg(QString name = "");
+            UpdateFileArg(QString fileId = "");
             virtual ~UpdateFileArg();
             void build(const QString& link_path, QUrl& url)const override;
             void toJson(QJsonObject& js)const override;
 
             /**
+            The ID of the file.
+            */
+            QString getFileId()const { return m_fileId; }
+            void    setFileId(QString val) { m_fileId = val; }
+
+            /**
                 A details for file.
             */
-            files::UpdateFileDetails& fileDetailes()const;
+            files::UpdateFileDetails& fileDetailes();
 
 
             /**
@@ -387,6 +397,7 @@ namespace googleQt {
 #endif //API_QT_AUTOTEST
 
         protected:
+            QString m_fileId;
             QString m_ocrLanguage;
             std::list <QString> m_removeParents;
             std::unique_ptr<files::UpdateFileDetails> m_update_file;

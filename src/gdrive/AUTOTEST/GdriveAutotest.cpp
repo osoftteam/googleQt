@@ -167,18 +167,6 @@ static void call_updateFileMeta_from_Files(){
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
-static void call_uploadFileMultipart_from_Files(){
-    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("uploadFileMultipart");
-    std::unique_ptr<gdrive::MultipartUploadFileArg> arg = gdrive::MultipartUploadFileArg::EXAMPLE(0);
-    QByteArray data("Hello World! 123454321 (.) :: (b -> c) -> (a -> b) -> (a -> c)");
-    QBuffer io(&data);
-    io.open(QIODevice::ReadOnly);
-    auto res = cl->getFiles()->uploadFileMultipart(*(arg.get()) , &io);
-    ApiAutotest::INSTANCE() << "------ RESULT ------------------";
-    ApiAutotest::INSTANCE() << res->toString();
-    ApiAutotest::INSTANCE() << "--------------------------";
-}
-
 static void call_uploadFileSimple_from_Files(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("uploadFileSimple");
     QByteArray data("Hello World! 123454321 (.) :: (b -> c) -> (a -> b) -> (a -> c)");
@@ -248,7 +236,6 @@ static void test_call_FilesRoutes(){
     call_moveFile_from_Files();
     call_rename_from_Files();
     call_updateFileMeta_from_Files();
-    call_uploadFileMultipart_from_Files();
     call_uploadFileSimple_from_Files();
 }
 

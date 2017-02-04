@@ -196,21 +196,6 @@ namespace files{
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
-            ApiRoute('uploadFileMultipart')
-
-
-            Upload file content and metadata.
-
-            */
-        std::unique_ptr<FileResource> uploadFileMultipart(const gdrive::MultipartUploadFileArg& arg, QIODevice* readFrom);
-        GoogleTask<FileResource>* uploadFileMultipart_Async(const gdrive::MultipartUploadFileArg& arg, QIODevice* data);
-        void uploadFileMultipart_AsyncCB(
-            const gdrive::MultipartUploadFileArg&,
-            QIODevice* data,
-            std::function<void(std::unique_ptr<FileResource>)> completed_callback = nullptr,
-            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
-
-            /**
             ApiRoute('uploadFileSimple')
 
 

@@ -1,6 +1,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include "GdriveRoutes.h"
+#include "gdrive/files/FilesCreateFileDetails.h"
 
 using namespace googleQt;
 
@@ -237,7 +238,7 @@ bool GdriveRoutes::moveFile(QString fileID, QString removeParentFolderID, QStrin
     return moveFile(fileID, removeParentFolderIDs, addParentFolderIDs);
 };
 
-QString GdriveRoutes::uploadFile(QString localFilePath, QString destFileName, QString parentFolderId)
+QString GdriveRoutes::uploadFile(QString localFilePath, QString destFileName, QString parentFolderId, QString mimeType)
 {
     QString fID = fileExists(destFileName, parentFolderId);
     if (!fID.isEmpty()) 
@@ -257,8 +258,23 @@ QString GdriveRoutes::uploadFile(QString localFilePath, QString destFileName, QS
 
     try
     {
-        gdrive::MultipartUploadFileArg arg(fi.fileName());
-        auto f = getFiles()->uploadFileMultipart(arg, &file_in);
+        gdrive::CreateFileArg arg(fi.fileName());
+        files::CreateFileDetails& file_details = arg.fileDetailes();
+        if (!parentFolderId.isEmpty())
+        {
+            std::list <QString> parent_folders;
+            parent_folders.push_back("appDataFolder");
+            file_details.setParents(parent_folders);
+        }
+        if (!mimeType.isEmpty())
+        {
+            file_details.setMimetype(mimeType);
+        }
+        else
+        {
+            arg.calcMimeType();
+        }
+        auto f = getFiles()->create(arg, &file_in);
         rv = f->id();
     }
     catch (GoogleException& e)

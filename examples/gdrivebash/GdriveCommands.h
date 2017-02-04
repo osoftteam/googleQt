@@ -47,8 +47,6 @@ public:
     void create_in_appdata(QString fileName);    
     ///upload file using 'simple' method without metadata, fileName - local filename to upload
     void upload_simple(QString fileName);    
-    ///upload file, fileName - local filename to upload
-    void upload_mpart(QString fileName);
     ///delete file or folder on gdrive
     void rm(QString fileId);
     ///create folder

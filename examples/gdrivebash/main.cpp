@@ -74,7 +74,6 @@ int main(int argc, char *argv[])
     t.addAction("create",           "Create a new file using 'multipart' method", [&](QString arg) {cmd.create(arg); });
     t.addAction("create_in_appdata","Create file in appDataFolder", [&](QString arg) {cmd.create_in_appdata(arg); });    
     t.addAction("upload_simple",    "Upload file using 'simple' method", [&](QString arg) {cmd.upload_simple(arg); });
-    t.addAction("upload_mpart",     "Upload file using 'multipart' method", [&](QString arg) {cmd.upload_mpart(arg); });
     t.addAction("rm",               "Delete file or folder", [&](QString arg) {cmd.rm(arg); });    
     t.addSeparator();
     t.addAction("ls_comments",      "List comments",  [&](QString arg) {cmd.ls_comments(arg); });

@@ -52,7 +52,7 @@ namespace googleQt
         /// move file by ID from one parent to another
         bool moveFile(QString fileID, QString removeParentFolderID, QString addParentFolderID);
         /// upload file, delete existing, return ID of the new file
-        QString uploadFile(QString localFilePath, QString destFileName, QString parentFolderId = "");
+        QString uploadFile(QString localFilePath, QString destFileName, QString parentFolderId = "", QString mimeType = "");
         /// upload file into tmp and if succeeded replace existing file on cloud
         /// this prevent data tranfer errors, alows file validation etc.
         QString upgradeFile(QString localFilePath, QString destFileName, QString parentFolderId = "");
