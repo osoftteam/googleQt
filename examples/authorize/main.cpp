@@ -1,12 +1,29 @@
 #include <iostream>
 #include <memory>
-#include <QtCore/QCoreApplication>
 #include <QUrl>
+#include <QCoreApplication>
+#include <QFile>
 #include "google/endpoint/ApiAppInfo.h"
 #include "google/endpoint/GoogleWebAuth.h"
 #include "google/endpoint/ApiException.h"
 
 using namespace googleQt;
+
+void saveScopeUrl(QUrl url)
+{
+	QString UrlFile = "scope-auth-url.info";
+	QFile out(UrlFile);
+	if (!out.open(QFile::WriteOnly | QIODevice::Truncate)) {
+		std::cout << "Error opening file: " << UrlFile.toStdString() << std::endl;
+		return;
+	}
+
+	out.write(url.toString().toStdString().c_str());
+	out.write("\n");
+	out.close();
+
+	std::cout << "Link saved to file: " << UrlFile.toStdString() << std::endl;
+};
 
 int main(int argc, char *argv[]) 
 {
@@ -84,6 +101,8 @@ int main(int argc, char *argv[])
                     scopes.push_back(GoogleWebAuth::authScope_gdrive());
                     scopes.push_back(GoogleWebAuth::authScope_gdrive_appdata());
                     QUrl url = GoogleWebAuth::getCodeAuthorizeUrl(appInfo.get(), scopes);
+					saveScopeUrl(url);
+
                     std::cout << "1. Go to " << url.toString().toStdString() << std::endl;
                     std::cout << "2. Click \"Allow\" (you might have to log in first)." << std::endl;
                     std::cout << "3. Copy the authorization code." << std::endl;
