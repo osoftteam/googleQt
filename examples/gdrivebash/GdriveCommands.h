@@ -25,8 +25,12 @@ public:
     void ls_folders(QString);
     ///list folder content
     void ls_dir_content(QString);
+    ///clean folder content
+    void clean_dir_content(QString);    
     ///list space content
-    void ls_space_content(QString);    
+    void ls_space_content(QString);
+    ///clean space content
+    void clean_space_content(QString);
     ///get file or folder meta information
     void get(QString fileId);
     ///search file by name

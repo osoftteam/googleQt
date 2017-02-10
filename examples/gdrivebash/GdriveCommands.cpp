@@ -105,6 +105,12 @@ void GdriveCommands::ls_folders(QString nextToken)
 
 void GdriveCommands::ls_dir_content(QString folderId)
 {
+    if(folderId.isEmpty())
+        {
+            std::cout << "folderId required" << std::endl;
+            return;
+        }
+    
     try
     {
         FileListArg arg;
@@ -126,14 +132,82 @@ void GdriveCommands::ls_dir_content(QString folderId)
                       << f.name()<< " "
                       << mimeType << std::endl;
         }
-        std::cout << "next token: " << lst->nextpagetoken() << std::endl;
-
-        print_last_result("");
+        if(!lst->nextpagetoken().isEmpty())
+            {
+                std::cout << "next token: " << lst->nextpagetoken() << std::endl;
+            }
     }
     catch (GoogleException& e)
     {
         std::cout << "Exception: " << e.what() << std::endl;
     }    
+};
+
+void GdriveCommands::clean_dir_content(QString folderId)
+{
+    if(folderId.isEmpty())
+        {
+            std::cout << "folderId required" << std::endl;
+            return;
+        }
+    
+    try
+        {
+            bool deleteAll = false;
+        
+            FileListArg arg;
+            arg.setQ(QString("'%1' in parents").arg(folderId));
+            auto lst = m_gd->getFiles()->list(arg);
+            const std::list <files::FileResource>& files = lst->files();
+            int idx = 1;
+            for(const files::FileResource& f : files){
+                std::string tmp;
+                if(!deleteAll)
+                    {
+            
+                        QString mimeType = f.mimetype();
+                        QString ftype = "[f]";
+                        if(mimeType == "application/vnd.google-apps.folder"){
+                            ftype = "[d]";
+                        }else if(mimeType == "image/jpeg"){
+                            ftype = "[i]";
+                        }
+                        std::cout << QString("%1").arg(idx++).leftJustified(3, ' ')
+                                  << ftype << " "
+                                  << f.id() << " "
+                                  << f.name()<< " "
+                                  << mimeType << std::endl;
+                        std::cout << "delete? [Y/n/REMOVE-ALL/END]" << std::endl;;
+                        getline(std::cin, tmp);
+                    }
+                if(deleteAll || tmp.compare("Y") == 0)
+                    {
+                        DeleteFileArg arg(f.id());
+                        m_gd->getFiles()->deleteOperation(arg);
+                        std::cout << "deleted: " << f.id() << std::endl;
+                    }
+                else if(tmp.compare("Y") == 0)
+                    {
+                        //skip
+                    }
+                else if(tmp.compare("END") == 0)
+                    {
+                        return;
+                    }
+                else if(tmp.compare("REMOVE-ALL") == 0)
+                    {
+                        DeleteFileArg arg(f.id());
+                        m_gd->getFiles()->deleteOperation(arg);
+                        std::cout << "deleted: " << f.id() << std::endl;
+                        deleteAll = true;
+                    }
+            
+            }
+        }
+    catch (GoogleException& e)
+        {
+            std::cout << "Exception: " << e.what() << std::endl;
+        }    
 };
 
 void GdriveCommands::ls_space_content(QString spaceName)
@@ -166,6 +240,67 @@ void GdriveCommands::ls_space_content(QString spaceName)
         std::cout << "Exception: " << e.what() << std::endl;
     }    
 };
+
+void GdriveCommands::clean_space_content(QString spaceName)
+{
+    try
+        {
+            bool deleteAll = false;
+        
+            FileListArg arg;
+            arg.setSpaces(spaceName);
+            auto lst = m_gd->getFiles()->list(arg);
+            const std::list <files::FileResource>& files = lst->files();
+            int idx = 1;
+            for(const files::FileResource& f : files)
+                {
+                    std::string tmp;
+                    if(!deleteAll)
+                        {
+                            QString mimeType = f.mimetype();
+                            QString ftype = "[f]";
+                            if(mimeType == "application/vnd.google-apps.folder"){
+                                ftype = "[d]";
+                            }else if(mimeType == "image/jpeg"){
+                                ftype = "[i]";
+                            }
+                            std::cout << QString("%1").arg(idx++).leftJustified(3, ' ')
+                                      << ftype << " "
+                                      << f.id() << " "
+                                      << f.name()<< " "
+                                      << mimeType << std::endl;
+                            std::cout << "delete? [Y/n/REMOVE-ALL/END]" << std::endl;;
+                            getline(std::cin, tmp);
+                        }
+                    if(deleteAll || tmp.compare("Y") == 0)
+                        {
+                            DeleteFileArg arg(f.id());
+                            m_gd->getFiles()->deleteOperation(arg);
+                            std::cout << "deleted: " << f.id() << std::endl;
+                        }
+                    else if(tmp.compare("Y") == 0)
+                        {
+                            //skip
+                        }
+                    else if(tmp.compare("END") == 0)
+                        {
+                            return;
+                        }
+                    else if(tmp.compare("REMOVE-ALL") == 0)
+                        {
+                            DeleteFileArg arg(f.id());
+                            m_gd->getFiles()->deleteOperation(arg);
+                            std::cout << "deleted: " << f.id() << std::endl;
+                            deleteAll = true;
+                        }
+                }
+        }
+    catch (GoogleException& e)
+        {
+            std::cout << "Exception: " << e.what() << std::endl;
+        }    
+};
+
 
 void GdriveCommands::search_by_name(QString name)
 {
@@ -524,19 +659,26 @@ void GdriveCommands::upload_simple(QString fileName)
     file_in.close();
 };
 
-void GdriveCommands::rm(QString fileId) 
+void GdriveCommands::rm(QString arg) 
 {
-    if (fileId.isEmpty())
+    if (arg.isEmpty())
     {
         std::cout << "fileId required" << std::endl;
         return;
     }
 
+    QStringList arg_list = arg.split(" ",
+                                     QString::SkipEmptyParts);
+    
     try
     {
-        DeleteFileArg arg(fileId);
-        m_gd->getFiles()->deleteOperation(arg);
-        std::cout << "=== deleted ===" << std::endl;
+        for(auto i = arg_list.begin(); i != arg_list.end(); i++)
+            {
+                QString fileId = *i;
+                DeleteFileArg arg(fileId);
+                m_gd->getFiles()->deleteOperation(arg);
+                std::cout << "deleted: " << fileId << std::endl;
+            }
     }
     catch (GoogleException& e)
     {

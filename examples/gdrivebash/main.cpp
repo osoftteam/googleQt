@@ -63,7 +63,9 @@ int main(int argc, char *argv[])
     t.addAction("ls",               "List",           [&](QString arg) {cmd.ls(arg); });
     t.addAction("ls_folders",       "Show folders",   [&](QString arg) {cmd.ls_folders(arg); });
     t.addAction("ls_dir_content",   "Show directory content",   [&](QString arg) {cmd.ls_dir_content(arg); });
-    t.addAction("ls_space_content", "Show space content (appDataFolder, drive, photos)",   [&](QString arg) {cmd.ls_space_content(arg); });    
+    t.addAction("clean_dir_content","Delete directory content (with confirmation)",   [&](QString arg) {cmd.clean_dir_content(arg); });    
+    t.addAction("ls_space_content", "Show space content (appDataFolder, drive, photos)",   [&](QString arg) {cmd.ls_space_content(arg); });
+    t.addAction("clean_space_content", "Delete space content with confirmation (appDataFolder, drive, photos)",   [&](QString arg) {cmd.clean_space_content(arg); });
     t.addAction("get",              "Get File Info",  [&](QString arg) {cmd.get(arg); });
     t.addAction("search_by_name",   "Search by File Name",  [&](QString arg) {cmd.search_by_name(arg); });
     t.addAction("mkdir",            "Create New Folder",[&](QString arg) {cmd.mkdir(arg); });
