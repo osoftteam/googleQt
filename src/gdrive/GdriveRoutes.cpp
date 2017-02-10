@@ -263,7 +263,7 @@ QString GdriveRoutes::uploadFile(QString localFilePath, QString destFileName, QS
         if (!parentFolderId.isEmpty())
         {
             std::list <QString> parent_folders;
-            parent_folders.push_back("appDataFolder");
+            parent_folders.push_back(parentFolderId);
             file_details.setParents(parent_folders);
         }
         if (!mimeType.isEmpty())
