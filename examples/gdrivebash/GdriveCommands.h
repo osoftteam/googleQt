@@ -33,8 +33,8 @@ public:
     void clean_space_content(QString);
     ///get file or folder meta information
     void get(QString fileId);
-    ///search file by name
-    void search_by_name(QString name);
+    ///find file by name
+    void find_by_name(QString name_space_parentId);
     ///rename file or folder
     void rename(QString fileId_space_new_title);
     ///change mime type of a file
@@ -47,14 +47,18 @@ public:
     void download(QString fileId_space_localFileName);
     ///download and print file content on the screen, good for text files
     void cat(QString fileId);
+    ///download, calculate and print hash calculated on file content
+    void hash_file(QString fileId);    
     ///create new file by uploading local file
     void create(QString fileName);
     ///create new file in ApplicationDataFolder by uploading local file
-    void create_in_appdata(QString fileName);    
+    void create_in_appdata(QString fileName);
+    ///delete files in appDataFolder by name except ID
+    void rm_appdata_files(QString name_exceptId);
     ///upload file using 'simple' method without metadata, fileName - local filename to upload
-    void upload_simple(QString fileName);    
-    ///upload file, fileName - local filename to upload
-    //void upload_mpart(QString fileName);
+    void upload_simple(QString fileName);
+    /// replace remote file with local using 'upgrade' utility function
+    void upgrade_file(QString localFile_parentFolderId);
     ///delete file or folder on gdrive
     void rm(QString fileId);
     ///create folder
