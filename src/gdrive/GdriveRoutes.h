@@ -33,6 +33,8 @@ namespace googleQt
         static QString appDataFolder();
         /// returns file ID if file exist, empty string otherwise
         QString  fileExists(QString name, QString parentFolderId = "");
+        /// returns file ID if file exist in appDataFolder, empty string otherwise
+        QString  appDataFileExists(QString name);
         /// returns folder ID if folder exist, empty string otherwise
         QString  folderExists(QString name, QString parentFolderId = "");
         /// returns folder ID if folder was created, empty string otherwise
@@ -53,9 +55,18 @@ namespace googleQt
         bool moveFile(QString fileID, QString removeParentFolderID, QString addParentFolderID);
         /// upload file, delete existing, return ID of the new file
         QString uploadFile(QString localFilePath, QString destFileName, QString parentFolderId = "", QString mimeType = "");
+        /// upload file, keep existing, return ID of the new file
+        QString uploadFileKeepExisting(QString localFilePath, QString destFileName, QString parentFolderId = "", QString mimeType = "");        
         /// upload file into tmp and if succeeded replace existing file on cloud
         /// this prevent data tranfer errors, alows file validation etc.
         QString upgradeFile(QString localFilePath, QString destFileName, QString parentFolderId = "");
+        /// same as upgradeFile but operates on files in appDataFolder
+        QString upgradeAppDataFile(QString localFilePath, QString destFileName);
+        ///delete all files in appDataFolder with names in name2del, except id in ids2keep
+        /// returns number of files deleted or -1 in case of error
+        int cleanUpAppDataFolder(const std::set<QString>& names2del, const std::set<QString>& ids2keep);
+        /// utility call to function with set-parameters
+        int cleanUpAppDataFolder(QString name2del, QString id2keep);        
         /// returns name->folderid map for a parent folder
         FolderContentMap mapFolders(QString parentFolderId);
         /// returns name->fileid map for a parent folder

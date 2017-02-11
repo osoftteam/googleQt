@@ -52,7 +52,7 @@ QString GdriveRoutes::fileExists(QString name, QString parentId)
     QString rv = "";
 
     gdrive::FileListArg arg;
-    QString q = QString("name contains '%1' and mimeType != 'application/vnd.google-apps.folder' and trashed = false")
+    QString q = QString("name = '%1' and mimeType != 'application/vnd.google-apps.folder' and trashed = false")
         .arg(name);    
     if (!parentId.isEmpty()) 
     {
@@ -247,6 +247,12 @@ QString GdriveRoutes::uploadFile(QString localFilePath, QString destFileName, QS
             return "";
     }
 
+    QString rv = uploadFileKeepExisting(localFilePath, destFileName, parentFolderId, mimeType);
+    return rv;
+};
+
+QString GdriveRoutes::uploadFileKeepExisting(QString localFilePath, QString destFileName, QString parentFolderId, QString mimeType)
+{
     QFile file_in(localFilePath);
     if (!file_in.open(QFile::ReadOnly)) {
         qWarning() << "Error opening file: " << localFilePath;
@@ -258,7 +264,7 @@ QString GdriveRoutes::uploadFile(QString localFilePath, QString destFileName, QS
 
     try
     {
-        gdrive::CreateFileArg arg(fi.fileName());
+        gdrive::CreateFileArg arg(destFileName);
         files::CreateFileDetails& file_details = arg.fileDetailes();
         if (!parentFolderId.isEmpty())
         {
@@ -293,7 +299,7 @@ QString GdriveRoutes::upgradeFile(QString localFilePath, QString destFileName, Q
         qWarning() << "Failed to upload file" << localFilePath << destFileName << parentFolderId;
         return "";
     }
-
+    
     QString oldFileID = fileExists(destFileName, parentFolderId);
     if (!oldFileID.isEmpty()) 
     {
@@ -311,6 +317,81 @@ QString GdriveRoutes::upgradeFile(QString localFilePath, QString destFileName, Q
     }
 
     return fTmpID;
+};
+
+QString GdriveRoutes::upgradeAppDataFile(QString localFilePath, QString destFileName)
+{
+    QString fID = uploadFileKeepExisting(localFilePath, destFileName, "appDataFolder");
+    if (fID.isEmpty()) {
+        qWarning() << "Failed to upload file" << localFilePath << destFileName << "appDataFolder";
+        return "";
+    }
+    int n = cleanUpAppDataFolder(destFileName, fID);
+    qDebug() << "cleaned-up files" << n;
+    return fID;
+};
+
+int GdriveRoutes::cleanUpAppDataFolder(QString name, QString id2keep)
+{
+    std::set<QString> names2del;
+    std::set<QString> ids2keep;
+    names2del.insert(name);
+    ids2keep.insert(id2keep);
+    return cleanUpAppDataFolder(names2del, ids2keep);
+};
+
+int GdriveRoutes::cleanUpAppDataFolder(const std::set<QString>& name2del,
+                                       const std::set<QString>& ids2keep)
+{
+    int rv = 0;
+    try
+        {
+            gdrive::FileListArg arg;
+            arg.setSpaces("appDataFolder");
+            auto lst = getFiles()->list(arg);
+            const std::list <files::FileResource>& files = lst->files();
+            for(const files::FileResource& f : files)
+                {
+                    if(ids2keep.find(f.id()) != ids2keep.end())
+                        continue;
+                    if(name2del.find(f.name()) != name2del.end())
+                        {
+                            gdrive::DeleteFileArg darg(f.id());
+                            getFiles()->deleteOperation(darg);
+                            rv++;
+                        }
+                }
+        }
+    catch (GoogleException& e)
+        {
+            qWarning() << "Exception: " << e.what();
+            return -1;
+        }    
+    return rv;
+};
+
+QString  GdriveRoutes::appDataFileExists(QString name)
+{
+    try
+        {
+            gdrive::FileListArg arg;
+            arg.setSpaces("appDataFolder");
+            auto lst = getFiles()->list(arg);
+            const std::list <files::FileResource>& files = lst->files();
+            for(const files::FileResource& f : files)
+                {
+                    if(f.name().compare(name) == 0)
+                        {
+                            return f.id();
+                        }
+                }
+        }
+    catch (GoogleException& e)
+        {
+            qWarning() << "Exception: " << e.what();
+            return "";
+        }    
+    return "";    
 };
 
 GdriveRoutes::FolderContentMap GdriveRoutes::mapFolderContent(QString parentId, QString q1 /*= "trashed = false"*/)
