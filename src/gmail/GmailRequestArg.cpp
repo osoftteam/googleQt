@@ -33,6 +33,7 @@ void ListArg::build(const QString& link_path, QUrl& url)const
     UrlBuilder b(link_path, url);
     b.add("includeSpamTrash", m_includeSpamTrash)
         .add("maxResults", m_maxResults)
+        .add("pageToken", m_pageToken)
         .add("q", m_q);
     for (QStringList::const_iterator i = m_labelIds.cbegin(); i != m_labelIds.cend(); i++)
         {

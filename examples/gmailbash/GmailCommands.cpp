@@ -31,9 +31,13 @@ void GmailCommands::listMessages(QString nextToken, QString labelIds)
                     id_list += m.id();
                     id_list += " ";
                 }
+            //print_last_result("");
             get_batch_snippets(id_list);
             nextToken = mlist->nextpagetoken();
-            std::cout << "next-token: " << nextToken << std::endl;
+            if(!nextToken.isEmpty())
+                {
+                    std::cout << "next-token: " << nextToken << std::endl;
+                }
         }
     catch(GoogleException& e)
         {

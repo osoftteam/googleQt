@@ -2,6 +2,7 @@
 
 #include "google/endpoint/ApiUtil.h"
 #include "google/endpoint/ApiClient.h"
+#include "google/endpoint/GoogleTask.h"
 
 namespace googleQt{
     class Endpoint;
