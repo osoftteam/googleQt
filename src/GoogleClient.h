@@ -13,7 +13,7 @@ namespace googleQt{
 class GoogleClient: public googleQt::ApiClient{
     Q_OBJECT
 public:
-    GoogleClient(googleQt::ApiAppInfo* appInfo, googleQt::ApiAuthInfo* authInfo, const QString& userId = "");
+    GoogleClient(googleQt::ApiAppInfo* appInfo, googleQt::ApiAuthInfo* authInfo);
     ~GoogleClient();
 
     /**
@@ -30,11 +30,6 @@ public:
     * gdrive - v3 Google Drive API
     */
     GdriveRoutes* gdrive();
-
-    /**
-    * used by some API (gmail)
-    */
-    QString userId()const{return m_userId;}
 
     /**
     * cancell all requests and exit blocking call is any
@@ -62,7 +57,6 @@ protected:
     std::unique_ptr<GtaskRoutes>           m_gtask_routes;
     std::unique_ptr<GdriveRoutes>          m_gdrive_routes;
     std::unique_ptr<Endpoint>              m_endpoint;
-    QString                                m_userId;
 };
 
 };

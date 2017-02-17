@@ -13,8 +13,8 @@ namespace googleQt{
         virtual ~ApiClient() {};
         QString getToken()const;
         QString getAppKey()const;
-        virtual bool refreshToken() = 0;
-        virtual QString userId()const = 0;
+        QString userId()const;
+        virtual bool refreshToken() = 0;        
     signals:
         void downloadProgress(qint64 bytesProcessed, qint64 total);
         void uploadProgress(qint64 bytesProcessed, qint64 total);

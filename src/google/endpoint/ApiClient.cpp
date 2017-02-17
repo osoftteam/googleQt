@@ -18,3 +18,7 @@ QString ApiClient::getAppKey()const
     return m_app->getKey();
 };
 
+QString ApiClient::userId()const
+{
+    return m_auth->getEmail();
+};

@@ -9,9 +9,8 @@
 using namespace googleQt;
 
 GoogleClient::GoogleClient(ApiAppInfo* appInfo,
-                         ApiAuthInfo* authInfo,
-                         const QString& userId)
-    :ApiClient(appInfo, authInfo), m_userId(userId)
+                         ApiAuthInfo* authInfo)
+    :ApiClient(appInfo, authInfo)
 {
     m_endpoint.reset(new Endpoint(this));
 };
