@@ -81,18 +81,31 @@ BatchRunner<QString,
     return r;
 };
 
-std::map<QString, std::shared_ptr<mail_batch::MessageData>> GmailRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
+void GmailRoutes::checkCacheObj()
 {
-	return getCacheMessages_Async(state, id_list)->waitForResultAndRelease();
+    if (!m_GMailCache) {
+        m_GMailCache.reset(new mail_batch::GMailCache(*m_endpoint, *this));
+    }
+};
+
+std::list<std::shared_ptr<mail_batch::MessageData>> GmailRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
+//std::map<QString, std::shared_ptr<mail_batch::MessageData>> GmailRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
+{
+	//return getCacheMessages_Async(state, id_list)->waitForResultAndRelease();
+    return getCacheMessages_Async(state, id_list)->waitForSortedResultListAndRelease();
 };
 
 std::unique_ptr<mail_batch::GMailCacheQueryResult> GmailRoutes::getCacheMessages_Async(EDataState state,
                                                                                        const std::list<QString>& id_list)
 {
-    if (!m_GMailCache) {
-		m_GMailCache.reset(new mail_batch::GMailCache(*m_endpoint, *this));
-    }
+    checkCacheObj();
 	return m_GMailCache->query_Async(state, id_list);
+};
+
+std::list<std::shared_ptr<mail_batch::MessageData>> GmailRoutes::getCacheMessages() 
+{
+    checkCacheObj();
+    return m_GMailCache->cacheData()->waitForSortedResultListAndRelease();
 };
 
 bool GmailRoutes::setupSQLiteCache(QString dbPath, QString dbName /*= "googleqt"*/, QString dbprefix /*= "api"*/) 
@@ -124,22 +137,6 @@ void GmailRoutes::autotestParLoad(EDataState state, const std::list<QString>& id
     //ApiAutotest::INSTANCE() << QString("=== checking gmail/batch-load of %1 ids").arg(id_list.size());
     std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = getBatchMessages(state, id_list);
     RESULT_LIST<messages::MessageResource*> res = br->results();
-    /*
-    int n = 1;
-    for (auto& m : res)
-    {
-        auto& payload = m->payload();
-        auto& header_list = payload.headers();
-
-        QString s_headers;
-        for (auto h : header_list)
-        {
-            s_headers += h.value() + "|";
-        }
-        ApiAutotest::INSTANCE() << QString("%1. %2|%3").arg(n).arg(m->id()).arg(s_headers);
-        n++;
-    }
-    */
     ApiAutotest::INSTANCE() << QString("par-loaded (avoid cache) %1 snippets").arg(res.size());
 };
 
@@ -200,6 +197,24 @@ void GmailRoutes::autotest()
     autotestParDBLoad(EDataState::snippet, id_list);
     autotestParDBLoad(EDataState::body, id_list);
     
+    int idx = 1;
+    using MSG_LIST = std::list<std::shared_ptr<mail_batch::MessageData>>;
+    MSG_LIST lst = getCacheMessages();
+    for (auto& i : lst)
+    {
+        mail_batch::MessageData* m = i.get();
+        QString s = QString("%1. %2 %3").arg(idx).arg(m->id()).arg(m->snippet());
+        ApiAutotest::INSTANCE() << s;
+        idx++;
+        if (idx > 20)
+        {
+            ApiAutotest::INSTANCE() << "...";
+            break;
+        }
+    }
+    QString s = QString("Total messages %1").arg(lst.size());
+    ApiAutotest::INSTANCE() << s;
+
     ApiAutotest::INSTANCE().enableRequestLog(true);
 };
 #endif

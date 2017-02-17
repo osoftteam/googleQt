@@ -42,8 +42,10 @@ namespace googleQt{
     std::unique_ptr<BatchResult<QString, messages::MessageResource>>   getBatchMessages(EDataState, const std::list<QString>& id_list);
     BatchRunner<QString, mail_batch::MesagesReciever, messages::MessageResource>* getBatchMessages_Async(EDataState, const std::list<QString>& id_list);
 
-	std::map<QString, std::shared_ptr<mail_batch::MessageData>> getCacheMessages(EDataState, const std::list<QString>& id_list);
+	//std::map<QString, std::shared_ptr<mail_batch::MessageData>> getCacheMessages(EDataState, const std::list<QString>& id_list);
+    std::list<std::shared_ptr<mail_batch::MessageData>> getCacheMessages(EDataState, const std::list<QString>& id_list);
 	std::unique_ptr<mail_batch::GMailCacheQueryResult> getCacheMessages_Async(EDataState, const std::list<QString>& id_list);
+    std::list<std::shared_ptr<mail_batch::MessageData>> getCacheMessages();
     bool setupSQLiteCache(QString dbPath, QString dbName = "googleqt", QString dbprefix = "api");
 
 #ifdef API_QT_AUTOTEST
@@ -52,6 +54,8 @@ namespace googleQt{
     void autotestParDBLoad(EDataState state, const std::list<QString>& id_list);
 #endif
   protected:
+      void checkCacheObj();
+
     std::unique_ptr<messages::MessagesRoutes>       m_MessagesRoutes;
     std::unique_ptr<labels::LabelsRoutes>           m_LabelsRoutes;
     std::unique_ptr<users::UsersRoutes>             m_UsersRoutes;

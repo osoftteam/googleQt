@@ -11,6 +11,8 @@ namespace googleQt {
 
 	template<class O>
 	using CACHE_QUERY_RESULT_MAP  = std::map<QString, std::shared_ptr<O>>;
+    //template<class O>
+    //using CACHE_QUERY_RESULT_LIST = std::list<std::shared_ptr<O>>;
     template<class O>
     using CACHE_QUERY_RESULT_LIST = std::list<std::shared_ptr<O>>;
 
@@ -95,7 +97,20 @@ namespace googleQt {
 			return m_result;
 		}
 
-		void add(QString id, std::shared_ptr<O> obj) { m_result[id] = obj; };
+        std::list<std::shared_ptr<O>> waitForResultListAndRelease()
+        {
+            if (!isFinished())
+            {
+                m_in_wait_loop = true;
+                waitUntillFinishedOrCancelled();
+            }
+
+            deleteLater();
+            return m_result_list;
+        }
+
+        void add(QString id, std::shared_ptr<O> obj) { m_result[id] = obj; m_result_list.push_back(obj); };
+        //void add(std::shared_ptr<O> obj) { m_result.push_back(obj); }
         void inc_mem_cache_hit_count() { m_mem_cache_hit_count++; }
         void set_db_cache_hit_count(size_t val) { m_db_cache_hit_count = val; }
         size_t mem_cache_hit_count()const { return m_mem_cache_hit_count; }
@@ -103,6 +118,7 @@ namespace googleQt {
 
     protected:
 		CACHE_QUERY_RESULT_MAP<O> m_result;
+        CACHE_QUERY_RESULT_LIST<O> m_result_list;
         EDataState m_state;
 		GoogleCacheBase<O>* m_cache;
         size_t     m_mem_cache_hit_count{0};
@@ -237,6 +253,18 @@ namespace googleQt {
 				}            
             return rv;
         };
+
+        std::unique_ptr<R> cacheData() 
+        {
+            std::unique_ptr<R> rv = produceCloudResultFetcher(EDataState::body, m_endpoint);
+            for (auto& i : m_mem_cache) 
+            {
+                rv->add(i.first, i.second);
+            }
+            rv->notifyOnCompletedFromCache();
+            return rv;
+        }
+
     protected:
         ApiEndpoint&                m_endpoint;
         CACHE_QUERY_RESULT_MAP<O>   m_mem_cache;
