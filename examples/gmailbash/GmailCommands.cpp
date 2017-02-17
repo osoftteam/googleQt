@@ -642,13 +642,13 @@ void GmailCommands::get_cache_snippets(QString id_list)
 		return;
 	}
 
-	std::map<QString, std::shared_ptr<mail_batch::MessageData>>mm = m_gm->getCacheMessages(EDataState::snippet, arg_list);
+	std::list<std::shared_ptr<mail_batch::MessageData>>mm = m_gm->getCacheMessages(EDataState::snippet, arg_list);
 	std::cout << "loaded from cache: " << mm.size() << std::endl;
 
 	int n = 1;
 	for (auto& i : mm)
 	{
-		mail_batch::MessageData* m = i.second.get();
+		mail_batch::MessageData* m = i.get();
 		std::cout << n << ". " << m->id() << "|";
 		std::cout << m->from() << "|";
 		std::cout << m->subject() << "|";
@@ -668,13 +668,13 @@ void GmailCommands::get_cache_details(QString id_list)
 		return;
 	}
 
-	std::map<QString, std::shared_ptr<mail_batch::MessageData>>mm = m_gm->getCacheMessages(EDataState::body, arg_list);
+	std::list<std::shared_ptr<mail_batch::MessageData>>mm = m_gm->getCacheMessages(EDataState::body, arg_list);
 	std::cout << "loaded from cache: " << mm.size() << std::endl;
 
 	int n = 1;
 	for (auto& i : mm)
 	{
-		mail_batch::MessageData* m = i.second.get();
+		mail_batch::MessageData* m = i.get();
 		std::cout << n << ". " << m->id() << "|";
 		std::cout << m->from() << "|";
 		std::cout << m->subject() << "|";

@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     QCoreApplication app(argc, argv);
 
     if (argc != 4) {
-        std::string  s = QString("\nUsage: %1 <app-file> <auth-file> <user-id>\n"
+        std::string  s = QString("\nUsage: %1 <app-file> <auth-file> <email>\n"
                                  "Example: %1 ../app.info ../token.info me@gmail.com\n"
                                  "\n"
                                  "<app-info-file>: a JSON file with information about your API app.\n"
@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 
     QString argAppFile = argv[1];
     QString argAuthFile = argv[2];
-    QString argUserId = argv[3];
+    QString argEmail = argv[3];
 
     std::unique_ptr<ApiAppInfo> appInfo(new ApiAppInfo);
     if(!appInfo->readFromFile(argAppFile)){
@@ -53,10 +53,14 @@ int main(int argc, char *argv[])
         return 0;        
     }
 
+    authInfo->setEmail(argEmail);
+
     demo::ApiListener lsn;
-    GoogleClient c(appInfo.release(), authInfo.release(), argUserId);
+    GoogleClient c(appInfo.release(), authInfo.release());
     QObject::connect(&c, &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);
 
+    qDebug() << "ykh " << c.userId();
+    
     GmailCommands cmd(c);
     demo::Terminal t("gmail");
     t.addAction("ls",               "List Messages", [&](QString arg) {cmd.ls(arg);} );
