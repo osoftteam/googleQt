@@ -88,6 +88,38 @@ void GmailRoutes::checkCacheObj()
     }
 };
 
+void GmailRoutes::getCacheMessages_AsyncCB(EDataState state, 
+	int messagesCount /*= 40*/, 
+	QString pageToken /*= ""*/,
+	std::function<void(std::list<std::shared_ptr<mail_batch::MessageData>>)> completed_callback,
+	std::function<void(std::unique_ptr<GoogleException>)> failed_callback
+	)
+{
+	gmail::ListArg listArg;
+	listArg.setMaxResults(messagesCount);
+	listArg.setPageToken(pageToken);	
+
+	std::function<void(std::unique_ptr<messages::MessageListRes>)> id_list_completed_callback = 
+		[=](std::unique_ptr<messages::MessageListRes> mlist)
+	{
+		std::list<QString> id_list;
+		for (auto& m : mlist->messages())
+		{
+			QString mid = m.id();
+			id_list.push_back(mid);
+			if (completed_callback)
+			{
+				completed_callback(getCacheMessages(state, id_list));
+			}
+			//id_list.push_back(m.id());
+		}
+	};
+
+	getMessages()->list_AsyncCB(listArg, id_list_completed_callback, failed_callback);
+
+	//return getCacheMessages_Async(st, id_list);
+};
+
 std::list<std::shared_ptr<mail_batch::MessageData>> GmailRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
 //std::map<QString, std::shared_ptr<mail_batch::MessageData>> GmailRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
 {
