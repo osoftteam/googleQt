@@ -58,8 +58,6 @@ int main(int argc, char *argv[])
     demo::ApiListener lsn;
     GoogleClient c(appInfo.release(), authInfo.release());
     QObject::connect(&c, &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);
-
-    qDebug() << "ykh " << c.userId();
     
     GmailCommands cmd(c);
     demo::Terminal t("gmail");
@@ -90,9 +88,11 @@ int main(int argc, char *argv[])
     t.addSeparator();
     t.addAction("get_cache_snippets", "Get Messages snippets by ID list from cache if available, if not query cloud", [&](QString arg) {cmd.get_cache_snippets(arg); });
     t.addAction("get_cache_details", "Get Messages email body by ID list from cache if available, if not query cloud", [&](QString arg) {cmd.get_cache_details(arg); });    
+    t.addAction("check_email_cache", "Check for new email on cloud, if found return and update cache, otherwise return cache messages", [&](QString arg) {cmd.check_email_cache(arg); });
     t.addSeparator();
     t.addAction("export_last_result",   "Export last response to a file", [&](QString arg) {cmd.export_last_result(arg); });
     t.addAction("print_last_result",   "Print last response", [&](QString arg) {cmd.print_last_result(arg); });
+    t.addAction("print_user_id",   "Print user ID", [&](QString arg) {cmd.print_user_id(arg); });
     
     t.start();
     return 0;

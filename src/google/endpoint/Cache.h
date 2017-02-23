@@ -131,7 +131,7 @@ namespace googleQt {
     public:
         virtual std::list<QString> load(EDataState state, 
                                         const std::list<QString>& id_list,
-                                        std::unique_ptr<R>& cr) = 0;
+                                        R* cr) = 0;
         virtual void update(EDataState state, CACHE_QUERY_RESULT_LIST<O>& r) = 0;
         virtual void update(EDataState state, CACHE_QUERY_RESULT_MAP<O>& r, const std::set<QString>& fetched_ids)
         {
@@ -157,7 +157,7 @@ namespace googleQt {
         GoogleCache(ApiEndpoint& ept): m_endpoint(ept){};
         void setupLocalStorage(LocalPersistentStorage<O, R>* localDB){m_localDB .reset(localDB);};
         bool hasLocalPersistentStorate()const { return(m_localDB.get() != nullptr); };
-		virtual std::unique_ptr<R> produceCloudResultFetcher(EDataState load, ApiEndpoint& ept) = 0;
+		virtual R* produceCloudResultFetcher(EDataState load, ApiEndpoint& ept) = 0;
 
         bool mem_has_object(QString id)const override 
         {
@@ -212,9 +212,9 @@ namespace googleQt {
                 }            
         }
         
-        std::unique_ptr<R> query_Async(EDataState load, const std::list<QString>& id_list)
+        R* query_Async(EDataState load, const std::list<QString>& id_list)
         {
-			std::unique_ptr<R> rv = produceCloudResultFetcher(load, m_endpoint);
+			R* rv = produceCloudResultFetcher(load, m_endpoint);
 
             std::list<QString> missed_cache;
             for (std::list<QString>::const_iterator i = id_list.begin(); i != id_list.end(); i++)
@@ -254,9 +254,9 @@ namespace googleQt {
             return rv;
         };
 
-        std::unique_ptr<R> cacheData() 
+        R* cacheData() 
         {
-            std::unique_ptr<R> rv = produceCloudResultFetcher(EDataState::body, m_endpoint);
+            R* rv = produceCloudResultFetcher(EDataState::body, m_endpoint);
             for (auto& i : m_mem_cache) 
             {
                 rv->add(i.first, i.second);

@@ -144,8 +144,16 @@ public:
 	*/
 	void get_cache_details(QString id_list);
 
+    /**
+    cache_check_email - list latest messages snippets, first
+    query for new messages then lookup snippets and update local cache
+    */
+    void check_email_cache(QString nextToken);
+
+
     void export_last_result(QString fileName);
     void print_last_result(QString );
+    void print_user_id(QString );
     
 protected:
     void listMessages(QString nextToken, QString labelIds);

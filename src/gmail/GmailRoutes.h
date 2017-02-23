@@ -18,7 +18,7 @@ namespace googleQt{
   class Endpoint;
 
   namespace mail_batch {
-	  class MesagesReciever;
+	  class MessagesReceiver;
 	  class MessageData;
 	  class GMailCacheQueryResult;
 	  class GMailCache;
@@ -40,19 +40,21 @@ namespace googleQt{
     drafts::DraftsRoutes*     getDrafts();
 
     std::unique_ptr<BatchResult<QString, messages::MessageResource>>   getBatchMessages(EDataState, const std::list<QString>& id_list);
-    BatchRunner<QString, mail_batch::MesagesReciever, messages::MessageResource>* getBatchMessages_Async(EDataState, const std::list<QString>& id_list);
+    BatchRunner<QString, mail_batch::MessagesReceiver, messages::MessageResource>* getBatchMessages_Async(EDataState, const std::list<QString>& id_list);
 
-	/// async load latest messagesCount emails starting pageToken and update cache
-	void getCacheMessages_AsyncCB(EDataState, 
-		int messagesCount = 40, 
-		QString pageToken = "",		
-		std::function<void(std::list<std::shared_ptr<mail_batch::MessageData>>)> completed_callback = nullptr,
-		std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr
-	);
-	/// async load emails by ID-list while updating local cache
-    std::list<std::shared_ptr<mail_batch::MessageData>> getCacheMessages(EDataState, const std::list<QString>& id_list);
-	std::unique_ptr<mail_batch::GMailCacheQueryResult> getCacheMessages_Async(EDataState, const std::list<QString>& id_list);
-    std::list<std::shared_ptr<mail_batch::MessageData>> getCacheMessages();
+	/// check for new emails - get top messagesCount messages and update cache
+    std::unique_ptr<mail_batch::MessagesList> getNextCacheMessages(int messagesCount = 40, QString pageToken = "");
+    GoogleTask<mail_batch::MessagesList>* getNextCacheMessages_Async(int messagesCount = 40, QString pageToken = "");
+
+    /// load emails by ID-list while updating local cache
+    std::unique_ptr<mail_batch::MessagesList> getCacheMessages(EDataState, const std::list<QString>& id_list);    
+	mail_batch::GMailCacheQueryResult* getCacheMessages_Async(EDataState, const std::list<QString>& id_list);
+
+    /// load messages from cache
+    std::unique_ptr<mail_batch::MessagesList> getCacheMessages();
+
+    /// init local cache table using SQlite DB, tables will have 'dbprefix' prefix
+    /// file path and DB-name should be specified
     bool setupSQLiteCache(QString dbPath, QString dbName = "googleqt", QString dbprefix = "api");
 
 #ifdef API_QT_AUTOTEST

@@ -5,7 +5,7 @@
 
 using namespace googleQt;
 
-GoogleTask<messages::MessageResource>* mail_batch::MesagesReciever::route(QString message_id)
+GoogleTask<messages::MessageResource>* mail_batch::MessagesReceiver::route(QString message_id)
 {   
     gmail::IdArg arg(message_id);
     if (m_msg_format == EDataState::snippet)
@@ -31,9 +31,9 @@ mail_batch::GMailCache::GMailCache(ApiEndpoint& ept, GmailRoutes& r)
 
 };
 
-std::unique_ptr<mail_batch::GMailCacheQueryResult> mail_batch::GMailCache::produceCloudResultFetcher(EDataState state, ApiEndpoint& ept)
+mail_batch::GMailCacheQueryResult* mail_batch::GMailCache::produceCloudResultFetcher(EDataState state, ApiEndpoint& ept)
 {
-	std::unique_ptr<mail_batch::GMailCacheQueryResult> rv(new mail_batch::GMailCacheQueryResult(state, ept, m_r, this));
+	mail_batch::GMailCacheQueryResult* rv = new mail_batch::GMailCacheQueryResult(state, ept, m_r, this);
 	return rv;
 };
 
@@ -118,7 +118,7 @@ void mail_batch::GMailCacheQueryResult::fetchFromCloud_Async(const std::list<QSt
         return;
     
     BatchRunner<QString,
-                mail_batch::MesagesReciever,
+                mail_batch::MessagesReceiver,
                 messages::MessageResource>* par_runner = NULL;
 
     par_runner = m_r.getBatchMessages_Async(m_state, id_list);
@@ -246,7 +246,7 @@ static bool compare_internalDate(std::shared_ptr<mail_batch::MessageData>& f,
     return (f->internalDate() < s->internalDate());
 };
 
-std::list<std::shared_ptr<mail_batch::MessageData>> mail_batch::GMailCacheQueryResult::waitForSortedResultListAndRelease()
+std::unique_ptr<mail_batch::MessagesList> mail_batch::GMailCacheQueryResult::waitForSortedResultListAndRelease()
 {
     if (!isFinished())
     {
@@ -255,9 +255,12 @@ std::list<std::shared_ptr<mail_batch::MessageData>> mail_batch::GMailCacheQueryR
     }
 
     m_result_list.sort(compare_internalDate);
+    std::unique_ptr<mail_batch::MessagesList> rv(new mail_batch::MessagesList);
+    rv->messages = std::move(m_result_list);
+    rv->state = m_state;
 
     deleteLater();
-    return m_result_list;
+    return rv;
 };
 
 ///GMailSQLiteStorage
@@ -330,7 +333,7 @@ bool mail_batch::GMailSQLiteStorage::init(QString dbPath, QString dbName, QStrin
 
 std::list<QString> mail_batch::GMailSQLiteStorage::load(EDataState state, 
                                                         const std::list<QString>& id_list,
-                                                        std::unique_ptr<GMailCacheQueryResult>& cr)
+                                                        GMailCacheQueryResult* cr)
 {   
     std::list<QString> rv;
     std::set<QString> db_loaded;

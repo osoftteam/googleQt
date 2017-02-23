@@ -67,15 +67,15 @@ std::unique_ptr<BatchResult<QString,
 };
 
 BatchRunner<QString,
-            mail_batch::MesagesReciever,
+            mail_batch::MessagesReceiver,
             messages::MessageResource>* GmailRoutes::getBatchMessages_Async(EDataState f, const std::list<QString>& id_list)
 {
-    mail_batch::MesagesReciever* mr = new mail_batch::MesagesReciever(*this, f);
+    mail_batch::MessagesReceiver* mr = new mail_batch::MessagesReceiver(*this, f);
     
     BatchRunner<QString,
-                mail_batch::MesagesReciever,
+                mail_batch::MessagesReceiver,
                 messages::MessageResource>* r = new BatchRunner<QString,
-                                                                mail_batch::MesagesReciever,
+                                                                mail_batch::MessagesReceiver,
                                                                 messages::MessageResource>(id_list, mr, *m_endpoint);
     r->run();
     return r;
@@ -88,10 +88,66 @@ void GmailRoutes::checkCacheObj()
     }
 };
 
-void GmailRoutes::getCacheMessages_AsyncCB(EDataState state, 
-	int messagesCount /*= 40*/, 
-	QString pageToken /*= ""*/,
-	std::function<void(std::list<std::shared_ptr<mail_batch::MessageData>>)> completed_callback,
+GoogleTask<mail_batch::MessagesList>* GmailRoutes::getNextCacheMessages_Async(int messagesCount /*= 40*/,
+    QString pageToken /*= ""*/)
+{
+
+    GoogleTask<mail_batch::MessagesList>* t = m_endpoint->produceTask<mail_batch::MessagesList>();
+
+    gmail::ListArg listArg;
+    listArg.setMaxResults(messagesCount);
+    listArg.setPageToken(pageToken);
+
+    std::function<void(std::unique_ptr<messages::MessageListRes>)> id_list_completed_callback =
+        [=](std::unique_ptr<messages::MessageListRes> mlist)
+    {
+        std::list<QString> id_list;
+        for (auto& m : mlist->messages())
+        {
+            QString mid = m.id();
+            id_list.push_back(mid);
+            try
+            {
+                std::unique_ptr<mail_batch::MessagesList> lst = std::move(getCacheMessages(EDataState::snippet, id_list));
+                lst->nextpage = mlist->nextpagetoken();
+                t->completed_callback(std::move(lst));
+            }
+            catch (GoogleException& e)
+            {
+                std::unique_ptr<GoogleException> ex(new GoogleException(e));
+                t->failed_callback(std::move(ex));
+            }
+        }
+    };
+
+    std::function<void(std::unique_ptr<GoogleException>)> failed_callback =
+        [=](std::unique_ptr<GoogleException> ex)
+    {
+        t->failed_callback(std::move(ex));
+    };
+
+
+    getMessages()->list_AsyncCB(listArg, id_list_completed_callback, failed_callback);
+
+    return t;
+};
+
+std::unique_ptr<mail_batch::MessagesList> GmailRoutes::getNextCacheMessages(int messagesCount /*= 40*/, QString pageToken /*= ""*/)
+{
+    return getNextCacheMessages_Async(messagesCount, pageToken)->waitForResultAndRelease();
+};
+
+/*
+
+void getNextCacheMessages_AsyncCB(int messagesCount = 40,
+QString pageToken = "",
+std::function<void(mail_batch::MessagesList)> completed_callback = nullptr,
+std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr
+);
+
+void GmailRoutes::getNextCacheMessages_AsyncCB(int messagesCount = 40, 
+	QString pageToken = "",
+	std::function<void(mail_batch::MessagesList)> completed_callback,
 	std::function<void(std::unique_ptr<GoogleException>)> failed_callback
 	)
 {
@@ -109,32 +165,30 @@ void GmailRoutes::getCacheMessages_AsyncCB(EDataState state,
 			id_list.push_back(mid);
 			if (completed_callback)
 			{
-				completed_callback(getCacheMessages(state, id_list));
+                mail_batch::MessagesList lst = getCacheMessages(EDataState::snippet, id_list);
+                lst.nextpage = mlist->nextpagetoken();
+				completed_callback(lst);
 			}
-			//id_list.push_back(m.id());
 		}
 	};
 
 	getMessages()->list_AsyncCB(listArg, id_list_completed_callback, failed_callback);
-
-	//return getCacheMessages_Async(st, id_list);
 };
+*/
 
-std::list<std::shared_ptr<mail_batch::MessageData>> GmailRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
-//std::map<QString, std::shared_ptr<mail_batch::MessageData>> GmailRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
+std::unique_ptr<mail_batch::MessagesList> GmailRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
 {
-	//return getCacheMessages_Async(state, id_list)->waitForResultAndRelease();
     return getCacheMessages_Async(state, id_list)->waitForSortedResultListAndRelease();
 };
 
-std::unique_ptr<mail_batch::GMailCacheQueryResult> GmailRoutes::getCacheMessages_Async(EDataState state,
-                                                                                       const std::list<QString>& id_list)
+mail_batch::GMailCacheQueryResult* GmailRoutes::getCacheMessages_Async(EDataState state,
+                                                                       const std::list<QString>& id_list)
 {
     checkCacheObj();
 	return m_GMailCache->query_Async(state, id_list);
 };
 
-std::list<std::shared_ptr<mail_batch::MessageData>> GmailRoutes::getCacheMessages() 
+std::unique_ptr<mail_batch::MessagesList> GmailRoutes::getCacheMessages()
 {
     checkCacheObj();
     return m_GMailCache->cacheData()->waitForSortedResultListAndRelease();
@@ -181,7 +235,7 @@ void GmailRoutes::autotestParDBLoad(EDataState state, const std::list<QString>& 
         return;
     };
 
-    std::unique_ptr<mail_batch::GMailCacheQueryResult> r = getCacheMessages_Async(state, id_list);
+    mail_batch::GMailCacheQueryResult* r = getCacheMessages_Async(state, id_list);
     std::map<QString, std::shared_ptr<mail_batch::MessageData>> res = r->waitForResultAndRelease();
     ApiAutotest::INSTANCE() << QString("loaded/cached %1 messages, mem_cache-hit: %2, db-cache-hit: %3")
         .arg(res.size())
@@ -230,22 +284,42 @@ void GmailRoutes::autotest()
     autotestParDBLoad(EDataState::body, id_list);
     
     int idx = 1;
-    using MSG_LIST = std::list<std::shared_ptr<mail_batch::MessageData>>;
-    MSG_LIST lst = getCacheMessages();
-    for (auto& i : lst)
+    bool print_cache = true;
+    if (print_cache)
     {
-        mail_batch::MessageData* m = i.get();
-        QString s = QString("%1. %2 %3").arg(idx).arg(m->id()).arg(m->snippet());
-        ApiAutotest::INSTANCE() << s;
-        idx++;
-        if (idx > 20)
+        using MSG_LIST = std::list<std::shared_ptr<mail_batch::MessageData>>;
+        std::unique_ptr<mail_batch::MessagesList> lst = getCacheMessages();
+        for (auto& i : lst->messages)
         {
-            ApiAutotest::INSTANCE() << "...";
-            break;
+            mail_batch::MessageData* m = i.get();
+            QString s = QString("%1. %2 %3").arg(idx).arg(m->id()).arg(m->snippet());
+            ApiAutotest::INSTANCE() << s;
+            idx++;
+            if (idx > 20)
+            {
+                ApiAutotest::INSTANCE() << "...";
+                break;
+            }
         }
+        QString s = QString("Total messages %1").arg(lst->messages.size());
+        ApiAutotest::INSTANCE() << s;
     }
-    QString s = QString("Total messages %1").arg(lst.size());
-    ApiAutotest::INSTANCE() << s;
+    //*** check latest emails
+    bool check_email = true;
+    if (check_email)
+    {
+        idx = 1;
+        std::unique_ptr<mail_batch::MessagesList> lst2 = getNextCacheMessages();
+        for (auto& i : lst2->messages)
+        {
+            mail_batch::MessageData* m = i.get();
+            QString s = QString("%1. %2 %3").arg(idx).arg(m->id()).arg(m->snippet());
+            ApiAutotest::INSTANCE() << s;
+            idx++;
+        }
+        QString s = QString("Next(new) messages %1").arg(lst2->messages.size());
+        ApiAutotest::INSTANCE() << s;
+    }
 
     ApiAutotest::INSTANCE().enableRequestLog(true);
 };

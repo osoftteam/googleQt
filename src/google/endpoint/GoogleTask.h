@@ -50,14 +50,14 @@ namespace googleQt{
 
         bool waitForResult()const;
 
-    protected:
-        GoogleBaseTask(ApiEndpoint& ept) :EndpointRunnable(ept) {};
-
         void failed_callback(std::unique_ptr<GoogleException> ex)
         {
             m_failed = std::move(ex);
             notifyOnFinished();
         };
+
+    protected:
+        GoogleBaseTask(ApiEndpoint& ept) :EndpointRunnable(ept) {};
 
     protected:
         std::unique_ptr<GoogleException> m_failed;
@@ -109,13 +109,14 @@ namespace googleQt{
             return res;
         };
 
-    protected:
-        GoogleTask(ApiEndpoint& ept) :GoogleBaseTask(ept) {};
         void completed_callback(std::unique_ptr<RESULT> r)
         {
             m_completed = std::move(r);
             notifyOnFinished();
         };
+
+    protected:
+        GoogleTask(ApiEndpoint& ept) :GoogleBaseTask(ept) {};
     protected:
         std::unique_ptr<RESULT> m_completed;
     };
@@ -131,13 +132,14 @@ namespace googleQt{
         ///also this function will schedule dispose of the Task via deleteLater
         void waitForResultAndRelease();
 
-    protected:
-        GoogleVoidTask(ApiEndpoint& ept) :GoogleBaseTask(ept) {};
         void completed_callback(void)
         {
             m_completed = true;
             notifyOnFinished();
         };
+
+    protected:
+        GoogleVoidTask(ApiEndpoint& ept) :GoogleBaseTask(ept) {};
 
     protected:
         bool m_completed = { false };

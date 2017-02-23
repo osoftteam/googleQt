@@ -260,6 +260,7 @@ void GmailCommands::printMessage(messages::MessageResource* r)
         }
 };
 
+
 void GmailCommands::exportMessageBody(messages::MessageResource* r, QString fileName)
 {
     auto p = r->payload();
@@ -537,6 +538,12 @@ void GmailCommands::print_last_result(QString )
     m_c.printLastResponse();
 };
 
+void GmailCommands::print_user_id(QString )
+{
+    std::cout << m_c.userId();
+};
+
+
 void GmailCommands::get_batch_snippets(QString id_list) 
 {
     std::list<QString> arg_list = split_string(id_list);
@@ -555,7 +562,7 @@ void GmailCommands::get_batch_snippets(QString id_list)
         auto& payload = m->payload();
         auto& header_list = payload.headers();
 
-        std::cout << n << ". " << m->id() << "|";
+        std::cout << n << ". " << m->id() << "|" << m->internaldate() << "|";
         for (auto h : header_list)
         {
             std::cout << h.value() << "|";
@@ -642,11 +649,11 @@ void GmailCommands::get_cache_snippets(QString id_list)
 		return;
 	}
 
-	std::list<std::shared_ptr<mail_batch::MessageData>>mm = m_gm->getCacheMessages(EDataState::snippet, arg_list);
-	std::cout << "loaded from cache: " << mm.size() << std::endl;
+    std::unique_ptr<mail_batch::MessagesList> lst = m_gm->getCacheMessages(EDataState::snippet, arg_list);
+	std::cout << "loaded from cache: " << lst->messages.size() << std::endl;
 
 	int n = 1;
-	for (auto& i : mm)
+	for (auto& i : lst->messages)
 	{
 		mail_batch::MessageData* m = i.get();
 		std::cout << n << ". " << m->id() << "|";
@@ -668,11 +675,11 @@ void GmailCommands::get_cache_details(QString id_list)
 		return;
 	}
 
-	std::list<std::shared_ptr<mail_batch::MessageData>>mm = m_gm->getCacheMessages(EDataState::body, arg_list);
-	std::cout << "loaded from cache: " << mm.size() << std::endl;
+    std::unique_ptr<mail_batch::MessagesList> lst = m_gm->getCacheMessages(EDataState::body, arg_list);
+	std::cout << "loaded from cache: " << lst->messages.size() << std::endl;
 
 	int n = 1;
-	for (auto& i : mm)
+	for (auto& i : lst->messages)
 	{
 		mail_batch::MessageData* m = i.get();
 		std::cout << n << ". " << m->id() << "|";
@@ -685,4 +692,60 @@ void GmailCommands::get_cache_details(QString id_list)
 		std::cout << m->html() << std::endl;
 		n++;
 	}
+};
+
+void GmailCommands::check_email_cache(QString nextToken) 
+{
+    initCache();
+
+    /*
+    std::function<void(mail_batch::MessagesList)> completed_callback = [](mail_batch::MessagesList lst) 
+    {
+        std::cout << "loaded: " << lst.messages.size() << std::endl;
+
+        int n = 1;
+        for (auto& i : lst.messages)
+        {
+            mail_batch::MessageData* m = i.get();
+            std::cout << n << ". " << m->id() << "|";
+            std::cout << m->from() << "|";
+            std::cout << m->subject() << "|";
+            std::cout << m->snippet() << "|" << std::endl;
+            n++;
+        }
+
+        if (!lst.nextpage.isEmpty()) 
+        {
+            std::cout << "nextpage: " << lst.nextpage << std::endl;
+        }
+    };
+
+    std::function<void(std::unique_ptr<GoogleException>)> failed_callback = [](std::unique_ptr<GoogleException> ex)
+    {
+        std::cout << "Exception: " << ex->what() << std::endl;
+    };
+
+    m_gm->getNextCacheMessages_AsyncCB(50, nextToken, completed_callback, failed_callback);
+    */
+
+    try
+        {    
+            std::unique_ptr<mail_batch::MessagesList> lst = m_gm->getNextCacheMessages(50, nextToken);
+            std::cout << "loaded from cache: " << lst->messages.size() << std::endl;
+
+            int n = 1;
+            for (auto& i : lst->messages)
+                {
+                    mail_batch::MessageData* m = i.get();
+                    std::cout << n << ". " << m->id() << "|";
+                    std::cout << m->from() << "|";
+                    std::cout << m->subject() << "|";
+                    std::cout << m->snippet() << "|" << std::endl;
+                    n++;
+                }
+        }
+    catch(GoogleException& e)
+        {
+            std::cout << "Exception: " << e.what() << std::endl;
+        }    
 };

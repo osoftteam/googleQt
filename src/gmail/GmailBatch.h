@@ -11,10 +11,10 @@ namespace googleQt{
 	class GmailRoutes;
 
 	namespace mail_batch{
-        class MesagesReciever
+        class MessagesReceiver
         {
         public:
-            MesagesReciever(GmailRoutes& r, EDataState f) :m_r(r), m_msg_format(f){};
+            MessagesReceiver(GmailRoutes& r, EDataState f) :m_r(r), m_msg_format(f){};
             GoogleTask<messages::MessageResource>* route(QString message_id);
         protected:
             GmailRoutes&    m_r;
@@ -58,15 +58,22 @@ namespace googleQt{
                 qlonglong internalDate);
         };
 
-		class GMailCache;
+        struct MessagesList
+        {
+            std::list<std::shared_ptr<mail_batch::MessageData>> messages;
+            EDataState state;
+            QString    nextpage;
+        };
 
+		class GMailCache;
         class GMailCacheQueryResult: public CacheQueryResult<MessageData>
         {
         public:
             GMailCacheQueryResult(EDataState load, ApiEndpoint& ept, GmailRoutes& r, GMailCache* c);
             void fetchFromCloud_Async(const std::list<QString>& id_list)override;
 
-            std::list<std::shared_ptr<MessageData>> waitForSortedResultListAndRelease();
+            //std::list<std::shared_ptr<MessageData>> waitForSortedResultListAndRelease();
+            std::unique_ptr<MessagesList> waitForSortedResultListAndRelease();
         protected:
             void fetchMessage(messages::MessageResource* m);
 			void loadHeaders(messages::MessageResource* m, QString& from, QString& subject);
@@ -78,7 +85,7 @@ namespace googleQt{
         {
         public:
             GMailCache(ApiEndpoint& ept, GmailRoutes& r);
-            std::unique_ptr<GMailCacheQueryResult> produceCloudResultFetcher(EDataState load, ApiEndpoint& ept)override;
+            GMailCacheQueryResult* produceCloudResultFetcher(EDataState load, ApiEndpoint& ept)override;
         protected:
             GmailRoutes&    m_r;
         };
@@ -89,7 +96,7 @@ namespace googleQt{
             GMailSQLiteStorage(GMailCache* c):m_mem_cache(c){};
             bool init(QString dbPath, QString dbName, QString db_meta_prefix);
             std::list<QString> load(EDataState state, const std::list<QString>& id_list,
-                                    std::unique_ptr<GMailCacheQueryResult>& cr)override;
+                                    GMailCacheQueryResult* cr)override;
             void update(EDataState state, CACHE_QUERY_RESULT_LIST<MessageData>& r)override;
             bool isValid()const override{return m_initialized;};
             void remove(const std::list<QString>& ids2remove)override;
