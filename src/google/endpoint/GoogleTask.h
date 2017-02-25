@@ -15,6 +15,12 @@ namespace googleQt{
     public:
         EndpointRunnable(ApiEndpoint& ept) :m_endpoint(ept) {}
         bool isFinished()const { return m_finished; }
+        virtual bool isCompleted()const = 0;
+        virtual bool isFailed()const { return (m_failed != nullptr); };        
+        bool waitForResult()const;
+
+        GoogleException* error();
+        void failed_callback(std::unique_ptr<GoogleException> ex);        
 
     signals:
         void finished();
@@ -27,44 +33,12 @@ namespace googleQt{
         ApiEndpoint& m_endpoint;
         bool m_finished{ false };
         mutable bool m_in_wait_loop{ false };
-    };
-
-    class GoogleBaseTask : public EndpointRunnable
-    {
-        friend class Endpoint;
-    public:
-        virtual ~GoogleBaseTask() {};
-
-        virtual bool isCompleted()const = 0;
-        virtual bool isFailed()const { return (m_failed != nullptr); };
-
-        GoogleException* error()
-        {
-            GoogleException* rv = nullptr;
-            if (m_failed)
-            {
-                rv = m_failed.get();
-            }
-            return rv;
-        };
-
-        bool waitForResult()const;
-
-        void failed_callback(std::unique_ptr<GoogleException> ex)
-        {
-            m_failed = std::move(ex);
-            notifyOnFinished();
-        };
-
-    protected:
-        GoogleBaseTask(ApiEndpoint& ept) :EndpointRunnable(ept) {};
-
-    protected:
         std::unique_ptr<GoogleException> m_failed;
     };
 
+
     template <class RESULT>
-    class GoogleTask : public GoogleBaseTask
+    class GoogleTask : public EndpointRunnable
     {
         friend class Endpoint;
     public:
@@ -116,12 +90,12 @@ namespace googleQt{
         };
 
     protected:
-        GoogleTask(ApiEndpoint& ept) :GoogleBaseTask(ept) {};
+        GoogleTask(ApiEndpoint& ept) :EndpointRunnable(ept) {};
     protected:
         std::unique_ptr<RESULT> m_completed;
     };
 
-    class GoogleVoidTask : public GoogleBaseTask
+    class GoogleVoidTask : public EndpointRunnable
     {
         friend class Endpoint;
     public:
@@ -139,7 +113,7 @@ namespace googleQt{
         };
 
     protected:
-        GoogleVoidTask(ApiEndpoint& ept) :GoogleBaseTask(ept) {};
+        GoogleVoidTask(ApiEndpoint& ept) :EndpointRunnable(ept) {};
 
     protected:
         bool m_completed = { false };

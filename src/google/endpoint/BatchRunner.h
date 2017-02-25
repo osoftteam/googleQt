@@ -48,37 +48,15 @@ namespace googleQt{
         REQUEST_LIST<ARG_PARAM> m_requests;
     };
 
-    class BatchBaseRunner : public EndpointRunnable
-    {
-    public:
-        BatchBaseRunner(ApiEndpoint& ept):EndpointRunnable(ept)
-        {
-            m_available_concurrent_routes_count = m_max_concurrent_routes_count;
-        }               
-
-    protected:
-        virtual void runSingleRequest() = 0;
-        void afterSingleStepFinished()
-        {
-            m_available_concurrent_routes_count++;
-            m_steps2complete--;
-            runSingleRequest();            
-        }
-        
-    protected:
-        int  m_max_concurrent_routes_count          {4};
-        int  m_available_concurrent_routes_count    {0};
-        int  m_steps2complete                       {0};        
-    };
-
 
     template <class ARG_PARAM, class ROUTER, class RESULT>
-    class BatchRunner: public BatchBaseRunner
+    class BatchRunner: public EndpointRunnable
     {
     public:
         BatchRunner(const std::list<ARG_PARAM>& arg_params, ROUTER* r, ApiEndpoint& ept)
-            :BatchBaseRunner(ept)
+            :EndpointRunnable(ept)
         {
+            m_available_concurrent_routes_count = m_max_concurrent_routes_count;
             m_arg_parameters = arg_params;
             m_router.reset(r);
         }
@@ -115,11 +93,14 @@ namespace googleQt{
             return res;
         }
 
+        bool isCompleted()const override { return m_completed; }
+
     protected:
-        void runSingleRequest()override 
+        void runSingleRequest() 
         {
             if(m_steps2complete <= 0)
                 {
+                    m_completed = true;
                     notifyOnFinished();
                 }
             
@@ -153,10 +134,21 @@ namespace googleQt{
             }
         }
 
+        void afterSingleStepFinished()
+        {
+            m_available_concurrent_routes_count++;
+            m_steps2complete--;
+            runSingleRequest();
+        }
+
     protected:
         std::list<ARG_PARAM>            m_arg_parameters;
         std::unique_ptr<ROUTER>         m_router        {nullptr};
         std::unique_ptr<BatchResult<ARG_PARAM,RESULT> > m_result;
+        int  m_max_concurrent_routes_count{ 4 };
+        int  m_available_concurrent_routes_count{ 0 };
+        int  m_steps2complete{ 0 };
+        bool m_completed{false};
     };
 
 };

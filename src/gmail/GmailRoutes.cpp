@@ -81,18 +81,16 @@ BatchRunner<QString,
     return r;
 };
 
-void GmailRoutes::checkCacheObj()
+void GmailRoutes::ensureCache()
 {
     if (!m_GMailCache) {
-        m_GMailCache.reset(new mail_batch::GMailCache(*m_endpoint, *this));
+        m_GMailCache.reset(new mail_batch::GMailCache(*m_endpoint));
     }
 };
 
-GoogleTask<mail_batch::MessagesList>* GmailRoutes::getNextCacheMessages_Async(int messagesCount /*= 40*/,
-    QString pageToken /*= ""*/)
+mail_batch::GMailCacheQueryResult* GmailRoutes::getNextCacheMessages_Async(int messagesCount /*= 40*/, QString pageToken /*= ""*/)
 {
-
-    GoogleTask<mail_batch::MessagesList>* t = m_endpoint->produceTask<mail_batch::MessagesList>();
+    mail_batch::GMailCacheQueryResult* rfetcher = newResultFetcher(EDataState::snippet);
 
     gmail::ListArg listArg;
     listArg.setMaxResults(messagesCount);
@@ -105,100 +103,63 @@ GoogleTask<mail_batch::MessagesList>* GmailRoutes::getNextCacheMessages_Async(in
         for (auto& m : mlist->messages())
         {
             QString mid = m.id();
-            id_list.push_back(mid);
-            try
-            {
-                std::unique_ptr<mail_batch::MessagesList> lst = std::move(getCacheMessages(EDataState::snippet, id_list));
-                lst->nextpage = mlist->nextpagetoken();
-                t->completed_callback(std::move(lst));
-            }
-            catch (GoogleException& e)
-            {
-                std::unique_ptr<GoogleException> ex(new GoogleException(e));
-                t->failed_callback(std::move(ex));
-            }
+            id_list.push_back(mid);            
         }
+        getCacheMessages_Async(EDataState::snippet, id_list, rfetcher);
     };
-
+    
+    
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback =
         [=](std::unique_ptr<GoogleException> ex)
     {
-        t->failed_callback(std::move(ex));
-    };
-
+        rfetcher->failed_callback(std::move(ex));
+    };    
 
     getMessages()->list_AsyncCB(listArg, id_list_completed_callback, failed_callback);
 
-    return t;
+    return rfetcher;
 };
 
 std::unique_ptr<mail_batch::MessagesList> GmailRoutes::getNextCacheMessages(int messagesCount /*= 40*/, QString pageToken /*= ""*/)
 {
-    return getNextCacheMessages_Async(messagesCount, pageToken)->waitForResultAndRelease();
+    return getNextCacheMessages_Async(messagesCount, pageToken)->waitForSortedResultListAndRelease();
 };
-
-/*
-
-void getNextCacheMessages_AsyncCB(int messagesCount = 40,
-QString pageToken = "",
-std::function<void(mail_batch::MessagesList)> completed_callback = nullptr,
-std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr
-);
-
-void GmailRoutes::getNextCacheMessages_AsyncCB(int messagesCount = 40, 
-	QString pageToken = "",
-	std::function<void(mail_batch::MessagesList)> completed_callback,
-	std::function<void(std::unique_ptr<GoogleException>)> failed_callback
-	)
-{
-	gmail::ListArg listArg;
-	listArg.setMaxResults(messagesCount);
-	listArg.setPageToken(pageToken);	
-
-	std::function<void(std::unique_ptr<messages::MessageListRes>)> id_list_completed_callback = 
-		[=](std::unique_ptr<messages::MessageListRes> mlist)
-	{
-		std::list<QString> id_list;
-		for (auto& m : mlist->messages())
-		{
-			QString mid = m.id();
-			id_list.push_back(mid);
-			if (completed_callback)
-			{
-                mail_batch::MessagesList lst = getCacheMessages(EDataState::snippet, id_list);
-                lst.nextpage = mlist->nextpagetoken();
-				completed_callback(lst);
-			}
-		}
-	};
-
-	getMessages()->list_AsyncCB(listArg, id_list_completed_callback, failed_callback);
-};
-*/
 
 std::unique_ptr<mail_batch::MessagesList> GmailRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
 {
     return getCacheMessages_Async(state, id_list)->waitForSortedResultListAndRelease();
 };
 
-mail_batch::GMailCacheQueryResult* GmailRoutes::getCacheMessages_Async(EDataState state,
-                                                                       const std::list<QString>& id_list)
+mail_batch::GMailCacheQueryResult* GmailRoutes::newResultFetcher(EDataState state)
 {
-    checkCacheObj();
-	return m_GMailCache->query_Async(state, id_list);
+    mail_batch::GMailCacheQueryResult* rfetcher = new mail_batch::GMailCacheQueryResult(state, *m_endpoint, *this, m_GMailCache.get());
+    return rfetcher;
 };
 
-std::unique_ptr<mail_batch::MessagesList> GmailRoutes::getCacheMessages()
+mail_batch::GMailCacheQueryResult* GmailRoutes::getCacheMessages_Async(EDataState state,
+                                                                       const std::list<QString>& id_list,
+                                                                        mail_batch::GMailCacheQueryResult* rfetcher /*= nullptr*/)
 {
-    checkCacheObj();
-    return m_GMailCache->cacheData()->waitForSortedResultListAndRelease();
+    ensureCache();
+    if (!rfetcher)
+    {
+        rfetcher = newResultFetcher(state);
+    }    
+    m_GMailCache->query_Async(state, id_list, rfetcher);
+    return rfetcher;
+};
+
+std::unique_ptr<mail_batch::MessagesList> GmailRoutes::getCacheMessages(int numberOfMessages)
+{
+    ensureCache();
+    mail_batch::GMailCacheQueryResult* rfetcher = newResultFetcher(EDataState::snippet);
+    m_GMailCache->cacheData(rfetcher, numberOfMessages);
+    return rfetcher->waitForSortedResultListAndRelease();
 };
 
 bool GmailRoutes::setupSQLiteCache(QString dbPath, QString dbName /*= "googleqt"*/, QString dbprefix /*= "api"*/) 
 {
-    if (!m_GMailCache) {
-        m_GMailCache.reset(new mail_batch::GMailCache(*m_endpoint, *this));
-    }
+    ensureCache();
 
     if (m_GMailCache->hasLocalPersistentStorate()) 
     {
@@ -262,15 +223,15 @@ void GmailRoutes::autotest()
 
     std::function<void(void)>deleteFirst10 = [=]() 
     {
-        std::list<QString> list2remove;
+        std::set<QString> set2remove;
         for (auto j = id_list.begin(); j != id_list.end(); j++)
         {
-            list2remove.push_back(*j);
-            if (list2remove.size() >= 10)
+            set2remove.insert(*j);
+            if (set2remove.size() >= 10)
                 break;
         }
 
-        m_GMailCache->persistent_clear(list2remove);
+        m_GMailCache->persistent_clear(set2remove);
     };
 
     deleteFirst10();
@@ -288,7 +249,7 @@ void GmailRoutes::autotest()
     if (print_cache)
     {
         using MSG_LIST = std::list<std::shared_ptr<mail_batch::MessageData>>;
-        std::unique_ptr<mail_batch::MessagesList> lst = getCacheMessages();
+        std::unique_ptr<mail_batch::MessagesList> lst = getCacheMessages(-1);
         for (auto& i : lst->messages)
         {
             mail_batch::MessageData* m = i.get();

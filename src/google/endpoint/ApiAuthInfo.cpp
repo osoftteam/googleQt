@@ -68,7 +68,9 @@ bool ApiAuthInfo::updateToken(const QJsonObject& js_in)
     int expires_in = js_in["expires_in"].toString().toInt();
     m_expires_in = expires_in;
     m_expire_time = QDateTime::currentDateTime().addSecs(expires_in).toString(Qt::ISODate);
-    m_email = js_in["email"].toString();
+    //do don't update email - it will be empty on refresh
+    //email/userid is something that is setup on client side
+    //m_email = js_in["email"].toString();
     
     if(!m_token_file.isEmpty())
         {

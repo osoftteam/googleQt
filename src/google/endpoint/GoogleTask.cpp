@@ -19,8 +19,7 @@ void EndpointRunnable::waitUntillFinishedOrCancelled()
     m_endpoint.runEventsLoop();
 };
 
-///GoogleBaseTask
-bool GoogleBaseTask::waitForResult()const
+bool EndpointRunnable::waitForResult()const
 {
     if (!isCompleted() && !isFailed())
     {
@@ -31,6 +30,25 @@ bool GoogleBaseTask::waitForResult()const
     return isCompleted();
 };
 
+GoogleException* EndpointRunnable::error()
+{
+    GoogleException* rv = nullptr;
+    if (m_failed)
+    {
+        rv = m_failed.get();
+    }
+    return rv;
+};
+
+void EndpointRunnable::failed_callback(std::unique_ptr<GoogleException> ex)
+{
+    m_failed = std::move(ex);
+    notifyOnFinished();
+};
+
+/**
+    GoogleVoidTask
+*/
 void GoogleVoidTask::waitForResultAndRelease()
 {
     if (!isCompleted() && !isFailed())

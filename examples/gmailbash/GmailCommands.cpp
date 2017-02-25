@@ -626,7 +626,7 @@ void GmailCommands::initCache()
     if(!m_cache_initialized)
         {
             QString dbPath = "gm-cache.sqlite";
-            if(m_gm->setupSQLiteCache(dbPath))
+            if(!m_gm->setupSQLiteCache(dbPath))
                 {
                     std::cout << "Failed to initialize SQLite cache database: " << std::endl;
                     return;
@@ -697,36 +697,6 @@ void GmailCommands::get_cache_details(QString id_list)
 void GmailCommands::check_email_cache(QString nextToken) 
 {
     initCache();
-
-    /*
-    std::function<void(mail_batch::MessagesList)> completed_callback = [](mail_batch::MessagesList lst) 
-    {
-        std::cout << "loaded: " << lst.messages.size() << std::endl;
-
-        int n = 1;
-        for (auto& i : lst.messages)
-        {
-            mail_batch::MessageData* m = i.get();
-            std::cout << n << ". " << m->id() << "|";
-            std::cout << m->from() << "|";
-            std::cout << m->subject() << "|";
-            std::cout << m->snippet() << "|" << std::endl;
-            n++;
-        }
-
-        if (!lst.nextpage.isEmpty()) 
-        {
-            std::cout << "nextpage: " << lst.nextpage << std::endl;
-        }
-    };
-
-    std::function<void(std::unique_ptr<GoogleException>)> failed_callback = [](std::unique_ptr<GoogleException> ex)
-    {
-        std::cout << "Exception: " << ex->what() << std::endl;
-    };
-
-    m_gm->getNextCacheMessages_AsyncCB(50, nextToken, completed_callback, failed_callback);
-    */
 
     try
         {    

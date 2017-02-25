@@ -25,16 +25,10 @@ GoogleTask<messages::MessageResource>* mail_batch::MessagesReceiver::route(QStri
 }
 
 ///GMailCache
-mail_batch::GMailCache::GMailCache(ApiEndpoint& ept, GmailRoutes& r)
-	:GoogleCache<MessageData, GMailCacheQueryResult>(ept), m_r(r)
+mail_batch::GMailCache::GMailCache(ApiEndpoint& ept)
+	:GoogleCache<MessageData, GMailCacheQueryResult>(ept)
 {
 
-};
-
-mail_batch::GMailCacheQueryResult* mail_batch::GMailCache::produceCloudResultFetcher(EDataState state, ApiEndpoint& ept)
-{
-	mail_batch::GMailCacheQueryResult* rv = new mail_batch::GMailCacheQueryResult(state, ept, m_r, this);
-	return rv;
 };
 
 ///MessageData
@@ -257,6 +251,7 @@ std::unique_ptr<mail_batch::MessagesList> mail_batch::GMailCacheQueryResult::wai
     m_result_list.sort(compare_internalDate);
     std::unique_ptr<mail_batch::MessagesList> rv(new mail_batch::MessagesList);
     rv->messages = std::move(m_result_list);
+    rv->messages_map = std::move(m_result);
     rv->state = m_state;
 
     deleteLater();
@@ -483,8 +478,14 @@ void mail_batch::GMailSQLiteStorage::update(EDataState state, CACHE_QUERY_RESULT
     }
 };
 
-void mail_batch::GMailSQLiteStorage::remove(const std::list<QString>& ids2remove) 
+void mail_batch::GMailSQLiteStorage::remove(const std::set<QString>& set_of_ids2remove) 
 {
+    std::list<QString> ids2remove;
+    for (auto& i : set_of_ids2remove) 
+    {
+        ids2remove.push_back(i);
+    }
+
     std::function<bool(const std::list<QString>& lst)> removeSublist = [&](const std::list<QString>& lst) -> bool
     {
         QString comma_ids = slist2commalist_decorated(lst);

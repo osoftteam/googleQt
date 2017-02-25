@@ -149,8 +149,8 @@ namespace googleQt {
 
 	template<class T>
 	bool chunk_list_execution(const std::list<T>& inputList, 
-        std::function<bool (const std::list<T>&)> chank_processor, 
-        size_t chank_size = 40)
+        std::function<bool (const std::list<T>&)> chunk_processor, 
+        size_t chunk_size = 40)
 	{
 		typedef typename std::list<T>::const_iterator ITR;
 		std::list<T> subList;
@@ -158,16 +158,16 @@ namespace googleQt {
             {
                 T o = *i;
                 subList.push_back(o);
-                if (subList.size() == chank_size)
+                if (subList.size() == chunk_size)
                     {
-                        if (!chank_processor(subList))
+                        if (!chunk_processor(subList))
                             return false;
                         subList.clear();
                     }
             }
 		if (!subList.empty())
             {
-                if (!chank_processor(subList))
+                if (!chunk_processor(subList))
                     return false;
             }
 		return true;

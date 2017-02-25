@@ -61,6 +61,7 @@ namespace googleQt{
         struct MessagesList
         {
             std::list<std::shared_ptr<mail_batch::MessageData>> messages;
+            std::map<QString, std::shared_ptr<mail_batch::MessageData>> messages_map;
             EDataState state;
             QString    nextpage;
         };
@@ -72,7 +73,6 @@ namespace googleQt{
             GMailCacheQueryResult(EDataState load, ApiEndpoint& ept, GmailRoutes& r, GMailCache* c);
             void fetchFromCloud_Async(const std::list<QString>& id_list)override;
 
-            //std::list<std::shared_ptr<MessageData>> waitForSortedResultListAndRelease();
             std::unique_ptr<MessagesList> waitForSortedResultListAndRelease();
         protected:
             void fetchMessage(messages::MessageResource* m);
@@ -84,10 +84,8 @@ namespace googleQt{
         class GMailCache : public GoogleCache<MessageData, GMailCacheQueryResult>
         {
         public:
-            GMailCache(ApiEndpoint& ept, GmailRoutes& r);
-            GMailCacheQueryResult* produceCloudResultFetcher(EDataState load, ApiEndpoint& ept)override;
-        protected:
-            GmailRoutes&    m_r;
+            GMailCache(ApiEndpoint& ept);
+            //void persistent_clear(const std::set<QString>& ids2delete) override;
         };
 
         class GMailSQLiteStorage: public LocalPersistentStorage<MessageData, GMailCacheQueryResult>
@@ -99,7 +97,7 @@ namespace googleQt{
                                     GMailCacheQueryResult* cr)override;
             void update(EDataState state, CACHE_QUERY_RESULT_LIST<MessageData>& r)override;
             bool isValid()const override{return m_initialized;};
-            void remove(const std::list<QString>& ids2remove)override;
+            void remove(const std::set<QString>& ids2remove)override;
         protected:
             bool execQuery(QString sql);
             QSqlQuery* prepareQuery(QString sql);
