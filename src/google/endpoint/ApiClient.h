@@ -14,6 +14,7 @@ namespace googleQt{
         QString getToken()const;
         QString getAppKey()const;
         QString userId()const;
+        void setUserId(QString email);
         virtual bool refreshToken() = 0;        
     signals:
         void downloadProgress(qint64 bytesProcessed, qint64 total);

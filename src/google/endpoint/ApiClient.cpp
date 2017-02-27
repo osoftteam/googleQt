@@ -22,3 +22,8 @@ QString ApiClient::userId()const
 {
     return m_auth->getEmail();
 };
+
+void ApiClient::setUserId(QString email)
+{
+    m_auth->setEmail(email);
+};

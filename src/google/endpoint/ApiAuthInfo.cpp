@@ -38,7 +38,6 @@ bool ApiAuthInfo::storeToFile(QString path)const
     js["expires_in"] = m_expires_in;
     js["expire_time"] = m_expire_time;
     js["update_time"] = QDateTime::currentDateTime().toString(Qt::ISODate);;
-    js["email"] = m_email;
     
     if(!storeJsonToFile(path, js))
         return false;
@@ -70,7 +69,6 @@ bool ApiAuthInfo::updateToken(const QJsonObject& js_in)
     m_expire_time = QDateTime::currentDateTime().addSecs(expires_in).toString(Qt::ISODate);
     //do don't update email - it will be empty on refresh
     //email/userid is something that is setup on client side
-    //m_email = js_in["email"].toString();
     
     if(!m_token_file.isEmpty())
         {
