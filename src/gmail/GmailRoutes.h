@@ -43,8 +43,8 @@ namespace googleQt{
     BatchRunner<QString, mail_batch::MessagesReceiver, messages::MessageResource>* getBatchMessages_Async(EDataState, const std::list<QString>& id_list);
 
 	/// check for new emails - get top messagesCount messages and update cache
-    std::unique_ptr<mail_batch::MessagesList> getNextCacheMessages(int messagesCount = 40, QString pageToken = "");
-    mail_batch::GMailCacheQueryResult* getNextCacheMessages_Async(int messagesCount = 40, QString pageToken = "");
+    std::unique_ptr<mail_batch::MessagesList> getNextCacheMessages(int messagesCount = 40, QString pageToken = "", std::set<QString>* msg2skip = nullptr);
+    mail_batch::GMailCacheQueryResult* getNextCacheMessages_Async(int messagesCount = 40, QString pageToken = "", std::set<QString>* msg2skip = nullptr);
 
     /// load emails by ID-list while updating local cache
     std::unique_ptr<mail_batch::MessagesList> getCacheMessages(EDataState, const std::list<QString>& id_list);    

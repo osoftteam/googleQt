@@ -116,7 +116,7 @@ namespace googleQt {
 
         bool isCompleted()const override { return m_completed; }
 
-        void add(QString id, std::shared_ptr<O> obj) { m_result[id] = obj; m_result_list.push_back(obj); };
+        void add(std::shared_ptr<O> obj) { m_result[obj->id()] = obj; m_result_list.push_back(obj); };
         void inc_mem_cache_hit_count() { m_mem_cache_hit_count++; }
         void set_db_cache_hit_count(size_t val) { m_db_cache_hit_count = val; }
         size_t mem_cache_hit_count()const { return m_mem_cache_hit_count; }
@@ -242,7 +242,7 @@ namespace googleQt {
 //                qDebug() << "check4" << id;
                 if (obj && obj->isLoaded(load))
                 {
-                    rfetcher->add(id, obj);
+                    rfetcher->add(obj);
                     rfetcher->inc_mem_cache_hit_count();
                 }
                 else 
@@ -276,7 +276,7 @@ namespace googleQt {
             int count = 0;
             for (auto& i : m_order_cache)
             {
-                rfetcher->add(i->id(), i);
+                rfetcher->add(i);
                 if (number2load > 0)
                 {
                     if (++count >= number2load)

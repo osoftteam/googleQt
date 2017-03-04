@@ -88,7 +88,9 @@ void GmailRoutes::ensureCache()
     }
 };
 
-mail_batch::GMailCacheQueryResult* GmailRoutes::getNextCacheMessages_Async(int messagesCount /*= 40*/, QString pageToken /*= ""*/)
+mail_batch::GMailCacheQueryResult* GmailRoutes::getNextCacheMessages_Async(int messagesCount /*= 40*/, 
+    QString pageToken /*= ""*/, 
+    std::set<QString>* msg2skip /*= nullptr*/)
 {
     mail_batch::GMailCacheQueryResult* rfetcher = newResultFetcher(EDataState::snippet);
 
@@ -102,8 +104,11 @@ mail_batch::GMailCacheQueryResult* GmailRoutes::getNextCacheMessages_Async(int m
         std::list<QString> id_list;
         for (auto& m : mlist->messages())
         {
-            QString mid = m.id();
-            id_list.push_back(mid);            
+            bool skip_msg = (msg2skip != nullptr && msg2skip->find(m.id()) != msg2skip->end());
+            if (!skip_msg)
+            {
+                id_list.push_back(m.id());
+            }
         }
         getCacheMessages_Async(EDataState::snippet, id_list, rfetcher);
     };
@@ -120,9 +125,11 @@ mail_batch::GMailCacheQueryResult* GmailRoutes::getNextCacheMessages_Async(int m
     return rfetcher;
 };
 
-std::unique_ptr<mail_batch::MessagesList> GmailRoutes::getNextCacheMessages(int messagesCount /*= 40*/, QString pageToken /*= ""*/)
+std::unique_ptr<mail_batch::MessagesList> GmailRoutes::getNextCacheMessages(int messagesCount /*= 40*/, 
+    QString pageToken /*= ""*/,
+    std::set<QString>* msg2skip /*= nullptr*/)
 {
-    return getNextCacheMessages_Async(messagesCount, pageToken)->waitForSortedResultListAndRelease();
+    return getNextCacheMessages_Async(messagesCount, pageToken, msg2skip)->waitForSortedResultListAndRelease();
 };
 
 std::unique_ptr<mail_batch::MessagesList> GmailRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)

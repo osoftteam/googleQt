@@ -171,7 +171,8 @@ void mail_batch::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
                 QString from, to, subject;
 				loadHeaders(m, from, subject);
 				std::shared_ptr<MessageData> md = std::make_shared<MessageData>(m->id(), from, subject, m->snippet(), m->internaldate());
-                m_result[m->id()] = md;
+                add(md);
+                //m_result[m->id()] = md;
             }break;
         case googleQt::EDataState::body:
             {
@@ -216,7 +217,8 @@ void mail_batch::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
 						loadHeaders(m, from, subject);
                         qDebug() << m->id() << from << subject;
 						std::shared_ptr<MessageData> md = std::make_shared<MessageData>(m->id(), from, subject, m->snippet(), m->internaldate());
-						m_result[m->id()] = md;
+                        add(md);
+						//m_result[m->id()] = md;
 						md->updateBody(plain_text, html_test);
                     }
                 else
@@ -364,7 +366,7 @@ std::list<QString> mail_batch::GMailSQLiteStorage::load(EDataState state,
                             cache_avail = m_mem_cache->mem_insert(md->id(), md);
                         }
                             db_loaded.insert(md->id());
-                            cr->add(md->id(), md);
+                            cr->add(md);
                         }
                 }
             return true;
