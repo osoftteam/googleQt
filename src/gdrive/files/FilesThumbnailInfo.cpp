@@ -59,12 +59,13 @@ std::unique_ptr<ThumbnailInfo>  ThumbnailInfo::factory::create(const QJsonObject
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<ThumbnailInfo> ThumbnailInfo::EXAMPLE(int context_index){
+std::unique_ptr<ThumbnailInfo> ThumbnailInfo::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<ThumbnailInfo> rv(new ThumbnailInfo);
-    rv->m_image = QByteArray("AUTOTEST-DATA").toBase64();
+    rv->m_image = ApiAutotest::INSTANCE().generateData("files::ThumbnailInfo", context_index, parent_context_index);
     rv->m_mimeType = QString("mimeType_%1").arg(example_idx);
     return rv;
 }

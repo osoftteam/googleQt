@@ -31,9 +31,9 @@ void LabelResource::toJson(QJsonObject& js)const{
         js["labelListVisibility"] = QString(m_labelListVisibility);
     if(!m_type.isEmpty())
         js["type"] = QString(m_type);
-    js["messagesTotal"] = m_messagesTotal;
-    js["messagesUnread"] = m_messagesUnread;
-    js["threadsTotal"] = m_threadsTotal;
+    js["messagesTotal"] = QString("%1").arg(m_messagesTotal);
+    js["messagesUnread"] = QString("%1").arg(m_messagesUnread);
+    js["threadsTotal"] = QString("%1").arg(m_threadsTotal);
 }
 
 void LabelResource::fromJson(const QJsonObject& js){
@@ -43,9 +43,9 @@ void LabelResource::fromJson(const QJsonObject& js){
     m_messageListVisibility = js["messageListVisibility"].toString();
     m_labelListVisibility = js["labelListVisibility"].toString();
     m_type = js["type"].toString();
-    m_messagesTotal = js["messagesTotal"].toVariant().toInt();
-    m_messagesUnread = js["messagesUnread"].toVariant().toInt();
-    m_threadsTotal = js["threadsTotal"].toVariant().toInt();
+    m_messagesTotal = js["messagesTotal"].toVariant().toString().toULongLong();
+    m_messagesUnread = js["messagesUnread"].toVariant().toString().toULongLong();
+    m_threadsTotal = js["threadsTotal"].toVariant().toString().toULongLong();
 }
 
 QString LabelResource::toString(bool multiline)const
@@ -75,8 +75,9 @@ std::unique_ptr<LabelResource>  LabelResource::factory::create(const QJsonObject
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<LabelResource> LabelResource::EXAMPLE(int context_index){
+std::unique_ptr<LabelResource> LabelResource::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<LabelResource> rv(new LabelResource);
@@ -85,9 +86,9 @@ std::unique_ptr<LabelResource> LabelResource::EXAMPLE(int context_index){
     rv->m_messageListVisibility = QString("messageListVisibility_%1").arg(example_idx);
     rv->m_labelListVisibility = QString("labelListVisibility_%1").arg(example_idx);
     rv->m_type = QString("type_%1").arg(example_idx);
-    rv->m_messagesTotal = 6;
-    rv->m_messagesUnread = 7;
-    rv->m_threadsTotal = 8;
+    rv->m_messagesTotal = 6 + example_idx;
+    rv->m_messagesUnread = 7 + example_idx;
+    rv->m_threadsTotal = 8 + example_idx;
     return rv;
 }
 #endif //API_QT_AUTOTEST

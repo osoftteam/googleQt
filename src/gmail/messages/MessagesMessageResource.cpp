@@ -28,10 +28,10 @@ void MessageResource::toJson(QJsonObject& js)const{
     js["labelIds"] = ingrl_list2jsonarray(m_labelIds);
     if(!m_snippet.isEmpty())
         js["snippet"] = QString(m_snippet);
-    js["historyId"] = m_historyId;
-    js["internalDate"] = m_internalDate;
+    js["historyId"] = QString("%1").arg(m_historyId);
+    js["internalDate"] = QString("%1").arg(m_internalDate);
     js["payload"] = (QJsonObject)m_payload;
-    js["sizeEstimate"] = m_sizeEstimate;
+    js["sizeEstimate"] = QString("%1").arg(m_sizeEstimate);
     js["raw"] = m_raw.constData();
 }
 
@@ -41,10 +41,10 @@ void MessageResource::fromJson(const QJsonObject& js){
     m_threadId = js["threadId"].toString();
     jsonarray2ingrl_list(js["labelIds"].toArray(), m_labelIds);
     m_snippet = js["snippet"].toString();
-    m_historyId = js["historyId"].toVariant().toInt();
-    m_internalDate = js["internalDate"].toVariant().toInt();
+    m_historyId = js["historyId"].toVariant().toString().toULongLong();
+    m_internalDate = js["internalDate"].toVariant().toString().toULongLong();
     m_payload.fromJson(js["payload"].toObject());
-    m_sizeEstimate = js["sizeEstimate"].toVariant().toInt();
+    m_sizeEstimate = js["sizeEstimate"].toVariant().toString().toULongLong();
     m_raw = js["raw"].toVariant().toByteArray();
 }
 
@@ -75,8 +75,9 @@ std::unique_ptr<MessageResource>  MessageResource::factory::create(const QJsonOb
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<MessageResource> MessageResource::EXAMPLE(int context_index){
+std::unique_ptr<MessageResource> MessageResource::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<MessageResource> rv(new MessageResource);
@@ -87,11 +88,11 @@ std::unique_ptr<MessageResource> MessageResource::EXAMPLE(int context_index){
         rv->m_labelIds.push_back(QString("_%1_%2").arg(i).arg(example_idx));
     }
     rv->m_snippet = QString("snippet_%1").arg(example_idx);
-    rv->m_historyId = 5;
-    rv->m_internalDate = 6;
-    rv->m_payload = *(messages::MessagePayload::EXAMPLE(0).get());
-    rv->m_sizeEstimate = 8;
-    rv->m_raw = QByteArray("AUTOTEST-DATA").toBase64();
+    rv->m_historyId = 5 + example_idx;
+    rv->m_internalDate = 6 + example_idx;
+    rv->m_payload = *(messages::MessagePayload::EXAMPLE(0, context_index).get());
+    rv->m_sizeEstimate = 8 + example_idx;
+    rv->m_raw = ApiAutotest::INSTANCE().generateData("messages::MessageResource", context_index, parent_context_index);
     return rv;
 }
 #endif //API_QT_AUTOTEST

@@ -26,6 +26,7 @@ namespace googleQt{
         ApiAutotest& operator << (const QNetworkRequest & req);
 
         void prepareAutoTestObj(const char* context_class_name, const char* class_name, void* p, int idx, int context_index);
+		QByteArray generateData(const char* context_class_name, int context_index, int parent_context_index);
         void logRequest(QString req);
         void enableRequestLog(bool val) { m_request_log_enabled = val; };
         void addId(QString class_name, QString id);

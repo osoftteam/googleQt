@@ -45,20 +45,20 @@ namespace about{
             /**
                 The usage by all files in Google Drive.
             */
-        qint64 usageindrive()const{return m_usageInDrive;};
-        StorageQuota& setUsageindrive(const qint64& arg){m_usageInDrive=arg;return *this;};
+        quint64 usageindrive()const{return m_usageInDrive;};
+        StorageQuota& setUsageindrive(const quint64& arg){m_usageInDrive=arg;return *this;};
 
             /**
                 The usage by trashed files in Google Drive.
             */
-        qint64 usageindrivetrash()const{return m_usageInDriveTrash;};
-        StorageQuota& setUsageindrivetrash(const qint64& arg){m_usageInDriveTrash=arg;return *this;};
+        quint64 usageindrivetrash()const{return m_usageInDriveTrash;};
+        StorageQuota& setUsageindrivetrash(const quint64& arg){m_usageInDriveTrash=arg;return *this;};
 
             /**
                 The maximum upload size in bytes.
             */
-        qint64 maxuploadsize()const{return m_maxUploadSize;};
-        StorageQuota& setMaxuploadsize(const qint64& arg){m_maxUploadSize=arg;return *this;};
+        quint64 maxuploadsize()const{return m_maxUploadSize;};
+        StorageQuota& setMaxuploadsize(const quint64& arg){m_maxUploadSize=arg;return *this;};
 
             /**
                 Whether the user has installed the requesting app.
@@ -81,7 +81,7 @@ namespace about{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<StorageQuota> EXAMPLE(int context_index);
+        static std::unique_ptr<StorageQuota> EXAMPLE(int context_index, int parent_context_index);
         #endif //API_QT_AUTOTEST
 
 
@@ -100,17 +100,17 @@ namespace about{
             /**
                 The usage by all files in Google Drive.
             */
-        qint64 m_usageInDrive = {0};
+        quint64 m_usageInDrive = {0};
 
             /**
                 The usage by trashed files in Google Drive.
             */
-        qint64 m_usageInDriveTrash = {0};
+        quint64 m_usageInDriveTrash = {0};
 
             /**
                 The maximum upload size in bytes.
             */
-        qint64 m_maxUploadSize = {0};
+        quint64 m_maxUploadSize = {0};
 
             /**
                 Whether the user has installed the requesting app.

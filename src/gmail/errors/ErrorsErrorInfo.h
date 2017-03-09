@@ -33,8 +33,8 @@ namespace errors{
             /**
                 HTTP response code
             */
-        qint64 code()const{return m_code;};
-        ErrorInfo& setCode(const qint64& arg){m_code=arg;return *this;};
+        quint64 code()const{return m_code;};
+        ErrorInfo& setCode(const quint64& arg){m_code=arg;return *this;};
 
             /**
                 Details of the error.
@@ -57,7 +57,7 @@ namespace errors{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<ErrorInfo> EXAMPLE(int context_index);
+        static std::unique_ptr<ErrorInfo> EXAMPLE(int context_index, int parent_context_index);
         #endif //API_QT_AUTOTEST
 
 
@@ -70,7 +70,7 @@ namespace errors{
             /**
                 HTTP response code
             */
-        qint64 m_code = {0};
+        quint64 m_code = {0};
 
             /**
                 Details of the error.

@@ -86,6 +86,48 @@ void ApiAutotest::prepareAutoTestObj(const char* context_class_name,
     }
 };
 
+QByteArray ApiAutotest::generateData(const char* context_class_name, int context_index, int parent_context_index)
+{
+	Q_UNUSED(context_index);
+
+	QByteArray rv = QByteArray("AUTOTEST-DATA").toBase64();
+	if (strcmp(context_class_name, "messages::MessagePartBody") == 0)
+	{
+		static int ref_num = 0;
+		ref_num++;
+
+		static const char* sample_html = "<p><strong>ref# %1</strong></p>\
+			<p>Mr.M.Leaf<br / >Chief of Syrup Production<br / >Old Sticky Pancake Company<br / >\
+			456 Maple Lane<br / >Forest, ON 7W8 9Y0<br / ><br / >Dear Mr.Leaf:<br / ><br / >\
+			Let me begin by thanking you for your past contributions to our Little League baseball team.\
+			Your sponsorship aided in the purchase of ten full uniforms and several pieces of baseball equipment \
+			for last year's season.<br /><br />Next month, our company is planning an employee appreciation pancake \
+			breakfast honoring retired employees for their past years of service and present employees for their \
+			loyalty and dedication in spite of the current difficult economic conditions.<br /><br />\
+			We would like to place an order with your company for 25 pounds of pancake mix and five gallons \
+			of maple syrup. We hope you will be able to provide these products in the bulk quantities \
+			we require.<br /><br />As you are a committed corporate sponsor and long-time associate, \
+			we hope that you will be able to join us for breakfast on December 12, 2016.<br /><br />\
+			Respectfully yours,<br /><br />&nbsp;<br /><br />Derek Jeter<br />\
+			https://www.scribendi.com/advice/formal_letter_example.en.html</p>";
+
+		QString s;
+		if (parent_context_index == 0)
+		{
+			QString tmp = sample_html;
+			tmp.remove(QRegExp("<[^>]*>"));
+			s = QString(tmp).arg(ref_num);
+		}
+		else if (parent_context_index == 1)
+		{
+			s = QString(sample_html).arg(ref_num);
+		}
+
+		rv = QByteArray(s.toStdString().c_str()).toBase64(QByteArray::Base64UrlEncoding);
+	}
+	return rv;
+};
+
 void ApiAutotest::logRequest(QString req) 
 {
     if (m_request_log_enabled)

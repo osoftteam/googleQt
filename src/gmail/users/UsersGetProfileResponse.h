@@ -33,20 +33,20 @@ namespace users{
             /**
                 The total number of messages in the mailbox.
             */
-        qint64 messagestotal()const{return m_messagesTotal;};
-        GetProfileResponse& setMessagestotal(const qint64& arg){m_messagesTotal=arg;return *this;};
+        quint64 messagestotal()const{return m_messagesTotal;};
+        GetProfileResponse& setMessagestotal(const quint64& arg){m_messagesTotal=arg;return *this;};
 
             /**
                 The total number of threads in the mailbox.
             */
-        qint64 threadstotal()const{return m_threadsTotal;};
-        GetProfileResponse& setThreadstotal(const qint64& arg){m_threadsTotal=arg;return *this;};
+        quint64 threadstotal()const{return m_threadsTotal;};
+        GetProfileResponse& setThreadstotal(const quint64& arg){m_threadsTotal=arg;return *this;};
 
             /**
                 The ID of the mailbox's current history record.
             */
-        qint64 historyid()const{return m_historyId;};
-        GetProfileResponse& setHistoryid(const qint64& arg){m_historyId=arg;return *this;};
+        quint64 historyid()const{return m_historyId;};
+        GetProfileResponse& setHistoryid(const quint64& arg){m_historyId=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -63,7 +63,7 @@ namespace users{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<GetProfileResponse> EXAMPLE(int context_index);
+        static std::unique_ptr<GetProfileResponse> EXAMPLE(int context_index, int parent_context_index);
         #endif //API_QT_AUTOTEST
 
 
@@ -76,17 +76,17 @@ namespace users{
             /**
                 The total number of messages in the mailbox.
             */
-        qint64 m_messagesTotal = {0};
+        quint64 m_messagesTotal = {0};
 
             /**
                 The total number of threads in the mailbox.
             */
-        qint64 m_threadsTotal = {0};
+        quint64 m_threadsTotal = {0};
 
             /**
                 The ID of the mailbox's current history record.
             */
-        qint64 m_historyId = {0};
+        quint64 m_historyId = {0};
 
     };//GetProfileResponse
 

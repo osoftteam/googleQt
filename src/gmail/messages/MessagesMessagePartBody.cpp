@@ -21,13 +21,13 @@ MessagePartBody::operator QJsonObject()const{
 
 void MessagePartBody::toJson(QJsonObject& js)const{
 
-    js["size"] = m_size;
+    js["size"] = QString("%1").arg(m_size);
     js["data"] = m_data.constData();
 }
 
 void MessagePartBody::fromJson(const QJsonObject& js){
 
-    m_size = js["size"].toVariant().toInt();
+    m_size = js["size"].toVariant().toString().toULongLong();
     m_data = js["data"].toVariant().toByteArray();
 }
 
@@ -58,13 +58,14 @@ std::unique_ptr<MessagePartBody>  MessagePartBody::factory::create(const QJsonOb
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<MessagePartBody> MessagePartBody::EXAMPLE(int context_index){
+std::unique_ptr<MessagePartBody> MessagePartBody::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<MessagePartBody> rv(new MessagePartBody);
-    rv->m_size = 1;
-    rv->m_data = QByteArray("AUTOTEST-DATA").toBase64();
+    rv->m_size = 1 + example_idx;
+    rv->m_data = ApiAutotest::INSTANCE().generateData("messages::MessagePartBody", context_index, parent_context_index);
     return rv;
 }
 #endif //API_QT_AUTOTEST

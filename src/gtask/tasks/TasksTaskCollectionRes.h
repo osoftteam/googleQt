@@ -69,7 +69,7 @@ namespace tasks{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<TaskCollectionRes> EXAMPLE(int context_index);
+        static std::unique_ptr<TaskCollectionRes> EXAMPLE(int context_index, int parent_context_index);
         #endif //API_QT_AUTOTEST
 
 

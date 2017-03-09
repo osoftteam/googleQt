@@ -41,8 +41,8 @@ namespace messages{
             /**
                 Total number of bytes in the body of the message part.
             */
-        qint64 size()const{return m_size;};
-        MessageMimeBody& setSize(const qint64& arg){m_size=arg;return *this;};
+        quint64 size()const{return m_size;};
+        MessageMimeBody& setSize(const quint64& arg){m_size=arg;return *this;};
 
             /**
                 The body data of a MIME message part. May be empty for MIME
@@ -68,7 +68,7 @@ namespace messages{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<MessageMimeBody> EXAMPLE(int context_index);
+        static std::unique_ptr<MessageMimeBody> EXAMPLE(int context_index, int parent_context_index);
         #endif //API_QT_AUTOTEST
 
 
@@ -84,7 +84,7 @@ namespace messages{
             /**
                 Total number of bytes in the body of the message part.
             */
-        qint64 m_size = {0};
+        quint64 m_size = {0};
 
             /**
                 The body data of a MIME message part. May be empty for MIME

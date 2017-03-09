@@ -16,7 +16,7 @@ namespace googleQt {
             void    setTasklist(QString val) { m_tasklist = val; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<TaskListIdArg> EXAMPLE(int context_index);
+            static std::unique_ptr<TaskListIdArg> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -30,7 +30,7 @@ namespace googleQt {
             void build(const QString& link_path, QUrl& url)const override;
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<TaskListContainerIdArg> EXAMPLE(int context_index);
+            static std::unique_ptr<TaskListContainerIdArg> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
         };
 
@@ -42,7 +42,7 @@ namespace googleQt {
             void build(const QString& link_path, QUrl& url)const override;
             //QString arg()const override;
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<TaskListClearArg> EXAMPLE(int context_index);
+            static std::unique_ptr<TaskListClearArg> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
         };
 
@@ -62,7 +62,7 @@ namespace googleQt {
 
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<TaskIdArg> EXAMPLE(int context_index);
+            static std::unique_ptr<TaskIdArg> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -90,7 +90,7 @@ namespace googleQt {
 
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<TaskInsertArg> EXAMPLE(int context_index);
+            static std::unique_ptr<TaskInsertArg> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -120,7 +120,7 @@ namespace googleQt {
 
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<TaskMoveArg> EXAMPLE(int context_index);
+            static std::unique_ptr<TaskMoveArg> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -196,7 +196,7 @@ namespace googleQt {
             void     setUpdatedMin(const QDateTime& val) { m_updatedMin = val; }
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<TaskListArg> EXAMPLE(int context_index);
+            static std::unique_ptr<TaskListArg> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -233,7 +233,7 @@ namespace googleQt {
             void build(const QString& link_path, QUrl& url)const override;
 
 #ifdef API_QT_AUTOTEST
-            static std::unique_ptr<TasklistsListArg> EXAMPLE(int context_index);
+            static std::unique_ptr<TasklistsListArg> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
 
         protected:

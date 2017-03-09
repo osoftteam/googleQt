@@ -20,26 +20,26 @@ namespace files{
     public:
         VideoMediaMetadata(){};
 
-        VideoMediaMetadata(const qint64& arg){ m_width = arg; };
+        VideoMediaMetadata(const quint64& arg){ m_width = arg; };
 
     public:
             /**
                 The width of the video in pixels.
             */
-        qint64 width()const{return m_width;};
-        VideoMediaMetadata& setWidth(const qint64& arg){m_width=arg;return *this;};
+        quint64 width()const{return m_width;};
+        VideoMediaMetadata& setWidth(const quint64& arg){m_width=arg;return *this;};
 
             /**
                 The height of the video in pixels.
             */
-        qint64 height()const{return m_height;};
-        VideoMediaMetadata& setHeight(const qint64& arg){m_height=arg;return *this;};
+        quint64 height()const{return m_height;};
+        VideoMediaMetadata& setHeight(const quint64& arg){m_height=arg;return *this;};
 
             /**
                 The duration of the video in milliseconds.
             */
-        qint64 durationmillis()const{return m_durationMillis;};
-        VideoMediaMetadata& setDurationmillis(const qint64& arg){m_durationMillis=arg;return *this;};
+        quint64 durationmillis()const{return m_durationMillis;};
+        VideoMediaMetadata& setDurationmillis(const quint64& arg){m_durationMillis=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -56,7 +56,7 @@ namespace files{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<VideoMediaMetadata> EXAMPLE(int context_index);
+        static std::unique_ptr<VideoMediaMetadata> EXAMPLE(int context_index, int parent_context_index);
         #endif //API_QT_AUTOTEST
 
 
@@ -64,17 +64,17 @@ namespace files{
             /**
                 The width of the video in pixels.
             */
-        qint64 m_width = {0};
+        quint64 m_width = {0};
 
             /**
                 The height of the video in pixels.
             */
-        qint64 m_height = {0};
+        quint64 m_height = {0};
 
             /**
                 The duration of the video in milliseconds.
             */
-        qint64 m_durationMillis = {0};
+        quint64 m_durationMillis = {0};
 
     };//VideoMediaMetadata
 

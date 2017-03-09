@@ -59,15 +59,16 @@ std::unique_ptr<PermissionResourcesCollection>  PermissionResourcesCollection::f
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<PermissionResourcesCollection> PermissionResourcesCollection::EXAMPLE(int context_index){
+std::unique_ptr<PermissionResourcesCollection> PermissionResourcesCollection::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<PermissionResourcesCollection> rv(new PermissionResourcesCollection);
     rv->m_kind = QString("kind_%1").arg(example_idx);
     std::list<permissions::ResourcePermission> list_of_permissions;
     for(int i = 0; i < 3; i++){
-        permissions::ResourcePermission p = *(permissions::ResourcePermission::EXAMPLE(i).get());
+        permissions::ResourcePermission p = *(permissions::ResourcePermission::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("permissions::PermissionResourcesCollection", "permissions::ResourcePermission", &p, i, context_index);
         rv->m_permissions.push_back(p);
     }

@@ -24,14 +24,14 @@ void ThreadListRes::toJson(QJsonObject& js)const{
     js["threads"] = struct_list2jsonarray(m_threads);
     if(!m_nextPageToken.isEmpty())
         js["nextPageToken"] = QString(m_nextPageToken);
-    js["resultSizeEstimate"] = m_resultSizeEstimate;
+    js["resultSizeEstimate"] = QString("%1").arg(m_resultSizeEstimate);
 }
 
 void ThreadListRes::fromJson(const QJsonObject& js){
 
     jsonarray2struct_list(js["threads"].toArray(), m_threads);
     m_nextPageToken = js["nextPageToken"].toString();
-    m_resultSizeEstimate = js["resultSizeEstimate"].toVariant().toInt();
+    m_resultSizeEstimate = js["resultSizeEstimate"].toVariant().toString().toULongLong();
 }
 
 QString ThreadListRes::toString(bool multiline)const
@@ -61,19 +61,20 @@ std::unique_ptr<ThreadListRes>  ThreadListRes::factory::create(const QJsonObject
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<ThreadListRes> ThreadListRes::EXAMPLE(int context_index){
+std::unique_ptr<ThreadListRes> ThreadListRes::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<ThreadListRes> rv(new ThreadListRes);
     std::list<threads::ThreadResource> list_of_threads;
     for(int i = 0; i < 3; i++){
-        threads::ThreadResource p = *(threads::ThreadResource::EXAMPLE(i).get());
+        threads::ThreadResource p = *(threads::ThreadResource::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("threads::ThreadListRes", "threads::ThreadResource", &p, i, context_index);
         rv->m_threads.push_back(p);
     }
     rv->m_nextPageToken = QString("nextPageToken_%1").arg(example_idx);
-    rv->m_resultSizeEstimate = 3;
+    rv->m_resultSizeEstimate = 3 + example_idx;
     return rv;
 }
 #endif //API_QT_AUTOTEST

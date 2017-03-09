@@ -60,14 +60,15 @@ std::unique_ptr<LocationData>  LocationData::factory::create(const QJsonObject& 
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<LocationData> LocationData::EXAMPLE(int context_index){
+std::unique_ptr<LocationData> LocationData::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<LocationData> rv(new LocationData);
-    rv->m_latitude = 1;
-    rv->m_longitude = 2;
-    rv->m_altitude = 3;
+    rv->m_latitude = 1 + example_idx;
+    rv->m_longitude = 2 + example_idx;
+    rv->m_altitude = 3 + example_idx;
     return rv;
 }
 #endif //API_QT_AUTOTEST

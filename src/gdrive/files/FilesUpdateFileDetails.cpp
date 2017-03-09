@@ -68,15 +68,16 @@ std::unique_ptr<UpdateFileDetails>  UpdateFileDetails::factory::create(const QJs
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<UpdateFileDetails> UpdateFileDetails::EXAMPLE(int context_index){
+std::unique_ptr<UpdateFileDetails> UpdateFileDetails::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<UpdateFileDetails> rv(new UpdateFileDetails);
     rv->m_name = QString("name_%1").arg(example_idx);
     rv->m_mimeType = QString("mimeType_%1").arg(example_idx);
     rv->m_description = QString("description_%1").arg(example_idx);
-    rv->m_contentHints = *(files::ContentHints::EXAMPLE(0).get());
+    rv->m_contentHints = *(files::ContentHints::EXAMPLE(0, context_index).get());
     rv->m_originalFilename = QString("originalFilename_%1").arg(example_idx);
     return rv;
 }

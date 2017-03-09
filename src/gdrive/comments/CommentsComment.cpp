@@ -85,8 +85,9 @@ std::unique_ptr<Comment>  Comment::factory::create(const QJsonObject& js)
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<Comment> Comment::EXAMPLE(int context_index){
+std::unique_ptr<Comment> Comment::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<Comment> rv(new Comment);
@@ -94,14 +95,14 @@ std::unique_ptr<Comment> Comment::EXAMPLE(int context_index){
     rv->m_kind = QString("kind_%1").arg(example_idx);
     rv->m_createdTime = QDateTime::currentDateTime();
     rv->m_modifiedTime = QDateTime::currentDateTime();
-    rv->m_author = *(comments::User::EXAMPLE(0).get());
+    rv->m_author = *(comments::User::EXAMPLE(0, context_index).get());
     rv->m_htmlContent = QString("htmlContent_%1").arg(example_idx);
     rv->m_content = QString("content_%1").arg(example_idx);
-    rv->m_quotedFileContent = *(comments::QuotedFileContent::EXAMPLE(0).get());
+    rv->m_quotedFileContent = *(comments::QuotedFileContent::EXAMPLE(0, context_index).get());
     rv->m_anchor = QString("anchor_%1").arg(example_idx);
     std::list<comments::Reply> list_of_replies;
     for(int i = 0; i < 3; i++){
-        comments::Reply p = *(comments::Reply::EXAMPLE(i).get());
+        comments::Reply p = *(comments::Reply::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("comments::Comment", "comments::Reply", &p, i, context_index);
         rv->m_replies.push_back(p);
     }

@@ -70,20 +70,20 @@ namespace labels{
             /**
                 The total number of messages with the label.
             */
-        qint64 messagestotal()const{return m_messagesTotal;};
-        LabelResource& setMessagestotal(const qint64& arg){m_messagesTotal=arg;return *this;};
+        quint64 messagestotal()const{return m_messagesTotal;};
+        LabelResource& setMessagestotal(const quint64& arg){m_messagesTotal=arg;return *this;};
 
             /**
                 The number of unread messages with the label.
             */
-        qint64 messagesunread()const{return m_messagesUnread;};
-        LabelResource& setMessagesunread(const qint64& arg){m_messagesUnread=arg;return *this;};
+        quint64 messagesunread()const{return m_messagesUnread;};
+        LabelResource& setMessagesunread(const quint64& arg){m_messagesUnread=arg;return *this;};
 
             /**
                 The number of unread threads with the label.
             */
-        qint64 threadstotal()const{return m_threadsTotal;};
-        LabelResource& setThreadstotal(const qint64& arg){m_threadsTotal=arg;return *this;};
+        quint64 threadstotal()const{return m_threadsTotal;};
+        LabelResource& setThreadstotal(const quint64& arg){m_threadsTotal=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -100,7 +100,7 @@ namespace labels{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<LabelResource> EXAMPLE(int context_index);
+        static std::unique_ptr<LabelResource> EXAMPLE(int context_index, int parent_context_index);
         #endif //API_QT_AUTOTEST
 
 
@@ -136,17 +136,17 @@ namespace labels{
             /**
                 The total number of messages with the label.
             */
-        qint64 m_messagesTotal = {0};
+        quint64 m_messagesTotal = {0};
 
             /**
                 The number of unread messages with the label.
             */
-        qint64 m_messagesUnread = {0};
+        quint64 m_messagesUnread = {0};
 
             /**
                 The number of unread threads with the label.
             */
-        qint64 m_threadsTotal = {0};
+        quint64 m_threadsTotal = {0};
 
     };//LabelResource
 

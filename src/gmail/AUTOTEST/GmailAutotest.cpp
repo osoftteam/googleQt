@@ -16,7 +16,7 @@ static GmailRoutes* cl;
 
 static void call_get_from_Drafts(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Drafts").arg("get");
-    std::unique_ptr<gmail::IdArg> arg = gmail::IdArg::EXAMPLE(0);
+    std::unique_ptr<gmail::IdArg> arg = gmail::IdArg::EXAMPLE(0, 0);
     auto res = cl->getDrafts()->get(*(arg.get()) );
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();
@@ -25,7 +25,7 @@ static void call_get_from_Drafts(){
 
 static void call_list_from_Drafts(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Drafts").arg("list");
-    std::unique_ptr<gmail::DraftListArg> arg = gmail::DraftListArg::EXAMPLE(0);
+    std::unique_ptr<gmail::DraftListArg> arg = gmail::DraftListArg::EXAMPLE(0, 0);
     auto res = cl->getDrafts()->list(*(arg.get()) );
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();
@@ -34,7 +34,7 @@ static void call_list_from_Drafts(){
 
 static void call_list_from_History(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("History").arg("list");
-    std::unique_ptr<gmail::HistoryListArg> arg = gmail::HistoryListArg::EXAMPLE(0);
+    std::unique_ptr<gmail::HistoryListArg> arg = gmail::HistoryListArg::EXAMPLE(0, 0);
     auto res = cl->getHistory()->list(*(arg.get()) );
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();
@@ -43,7 +43,7 @@ static void call_list_from_History(){
 
 static void call_create_from_Labels(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Labels").arg("create");
-    std::unique_ptr<labels::LabelResource> arg = labels::LabelResource::EXAMPLE(0);
+    std::unique_ptr<labels::LabelResource> arg = labels::LabelResource::EXAMPLE(0, 0);
     auto res = cl->getLabels()->create(*(arg.get()) );
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();
@@ -52,14 +52,14 @@ static void call_create_from_Labels(){
 
 static void call_deleteOperation_from_Labels(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Labels").arg("deleteOperation");
-    std::unique_ptr<gmail::IdArg> arg = gmail::IdArg::EXAMPLE(0);
+    std::unique_ptr<gmail::IdArg> arg = gmail::IdArg::EXAMPLE(0, 0);
     cl->getLabels()->deleteOperation(*(arg.get()) );
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
 static void call_get_from_Labels(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Labels").arg("get");
-    std::unique_ptr<gmail::IdArg> arg = gmail::IdArg::EXAMPLE(0);
+    std::unique_ptr<gmail::IdArg> arg = gmail::IdArg::EXAMPLE(0, 0);
     auto res = cl->getLabels()->get(*(arg.get()) );
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();
@@ -74,8 +74,8 @@ static void call_list_from_Labels(){
 
 static void call_update_from_Labels(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Labels").arg("update");
-    std::unique_ptr<gmail::IdArg> arg = gmail::IdArg::EXAMPLE(0);
-    std::unique_ptr<labels::LabelResource> arg2 = labels::LabelResource::EXAMPLE(0);
+    std::unique_ptr<gmail::IdArg> arg = gmail::IdArg::EXAMPLE(0, 0);
+    std::unique_ptr<labels::LabelResource> arg2 = labels::LabelResource::EXAMPLE(0, 0);
     auto res = cl->getLabels()->update(*(arg.get()) , *(arg2.get()));
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();
@@ -84,14 +84,14 @@ static void call_update_from_Labels(){
 
 static void call_deleteOperation_from_Messages(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Messages").arg("deleteOperation");
-    std::unique_ptr<gmail::IdArg> arg = gmail::IdArg::EXAMPLE(0);
+    std::unique_ptr<gmail::IdArg> arg = gmail::IdArg::EXAMPLE(0, 0);
     cl->getMessages()->deleteOperation(*(arg.get()) );
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
 static void call_get_from_Messages(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Messages").arg("get");
-    std::unique_ptr<gmail::IdArg> arg = gmail::IdArg::EXAMPLE(0);
+    std::unique_ptr<gmail::IdArg> arg = gmail::IdArg::EXAMPLE(0, 0);
     auto res = cl->getMessages()->get(*(arg.get()) );
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();
@@ -100,8 +100,8 @@ static void call_get_from_Messages(){
 
 static void call_importMessage_from_Messages(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Messages").arg("importMessage");
-    std::unique_ptr<gmail::ImportMessageArg> arg = gmail::ImportMessageArg::EXAMPLE(0);
-    std::unique_ptr<messages::MessageResource> arg2 = messages::MessageResource::EXAMPLE(0);
+    std::unique_ptr<gmail::ImportMessageArg> arg = gmail::ImportMessageArg::EXAMPLE(0, 0);
+    std::unique_ptr<messages::MessageResource> arg2 = messages::MessageResource::EXAMPLE(0, 0);
     auto res = cl->getMessages()->importMessage(*(arg.get()) , *(arg2.get()));
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();
@@ -110,8 +110,8 @@ static void call_importMessage_from_Messages(){
 
 static void call_insert_from_Messages(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Messages").arg("insert");
-    std::unique_ptr<gmail::InsertMessageArg> arg = gmail::InsertMessageArg::EXAMPLE(0);
-    std::unique_ptr<messages::MessageResource> arg2 = messages::MessageResource::EXAMPLE(0);
+    std::unique_ptr<gmail::InsertMessageArg> arg = gmail::InsertMessageArg::EXAMPLE(0, 0);
+    std::unique_ptr<messages::MessageResource> arg2 = messages::MessageResource::EXAMPLE(0, 0);
     auto res = cl->getMessages()->insert(*(arg.get()) , *(arg2.get()));
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();
@@ -120,7 +120,7 @@ static void call_insert_from_Messages(){
 
 static void call_list_from_Messages(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Messages").arg("list");
-    std::unique_ptr<gmail::ListArg> arg = gmail::ListArg::EXAMPLE(0);
+    std::unique_ptr<gmail::ListArg> arg = gmail::ListArg::EXAMPLE(0, 0);
     auto res = cl->getMessages()->list(*(arg.get()) );
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();
@@ -129,8 +129,8 @@ static void call_list_from_Messages(){
 
 static void call_send_from_Messages(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Messages").arg("send");
-    std::unique_ptr<gmail::SendMessageArg> arg = gmail::SendMessageArg::EXAMPLE(0);
-    std::unique_ptr<messages::MessageResource> arg2 = messages::MessageResource::EXAMPLE(0);
+    std::unique_ptr<gmail::SendMessageArg> arg = gmail::SendMessageArg::EXAMPLE(0, 0);
+    std::unique_ptr<messages::MessageResource> arg2 = messages::MessageResource::EXAMPLE(0, 0);
     auto res = cl->getMessages()->send(*(arg.get()) , *(arg2.get()));
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();
@@ -139,21 +139,21 @@ static void call_send_from_Messages(){
 
 static void call_trash_from_Messages(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Messages").arg("trash");
-    std::unique_ptr<gmail::TrashMessageArg> arg = gmail::TrashMessageArg::EXAMPLE(0);
+    std::unique_ptr<gmail::TrashMessageArg> arg = gmail::TrashMessageArg::EXAMPLE(0, 0);
     cl->getMessages()->trash(*(arg.get()) );
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
 static void call_untrash_from_Messages(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Messages").arg("untrash");
-    std::unique_ptr<gmail::UntrashMessageArg> arg = gmail::UntrashMessageArg::EXAMPLE(0);
+    std::unique_ptr<gmail::UntrashMessageArg> arg = gmail::UntrashMessageArg::EXAMPLE(0, 0);
     cl->getMessages()->untrash(*(arg.get()) );
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
 static void call_get_from_Threads(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Threads").arg("get");
-    std::unique_ptr<gmail::IdArg> arg = gmail::IdArg::EXAMPLE(0);
+    std::unique_ptr<gmail::IdArg> arg = gmail::IdArg::EXAMPLE(0, 0);
     auto res = cl->getThreads()->get(*(arg.get()) );
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();
@@ -162,7 +162,7 @@ static void call_get_from_Threads(){
 
 static void call_list_from_Threads(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Threads").arg("list");
-    std::unique_ptr<gmail::ListArg> arg = gmail::ListArg::EXAMPLE(0);
+    std::unique_ptr<gmail::ListArg> arg = gmail::ListArg::EXAMPLE(0, 0);
     auto res = cl->getThreads()->list(*(arg.get()) );
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();

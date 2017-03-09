@@ -96,8 +96,9 @@ std::unique_ptr<TaskResource>  TaskResource::factory::create(const QJsonObject& 
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<TaskResource> TaskResource::EXAMPLE(int context_index){
+std::unique_ptr<TaskResource> TaskResource::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<TaskResource> rv(new TaskResource);
@@ -115,7 +116,7 @@ std::unique_ptr<TaskResource> TaskResource::EXAMPLE(int context_index){
     rv->m_completed = QDateTime::currentDateTime();
     std::list<tasks::TaskLink> list_of_links;
     for(int i = 0; i < 3; i++){
-        tasks::TaskLink p = *(tasks::TaskLink::EXAMPLE(i).get());
+        tasks::TaskLink p = *(tasks::TaskLink::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("tasks::TaskResource", "tasks::TaskLink", &p, i, context_index);
         rv->m_links.push_back(p);
     }

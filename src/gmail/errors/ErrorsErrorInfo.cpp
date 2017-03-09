@@ -22,7 +22,7 @@ ErrorInfo::operator QJsonObject()const{
 void ErrorInfo::toJson(QJsonObject& js)const{
 
     js["errors"] = struct_list2jsonarray(m_errors);
-    js["code"] = m_code;
+    js["code"] = QString("%1").arg(m_code);
     if(!m_message.isEmpty())
         js["message"] = QString(m_message);
 }
@@ -30,7 +30,7 @@ void ErrorInfo::toJson(QJsonObject& js)const{
 void ErrorInfo::fromJson(const QJsonObject& js){
 
     jsonarray2struct_list(js["errors"].toArray(), m_errors);
-    m_code = js["code"].toVariant().toInt();
+    m_code = js["code"].toVariant().toString().toULongLong();
     m_message = js["message"].toString();
 }
 
@@ -61,18 +61,19 @@ std::unique_ptr<ErrorInfo>  ErrorInfo::factory::create(const QJsonObject& js)
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<ErrorInfo> ErrorInfo::EXAMPLE(int context_index){
+std::unique_ptr<ErrorInfo> ErrorInfo::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<ErrorInfo> rv(new ErrorInfo);
     std::list<errors::ErrorPart> list_of_errors;
     for(int i = 0; i < 3; i++){
-        errors::ErrorPart p = *(errors::ErrorPart::EXAMPLE(i).get());
+        errors::ErrorPart p = *(errors::ErrorPart::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("errors::ErrorInfo", "errors::ErrorPart", &p, i, context_index);
         rv->m_errors.push_back(p);
     }
-    rv->m_code = 2;
+    rv->m_code = 2 + example_idx;
     rv->m_message = QString("message_%1").arg(example_idx);
     return rv;
 }

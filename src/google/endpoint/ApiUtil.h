@@ -199,7 +199,7 @@ namespace googleQt {
         }
 
 #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<VoidType> EXAMPLE(int ) { return std::unique_ptr<VoidType>(new VoidType()); };
+        static std::unique_ptr<VoidType> EXAMPLE(int, int) { return std::unique_ptr<VoidType>(new VoidType()); };
 #endif //API_QT_AUTOTEST
 
     };
@@ -255,7 +255,7 @@ namespace googleQt {
         }
 
 #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<D> EXAMPLE(int ) { std::unique_ptr<D> rv(new D); return rv; };
+        static std::unique_ptr<D> EXAMPLE(int, int) { std::unique_ptr<D> rv(new D); return rv; };
 #endif //API_QT_AUTOTEST        
     };
 
@@ -271,7 +271,7 @@ namespace googleQt {
         }
 
 #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<D> EXAMPLE(int ) { std::unique_ptr<D> rv(new D("100")); return rv; };
+        static std::unique_ptr<D> EXAMPLE(int, int) { std::unique_ptr<D> rv(new D("100")); return rv; };
 #endif //API_QT_AUTOTEST
     protected:
         QString m_id;

@@ -65,8 +65,8 @@ namespace messages{
             /**
                 The ID of the last history record that modified this message.
             */
-        qint64 historyid()const{return m_historyId;};
-        MessageResource& setHistoryid(const qint64& arg){m_historyId=arg;return *this;};
+        quint64 historyid()const{return m_historyId;};
+        MessageResource& setHistoryid(const quint64& arg){m_historyId=arg;return *this;};
 
             /**
                 The internal message creation timestamp (epoch ms), which
@@ -76,8 +76,8 @@ namespace messages{
                 However, for API-migrated mail, it can be configured by client
                 to be based on the Date header.
             */
-        qint64 internaldate()const{return m_internalDate;};
-        MessageResource& setInternaldate(const qint64& arg){m_internalDate=arg;return *this;};
+        quint64 internaldate()const{return m_internalDate;};
+        MessageResource& setInternaldate(const quint64& arg){m_internalDate=arg;return *this;};
 
             /**
                 The parsed email structure in the message parts.
@@ -88,8 +88,8 @@ namespace messages{
             /**
                 Estimated size in bytes of the message.
             */
-        qint64 sizeestimate()const{return m_sizeEstimate;};
-        MessageResource& setSizeestimate(const qint64& arg){m_sizeEstimate=arg;return *this;};
+        quint64 sizeestimate()const{return m_sizeEstimate;};
+        MessageResource& setSizeestimate(const quint64& arg){m_sizeEstimate=arg;return *this;};
 
             /**
                 The entire email message in an RFC 2822 formatted and base64url
@@ -114,7 +114,7 @@ namespace messages{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<MessageResource> EXAMPLE(int context_index);
+        static std::unique_ptr<MessageResource> EXAMPLE(int context_index, int parent_context_index);
         #endif //API_QT_AUTOTEST
 
 
@@ -142,7 +142,7 @@ namespace messages{
             /**
                 The ID of the last history record that modified this message.
             */
-        qint64 m_historyId = {0};
+        quint64 m_historyId = {0};
 
             /**
                 The internal message creation timestamp (epoch ms), which
@@ -152,7 +152,7 @@ namespace messages{
                 However, for API-migrated mail, it can be configured by client
                 to be based on the Date header.
             */
-        qint64 m_internalDate = {0};
+        quint64 m_internalDate = {0};
 
             /**
                 The parsed email structure in the message parts.
@@ -162,7 +162,7 @@ namespace messages{
             /**
                 Estimated size in bytes of the message.
             */
-        qint64 m_sizeEstimate = {0};
+        quint64 m_sizeEstimate = {0};
 
             /**
                 The entire email message in an RFC 2822 formatted and base64url

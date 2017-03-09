@@ -40,8 +40,8 @@ namespace threads{
             /**
                 The ID of the last history record that modified this thread.
             */
-        qint64 historyid()const{return m_historyId;};
-        ThreadResource& setHistoryid(const qint64& arg){m_historyId=arg;return *this;};
+        quint64 historyid()const{return m_historyId;};
+        ThreadResource& setHistoryid(const quint64& arg){m_historyId=arg;return *this;};
 
         const std::list <messages::MessageResource>& messages()const{return m_messages;};
         ThreadResource& setMessages(const std::list <messages::MessageResource>& arg){m_messages=arg;return *this;};
@@ -61,7 +61,7 @@ namespace threads{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<ThreadResource> EXAMPLE(int context_index);
+        static std::unique_ptr<ThreadResource> EXAMPLE(int context_index, int parent_context_index);
         #endif //API_QT_AUTOTEST
 
 
@@ -79,7 +79,7 @@ namespace threads{
             /**
                 The ID of the last history record that modified this thread.
             */
-        qint64 m_historyId = {0};
+        quint64 m_historyId = {0};
 
         std::list <messages::MessageResource> m_messages;
 

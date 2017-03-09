@@ -59,13 +59,14 @@ std::unique_ptr<DraftResource>  DraftResource::factory::create(const QJsonObject
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<DraftResource> DraftResource::EXAMPLE(int context_index){
+std::unique_ptr<DraftResource> DraftResource::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<DraftResource> rv(new DraftResource);
     rv->m_id = ApiAutotest::INSTANCE().getId("drafts::DraftResource", example_idx);
-    rv->m_message = *(messages::MessageResource::EXAMPLE(0).get());
+    rv->m_message = *(messages::MessageResource::EXAMPLE(0, context_index).get());
     return rv;
 }
 #endif //API_QT_AUTOTEST

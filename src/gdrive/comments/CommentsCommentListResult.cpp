@@ -62,8 +62,9 @@ std::unique_ptr<CommentListResult>  CommentListResult::factory::create(const QJs
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<CommentListResult> CommentListResult::EXAMPLE(int context_index){
+std::unique_ptr<CommentListResult> CommentListResult::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<CommentListResult> rv(new CommentListResult);
@@ -71,7 +72,7 @@ std::unique_ptr<CommentListResult> CommentListResult::EXAMPLE(int context_index)
     rv->m_kind = QString("kind_%1").arg(example_idx);
     std::list<comments::Comment> list_of_comments;
     for(int i = 0; i < 3; i++){
-        comments::Comment p = *(comments::Comment::EXAMPLE(i).get());
+        comments::Comment p = *(comments::Comment::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("comments::CommentListResult", "comments::Comment", &p, i, context_index);
         rv->m_comments.push_back(p);
     }

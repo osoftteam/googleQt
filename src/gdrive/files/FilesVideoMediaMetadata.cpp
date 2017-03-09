@@ -21,16 +21,16 @@ VideoMediaMetadata::operator QJsonObject()const{
 
 void VideoMediaMetadata::toJson(QJsonObject& js)const{
 
-    js["width"] = m_width;
-    js["height"] = m_height;
-    js["durationMillis"] = m_durationMillis;
+    js["width"] = QString("%1").arg(m_width);
+    js["height"] = QString("%1").arg(m_height);
+    js["durationMillis"] = QString("%1").arg(m_durationMillis);
 }
 
 void VideoMediaMetadata::fromJson(const QJsonObject& js){
 
-    m_width = js["width"].toVariant().toInt();
-    m_height = js["height"].toVariant().toInt();
-    m_durationMillis = js["durationMillis"].toVariant().toInt();
+    m_width = js["width"].toVariant().toString().toULongLong();
+    m_height = js["height"].toVariant().toString().toULongLong();
+    m_durationMillis = js["durationMillis"].toVariant().toString().toULongLong();
 }
 
 QString VideoMediaMetadata::toString(bool multiline)const
@@ -60,14 +60,15 @@ std::unique_ptr<VideoMediaMetadata>  VideoMediaMetadata::factory::create(const Q
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<VideoMediaMetadata> VideoMediaMetadata::EXAMPLE(int context_index){
+std::unique_ptr<VideoMediaMetadata> VideoMediaMetadata::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<VideoMediaMetadata> rv(new VideoMediaMetadata);
-    rv->m_width = 1;
-    rv->m_height = 2;
-    rv->m_durationMillis = 3;
+    rv->m_width = 1 + example_idx;
+    rv->m_height = 2 + example_idx;
+    rv->m_durationMillis = 3 + example_idx;
     return rv;
 }
 #endif //API_QT_AUTOTEST

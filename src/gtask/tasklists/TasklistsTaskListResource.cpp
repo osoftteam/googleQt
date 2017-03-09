@@ -72,8 +72,9 @@ std::unique_ptr<TaskListResource>  TaskListResource::factory::create(const QJson
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<TaskListResource> TaskListResource::EXAMPLE(int context_index){
+std::unique_ptr<TaskListResource> TaskListResource::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<TaskListResource> rv(new TaskListResource);

@@ -159,21 +159,21 @@ void TasklistsListArg::build(const QString& link_path, QUrl& url)const
 };
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<TaskListIdArg> TaskListIdArg::EXAMPLE(int) 
+std::unique_ptr<TaskListIdArg> TaskListIdArg::EXAMPLE(int, int) 
 {
     std::unique_ptr<TaskListIdArg> rv(new TaskListIdArg);
     rv->setTasklist("task-list1");
     return rv;
 };
 
-std::unique_ptr<TaskListContainerIdArg> TaskListContainerIdArg::EXAMPLE(int)
+std::unique_ptr<TaskListContainerIdArg> TaskListContainerIdArg::EXAMPLE(int, int)
 {
     std::unique_ptr<TaskListContainerIdArg> rv(new TaskListContainerIdArg);
     rv->setTasklist("task-list1");
     return rv;
 };
 
-std::unique_ptr<TaskIdArg> TaskIdArg::EXAMPLE(int)
+std::unique_ptr<TaskIdArg> TaskIdArg::EXAMPLE(int, int)
 {
     std::unique_ptr<TaskIdArg> rv(new TaskIdArg);
     rv->setTasklist("task-list1");
@@ -181,7 +181,7 @@ std::unique_ptr<TaskIdArg> TaskIdArg::EXAMPLE(int)
     return rv;
 };
 
-std::unique_ptr<TaskInsertArg> TaskInsertArg::EXAMPLE(int)
+std::unique_ptr<TaskInsertArg> TaskInsertArg::EXAMPLE(int, int)
 {
     std::unique_ptr<TaskInsertArg> rv(new TaskInsertArg);
     rv->setTasklist("task-list1");
@@ -190,7 +190,7 @@ std::unique_ptr<TaskInsertArg> TaskInsertArg::EXAMPLE(int)
     return rv;
 };
 
-std::unique_ptr<TaskMoveArg> TaskMoveArg::EXAMPLE(int)
+std::unique_ptr<TaskMoveArg> TaskMoveArg::EXAMPLE(int, int)
 {
     std::unique_ptr<TaskMoveArg> rv(new TaskMoveArg);
     rv->setTasklist("task-list1");
@@ -201,14 +201,14 @@ std::unique_ptr<TaskMoveArg> TaskMoveArg::EXAMPLE(int)
 };
 
 
-std::unique_ptr<TaskListClearArg> TaskListClearArg::EXAMPLE(int)
+std::unique_ptr<TaskListClearArg> TaskListClearArg::EXAMPLE(int, int)
 {
     std::unique_ptr<TaskListClearArg> rv(new TaskListClearArg);
     rv->setTasklist("task-list1");
     return rv;
 };
 
-std::unique_ptr<TaskListArg> TaskListArg::EXAMPLE(int)
+std::unique_ptr<TaskListArg> TaskListArg::EXAMPLE(int, int)
 {
     std::unique_ptr<TaskListArg> rv(new TaskListArg);
     rv->setTasklist("task-list1");
@@ -221,7 +221,7 @@ std::unique_ptr<TaskListArg> TaskListArg::EXAMPLE(int)
     return rv;
 };
 
-std::unique_ptr<TasklistsListArg> TasklistsListArg::EXAMPLE(int)
+std::unique_ptr<TasklistsListArg> TasklistsListArg::EXAMPLE(int, int)
 {
     std::unique_ptr<TasklistsListArg> rv(new TasklistsListArg);
     rv->setMaxResults(20);

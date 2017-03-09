@@ -21,9 +21,9 @@ ImageMediaMetadata::operator QJsonObject()const{
 
 void ImageMediaMetadata::toJson(QJsonObject& js)const{
 
-    js["width"] = m_width;
-    js["height"] = m_height;
-    js["rotation"] = m_rotation;
+    js["width"] = QString("%1").arg(m_width);
+    js["height"] = QString("%1").arg(m_height);
+    js["rotation"] = QString("%1").arg(m_rotation);
     js["location"] = (QJsonObject)m_location;
     if(!m_time.isEmpty())
         js["time"] = QString(m_time);
@@ -34,7 +34,7 @@ void ImageMediaMetadata::toJson(QJsonObject& js)const{
     js["exposureTime"] = m_exposureTime;
     js["flashUsed"] = m_flashUsed;
     js["focalLength"] = m_focalLength;
-    js["isoSpeed"] = m_isoSpeed;
+    js["isoSpeed"] = QString("%1").arg(m_isoSpeed);
     if(!m_meteringMode.isEmpty())
         js["meteringMode"] = QString(m_meteringMode);
     if(!m_sensor.isEmpty())
@@ -47,16 +47,16 @@ void ImageMediaMetadata::toJson(QJsonObject& js)const{
         js["whiteBalance"] = QString(m_whiteBalance);
     js["exposureBias"] = m_exposureBias;
     js["maxApertureValue"] = m_maxApertureValue;
-    js["subjectDistance"] = m_subjectDistance;
+    js["subjectDistance"] = QString("%1").arg(m_subjectDistance);
     if(!m_lens.isEmpty())
         js["lens"] = QString(m_lens);
 }
 
 void ImageMediaMetadata::fromJson(const QJsonObject& js){
 
-    m_width = js["width"].toVariant().toInt();
-    m_height = js["height"].toVariant().toInt();
-    m_rotation = js["rotation"].toVariant().toInt();
+    m_width = js["width"].toVariant().toString().toULongLong();
+    m_height = js["height"].toVariant().toString().toULongLong();
+    m_rotation = js["rotation"].toVariant().toString().toULongLong();
     m_location.fromJson(js["location"].toObject());
     m_time = js["time"].toString();
     m_cameraMake = js["cameraMake"].toString();
@@ -64,7 +64,7 @@ void ImageMediaMetadata::fromJson(const QJsonObject& js){
     m_exposureTime = js["exposureTime"].toVariant().toFloat();
     m_flashUsed = js["flashUsed"].toVariant().toBool();
     m_focalLength = js["focalLength"].toVariant().toFloat();
-    m_isoSpeed = js["isoSpeed"].toVariant().toInt();
+    m_isoSpeed = js["isoSpeed"].toVariant().toString().toULongLong();
     m_meteringMode = js["meteringMode"].toString();
     m_sensor = js["sensor"].toString();
     m_exposureMode = js["exposureMode"].toString();
@@ -72,7 +72,7 @@ void ImageMediaMetadata::fromJson(const QJsonObject& js){
     m_whiteBalance = js["whiteBalance"].toString();
     m_exposureBias = js["exposureBias"].toVariant().toFloat();
     m_maxApertureValue = js["maxApertureValue"].toVariant().toFloat();
-    m_subjectDistance = js["subjectDistance"].toVariant().toInt();
+    m_subjectDistance = js["subjectDistance"].toVariant().toString().toULongLong();
     m_lens = js["lens"].toString();
 }
 
@@ -103,29 +103,30 @@ std::unique_ptr<ImageMediaMetadata>  ImageMediaMetadata::factory::create(const Q
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<ImageMediaMetadata> ImageMediaMetadata::EXAMPLE(int context_index){
+std::unique_ptr<ImageMediaMetadata> ImageMediaMetadata::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<ImageMediaMetadata> rv(new ImageMediaMetadata);
-    rv->m_width = 1;
-    rv->m_height = 2;
-    rv->m_rotation = 3;
-    rv->m_location = *(files::LocationData::EXAMPLE(0).get());
+    rv->m_width = 1 + example_idx;
+    rv->m_height = 2 + example_idx;
+    rv->m_rotation = 3 + example_idx;
+    rv->m_location = *(files::LocationData::EXAMPLE(0, context_index).get());
     rv->m_time = QString("time_%1").arg(example_idx);
     rv->m_cameraMake = QString("cameraMake_%1").arg(example_idx);
     rv->m_cameraModel = QString("cameraModel_%1").arg(example_idx);
-    rv->m_exposureTime = 8;
-    rv->m_focalLength = 10;
-    rv->m_isoSpeed = 11;
+    rv->m_exposureTime = 8 + example_idx;
+    rv->m_focalLength = 10 + example_idx;
+    rv->m_isoSpeed = 11 + example_idx;
     rv->m_meteringMode = QString("meteringMode_%1").arg(example_idx);
     rv->m_sensor = QString("sensor_%1").arg(example_idx);
     rv->m_exposureMode = QString("exposureMode_%1").arg(example_idx);
     rv->m_colorSpace = QString("colorSpace_%1").arg(example_idx);
     rv->m_whiteBalance = QString("whiteBalance_%1").arg(example_idx);
-    rv->m_exposureBias = 17;
-    rv->m_maxApertureValue = 18;
-    rv->m_subjectDistance = 19;
+    rv->m_exposureBias = 17 + example_idx;
+    rv->m_maxApertureValue = 18 + example_idx;
+    rv->m_subjectDistance = 19 + example_idx;
     rv->m_lens = QString("lens_%1").arg(example_idx);
     return rv;
 }

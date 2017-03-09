@@ -40,8 +40,8 @@ namespace threads{
             /**
                 Estimated total number of results.
             */
-        qint64 resultsizeestimate()const{return m_resultSizeEstimate;};
-        ThreadListRes& setResultsizeestimate(const qint64& arg){m_resultSizeEstimate=arg;return *this;};
+        quint64 resultsizeestimate()const{return m_resultSizeEstimate;};
+        ThreadListRes& setResultsizeestimate(const quint64& arg){m_resultSizeEstimate=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -58,7 +58,7 @@ namespace threads{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<ThreadListRes> EXAMPLE(int context_index);
+        static std::unique_ptr<ThreadListRes> EXAMPLE(int context_index, int parent_context_index);
         #endif //API_QT_AUTOTEST
 
 
@@ -76,7 +76,7 @@ namespace threads{
             /**
                 Estimated total number of results.
             */
-        qint64 m_resultSizeEstimate = {0};
+        quint64 m_resultSizeEstimate = {0};
 
     };//ThreadListRes
 

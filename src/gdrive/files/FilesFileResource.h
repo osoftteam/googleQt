@@ -197,8 +197,8 @@ namespace files{
                 reflects every change made to the file on the server, even those
                 not visible to the user.
             */
-        qint64 version()const{return m_version;};
-        FileResource& setVersion(const qint64& arg){m_version=arg;return *this;};
+        quint64 version()const{return m_version;};
+        FileResource& setVersion(const quint64& arg){m_version=arg;return *this;};
 
             /**
                 A link for downloading the content of the file in a browser.
@@ -361,16 +361,16 @@ namespace files{
                 The size of the file's content in bytes. This is only applicable
                 to files with binary content in Drive.
             */
-        qint64 size()const{return m_size;};
-        FileResource& setSize(const qint64& arg){m_size=arg;return *this;};
+        quint64 size()const{return m_size;};
+        FileResource& setSize(const quint64& arg){m_size=arg;return *this;};
 
             /**
                 The number of storage quota bytes used by the file. This
                 includes the head revision as well as previous revisions with
                 keepForever enabled.
             */
-        qint64 quotabytesused()const{return m_quotaBytesUsed;};
-        FileResource& setQuotabytesused(const qint64& arg){m_quotaBytesUsed=arg;return *this;};
+        quint64 quotabytesused()const{return m_quotaBytesUsed;};
+        FileResource& setQuotabytesused(const quint64& arg){m_quotaBytesUsed=arg;return *this;};
 
             /**
                 The ID of the file's head revision. This is currently only
@@ -420,7 +420,7 @@ namespace files{
 
 
         #ifdef API_QT_AUTOTEST
-        static std::unique_ptr<FileResource> EXAMPLE(int context_index);
+        static std::unique_ptr<FileResource> EXAMPLE(int context_index, int parent_context_index);
         #endif //API_QT_AUTOTEST
 
 
@@ -491,7 +491,7 @@ namespace files{
                 reflects every change made to the file on the server, even those
                 not visible to the user.
             */
-        qint64 m_version = {0};
+        quint64 m_version = {0};
 
             /**
                 A link for downloading the content of the file in a browser.
@@ -632,14 +632,14 @@ namespace files{
                 The size of the file's content in bytes. This is only applicable
                 to files with binary content in Drive.
             */
-        qint64 m_size = {0};
+        quint64 m_size = {0};
 
             /**
                 The number of storage quota bytes used by the file. This
                 includes the head revision as well as previous revisions with
                 keepForever enabled.
             */
-        qint64 m_quotaBytesUsed = {0};
+        quint64 m_quotaBytesUsed = {0};
 
             /**
                 The ID of the file's head revision. This is currently only

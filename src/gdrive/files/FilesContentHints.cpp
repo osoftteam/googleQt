@@ -59,12 +59,13 @@ std::unique_ptr<ContentHints>  ContentHints::factory::create(const QJsonObject& 
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<ContentHints> ContentHints::EXAMPLE(int context_index){
+std::unique_ptr<ContentHints> ContentHints::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<ContentHints> rv(new ContentHints);
-    rv->m_thumbnail = *(files::ThumbnailInfo::EXAMPLE(0).get());
+    rv->m_thumbnail = *(files::ThumbnailInfo::EXAMPLE(0, context_index).get());
     rv->m_indexableText = QString("indexableText_%1").arg(example_idx);
     return rv;
 }

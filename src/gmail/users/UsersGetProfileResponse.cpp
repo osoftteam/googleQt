@@ -23,17 +23,17 @@ void GetProfileResponse::toJson(QJsonObject& js)const{
 
     if(!m_emailAddress.isEmpty())
         js["emailAddress"] = QString(m_emailAddress);
-    js["messagesTotal"] = m_messagesTotal;
-    js["threadsTotal"] = m_threadsTotal;
-    js["historyId"] = m_historyId;
+    js["messagesTotal"] = QString("%1").arg(m_messagesTotal);
+    js["threadsTotal"] = QString("%1").arg(m_threadsTotal);
+    js["historyId"] = QString("%1").arg(m_historyId);
 }
 
 void GetProfileResponse::fromJson(const QJsonObject& js){
 
     m_emailAddress = js["emailAddress"].toString();
-    m_messagesTotal = js["messagesTotal"].toVariant().toInt();
-    m_threadsTotal = js["threadsTotal"].toVariant().toInt();
-    m_historyId = js["historyId"].toVariant().toInt();
+    m_messagesTotal = js["messagesTotal"].toVariant().toString().toULongLong();
+    m_threadsTotal = js["threadsTotal"].toVariant().toString().toULongLong();
+    m_historyId = js["historyId"].toVariant().toString().toULongLong();
 }
 
 QString GetProfileResponse::toString(bool multiline)const
@@ -63,15 +63,16 @@ std::unique_ptr<GetProfileResponse>  GetProfileResponse::factory::create(const Q
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<GetProfileResponse> GetProfileResponse::EXAMPLE(int context_index){
+std::unique_ptr<GetProfileResponse> GetProfileResponse::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<GetProfileResponse> rv(new GetProfileResponse);
     rv->m_emailAddress = QString("emailAddress_%1").arg(example_idx);
-    rv->m_messagesTotal = 2;
-    rv->m_threadsTotal = 3;
-    rv->m_historyId = 4;
+    rv->m_messagesTotal = 2 + example_idx;
+    rv->m_threadsTotal = 3 + example_idx;
+    rv->m_historyId = 4 + example_idx;
     return rv;
 }
 #endif //API_QT_AUTOTEST

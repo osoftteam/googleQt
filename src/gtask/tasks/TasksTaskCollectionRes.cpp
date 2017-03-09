@@ -65,8 +65,9 @@ std::unique_ptr<TaskCollectionRes>  TaskCollectionRes::factory::create(const QJs
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<TaskCollectionRes> TaskCollectionRes::EXAMPLE(int context_index){
+std::unique_ptr<TaskCollectionRes> TaskCollectionRes::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<TaskCollectionRes> rv(new TaskCollectionRes);
@@ -75,7 +76,7 @@ std::unique_ptr<TaskCollectionRes> TaskCollectionRes::EXAMPLE(int context_index)
     rv->m_nextPageToken = QString("nextPageToken_%1").arg(example_idx);
     std::list<tasks::TaskResource> list_of_items;
     for(int i = 0; i < 3; i++){
-        tasks::TaskResource p = *(tasks::TaskResource::EXAMPLE(i).get());
+        tasks::TaskResource p = *(tasks::TaskResource::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("tasks::TaskCollectionRes", "tasks::TaskResource", &p, i, context_index);
         rv->m_items.push_back(p);
     }

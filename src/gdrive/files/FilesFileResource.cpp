@@ -36,7 +36,7 @@ void FileResource::toJson(QJsonObject& js)const{
     js["explicitlyTrashed"] = m_explicitlyTrashed;
     js["parents"] = ingrl_list2jsonarray(m_parents);
     js["spaces"] = ingrl_list2jsonarray(m_spaces);
-    js["version"] = m_version;
+    js["version"] = QString("%1").arg(m_version);
     if(!m_webContentLink.isEmpty())
         js["webContentLink"] = QString(m_webContentLink);
     if(!m_webViewLink.isEmpty())
@@ -73,8 +73,8 @@ void FileResource::toJson(QJsonObject& js)const{
         js["fileExtension"] = QString(m_fileExtension);
     if(!m_md5Checksum.isEmpty())
         js["md5Checksum"] = QString(m_md5Checksum);
-    js["size"] = m_size;
-    js["quotaBytesUsed"] = m_quotaBytesUsed;
+    js["size"] = QString("%1").arg(m_size);
+    js["quotaBytesUsed"] = QString("%1").arg(m_quotaBytesUsed);
     if(!m_headRevisionId.isEmpty())
         js["headRevisionId"] = QString(m_headRevisionId);
     js["contentHints"] = (QJsonObject)m_contentHints;
@@ -95,7 +95,7 @@ void FileResource::fromJson(const QJsonObject& js){
     m_explicitlyTrashed = js["explicitlyTrashed"].toVariant().toBool();
     jsonarray2ingrl_list(js["parents"].toArray(), m_parents);
     jsonarray2ingrl_list(js["spaces"].toArray(), m_spaces);
-    m_version = js["version"].toVariant().toInt();
+    m_version = js["version"].toVariant().toString().toULongLong();
     m_webContentLink = js["webContentLink"].toString();
     m_webViewLink = js["webViewLink"].toString();
     m_iconLink = js["iconLink"].toString();
@@ -118,8 +118,8 @@ void FileResource::fromJson(const QJsonObject& js){
     m_fullFileExtension = js["fullFileExtension"].toString();
     m_fileExtension = js["fileExtension"].toString();
     m_md5Checksum = js["md5Checksum"].toString();
-    m_size = js["size"].toVariant().toInt();
-    m_quotaBytesUsed = js["quotaBytesUsed"].toVariant().toInt();
+    m_size = js["size"].toVariant().toString().toULongLong();
+    m_quotaBytesUsed = js["quotaBytesUsed"].toVariant().toString().toULongLong();
     m_headRevisionId = js["headRevisionId"].toString();
     m_contentHints.fromJson(js["contentHints"].toObject());
     m_imageMediaMetadata.fromJson(js["imageMediaMetadata"].toObject());
@@ -154,8 +154,9 @@ std::unique_ptr<FileResource>  FileResource::factory::create(const QJsonObject& 
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<FileResource> FileResource::EXAMPLE(int context_index){
+std::unique_ptr<FileResource> FileResource::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<FileResource> rv(new FileResource);
@@ -172,7 +173,7 @@ std::unique_ptr<FileResource> FileResource::EXAMPLE(int context_index){
     for(int i = 0; i < 3; i++){
         rv->m_spaces.push_back(QString("_%1_%2").arg(i).arg(example_idx));
     }
-    rv->m_version = 11;
+    rv->m_version = 11 + example_idx;
     rv->m_webContentLink = QString("webContentLink_%1").arg(example_idx);
     rv->m_webViewLink = QString("webViewLink_%1").arg(example_idx);
     rv->m_iconLink = QString("iconLink_%1").arg(example_idx);
@@ -182,17 +183,17 @@ std::unique_ptr<FileResource> FileResource::EXAMPLE(int context_index){
     rv->m_modifiedTime = QDateTime::currentDateTime();
     rv->m_modifiedByMeTime = QDateTime::currentDateTime();
     rv->m_sharedWithMeTime = QDateTime::currentDateTime();
-    rv->m_sharingUser = *(about::UserInfo::EXAMPLE(0).get());
+    rv->m_sharingUser = *(about::UserInfo::EXAMPLE(0, context_index).get());
     std::list<about::UserInfo> list_of_owners;
     for(int i = 0; i < 3; i++){
-        about::UserInfo p = *(about::UserInfo::EXAMPLE(i).get());
+        about::UserInfo p = *(about::UserInfo::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("files::FileResource", "about::UserInfo", &p, i, context_index);
         rv->m_owners.push_back(p);
     }
-    rv->m_lastModifyingUser = *(about::UserInfo::EXAMPLE(0).get());
+    rv->m_lastModifyingUser = *(about::UserInfo::EXAMPLE(0, context_index).get());
     std::list<permissions::ResourcePermission> list_of_permissions;
     for(int i = 0; i < 3; i++){
-        permissions::ResourcePermission p = *(permissions::ResourcePermission::EXAMPLE(i).get());
+        permissions::ResourcePermission p = *(permissions::ResourcePermission::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("files::FileResource", "permissions::ResourcePermission", &p, i, context_index);
         rv->m_permissions.push_back(p);
     }
@@ -201,12 +202,12 @@ std::unique_ptr<FileResource> FileResource::EXAMPLE(int context_index){
     rv->m_fullFileExtension = QString("fullFileExtension_%1").arg(example_idx);
     rv->m_fileExtension = QString("fileExtension_%1").arg(example_idx);
     rv->m_md5Checksum = QString("md5Checksum_%1").arg(example_idx);
-    rv->m_size = 34;
-    rv->m_quotaBytesUsed = 35;
+    rv->m_size = 34 + example_idx;
+    rv->m_quotaBytesUsed = 35 + example_idx;
     rv->m_headRevisionId = QString("headRevisionId_%1").arg(example_idx);
-    rv->m_contentHints = *(files::ContentHints::EXAMPLE(0).get());
-    rv->m_imageMediaMetadata = *(files::ImageMediaMetadata::EXAMPLE(0).get());
-    rv->m_videoMediaMetadata = *(files::VideoMediaMetadata::EXAMPLE(0).get());
+    rv->m_contentHints = *(files::ContentHints::EXAMPLE(0, context_index).get());
+    rv->m_imageMediaMetadata = *(files::ImageMediaMetadata::EXAMPLE(0, context_index).get());
+    rv->m_videoMediaMetadata = *(files::VideoMediaMetadata::EXAMPLE(0, context_index).get());
     return rv;
 }
 #endif //API_QT_AUTOTEST

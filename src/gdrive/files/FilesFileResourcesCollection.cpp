@@ -62,8 +62,9 @@ std::unique_ptr<FileResourcesCollection>  FileResourcesCollection::factory::crea
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<FileResourcesCollection> FileResourcesCollection::EXAMPLE(int context_index){
+std::unique_ptr<FileResourcesCollection> FileResourcesCollection::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<FileResourcesCollection> rv(new FileResourcesCollection);
@@ -71,7 +72,7 @@ std::unique_ptr<FileResourcesCollection> FileResourcesCollection::EXAMPLE(int co
     rv->m_kind = QString("kind_%1").arg(example_idx);
     std::list<files::FileResource> list_of_files;
     for(int i = 0; i < 3; i++){
-        files::FileResource p = *(files::FileResource::EXAMPLE(i).get());
+        files::FileResource p = *(files::FileResource::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("files::FileResourcesCollection", "files::FileResource", &p, i, context_index);
         rv->m_files.push_back(p);
     }

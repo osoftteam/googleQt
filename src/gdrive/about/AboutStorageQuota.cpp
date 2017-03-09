@@ -23,9 +23,9 @@ void StorageQuota::toJson(QJsonObject& js)const{
 
     js["limit"] = m_limit;
     js["usage"] = m_usage;
-    js["usageInDrive"] = m_usageInDrive;
-    js["usageInDriveTrash"] = m_usageInDriveTrash;
-    js["maxUploadSize"] = m_maxUploadSize;
+    js["usageInDrive"] = QString("%1").arg(m_usageInDrive);
+    js["usageInDriveTrash"] = QString("%1").arg(m_usageInDriveTrash);
+    js["maxUploadSize"] = QString("%1").arg(m_maxUploadSize);
     js["appInstalled"] = m_appInstalled;
 }
 
@@ -33,9 +33,9 @@ void StorageQuota::fromJson(const QJsonObject& js){
 
     m_limit = js["limit"].toVariant().toFloat();
     m_usage = js["usage"].toVariant().toFloat();
-    m_usageInDrive = js["usageInDrive"].toVariant().toInt();
-    m_usageInDriveTrash = js["usageInDriveTrash"].toVariant().toInt();
-    m_maxUploadSize = js["maxUploadSize"].toVariant().toInt();
+    m_usageInDrive = js["usageInDrive"].toVariant().toString().toULongLong();
+    m_usageInDriveTrash = js["usageInDriveTrash"].toVariant().toString().toULongLong();
+    m_maxUploadSize = js["maxUploadSize"].toVariant().toString().toULongLong();
     m_appInstalled = js["appInstalled"].toVariant().toBool();
 }
 
@@ -66,16 +66,17 @@ std::unique_ptr<StorageQuota>  StorageQuota::factory::create(const QJsonObject& 
 }
 
 #ifdef API_QT_AUTOTEST
-std::unique_ptr<StorageQuota> StorageQuota::EXAMPLE(int context_index){
+std::unique_ptr<StorageQuota> StorageQuota::EXAMPLE(int context_index, int parent_context_index){
     Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<StorageQuota> rv(new StorageQuota);
-    rv->m_limit = 1;
-    rv->m_usage = 2;
-    rv->m_usageInDrive = 3;
-    rv->m_usageInDriveTrash = 4;
-    rv->m_maxUploadSize = 5;
+    rv->m_limit = 1 + example_idx;
+    rv->m_usage = 2 + example_idx;
+    rv->m_usageInDrive = 3 + example_idx;
+    rv->m_usageInDriveTrash = 4 + example_idx;
+    rv->m_maxUploadSize = 5 + example_idx;
     return rv;
 }
 #endif //API_QT_AUTOTEST
