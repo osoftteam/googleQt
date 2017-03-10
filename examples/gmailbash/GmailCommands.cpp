@@ -31,7 +31,7 @@ void GmailCommands::listMessages(QString nextToken, QString labelIds)
                     id_list += m.id();
                     id_list += " ";
                 }
-            //print_last_result("");
+
             get_batch_snippets(id_list);
             nextToken = mlist->nextpagetoken();
             if(!nextToken.isEmpty())
@@ -232,32 +232,40 @@ void GmailCommands::printMessage(messages::MessageResource* r)
                 std::cout << h.name().leftJustified(20, ' ') << h.value() << std::endl;
         }
 
-    auto parts = p.parts();
-    std::cout << "parts count: " << parts.size() << std::endl;
-    for(auto pt : parts)
-        {
-            const messages::MessagePartBody& pt_body = pt.body();
-            QString partID = pt.partid();
-            std::cout << "------------------------------------------------"
-                      << "part" << partID << "---------------------------------"
-                      << std::endl;            
-            std::cout << pt.mimetype() << " body-size:" << pt_body.size() << std::endl;
-            bool is_plain_text = false;
-            bool is_html_text = false;
-            auto pt_headers = pt.headers();
-            for(auto h : pt_headers)
-                {
-                    if(h.name() == "Content-Type"){
-                        is_plain_text = (h.value().indexOf("text/plain") == 0);
-                        is_html_text = (h.value().indexOf("text/html") == 0);
-                    }
-                    std::cout << ""<< h.name().leftJustified(20, ' ') << " " << h.value() << std::endl;
-                }
-            if(is_plain_text || is_html_text)
-                {
-                    std::cout << QByteArray::fromBase64(pt_body.data(), QByteArray::Base64UrlEncoding).constData() << std::endl;
-                }
-        }
+	if (p.mimetype().compare("text/html") == 0)
+	{
+		QByteArray payload_body = QByteArray::fromBase64(p.body().data(), QByteArray::Base64UrlEncoding);
+		std::cout << payload_body.constData() << std::endl;
+	}
+	else
+	{
+		auto parts = p.parts();
+		std::cout << "parts count: " << parts.size() << std::endl;
+		for (auto pt : parts)
+		{
+			const messages::MessagePartBody& pt_body = pt.body();
+			QString partID = pt.partid();
+			std::cout << "------------------------------------------------"
+				<< "part" << partID << "---------------------------------"
+				<< std::endl;
+			std::cout << pt.mimetype() << " body-size:" << pt_body.size() << std::endl;
+			bool is_plain_text = false;
+			bool is_html_text = false;
+			auto pt_headers = pt.headers();
+			for (auto h : pt_headers)
+			{
+				if (h.name() == "Content-Type") {
+					is_plain_text = (h.value().indexOf("text/plain") == 0);
+					is_html_text = (h.value().indexOf("text/html") == 0);
+				}
+				std::cout << "" << h.name().leftJustified(20, ' ') << " " << h.value() << std::endl;
+			}
+			if (is_plain_text || is_html_text)
+			{
+				std::cout << QByteArray::fromBase64(pt_body.data(), QByteArray::Base64UrlEncoding).constData() << std::endl;
+			}
+		}
+	}
 };
 
 
@@ -554,6 +562,7 @@ void GmailCommands::get_batch_snippets(QString id_list)
     }
     std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = m_gm->getBatchMessages(EDataState::snippet, arg_list);
     RESULT_LIST<messages::MessageResource*> res = br->results();
+	res.sort([](messages::MessageResource* f, messages::MessageResource* s) {return (f->internaldate() > s->internaldate()); });
     std::cout << "batch size: " << res.size() << std::endl;
     
     int n = 1;
@@ -700,7 +709,7 @@ void GmailCommands::check_email_cache(QString nextToken)
 
     try
         {    
-            std::unique_ptr<mail_batch::MessagesList> lst = m_gm->getNextCacheMessages(50, nextToken);
+            std::unique_ptr<mail_batch::MessagesList> lst = m_gm->getNextCacheMessages(20, nextToken);
             std::cout << "loaded from cache: " << lst->messages.size() << std::endl;
 
             int n = 1;

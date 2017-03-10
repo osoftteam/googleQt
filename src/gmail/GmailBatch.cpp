@@ -176,39 +176,49 @@ void mail_batch::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
             }break;
         case googleQt::EDataState::body:
             {
-                QString plain_text, html_test;
+                QString plain_text, html_text;
+				auto p = m->payload();
+				if (p.mimetype().compare("text/html") == 0)
+				{
+					QByteArray payload_body = QByteArray::fromBase64(p.body().data(), QByteArray::Base64UrlEncoding);
+					html_text = payload_body.constData();
+					plain_text = html_text;
+					plain_text.remove(QRegExp("<[^>]*>"));
+				}
+				else
+				{
+					auto parts = p.parts();
+					for (auto pt : parts)
+					{
+						bool plain_text_loaded = false;
+						bool html_text_loaded = false;
+						auto pt_headers = pt.headers();
+						for (auto h : pt_headers)
+						{
+							if (h.name() == "Content-Type") {
+								if ((h.value().indexOf("text/plain") == 0))
+								{
+									plain_text_loaded = true;
+									const messages::MessagePartBody& pt_body = pt.body();
+									plain_text = QByteArray::fromBase64(pt_body.data(),
+										QByteArray::Base64UrlEncoding).constData();
+									break;
+								}
+								else if ((h.value().indexOf("text/html") == 0))
+								{
+									html_text_loaded = true;
+									const messages::MessagePartBody& pt_body = pt.body();
+									html_text = QByteArray::fromBase64(pt_body.data(),
+										QByteArray::Base64UrlEncoding).constData();
+									break;
+								}
+							}//"Content-Type"
+						}//pt_headers
+						if (plain_text_loaded && html_text_loaded)
+							break;
+					}// parts
+				}
 
-                auto p = m->payload();
-                auto parts = p.parts();
-                for (auto pt : parts)
-                    {
-                        bool plain_text_loaded = false;
-                        bool html_text_loaded = false;
-                        auto pt_headers = pt.headers();
-                        for (auto h : pt_headers)
-                            {
-                                if (h.name() == "Content-Type") {
-                                    if ((h.value().indexOf("text/plain") == 0))
-                                        {
-                                            plain_text_loaded = true;
-                                            const messages::MessagePartBody& pt_body = pt.body();
-                                            plain_text = QByteArray::fromBase64(pt_body.data(), 
-                                                                                QByteArray::Base64UrlEncoding).constData();
-                                            break;
-                                        }
-                                    else if ((h.value().indexOf("text/html") == 0))
-                                        {
-                                            html_text_loaded = true;
-                                            const messages::MessagePartBody& pt_body = pt.body();
-                                            html_test = QByteArray::fromBase64(pt_body.data(), 
-                                                                               QByteArray::Base64UrlEncoding).constData();
-                                            break;
-                                        }
-                                }//"Content-Type"
-                            }//pt_headers
-                        if (plain_text_loaded && html_text_loaded)
-                            break;
-                    }// parts
                 auto i = m_result.find(m->id());
                 if (i == m_result.end())
                     {
@@ -216,10 +226,11 @@ void mail_batch::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
 						QString from, subject;
 						loadHeaders(m, from, subject);
                         qDebug() << m->id() << from << subject;
+						qDebug() << plain_text << html_text;
 						std::shared_ptr<MessageData> md = std::make_shared<MessageData>(m->id(), from, subject, m->snippet(), m->internaldate());
                         add(md);
 						//m_result[m->id()] = md;
-						md->updateBody(plain_text, html_test);
+						md->updateBody(plain_text, html_text);
                     }
                 else
                     {
@@ -230,16 +241,16 @@ void mail_batch::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
                                 loadHeaders(m, from, subject);
                                 md->updateSnippet(from, subject, m->snippet());
                             }
-                        md->updateBody(plain_text, html_test);
+                        md->updateBody(plain_text, html_text);
                     }
-            }break;
+            }break;//body
         }
 };
 
 static bool compare_internalDate(std::shared_ptr<mail_batch::MessageData>& f,
     std::shared_ptr<mail_batch::MessageData>& s) 
 {
-    return (f->internalDate() < s->internalDate());
+    return (f->internalDate() > s->internalDate());
 };
 
 std::unique_ptr<mail_batch::MessagesList> mail_batch::GMailCacheQueryResult::waitForSortedResultListAndRelease()
@@ -249,6 +260,15 @@ std::unique_ptr<mail_batch::MessagesList> mail_batch::GMailCacheQueryResult::wai
         m_in_wait_loop = true;
         waitUntillFinishedOrCancelled();
     }
+
+	std::cout << "======before-sorted " << m_result_list.size() << std::endl;
+	for (auto i : m_result_list) {
+		std::cout << i->internalDate() << std::endl;
+	}
+	std::cout << "======after-sorted " << m_result_list.size() << std::endl;
+	for (auto i : m_result_list) {
+		std::cout << i->internalDate() << std::endl;
+	}
 
     m_result_list.sort(compare_internalDate);
     std::unique_ptr<mail_batch::MessagesList> rv(new mail_batch::MessagesList);
