@@ -271,37 +271,52 @@ void GmailCommands::printMessage(messages::MessageResource* r)
 
 void GmailCommands::exportMessageBody(messages::MessageResource* r, QString fileName)
 {
+    QByteArray body_part;
+    
     auto p = r->payload();
-    auto parts = p.parts();
-    for(auto pt : parts)
+    if (p.mimetype().compare("text/html") == 0)
         {
+            body_part = QByteArray::fromBase64(p.body().data(), QByteArray::Base64UrlEncoding);
+        }
+    else
+        {
+            auto parts = p.parts();
             for(auto pt : parts)
                 {
-                    const messages::MessagePartBody& pt_body = pt.body();            
-                    auto pt_headers = pt.headers();
-                    for(auto h : pt_headers)
+                    for(auto pt : parts)
                         {
-                            bool is_html_text = false;
-                            if(h.name() == "Content-Type"){
-                                is_html_text = (h.value().indexOf("text/html") == 0);
-                            }
-                            if(is_html_text){
-                                QByteArray body_part = QByteArray::fromBase64(pt_body.data(), QByteArray::Base64UrlEncoding);
-                                QFile file_in(fileName);
-                                if (!file_in.open(QFile::WriteOnly)) {
-                                    qWarning() << "Error opening file: " << fileName;
-                                    return;
-                                }
-                                file_in.write(body_part);
-                                file_in.close();
-                                std::cout << "exported: " << fileName << " " << size_human(body_part.size()) << std::endl;
-                                return;
-                            }
-                        }//headers
-                }//parts
+                            const messages::MessagePartBody& pt_body = pt.body();            
+                            auto pt_headers = pt.headers();
+                            for(auto h : pt_headers)
+                                {
+                                    bool is_html_text = false;
+                                    if(h.name() == "Content-Type"){
+                                        is_html_text = (h.value().indexOf("text/html") == 0);
+                                    }
+                                    if(is_html_text){
+                                        body_part = QByteArray::fromBase64(pt_body.data(), QByteArray::Base64UrlEncoding);
+                                        break;;
+                                    }
+                                }//headers
+                        }//parts
+                }//for
         }
 
-    std::cout << "HTML body not found" << std::endl;
+    if(body_part.size() > 0)
+        {
+            QFile file_in(fileName);
+            if (!file_in.open(QFile::WriteOnly)) {
+                qWarning() << "Error opening file: " << fileName;
+                return;
+            }
+            file_in.write(body_part);
+            file_in.close();
+            std::cout << "exported: " << fileName << " " << size_human(body_part.size()) << std::endl;
+        }
+    else
+        {
+            std::cout << "HTML body not found" << std::endl;
+        }
 };
 
 void GmailCommands::get(QString msg_id)
