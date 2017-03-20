@@ -209,7 +209,7 @@ void GmailCommands::untrash(QString message_id)
 
 void GmailCommands::printMessage(messages::MessageResource* r)
 {
-    std::set<QString> headers_to_print = {"From", "To", "Subject"};
+    std::set<QString> headers_to_print = {"From", "To", "Subject", "CC", "BCC"};
     
     std::cout << "rid="<< r->id() << std::endl
               << "tid=" << r->threadid() << std::endl

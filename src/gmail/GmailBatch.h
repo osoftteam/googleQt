@@ -28,12 +28,13 @@ namespace googleQt{
             friend class GMailCacheQueryResult;
             friend class GMailSQLiteStorage;
         public:
-			MessageData(QString id, QString from, QString subject, QString snippet, qlonglong internalDate);
-			MessageData(QString id, QString from, QString subject, QString snippet, QString plain, QString html, qlonglong internalDate);
+			MessageData(QString id, QString from, QString to, QString subject, QString snippet, qlonglong internalDate);
+			MessageData(QString id, QString from, QString to, QString subject, QString snippet, QString plain, QString html, qlonglong internalDate);
 
             void  merge(CacheData* other);
             
             QString from()const { return m_from; }
+            QString to()const { return m_to; }
             QString subject()const{return m_subject;}
             QString snippet()const { return m_snippet; }
             QString plain()const { return m_plain; }
@@ -43,19 +44,29 @@ namespace googleQt{
             static std::unique_ptr<MessageData> EXAMPLE(EDataState st);
 #endif //API_QT_AUTOTEST
         protected:
-			void updateSnippet(QString from, QString subject, QString snippet);
+			void updateSnippet(QString from,
+                               QString to,
+                               QString subject,
+                               QString snippet);
             void updateBody(QString plain, QString html);
         protected:
             QString m_from;
+            QString m_to;
             QString m_subject;
             QString m_snippet;
             QString m_plain;
             QString m_html;
             qlonglong m_internalDate;
         private:
-            MessageData(int agg_state, QString id, QString from, 
-                QString subject, QString snippet, QString plain, QString html,
-                qlonglong internalDate);
+            MessageData(int agg_state,
+                        QString id,
+                        QString from,
+                        QString to, 
+                        QString subject,
+                        QString snippet,
+                        QString plain,
+                        QString html,
+                        qlonglong internalDate);
         };
 
         struct MessagesList
@@ -76,7 +87,10 @@ namespace googleQt{
             std::unique_ptr<MessagesList> waitForSortedResultListAndRelease();
         protected:
             void fetchMessage(messages::MessageResource* m);
-			void loadHeaders(messages::MessageResource* m, QString& from, QString& subject);
+			void loadHeaders(messages::MessageResource* m,
+                             QString& from,
+                             QString& to,
+                             QString& subject);
         protected:
             GmailRoutes&  m_r;
         };
