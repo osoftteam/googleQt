@@ -14,6 +14,8 @@ GoogleTask<messages::MessageResource>* mail_batch::MessagesReceiver::route(QStri
             arg.headers().push_back("Subject");
             arg.headers().push_back("From");
             arg.headers().push_back("To");
+			arg.headers().push_back("Cc");
+			arg.headers().push_back("Bcc");
         }
     else if (m_msg_format == EDataState::body)
         {
@@ -36,34 +38,42 @@ mail_batch::GMailCache::GMailCache(ApiEndpoint& ept)
 mail_batch::MessageData::MessageData(QString id,
                                      QString from,
                                      QString to,
+                                     QString cc,
+                                     QString bcc,
                                      QString subject,
                                      QString snippet,
                                      qlonglong internalDate)
     :CacheData(EDataState::snippet, id),
      m_from(from),
      m_to(to),
+     m_cc(cc),
+     m_bcc(bcc),
      m_subject(subject),
-     m_snippet(snippet),
-     m_internalDate(internalDate)
+    m_snippet(snippet),
+    m_internalDate(internalDate)
 {
 };
 
 mail_batch::MessageData::MessageData(QString id,
                                      QString from,
                                      QString to,
+                                     QString cc,
+                                     QString bcc,
                                      QString subject,
                                      QString snippet,
                                      QString plain,
                                      QString html,
                                      qlonglong internalDate)
 	:CacheData(EDataState::body, id),
-     m_from(from),
-     m_to(to),
-     m_subject(subject),
-     m_snippet(snippet),
-     m_plain(plain),
-     m_html(html),
-     m_internalDate(internalDate)
+    m_from(from),
+    m_to(to),
+    m_cc(cc),
+    m_bcc(bcc),
+    m_subject(subject),
+    m_snippet(snippet),
+    m_plain(plain),
+    m_html(html),
+    m_internalDate(internalDate)
 {
 
 };
@@ -72,31 +82,39 @@ mail_batch::MessageData::MessageData(int agg_state,
                                      QString id,
                                      QString from,
                                      QString to,
+                                     QString cc,
+                                     QString bcc,
                                      QString subject,
                                      QString snippet,
                                      QString plain,
                                      QString html,
                                      qlonglong internalDate)
-    :CacheData(EDataState::body, id),
-     m_from(from),
-     m_to(to),
-     m_subject(subject),
-     m_snippet(snippet),
-     m_plain(plain),
-     m_html(html),
-     m_internalDate(internalDate)
+:CacheData(EDataState::body, id),
+    m_from(from),
+    m_to(to),
+    m_cc(cc),
+    m_bcc(bcc),
+    m_subject(subject),
+    m_snippet(snippet),
+    m_plain(plain),
+    m_html(html),
+    m_internalDate(internalDate)
 {
     m_state_agg = agg_state;
 };
 
 void mail_batch::MessageData::updateSnippet(QString from,
                                             QString to,
+                                            QString cc,
+                                            QString bcc,
                                             QString subject,
                                             QString snippet)
 {
 	m_state_agg |= static_cast<int>(EDataState::snippet);
 	m_from = from;
     m_to = to;
+    m_cc = cc;
+    m_bcc = bcc;
 	m_subject = subject;
 	m_snippet = snippet;
 };
@@ -162,37 +180,39 @@ void mail_batch::GMailCacheQueryResult::fetchFromCloud_Async(const std::list<QSt
     par_runner = m_r.getBatchMessages_Async(m_state, id_list);
  
     std::function<void(void)> fetchMessagesOnFinished = [=]() 
-    {
-        RESULT_LIST<messages::MessageResource*> res = par_runner->get();
-        for (auto& m : res)
         {
-            fetchMessage(m);
-        }
-        std::set<QString> id_set;
-        for (std::list<QString>::const_iterator i = id_list.cbegin(); i != id_list.cend(); i++)
-        {
-            id_set.insert(*i);
-        }
-        notifyFetchCompleted(m_result, id_set);
-        par_runner->deleteLater();
-    };
+            RESULT_LIST<messages::MessageResource*> res = par_runner->get();
+            for (auto& m : res)
+                {
+                    fetchMessage(m);
+                }
+            std::set<QString> id_set;
+            for (std::list<QString>::const_iterator i = id_list.cbegin(); i != id_list.cend(); i++)
+                {
+                    id_set.insert(*i);
+                }
+            notifyFetchCompleted(m_result, id_set);
+            par_runner->deleteLater();
+        };
 
     if (par_runner->isFinished())
-    {
-        fetchMessagesOnFinished();
-    }
-    else
-    {
-        connect(par_runner, &EndpointRunnable::finished, [=]()
         {
             fetchMessagesOnFinished();
-        });
-    }
+        }
+    else
+        {
+            connect(par_runner, &EndpointRunnable::finished, [=]()
+                    {
+                        fetchMessagesOnFinished();
+                    });
+        }
 };
 
 void mail_batch::GMailCacheQueryResult::loadHeaders(messages::MessageResource* m,
                                                     QString& from,
                                                     QString& to,
+													QString& cc,
+													QString& bcc,
                                                     QString& subject)
 {
 	auto& header_list = m->payload().headers();
@@ -205,7 +225,15 @@ void mail_batch::GMailCacheQueryResult::loadHeaders(messages::MessageResource* m
             else if (h.name().compare("To", Qt::CaseInsensitive) == 0)
                 {
                     to = h.value();
-                }            
+                }
+			else if (h.name().compare("CC", Qt::CaseInsensitive) == 0)
+                {
+                    cc = h.value();
+                }
+			else if (h.name().compare("BCC", Qt::CaseInsensitive) == 0)
+                {
+                    bcc = h.value();
+                }
             else if (h.name().compare("Subject", Qt::CaseInsensitive) == 0)
                 {
                     subject = h.value();
@@ -219,9 +247,16 @@ void mail_batch::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
         {
         case googleQt::EDataState::snippet:
             {
-                QString from, to, subject;
-				loadHeaders(m, from, to, subject);
-				std::shared_ptr<MessageData> md = std::make_shared<MessageData>(m->id(), from, to, subject, m->snippet(), m->internaldate());
+                QString from, to, cc, bcc, subject;
+				loadHeaders(m, from, to, cc, bcc, subject);
+				std::shared_ptr<MessageData> md = std::make_shared<MessageData>(m->id(), 
+                                                                                from, 
+                                                                                to, 
+                                                                                cc,
+                                                                                bcc,
+                                                                                subject, 
+                                                                                m->snippet(), 
+                                                                                m->internaldate());
                 add(md);
             }break;
         case googleQt::EDataState::body:
@@ -229,54 +264,59 @@ void mail_batch::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
                 QString plain_text, html_text;
 				auto p = m->payload();
 				if (p.mimetype().compare("text/html") == 0)
-				{
-					QByteArray payload_body = QByteArray::fromBase64(p.body().data(), QByteArray::Base64UrlEncoding);
-					html_text = payload_body.constData();
-					plain_text = html_text;
-					plain_text.remove(QRegExp("<[^>]*>"));
-				}
+                    {
+                        QByteArray payload_body = QByteArray::fromBase64(p.body().data(), QByteArray::Base64UrlEncoding);
+                        html_text = payload_body.constData();
+                        plain_text = html_text;
+                        plain_text.remove(QRegExp("<[^>]*>"));
+                    }
 				else
-				{
-					auto parts = p.parts();
-					for (auto pt : parts)
-					{
-						bool plain_text_loaded = false;
-						bool html_text_loaded = false;
-						auto pt_headers = pt.headers();
-						for (auto h : pt_headers)
-						{
-							if (h.name() == "Content-Type") {
-								if ((h.value().indexOf("text/plain") == 0))
-								{
-									plain_text_loaded = true;
-									const messages::MessagePartBody& pt_body = pt.body();
-									plain_text = QByteArray::fromBase64(pt_body.data(),
-										QByteArray::Base64UrlEncoding).constData();
-									break;
-								}
-								else if ((h.value().indexOf("text/html") == 0))
-								{
-									html_text_loaded = true;
-									const messages::MessagePartBody& pt_body = pt.body();
-									html_text = QByteArray::fromBase64(pt_body.data(),
-										QByteArray::Base64UrlEncoding).constData();
-									break;
-								}
-							}//"Content-Type"
-						}//pt_headers
-						if (plain_text_loaded && html_text_loaded)
-							break;
-					}// parts
-				}
+                    {
+                        auto parts = p.parts();
+                        for (auto pt : parts)
+                            {
+                                bool plain_text_loaded = false;
+                                bool html_text_loaded = false;
+                                auto pt_headers = pt.headers();
+                                for (auto h : pt_headers)
+                                    {
+                                        if (h.name() == "Content-Type") {
+                                            if ((h.value().indexOf("text/plain") == 0))
+                                                {
+                                                    plain_text_loaded = true;
+                                                    const messages::MessagePartBody& pt_body = pt.body();
+                                                    plain_text = QByteArray::fromBase64(pt_body.data(),
+                                                                                        QByteArray::Base64UrlEncoding).constData();
+                                                    break;
+                                                }
+                                            else if ((h.value().indexOf("text/html") == 0))
+                                                {
+                                                    html_text_loaded = true;
+                                                    const messages::MessagePartBody& pt_body = pt.body();
+                                                    html_text = QByteArray::fromBase64(pt_body.data(),
+                                                                                       QByteArray::Base64UrlEncoding).constData();
+                                                    break;
+                                                }
+                                        }//"Content-Type"
+                                    }//pt_headers
+                                if (plain_text_loaded && html_text_loaded)
+                                    break;
+                            }// parts
+                    }
 
                 auto i = m_result.find(m->id());
                 if (i == m_result.end())
                     {
-						QString from, to, subject;
-						loadHeaders(m, from, to, subject);
-                        //                        qDebug() << m->id() << from << subject;
-                        //						qDebug() << plain_text << html_text;
-						std::shared_ptr<MessageData> md = std::make_shared<MessageData>(m->id(), from, to, subject, m->snippet(), m->internaldate());
+						QString from, to, cc, bcc, subject;
+						loadHeaders(m, from, to, cc, bcc, subject);
+						std::shared_ptr<MessageData> md = std::make_shared<MessageData>(m->id(), 
+                                                                                        from, 
+                                                                                        to, 
+                                                                                        cc, 
+                                                                                        bcc, 
+                                                                                        subject, 
+                                                                                        m->snippet(), 
+                                                                                        m->internaldate());
                         add(md);
 						md->updateBody(plain_text, html_text);
                     }
@@ -285,9 +325,9 @@ void mail_batch::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
                         std::shared_ptr<MessageData> md = i->second;
 						if (!md->isLoaded(googleQt::EDataState::snippet)) 
                             {							
-                                QString from, to, subject;
-                                loadHeaders(m, from, to, subject);
-                                md->updateSnippet(from, to, subject, m->snippet());
+                                QString from, to, cc, bcc, subject;
+                                loadHeaders(m, from, to, cc, bcc, subject);
+                                md->updateSnippet(from, to, cc, bcc, subject, m->snippet());
                             }
                         md->updateBody(plain_text, html_text);
                     }
@@ -296,7 +336,7 @@ void mail_batch::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
 };
 
 static bool compare_internalDate(std::shared_ptr<mail_batch::MessageData>& f,
-    std::shared_ptr<mail_batch::MessageData>& s) 
+                                 std::shared_ptr<mail_batch::MessageData>& s) 
 {
     return (f->internalDate() > s->internalDate());
 };
@@ -304,19 +344,10 @@ static bool compare_internalDate(std::shared_ptr<mail_batch::MessageData>& f,
 std::unique_ptr<mail_batch::MessagesList> mail_batch::GMailCacheQueryResult::waitForSortedResultListAndRelease()
 {
     if (!isFinished())
-    {
-        m_in_wait_loop = true;
-        waitUntillFinishedOrCancelled();
-    }
-
-	std::cout << "======before-sorted " << m_result_list.size() << std::endl;
-	for (auto i : m_result_list) {
-		std::cout << i->internalDate() << std::endl;
-	}
-	std::cout << "======after-sorted " << m_result_list.size() << std::endl;
-	for (auto i : m_result_list) {
-		std::cout << i->internalDate() << std::endl;
-	}
+        {
+            m_in_wait_loop = true;
+            waitUntillFinishedOrCancelled();
+        }
 
     m_result_list.sort(compare_internalDate);
     std::unique_ptr<mail_batch::MessagesList> rv(new mail_batch::MessagesList);
@@ -343,12 +374,15 @@ bool mail_batch::GMailSQLiteStorage::init(QString dbPath, QString dbName, QStrin
 
     m_query.reset(new QSqlQuery(m_db));
 
-    QString sql = QString("CREATE TABLE IF NOT EXISTS %1gmail_msg(msg_id TEXT PRIMARY KEY, msg_from TEXT, msg_to TEXT, msg_subject TEXT, msg_snippet TEXT, msg_plain TEXT, msg_html TEXT, internal_date INTEGER, msg_state INTEGER)").arg(m_db_meta_prefix);
+    QString sql = QString("CREATE TABLE IF NOT EXISTS %1gmail_msg(msg_id TEXT PRIMARY KEY, msg_from TEXT, "
+                          "msg_to TEXT, msg_cc TEXT, msg_bcc TEXT, msg_subject TEXT, msg_snippet TEXT, msg_plain TEXT, "
+                          "msg_html TEXT, internal_date INTEGER, msg_state INTEGER, msg_cache_lock INTEGER)").arg(m_db_meta_prefix);
 
     if (!execQuery(sql))
         return false;
 
-    sql = QString("SELECT msg_state, msg_id, msg_from, msg_to, msg_subject, msg_snippet, msg_plain, msg_html, internal_date FROM %1gmail_msg ORDER BY internal_date").arg(m_db_meta_prefix);
+    sql = QString("SELECT msg_state, msg_id, msg_from, msg_to, msg_cc, msg_bcc, "
+                  "msg_subject, msg_snippet, msg_plain, msg_html, internal_date FROM %1gmail_msg ORDER BY internal_date").arg(m_db_meta_prefix);
     QSqlQuery* q = selectQuery(sql);
     if (!q)
         return false;
@@ -356,39 +390,34 @@ bool mail_batch::GMailSQLiteStorage::init(QString dbPath, QString dbName, QStrin
     int loaded_objects = 0, skipped = 0;
     bool cache_avail = true;
     while (q->next() && cache_avail)
-    {
-        std::shared_ptr<MessageData> md = loadObjFromDB(q);
-        if (md == nullptr)
-            continue;
-
-        cache_avail = false;
-        if (md != nullptr)
         {
-            if (m_mem_cache->mem_has_object(md->id())) 
-            {
-                skipped++;
-/*#ifdef API_QT_AUTOTEST
-                ApiAutotest::INSTANCE() << QString("%1. DB-loaded (skipped) %2").arg(loaded_objects + 1).arg(md->id());
-#endif*/
-            }
+            std::shared_ptr<MessageData> md = loadObjFromDB(q);
+            if (md == nullptr)
+                continue;
+
+            cache_avail = false;
+            if (md != nullptr)
+                {
+                    if (m_mem_cache->mem_has_object(md->id())) 
+                        {
+                            skipped++;
+                        }
+                    else
+                        {
+                            cache_avail = m_mem_cache->mem_insert(md->id(), md);
+                        }
+                }
             else
-            {
-                cache_avail = m_mem_cache->mem_insert(md->id(), md);
-/*#ifdef API_QT_AUTOTEST
-                ApiAutotest::INSTANCE() << QString("%1. DB-loaded %2").arg(loaded_objects + 1).arg(md->id());
-#endif*/
-            }
-        }
-        else
-        {
-            break;
-        }
+                {
+                    break;
+                }
 
-        loaded_objects++;
-    }
+            loaded_objects++;
+        }
 
 #ifdef API_QT_AUTOTEST
-    ApiAutotest::INSTANCE() << QString("DB-loaded %1 records, skipped %2, mem-cache-size: %3").arg(loaded_objects).arg(skipped).arg(m_mem_cache->mem_size());
+    ApiAutotest::INSTANCE() << QString("DB-loaded %1 records, skipped %2, mem-cache-size: %3")
+        .arg(loaded_objects).arg(skipped).arg(m_mem_cache->mem_size());
 #endif
 
     m_initialized = true;
@@ -406,20 +435,21 @@ std::list<QString> mail_batch::GMailSQLiteStorage::load(EDataState state,
     std::function<bool(const std::list<QString>& lst)> loadSublist = [&](const std::list<QString>& lst) -> bool
         {
             QString comma_ids = slist2commalist_decorated(lst);
-            QString sql = QString("SELECT msg_state, msg_id, msg_from, msg_to, msg_subject, msg_snippet, msg_plain, msg_html, internal_date FROM %1gmail_msg WHERE msg_id IN(%2)")
+            QString sql = QString("SELECT msg_state, msg_id, msg_from, msg_to, msg_cc, msg_bcc, "
+                                  "msg_subject, msg_snippet, msg_plain, msg_html, internal_date FROM %1gmail_msg WHERE msg_id IN(%2)")
             .arg(m_db_meta_prefix)
             .arg(comma_ids);
             switch (state)
-            {
-            case EDataState::snippet: 
-            {
-                sql += " AND (msg_state = 1 OR msg_state = 3)";
-            }break;
-            case EDataState::body:
-            {
-                sql += " AND (msg_state = 2 OR msg_state = 3)";
-            }break;
-            }
+                {
+                case EDataState::snippet: 
+                    {
+                        sql += " AND (msg_state = 1 OR msg_state = 3)";
+                    }break;
+                case EDataState::body:
+                    {
+                        sql += " AND (msg_state = 2 OR msg_state = 3)";
+                    }break;
+                }
             sql += " ORDER BY internal_date";
             QSqlQuery* q = selectQuery(sql);
             if (!q)
@@ -429,10 +459,10 @@ std::list<QString> mail_batch::GMailSQLiteStorage::load(EDataState state,
                     std::shared_ptr<MessageData> md = loadObjFromDB(q);
                     if (md)
                         {
-                        if (cache_avail)
-                        {
-                            cache_avail = m_mem_cache->mem_insert(md->id(), md);
-                        }
+                            if (cache_avail)
+                                {
+                                    cache_avail = m_mem_cache->mem_insert(md->id(), md);
+                                }
                             db_loaded.insert(md->id());
                             cr->add(md);
                         }
@@ -462,121 +492,129 @@ void mail_batch::GMailSQLiteStorage::update(EDataState state, CACHE_QUERY_RESULT
 {
     QString sql_update, sql_insert;
     switch (state)
-    {
-    case EDataState::snippet:
-    {
-        sql_update = QString("UPDATE %1gmail_msg SET msg_state=?, msg_from=?, msg_to=?, msg_subject=?, msg_snippet=?, internal_date=? WHERE msg_id=?")
-            .arg(m_db_meta_prefix);
-        sql_insert = QString("INSERT INTO %1gmail_msg(msg_state, msg_from, msg_to, msg_subject, msg_snippet, internal_date, msg_id) VALUES(?, ?, ?, ?, ?, ?, ?)")
-            .arg(m_db_meta_prefix);
-    }break;
-    case EDataState::body: 
-    {
-        sql_update = QString("UPDATE %1gmail_msg SET msg_state=?, msg_from=?, msg_to=?, msg_subject=?, msg_snippet=?, msg_plain=?, msg_html=?, internal_date=? WHERE msg_id=?")
-            .arg(m_db_meta_prefix);
-        sql_insert = QString("INSERT INTO %1gmail_msg(msg_state, msg_from, msg_to, msg_subject, msg_snippet, msg_plain, msg_html, internal_date, msg_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)")
-            .arg(m_db_meta_prefix);
-    }break;
-    }        
+        {
+        case EDataState::snippet:
+            {
+                sql_update = QString("UPDATE %1gmail_msg SET msg_state=?, msg_from=?, msg_to=?, "
+                                     "msg_cc=?, msg_bcc=?, msg_subject=?, msg_snippet=?, internal_date=? WHERE msg_id=?")
+                    .arg(m_db_meta_prefix);
+                sql_insert = QString("INSERT INTO %1gmail_msg(msg_state, msg_from, msg_to, msg_cc, msg_bcc, msg_subject, "
+                                     "msg_snippet, internal_date, msg_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                    .arg(m_db_meta_prefix);
+            }break;
+        case EDataState::body: 
+            {
+                sql_update = QString("UPDATE %1gmail_msg SET msg_state=?, msg_from=?, msg_to=?, msg_cc=?, msg_bcc=?, "
+                                     "msg_subject=?, msg_snippet=?, msg_plain=?, msg_html=?, internal_date=? WHERE msg_id=?")
+                    .arg(m_db_meta_prefix);
+                sql_insert = QString("INSERT INTO %1gmail_msg(msg_state, msg_from, msg_to, msg_cc, msg_bcc, msg_subject, "
+                                     "msg_snippet, msg_plain, msg_html, internal_date, msg_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                    .arg(m_db_meta_prefix);
+            }break;
+        }        
 
     std::function<bool (QSqlQuery*, mail_batch::MessageData*)> execWithValues = 
         [&](QSqlQuery* q, 
-        mail_batch::MessageData* m) -> bool
-    {
-        switch (state)
+            mail_batch::MessageData* m) -> bool
         {
-        case EDataState::snippet:
-        {
-            q->addBindValue(m->aggState());
-            q->addBindValue(m->from());
-            q->addBindValue(m->to());
-            q->addBindValue(m->subject());
-            q->addBindValue(m->snippet());
-            q->addBindValue(m->internalDate());
-            q->addBindValue(m->id());
-        }break;
-        case EDataState::body:
-        {
-            q->addBindValue(m->aggState());
-            q->addBindValue(m->from());
-            q->addBindValue(m->to());
-            q->addBindValue(m->subject());
-            q->addBindValue(m->snippet());
-            q->addBindValue(m->plain());
-            q->addBindValue(m->html());
-            q->addBindValue(m->internalDate());
-            q->addBindValue(m->id());
-        }break;
-        }
-        return q->exec();
-    };
+            switch (state)
+                {
+                case EDataState::snippet:
+                {
+                    q->addBindValue(m->aggState());
+                    q->addBindValue(m->from());
+                    q->addBindValue(m->to());
+                    q->addBindValue(m->cc());
+                    q->addBindValue(m->bcc());
+                    q->addBindValue(m->subject());
+                    q->addBindValue(m->snippet());
+                    q->addBindValue(m->internalDate());
+                    q->addBindValue(m->id());
+                }break;
+                case EDataState::body:
+                {
+                    q->addBindValue(m->aggState());
+                    q->addBindValue(m->from());
+                    q->addBindValue(m->to());
+                    q->addBindValue(m->cc());
+                    q->addBindValue(m->bcc());
+                    q->addBindValue(m->subject());
+                    q->addBindValue(m->snippet());
+                    q->addBindValue(m->plain());
+                    q->addBindValue(m->html());
+                    q->addBindValue(m->internalDate());
+                    q->addBindValue(m->id());
+                }break;
+                }
+            return q->exec();
+        };
 
     int updated_records = 0;
     int inserted_records = 0;
 
     for(auto& i : r)
-    {
-        std::shared_ptr<mail_batch::MessageData>& m = i;
-        QSqlQuery* q = prepareQuery(sql_update);
-        if (!q)return;
-        bool ok = execWithValues(q, m.get());
-        if (!ok) 
         {
-            qWarning() << "SQL update failed" << q->lastError().text() << i->id();
-        }
-        int rows_updated = q->numRowsAffected();
-        if (rows_updated <= 0)
-        {
-            q = prepareQuery(sql_insert);
+            std::shared_ptr<mail_batch::MessageData>& m = i;
+            QSqlQuery* q = prepareQuery(sql_update);
             if (!q)return;
-            ok = execWithValues(q, m.get());
-            if (!ok)
-            {
-                qWarning() << "SQL insert failed" << q->lastError().text() << i->id();
-            }
-            else
-            {
-                rows_updated = q->numRowsAffected();
-                if (rows_updated > 0)
-                    inserted_records++;
-                qDebug() << "insert " << i->id() << " " << rows_updated << "/" << inserted_records << "/" << r.size();
-            }
+            bool ok = execWithValues(q, m.get());
+            if (!ok) 
+                {
+                    qWarning() << "SQL update failed" << q->lastError().text() << i->id();
+                }
+            int rows_updated = q->numRowsAffected();
+            if (rows_updated <= 0)
+                {
+                    q = prepareQuery(sql_insert);
+                    if (!q)return;
+                    ok = execWithValues(q, m.get());
+                    if (!ok)
+                        {
+                            qWarning() << "SQL insert failed" << q->lastError().text() << i->id();
+                        }
+                    else
+                        {
+                            rows_updated = q->numRowsAffected();
+                            if (rows_updated > 0)
+                                inserted_records++;
+                            qDebug() << "insert " << i->id() << " " << rows_updated << "/" << inserted_records << "/" << r.size();
+                        }
+                }
+            else 
+                {
+                    updated_records++;
+                    qDebug() << "update " << i->id() << " " << rows_updated << "/" << updated_records << "/" << r.size();
+                }
         }
-        else 
-        {
-            updated_records++;
-            qDebug() << "update " << i->id() << " " << rows_updated << "/" << updated_records << "/" << r.size();
-        }
-    }
 };
 
 void mail_batch::GMailSQLiteStorage::remove(const std::set<QString>& set_of_ids2remove) 
 {
     std::list<QString> ids2remove;
     for (auto& i : set_of_ids2remove) 
-    {
-        ids2remove.push_back(i);
-    }
+        {
+            ids2remove.push_back(i);
+        }
 
     std::function<bool(const std::list<QString>& lst)> removeSublist = [&](const std::list<QString>& lst) -> bool
-    {
-        QString comma_ids = slist2commalist_decorated(lst);
-        QString sql = QString("DELETE FROM %1gmail_msg WHERE msg_id IN(%2)")
+        {
+            QString comma_ids = slist2commalist_decorated(lst);
+            QString sql = QString("DELETE FROM %1gmail_msg WHERE msg_id IN(%2)")
             .arg(m_db_meta_prefix)
             .arg(comma_ids);
-        QSqlQuery* q = prepareQuery(sql);
-        if (!q)return false;
-        if (!q->exec()) return false;
-        return true;
-    };
+            QSqlQuery* q = prepareQuery(sql);
+            if (!q)return false;
+            if (!q->exec()) return false;
+            return true;
+        };
 
     if (isValid())
-    {
-        if(!chunk_list_execution(ids2remove, removeSublist))
         {
-            qWarning() << "Failed to remove list of records.";
+            if(!chunk_list_execution(ids2remove, removeSublist))
+                {
+                    qWarning() << "Failed to remove list of records.";
+                }
         }
-    }
 };
 
 std::shared_ptr<mail_batch::MessageData> mail_batch::GMailSQLiteStorage::loadObjFromDB(QSqlQuery* q)
@@ -598,19 +636,31 @@ std::shared_ptr<mail_batch::MessageData> mail_batch::GMailSQLiteStorage::loadObj
 
     QString msg_from = q->value(2).toString();
     QString msg_to = q->value(3).toString();
-    QString msg_subject = q->value(4).toString();
-    QString msg_snippet = q->value(5).toString();
+    QString msg_cc = q->value(4).toString();
+    QString msg_bcc = q->value(5).toString();
+    QString msg_subject = q->value(6).toString();
+    QString msg_snippet = q->value(7).toString();
     QString msg_plain = "";
     QString msg_html = "";
     
     if (agg_state > 1)
-    {
-        msg_plain = q->value(6).toString();
-        msg_html = q->value(7).toString();
-    }
+        {
+            msg_plain = q->value(8).toString();
+            msg_html = q->value(9).toString();
+        }
     qlonglong  msg_internalDate = q->value(8).toLongLong();
 
-    md = std::shared_ptr<MessageData>(new MessageData(agg_state, msg_id, msg_from, msg_to, msg_subject, msg_snippet, msg_plain, msg_html, msg_internalDate));
+    md = std::shared_ptr<MessageData>(new MessageData(agg_state, 
+                                                      msg_id, 
+                                                      msg_from, 
+                                                      msg_to, 
+                                                      msg_cc,
+                                                      msg_bcc,
+                                                      msg_subject, 
+                                                      msg_snippet, 
+                                                      msg_plain, 
+                                                      msg_html, 
+                                                      msg_internalDate));
     return md;
 };
 
@@ -641,16 +691,16 @@ bool mail_batch::GMailSQLiteStorage::execQuery(QString sql)
 QSqlQuery* mail_batch::GMailSQLiteStorage::prepareQuery(QString sql)
 {
     if (!m_query)
-    {
-        qWarning() << "Expected internal query";
-        return nullptr;
-    }
+        {
+            qWarning() << "Expected internal query";
+            return nullptr;
+        }
     if (!m_query->prepare(sql))
-    {
-        QString error = m_query->lastError().text();
-        qWarning() << "Failed to prepare sql query" << error << sql;
-        return nullptr;
-    };
+        {
+            QString error = m_query->lastError().text();
+            qWarning() << "Failed to prepare sql query" << error << sql;
+            return nullptr;
+        };
     return m_query.get();
 };
 
@@ -668,32 +718,43 @@ QSqlQuery* mail_batch::GMailSQLiteStorage::selectQuery(QString sql)
 };
 
 #ifdef API_QT_AUTOTEST
+/*
 std::unique_ptr<mail_batch::MessageData> mail_batch::MessageData::EXAMPLE(EDataState st)
 {
     static int idx = time(NULL);
     QString id = QString("%1").arg(idx);
     QString from = QString("%1_from").arg(idx);
     QString to = QString("%1_from@gmail.com").arg(idx);
+    QString cc = QString("%1_ccm@gmail.com").arg(idx);
+    QString bcc = QString("%1_bccm@gmail.com").arg(idx);
     QString subject = QString("%1_subject").arg(idx);
     QString snippet = QString("%1_snippet").arg(idx);
-    qlonglong internalDate = idx + 1000;
+    qlonglong internalDate = QDateTime::currentMSecsSinceEpoch();
 
 
     std::unique_ptr<mail_batch::MessageData> rv;
     switch (st) 
-    {
-    case EDataState::snippet:
-    {
-        rv.reset(new mail_batch::MessageData(id, from, to, subject, snippet, internalDate));
-    }break;
-    case EDataState::body: 
-    {
-        QString plain = QString("%1_plain").arg(idx);
-        QString html = QString("<html>%1_html</html>").arg(idx);
-
-        rv.reset(new mail_batch::MessageData(id, from, subject, snippet, plain, html, internalDate));
-    }break;
-    }
+        {
+        case EDataState::snippet:
+            {
+                rv.reset(new mail_batch::MessageData(id, 
+                                                     from,
+                                                     to, 
+                                                     cc,
+                                                     bcc,
+                                                     subject, 
+                                                     snippet, 
+                                                     internalDate));
+            }break;
+        case EDataState::body: 
+            {
+                QString plain = QString("%1_plain").arg(idx);
+                QString html = QString("<html>%1_html</html>").arg(idx);
+				
+                rv.reset(new mail_batch::MessageData(id, from, to, cc, bcc, subject, snippet, plain, html, internalDate));
+            }break;
+        }
     return rv;
 };
+*/
 #endif //API_QT_AUTOTEST

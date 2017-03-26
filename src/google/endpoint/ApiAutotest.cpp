@@ -57,9 +57,11 @@ void ApiAutotest::prepareAutoTestObj(const char* context_class_name,
             messages::MessagePayloadHeader* h = (messages::MessagePayloadHeader*)p;
             switch (idx)
             {
-            case 0: h->setName("From"); h->setValue("From_" + h->value()); break;
-            case 1: h->setName("To"); h->setValue("To_" + h->value()); break;
-            case 2: h->setName("Subject"); h->setValue("Subject_" + h->value()); break;
+            case 0: h->setName("From"); h->setValue("From_" + h->value() + "@gmail.com"); break;
+            case 1: h->setName("To"); h->setValue("To_" + h->value() + "@gmail.com"); break;
+            case 2: h->setName("Subject"); h->setValue("Subject_" + h->value() + "@gmail.com"); break;
+			case 3: h->setName("CC"); h->setValue("CC_" + h->value() + "@gmail.com"); break;
+			case 4: h->setName("BCC"); h->setValue("BCC_" + h->value() + "@gmail.com"); break;
             }
         }//messages::MessagePayload
         if (strcmp(context_class_name, "messages::MessagePart") == 0) 
