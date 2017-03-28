@@ -17,7 +17,7 @@ namespace googleQt{
     using REQUEST_LIST = std::list<ARG_PARAM>;
 
     template <class ARG_PARAM, class RESULT>
-    class BatchResult
+    class UserBatchResult
     {
     public:
         void registerRequest(const ARG_PARAM& ap)
@@ -50,10 +50,10 @@ namespace googleQt{
 
 
     template <class ARG_PARAM, class ROUTER, class RESULT>
-    class BatchRunner: public EndpointRunnable
+    class UserBatchRunner: public EndpointRunnable
     {
     public:
-        BatchRunner(const std::list<ARG_PARAM>& arg_params, ROUTER* r, ApiEndpoint& ept)
+        UserBatchRunner(const std::list<ARG_PARAM>& arg_params, ROUTER* r, ApiEndpoint& ept)
             :EndpointRunnable(ept)
         {
             m_available_concurrent_routes_count = m_max_concurrent_routes_count;
@@ -65,7 +65,7 @@ namespace googleQt{
         {
             if (!m_result)
             {
-                m_result.reset(new BatchResult<ARG_PARAM, RESULT>);
+                m_result.reset(new UserBatchResult<ARG_PARAM, RESULT>);
             }
 
             m_steps2complete = static_cast<int>(m_arg_parameters.size());
@@ -77,9 +77,9 @@ namespace googleQt{
         }
 
         RESULT_LIST<RESULT*> get() { return m_result->results(); }
-        std::unique_ptr<BatchResult<ARG_PARAM, RESULT> > waitForResultAndRelease()
+        std::unique_ptr<UserBatchResult<ARG_PARAM, RESULT> > waitForResultAndRelease()
         {
-            std::unique_ptr<BatchResult<ARG_PARAM, RESULT> > res;
+            std::unique_ptr<UserBatchResult<ARG_PARAM, RESULT> > res;
 
             if (!isFinished()) 
             {
@@ -144,7 +144,7 @@ namespace googleQt{
     protected:
         std::list<ARG_PARAM>            m_arg_parameters;
         std::unique_ptr<ROUTER>         m_router        {nullptr};
-        std::unique_ptr<BatchResult<ARG_PARAM,RESULT> > m_result;
+        std::unique_ptr<UserBatchResult<ARG_PARAM,RESULT> > m_result;
         int  m_max_concurrent_routes_count{ 4 };
         int  m_available_concurrent_routes_count{ 0 };
         int  m_steps2complete{ 0 };

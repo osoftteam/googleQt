@@ -575,7 +575,7 @@ void GmailCommands::get_batch_snippets(QString id_list)
         std::cout << "Space separated messages ID list required" << std::endl;
         return;
     }
-    std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = m_gm->getBatchMessages(EDataState::snippet, arg_list);
+    std::unique_ptr<UserBatchResult<QString, messages::MessageResource>> br = m_gm->getUserBatchMessages(EDataState::snippet, arg_list);
     RESULT_LIST<messages::MessageResource*> res = br->results();
 	res.sort([](messages::MessageResource* f, messages::MessageResource* s) {return (f->internaldate() > s->internaldate()); });
     std::cout << "batch size: " << res.size() << std::endl;
@@ -587,6 +587,8 @@ void GmailCommands::get_batch_snippets(QString id_list)
         auto& header_list = payload.headers();
 
         std::cout << n << ". " << m->id() << "|" << m->internaldate() << "|";
+        QDateTime dt = QDateTime::fromMSecsSinceEpoch(m->internaldate());
+        std::cout << dt.toString(Qt::ISODate).toStdString() << "|";
         for (auto h : header_list)
         {
             std::cout << h.value() << "|";
@@ -605,7 +607,7 @@ void GmailCommands::get_batch_details(QString id_list)
         return;
     }
 
-    std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = m_gm->getBatchMessages(EDataState::body, arg_list);
+    std::unique_ptr<UserBatchResult<QString, messages::MessageResource>> br = m_gm->getUserBatchMessages(EDataState::body, arg_list);
     RESULT_LIST<messages::MessageResource*> res = br->results();
     int n = 1;
     for (auto& m : res)

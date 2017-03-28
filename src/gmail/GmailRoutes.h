@@ -39,8 +39,8 @@ namespace googleQt{
     history::HistoryRoutes*   getHistory();
     drafts::DraftsRoutes*     getDrafts();
 
-    std::unique_ptr<BatchResult<QString, messages::MessageResource>>   getBatchMessages(EDataState, const std::list<QString>& id_list);
-    BatchRunner<QString, mail_batch::MessagesReceiver, messages::MessageResource>* getBatchMessages_Async(EDataState, const std::list<QString>& id_list);
+    std::unique_ptr<UserBatchResult<QString, messages::MessageResource>>   getUserBatchMessages(EDataState, const std::list<QString>& id_list);
+    UserBatchRunner<QString, mail_batch::MessagesReceiver, messages::MessageResource>* getUserBatchMessages_Async(EDataState, const std::list<QString>& id_list);
 
 	/// check for new emails - get top messagesCount messages and update cache
     std::unique_ptr<mail_batch::MessagesList> getNextCacheMessages(int messagesCount = 40, QString pageToken = "", std::set<QString>* msg2skip = nullptr);

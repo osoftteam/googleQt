@@ -173,11 +173,11 @@ void mail_batch::GMailCacheQueryResult::fetchFromCloud_Async(const std::list<QSt
     if (id_list.empty())
         return;
     
-    BatchRunner<QString,
+    UserBatchRunner<QString,
                 mail_batch::MessagesReceiver,
                 messages::MessageResource>* par_runner = NULL;
 
-    par_runner = m_r.getBatchMessages_Async(m_state, id_list);
+    par_runner = m_r.getUserBatchMessages_Async(m_state, id_list);
  
     std::function<void(void)> fetchMessagesOnFinished = [=]() 
         {

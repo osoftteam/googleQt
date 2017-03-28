@@ -59,22 +59,22 @@ drafts::DraftsRoutes* GmailRoutes::getDrafts()
 
 
 
-std::unique_ptr<BatchResult<QString, 
-                            messages::MessageResource>> GmailRoutes::getBatchMessages(EDataState f,
+std::unique_ptr<UserBatchResult<QString, 
+                            messages::MessageResource>> GmailRoutes::getUserBatchMessages(EDataState f,
                                                                                       const std::list<QString>& id_list)
 {
-    return getBatchMessages_Async(f, id_list)->waitForResultAndRelease();
+    return getUserBatchMessages_Async(f, id_list)->waitForResultAndRelease();
 };
 
-BatchRunner<QString,
+UserBatchRunner<QString,
             mail_batch::MessagesReceiver,
-            messages::MessageResource>* GmailRoutes::getBatchMessages_Async(EDataState f, const std::list<QString>& id_list)
+            messages::MessageResource>* GmailRoutes::getUserBatchMessages_Async(EDataState f, const std::list<QString>& id_list)
 {
     mail_batch::MessagesReceiver* mr = new mail_batch::MessagesReceiver(*this, f);
     
-    BatchRunner<QString,
+    UserBatchRunner<QString,
                 mail_batch::MessagesReceiver,
-                messages::MessageResource>* r = new BatchRunner<QString,
+                messages::MessageResource>* r = new UserBatchRunner<QString,
                                                                 mail_batch::MessagesReceiver,
                                                                 messages::MessageResource>(id_list, mr, *m_endpoint);
     r->run();
@@ -189,7 +189,7 @@ void GmailRoutes::autotestParLoad(EDataState state, const std::list<QString>& id
 {
     /// check parallel requests ///
     //ApiAutotest::INSTANCE() << QString("=== checking gmail/batch-load of %1 ids").arg(id_list.size());
-    std::unique_ptr<BatchResult<QString, messages::MessageResource>> br = getBatchMessages(state, id_list);
+    std::unique_ptr<UserBatchResult<QString, messages::MessageResource>> br = getUserBatchMessages(state, id_list);
     RESULT_LIST<messages::MessageResource*> res = br->results();
     ApiAutotest::INSTANCE() << QString("par-loaded (avoid cache) %1 snippets").arg(res.size());
 };
