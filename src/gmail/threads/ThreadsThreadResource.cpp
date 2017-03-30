@@ -74,7 +74,7 @@ std::unique_ptr<ThreadResource> ThreadResource::EXAMPLE(int context_index, int p
     rv->m_snipped = QString("snipped_%1").arg(example_idx);
     rv->m_historyId = 3 + example_idx;
     std::list<messages::MessageResource> list_of_messages;
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < 5; i++){
         messages::MessageResource p = *(messages::MessageResource::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("threads::ThreadResource", "messages::MessageResource", &p, i, context_index);
         rv->m_messages.push_back(p);

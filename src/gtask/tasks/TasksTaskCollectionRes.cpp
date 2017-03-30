@@ -75,7 +75,7 @@ std::unique_ptr<TaskCollectionRes> TaskCollectionRes::EXAMPLE(int context_index,
     rv->m_etag = QString("etag_%1").arg(example_idx);
     rv->m_nextPageToken = QString("nextPageToken_%1").arg(example_idx);
     std::list<tasks::TaskResource> list_of_items;
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < 5; i++){
         tasks::TaskResource p = *(tasks::TaskResource::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("tasks::TaskCollectionRes", "tasks::TaskResource", &p, i, context_index);
         rv->m_items.push_back(p);

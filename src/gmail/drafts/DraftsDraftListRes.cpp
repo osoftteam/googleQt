@@ -68,7 +68,7 @@ std::unique_ptr<DraftListRes> DraftListRes::EXAMPLE(int context_index, int paren
     example_idx++;
     std::unique_ptr<DraftListRes> rv(new DraftListRes);
     std::list<drafts::DraftResource> list_of_drafts;
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < 5; i++){
         drafts::DraftResource p = *(drafts::DraftResource::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("drafts::DraftListRes", "drafts::DraftResource", &p, i, context_index);
         rv->m_drafts.push_back(p);

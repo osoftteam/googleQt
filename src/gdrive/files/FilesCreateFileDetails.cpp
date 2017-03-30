@@ -88,7 +88,7 @@ std::unique_ptr<CreateFileDetails> CreateFileDetails::EXAMPLE(int context_index,
     rv->m_name = QString("name_%1").arg(example_idx);
     rv->m_originalFilename = QString("originalFilename_%1").arg(example_idx);
     std::list<QString> list_of_parents;
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < 5; i++){
         rv->m_parents.push_back(QString("_%1_%2").arg(i).arg(example_idx));
     }
     return rv;

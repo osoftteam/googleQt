@@ -65,11 +65,11 @@ std::unique_ptr<LabelModifyBodyArg> LabelModifyBodyArg::EXAMPLE(int context_inde
     example_idx++;
     std::unique_ptr<LabelModifyBodyArg> rv(new LabelModifyBodyArg);
     std::list<QString> list_of_addLabels;
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < 5; i++){
         rv->m_addLabels.push_back(QString("_%1_%2").arg(i).arg(example_idx));
     }
     std::list<QString> list_of_removeLabels;
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < 5; i++){
         rv->m_removeLabels.push_back(QString("_%1_%2").arg(i).arg(example_idx));
     }
     return rv;

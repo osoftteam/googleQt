@@ -101,7 +101,7 @@ std::unique_ptr<Comment> Comment::EXAMPLE(int context_index, int parent_context_
     rv->m_quotedFileContent = *(comments::QuotedFileContent::EXAMPLE(0, context_index).get());
     rv->m_anchor = QString("anchor_%1").arg(example_idx);
     std::list<comments::Reply> list_of_replies;
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < 5; i++){
         comments::Reply p = *(comments::Reply::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("comments::Comment", "comments::Reply", &p, i, context_index);
         rv->m_replies.push_back(p);

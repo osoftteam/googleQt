@@ -115,7 +115,7 @@ std::unique_ptr<TaskResource> TaskResource::EXAMPLE(int context_index, int paren
     rv->m_due = QDateTime::currentDateTime();
     rv->m_completed = QDateTime::currentDateTime();
     std::list<tasks::TaskLink> list_of_links;
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < 5; i++){
         tasks::TaskLink p = *(tasks::TaskLink::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("tasks::TaskResource", "tasks::TaskLink", &p, i, context_index);
         rv->m_links.push_back(p);

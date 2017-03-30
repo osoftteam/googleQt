@@ -71,7 +71,7 @@ std::unique_ptr<FileResourcesCollection> FileResourcesCollection::EXAMPLE(int co
     rv->m_nextPageToken = QString("nextPageToken_%1").arg(example_idx);
     rv->m_kind = QString("kind_%1").arg(example_idx);
     std::list<files::FileResource> list_of_files;
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < 5; i++){
         files::FileResource p = *(files::FileResource::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("files::FileResourcesCollection", "files::FileResource", &p, i, context_index);
         rv->m_files.push_back(p);

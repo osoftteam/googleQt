@@ -68,7 +68,7 @@ std::unique_ptr<ErrorInfo> ErrorInfo::EXAMPLE(int context_index, int parent_cont
     example_idx++;
     std::unique_ptr<ErrorInfo> rv(new ErrorInfo);
     std::list<errors::ErrorPart> list_of_errors;
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < 5; i++){
         errors::ErrorPart p = *(errors::ErrorPart::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("errors::ErrorInfo", "errors::ErrorPart", &p, i, context_index);
         rv->m_errors.push_back(p);

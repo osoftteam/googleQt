@@ -69,7 +69,7 @@ std::unique_ptr<HistoryRecordList> HistoryRecordList::EXAMPLE(int context_index,
     example_idx++;
     std::unique_ptr<HistoryRecordList> rv(new HistoryRecordList);
     std::list<history::HistoryRecord> list_of_history;
-    for(int i = 0; i < 3; i++){
+    for(int i = 0; i < 5; i++){
         history::HistoryRecord p = *(history::HistoryRecord::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("history::HistoryRecordList", "history::HistoryRecord", &p, i, context_index);
         rv->m_history.push_back(p);
