@@ -51,12 +51,15 @@ for(m, GD_MODULES){
 
 ################################################################
 # autotest generation (internal profiling usage)               
-#
-#HEADERS += $${G_DIR}/AUTOTEST/*.h
-#SOURCES += $${G_DIR}/AUTOTEST/*.cpp
-#HEADERS += $${GM_DIR}/AUTOTEST/*.h $${GT_DIR}/AUTOTEST/*.h $${GD_DIR}/AUTOTEST/*.h
-#SOURCES += $${GM_DIR}/AUTOTEST/*.cpp $${GT_DIR}/AUTOTEST/*.cpp $${GD_DIR}/AUTOTEST/*.cpp
-#DEFINES += API_QT_AUTOTEST
+################################################################
+ARD_AUTOTEST=$$(ARD_AUTOTEST)
+if(!isEmpty( ARD_AUTOTEST )){
+    HEADERS += $${G_DIR}/AUTOTEST/*.h
+    SOURCES += $${G_DIR}/AUTOTEST/*.cpp
+    HEADERS += $${GM_DIR}/AUTOTEST/*.h $${GT_DIR}/AUTOTEST/*.h $${GD_DIR}/AUTOTEST/*.h
+    SOURCES += $${GM_DIR}/AUTOTEST/*.cpp $${GT_DIR}/AUTOTEST/*.cpp $${GD_DIR}/AUTOTEST/*.cpp
+    DEFINES += API_QT_AUTOTEST
+}
 ################################################################
 
 
