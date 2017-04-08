@@ -68,9 +68,8 @@ int main(int argc, char *argv[])
     t.addAction("get_html",         "Export body of Message to html file", [&](QString arg) {cmd.get_html(arg);} );
     t.addAction("trash",            "Trash Message by ID", [&](QString arg) {cmd.trash(arg); });
     t.addAction("untrash",          "Untrash Message by ID", [&](QString arg) {cmd.untrash(arg); });
-    t.addAction("send",             "Send Message", [&](QString arg) {cmd.send(arg); });
-    t.addAction("import",           "Import Message", [&](QString arg) {cmd.importMessage(arg); });
-    t.addAction("insert",           "Insert Message", [&](QString arg) {cmd.insertMessage(arg); });
+    t.addAction("send_plain",       "Send Plain Message", [&](QString arg) {cmd.send_plain(arg); });
+	t.addAction("send_as_html",		"Send Html Message", [&](QString arg) {cmd.send_as_html(arg); });
     t.addSeparator();
     t.addAction("ls_labels",        "List Labels", [&](QString arg) {cmd.ls_labels(arg); });
     t.addAction("get_label",        "Get Label Info", [&](QString arg) {cmd.get_label(arg); });

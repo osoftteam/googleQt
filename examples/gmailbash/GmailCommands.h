@@ -47,22 +47,14 @@ public:
 
     
     /**
-        send - send new message, the body of the message should be stored
-        in a text file
+        send plain text message
     */
-    void send(QString message_file_name);
+    void send_plain(QString to_subject_text);
 
-    /**
-        importMessage - import new message, the body of the message should be stored
-        in a text file
-    */
-    void importMessage(QString message_file_name);
-
-    /**
-        insertMessage - insert new message, the body of the message should be stored
-        in a text file
-    */
-    void insertMessage(QString message_file_name);
+	/**
+		send html text message
+	*/
+	void send_as_html(QString to_subject_text);
 
     /**
         trash - trash message by id

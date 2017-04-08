@@ -127,18 +127,26 @@ void GmailCommands::ls_by_labels(QString labelIds)
     listMessages("", labelIds);
 };
 
-void GmailCommands::send(QString message_file_name) 
+void GmailCommands::send_plain(QString to_subject_text)
 {
+	QStringList arg_list = to_subject_text.split(" ",
+		QString::SkipEmptyParts);
+
+	if (arg_list.size() < 3)
+	{
+		std::cout << "Invalid parameters, expected <To> <Subject> <Text>" << std::endl;
+		return;	
+	}
+
+	QString msg_to = arg_list[0];
+	QString msg_subject = arg_list[1];
+	QString msg_text = arg_list[2];
+
     try
     {
-        gmail::SendMessageArg arg;
-        messages::MessageResource body;
-        if (!loadMessageFile(message_file_name, &body)) 
-            return;
-        printMessage(&body);
-        return;
-        auto r = m_gm->getMessages()->send(arg, body);
-        printMessage(r.get());
+		gmail::SendMimeMessageArg arg(m_c.userId(), msg_to, msg_subject, msg_text);
+		auto r = m_gm->getMessages()->send(arg);
+		printMessage(r.get());
     }
     catch (GoogleException& e)
     {
@@ -146,38 +154,32 @@ void GmailCommands::send(QString message_file_name)
     }
 };
 
-void GmailCommands::importMessage(QString message_file_name)
+void GmailCommands::send_as_html(QString to_subject_text)
 {
-    try
-    {
-        gmail::ImportMessageArg arg;
-        messages::MessageResource body;
-        if (!loadMessageFile(message_file_name, &body))
-            return;
-        auto r = m_gm->getMessages()->importMessage(arg, body);
-        printMessage(r.get());
-    }
-    catch (GoogleException& e)
-    {
-        std::cout << "Exception: " << e.what() << std::endl;
-    }
-};
+	QStringList arg_list = to_subject_text.split(" ",
+		QString::SkipEmptyParts);
 
-void GmailCommands::insertMessage(QString message_file_name)
-{
-    try
-    {
-        gmail::InsertMessageArg arg;
-        messages::MessageResource body;
-        if (!loadMessageFile(message_file_name, &body))
-            return;
-        auto r = m_gm->getMessages()->insert(arg, body);
-        printMessage(r.get());
-    }
-    catch (GoogleException& e)
-    {
-        std::cout << "Exception: " << e.what() << std::endl;
-    }
+	if (arg_list.size() < 3)
+	{
+		std::cout << "Invalid parameters, expected <To> <Subject> <Text>" << std::endl;
+		return;
+	}
+
+	QString msg_to = arg_list[0];
+	QString msg_subject = arg_list[1];
+	QString msg_text = arg_list[2];
+	QString msg_html = QString("<html><body><b>%1</b></body></html>").arg(msg_text);
+
+	try
+	{
+		gmail::SendMimeMessageArg arg(m_c.userId(), msg_to, msg_subject, msg_text, msg_html);
+		auto r = m_gm->getMessages()->send(arg);
+		printMessage(r.get());
+	}
+	catch (GoogleException& e)
+	{
+		std::cout << "Exception: " << e.what() << std::endl;
+	}
 };
 
 
@@ -388,7 +390,13 @@ void GmailCommands::ls_labels(QString )
         auto labels_list = m_gm->getLabels()->list();
         for (auto lbl : labels_list->labels())
         {
-            std::cout << "id=" << lbl.id() << " name=" << lbl.name() << " type=" << lbl.type() << std::endl;
+            std::cout << "id=" << lbl.id() 
+				<< " name=" << lbl.name() 
+				<< " type=" << lbl.type() 
+				<< " messagestotal=" << lbl.messagestotal()
+				<< " unread=" << lbl.messagesunread()
+				<< " threadstotal=" << lbl.threadstotal()
+				<< std::endl;
         }
 
     }
