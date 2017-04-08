@@ -5,7 +5,6 @@
 #include <memory>
 #include <functional>
 #include <QString>
-#include <QDebug>
 #include <QDateTime>
 #include <QVariant>
 #include <QJsonObject>
