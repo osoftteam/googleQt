@@ -5,7 +5,6 @@
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
-#include <QDebug>
 #include <QJsonObject>
 #include <QEventLoop>
 #include <QHttpMultiPart>
