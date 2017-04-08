@@ -155,6 +155,7 @@ namespace googleQt {
         };
         virtual void remove(const std::set<QString>& ids2remove) = 0;
         virtual bool isValid()const = 0;
+		virtual void setStarred(QString msg_id, bool starred_on) = 0;
     };
     
     template <class O, class R>
@@ -230,16 +231,22 @@ namespace googleQt {
                 }            
         }
         
+		void update_persistent_starred(QString msg_id, bool starred_on) 
+		{
+			if (m_localDB != nullptr &&
+				m_localDB->isValid())
+			{
+				m_localDB->setStarred(msg_id, starred_on);
+			}
+		}
+
         void query_Async(EDataState load, const std::list<QString>& id_list, R* rfetcher)
         {
-			//R* rv = produceCloudResultFetcher(load, m_endpoint);
-
             std::list<QString> missed_cache;
             for (std::list<QString>::const_iterator i = id_list.begin(); i != id_list.end(); i++)
             {
                 QString id = *i;
 				std::shared_ptr<O> obj = mem_object(id);
-//                qDebug() << "check4" << id;
                 if (obj && obj->isLoaded(load))
                 {
                     rfetcher->add(obj);
