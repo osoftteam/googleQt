@@ -1,6 +1,7 @@
 #include "GmailBatch.h"
 #include "GmailRoutes.h"
 #include <QSqlError>
+#include <QDebug>
 #include <ctime>
 
 using namespace googleQt;
@@ -52,6 +53,7 @@ mail_batch::MessageData::MessageData(QString id,
     m_snippet(snippet),
     m_internalDate(internalDate)
 {
+	m_flags.flag = 0;
 };
 
 mail_batch::MessageData::MessageData(QString id,
@@ -75,7 +77,7 @@ mail_batch::MessageData::MessageData(QString id,
     m_html(html),
     m_internalDate(internalDate)
 {
-
+	m_flags.flag = 0;
 };
 
 mail_batch::MessageData::MessageData(int agg_state,
@@ -101,6 +103,7 @@ mail_batch::MessageData::MessageData(int agg_state,
     m_internalDate(internalDate)
 {
     m_state_agg = agg_state;
+	m_flags.flag = 0;
 };
 
 void mail_batch::MessageData::updateSnippet(QString from,
@@ -382,7 +385,7 @@ bool mail_batch::GMailSQLiteStorage::init(QString dbPath, QString dbName, QStrin
         return false;
 
     sql = QString("SELECT msg_state, msg_id, msg_from, msg_to, msg_cc, msg_bcc, "
-                  "msg_subject, msg_snippet, msg_plain, msg_html, internal_date FROM %1gmail_msg ORDER BY internal_date").arg(m_db_meta_prefix);
+                  "msg_subject, msg_snippet, msg_plain, msg_html, internal_date FROM %1gmail_msg ORDER BY internal_date DESC").arg(m_db_meta_prefix);
     QSqlQuery* q = selectQuery(sql);
     if (!q)
         return false;
@@ -450,7 +453,7 @@ std::list<QString> mail_batch::GMailSQLiteStorage::load(EDataState state,
                         sql += " AND (msg_state = 2 OR msg_state = 3)";
                     }break;
                 }
-            sql += " ORDER BY internal_date";
+            sql += " ORDER BY internal_date DESC";
             QSqlQuery* q = selectQuery(sql);
             if (!q)
                 return false;
@@ -617,6 +620,11 @@ void mail_batch::GMailSQLiteStorage::remove(const std::set<QString>& set_of_ids2
         }
 };
 
+void mail_batch::GMailSQLiteStorage::setStarred(QString msg_id, bool starred_on) 
+{
+	//qDebug() << "";
+};
+
 std::shared_ptr<mail_batch::MessageData> mail_batch::GMailSQLiteStorage::loadObjFromDB(QSqlQuery* q)
 {
     std::shared_ptr<MessageData> md;
@@ -648,7 +656,7 @@ std::shared_ptr<mail_batch::MessageData> mail_batch::GMailSQLiteStorage::loadObj
             msg_plain = q->value(8).toString();
             msg_html = q->value(9).toString();
         }
-    qlonglong  msg_internalDate = q->value(8).toLongLong();
+    qlonglong  msg_internalDate = q->value(10).toLongLong();
 
     md = std::shared_ptr<MessageData>(new MessageData(agg_state, 
                                                       msg_id, 

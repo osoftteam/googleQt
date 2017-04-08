@@ -191,10 +191,59 @@ namespace googleQt{
             QStringList m_headers;
         };       
 
-        class ModifyMessageArg: public PathWithIdArg<path_modify, ModifyMessageArg>
+		class AttachmentIdArg : public QParamArg
+		{
+		public:
+			AttachmentIdArg() {};
+			AttachmentIdArg(QString message_id, QString attachment_id);
+
+			void build(const QString& link_path, QUrl& url)const override;
+
+			QString getMessageId()const { return m_message_id; }
+			void    setMessageId(QString id) { m_message_id = id; };
+
+			QString getAttachmentId()const { return m_attachment_id; }
+			void    setAttachmentId(QString id) { m_attachment_id = id; };
+
+
+#ifdef API_QT_AUTOTEST
+			static std::unique_ptr<AttachmentIdArg> EXAMPLE(int context_index, int parent_content_index);
+#endif //API_QT_AUTOTEST
+
+		protected:
+			QString     m_message_id;
+			QString     m_attachment_id;
+		};
+
+
+        class ModifyMessageArg: public QParamArgWithBody<ModifyMessageArg>
         {
         public:
-            ModifyMessageArg(QString idValue){m_id = idValue;}
+			ModifyMessageArg() {};
+            ModifyMessageArg(QString idValue){m_message_id = idValue;}
+
+			QString messageId()const { return m_message_id; }
+			void setMessageId(QString mid) { m_message_id = mid; }
+
+			const std::list <QString>& getAddlabels()const { return m_addLabels; };
+			void setAddlabels(const std::list <QString>& arg) { m_addLabels = arg;};
+
+			const std::list <QString>& getRemovelabels()const { return m_removeLabels; };
+			void setRemovelabels(const std::list <QString>& arg) { m_removeLabels = arg;};
+
+			void build(const QString& link_path, QUrl& url)const override;
+			void toJson(QJsonObject& js)const override;
+			operator QJsonObject ()const;
+
+#ifdef API_QT_AUTOTEST
+			static std::unique_ptr<ModifyMessageArg> EXAMPLE(int context_index, int parent_content_index);
+#endif //API_QT_AUTOTEST
+
+		protected:
+			QString m_message_id;
+			std::list <QString> m_addLabels;
+			std::list <QString> m_removeLabels;
+
         };
     
         class SendMessageArg: public PathArg<path_send, SendMessageArg>
@@ -220,6 +269,84 @@ namespace googleQt{
         protected:
             QString m_uploadType;
         };
+
+		//...
+		class MimeBodyPart 
+		{
+			friend class SendMimeMessageArg;
+		public:
+			void setContent(QString val, QString _type);
+		protected:
+			QString m_type;
+			QString m_content;
+		};
+
+		class SendMimeMessageArg : public QParamArgWithBody<SendMimeMessageArg>
+		{
+		public:
+			SendMimeMessageArg();
+
+			///plain text message constructor
+			SendMimeMessageArg(QString from, 
+				QString to, 
+				QString subject, 
+				QString text);
+
+			///plain+html text message constructor
+			SendMimeMessageArg(QString from,
+				QString to,
+				QString subject,
+				QString text_plain,
+				QString text_html);
+
+
+			QString getSubject()const { return m_Subject; }
+			void setSubject(QString subject) { m_Subject = subject; }
+
+			QString getFrom()const { return m_From; }
+			void setFrom(QString from_val) { m_From = from_val; }
+
+			QString getTo()const { return m_To; }
+			void setTo(QString to_val) { m_To = to_val; }
+
+			QString getCC()const { return m_CC; }
+			void setCC(QString cc_val) { m_CC = cc_val; }
+
+			QString getBCC()const { return m_BCC; }
+			void setBCC(QString bcc_val) { m_BCC = bcc_val; }
+
+			void addBodyPart(const MimeBodyPart& pt) { m_body_parts.push_back(pt); };
+
+			/**
+			The type of upload request to the /upload URI. Acceptable values are:
+			media - Simple upload. Upload the media only, without any metadata.
+			multipart - Multipart upload. Upload both the media and its metadata, in a single request.
+			resumable - Resumable upload. Upload the file in a resumable fashion, using a series of
+			at least two requests where the first request includes the metadata.
+			*/
+			QString getUploadType()const { return m_uploadType; }
+			void    setUploadType(QString val) { m_uploadType = val; }
+
+			void build(const QString& link_path, QUrl& url)const override;
+			void toJson(QJsonObject& js)const override;
+			QString toRfc822()const;
+			operator QJsonObject ()const;
+
+#ifdef API_QT_AUTOTEST
+			static std::unique_ptr<SendMimeMessageArg> EXAMPLE(int context_index, int parent_content_index);
+#endif //API_QT_AUTOTEST
+
+		protected:
+			QString m_uploadType;
+			QString m_Subject;
+			QString m_From;
+			QString m_To;
+			QString m_CC;
+			QString m_BCC;
+			std::list<MimeBodyPart> m_body_parts;
+		};
+
+		//...
 
         class InsertMessageArg : public PathArg<path_insert, InsertMessageArg>
         {

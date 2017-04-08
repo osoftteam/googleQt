@@ -298,6 +298,16 @@ namespace googleQt{
             return url;
         }
 
+		template <class ARG>
+		QUrl buildGmailAttachmentUrl(const ARG& a)const
+		{
+			QUrl url;
+			a.build(QString("https://www.googleapis.com/gmail/v1/users/%1/messages/")
+				.arg(client()->userId()), url);
+			return url;
+		}
+
+
         template <class ARG>
         QUrl buildGmailUploadlUrl(const QString& namespace_path, const ARG& a)const
         {

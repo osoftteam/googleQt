@@ -16,6 +16,13 @@ messages::MessagesRoutes* GmailRoutes::getMessages()
     return m_MessagesRoutes.get();
 };
 
+attachments::AttachmentsRoutes* GmailRoutes::getAttachments() 
+{
+	if (!m_AttachmentsRoutes) {
+		m_AttachmentsRoutes.reset(new attachments::AttachmentsRoutes(m_endpoint));
+	}
+	return m_AttachmentsRoutes.get();
+};
 
 labels::LabelsRoutes* GmailRoutes::getLabels()
 {
@@ -90,6 +97,7 @@ void GmailRoutes::ensureCache()
 
 mail_batch::GMailCacheQueryResult* GmailRoutes::getNextCacheMessages_Async(int messagesCount /*= 40*/, 
     QString pageToken /*= ""*/, 
+	QStringList* labels /*= nullptr*/,
     std::set<QString>* msg2skip /*= nullptr*/)
 {
     mail_batch::GMailCacheQueryResult* rfetcher = newResultFetcher(EDataState::snippet);
@@ -97,6 +105,10 @@ mail_batch::GMailCacheQueryResult* GmailRoutes::getNextCacheMessages_Async(int m
     gmail::ListArg listArg;
     listArg.setMaxResults(messagesCount);
     listArg.setPageToken(pageToken);
+	if (labels) 
+	{
+		listArg.labels() = *labels;
+	}
 
     std::function<void(std::unique_ptr<messages::MessageListRes>)> id_list_completed_callback =
         [=](std::unique_ptr<messages::MessageListRes> mlist)
@@ -127,9 +139,13 @@ mail_batch::GMailCacheQueryResult* GmailRoutes::getNextCacheMessages_Async(int m
 
 std::unique_ptr<mail_batch::MessagesList> GmailRoutes::getNextCacheMessages(int messagesCount /*= 40*/, 
     QString pageToken /*= ""*/,
+	QStringList* labels /*= nullptr*/,
     std::set<QString>* msg2skip /*= nullptr*/)
 {
-    return getNextCacheMessages_Async(messagesCount, pageToken, msg2skip)->waitForSortedResultListAndRelease();
+    return getNextCacheMessages_Async(messagesCount, 
+		pageToken, 
+		labels, 
+		msg2skip)->waitForSortedResultListAndRelease();
 };
 
 std::unique_ptr<mail_batch::MessagesList> GmailRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
@@ -184,6 +200,54 @@ bool GmailRoutes::setupSQLiteCache(QString dbPath, QString dbName /*= "googleqt"
     return true;
 };
 
+void GmailRoutes::setStarred(mail_batch::MessageData* d, bool starred_on) 
+{
+	setStarred_Async(d, starred_on)->waitForResultAndRelease();
+};
+
+GoogleTask<messages::MessageResource>* GmailRoutes::setStarred_Async(mail_batch::MessageData* d, bool starred_on)
+{
+	QString msg_id = d->id();
+	gmail::ModifyMessageArg arg(msg_id);
+	std::list <QString> labels;
+	labels.push_back("STARRED");
+	if (starred_on)
+	{
+		arg.setAddlabels(labels);
+		d->m_flags.STARRED = 1;
+	}
+	else 
+	{
+		arg.setRemovelabels(labels);
+		d->m_flags.STARRED = 0;
+	}
+
+	messages::MessagesRoutes* msg = getMessages();
+	GoogleTask<messages::MessageResource>* t = msg->modify_Async(arg);
+
+	std::function<void()> onMessageLabelUpdated = [=]()
+	{
+		if (m_GMailCache &&
+			m_GMailCache->hasLocalPersistentStorate())
+		{
+			m_GMailCache->update_persistent_starred(msg_id, starred_on);
+		}
+	};
+
+	if (t->isFinished())
+	{
+		onMessageLabelUpdated();
+	}
+	else
+	{
+		QObject::connect(t, &EndpointRunnable::finished, [=]()
+		{
+			onMessageLabelUpdated();
+		});
+	}
+	return t;
+};
+
 #ifdef API_QT_AUTOTEST
 void GmailRoutes::autotestParLoad(EDataState state, const std::list<QString>& id_list)
 {
@@ -213,6 +277,15 @@ void GmailRoutes::autotestParDBLoad(EDataState state, const std::list<QString>& 
 
 void GmailRoutes::autotest()
 {
+	auto m = gmail::SendMimeMessageArg::EXAMPLE(0, 0);
+	QString rfc822_sample = m->toRfc822();
+	ApiAutotest::INSTANCE() << "rcf822" << rfc822_sample;
+	ApiAutotest::INSTANCE() << "";
+	QJsonObject js;
+	m->toJson(js);
+	ApiAutotest::INSTANCE() << js["raw"].toString();
+	ApiAutotest::INSTANCE() << "";
+
     std::list<QString> id_list;
     for (int i = 1; i <= 1000; i++)
     {

@@ -14,6 +14,15 @@ using namespace googleQt;
 static GmailRoutes* cl;
 
 
+static void call_get_from_Attachments(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Attachments").arg("get");
+    std::unique_ptr<gmail::AttachmentIdArg> arg = gmail::AttachmentIdArg::EXAMPLE(0, 0);
+    auto res = cl->getAttachments()->get(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "------ RESULT ------------------";
+    ApiAutotest::INSTANCE() << res->toString();
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
 static void call_get_from_Drafts(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Drafts").arg("get");
     std::unique_ptr<gmail::IdArg> arg = gmail::IdArg::EXAMPLE(0, 0);
@@ -98,26 +107,6 @@ static void call_get_from_Messages(){
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
-static void call_importMessage_from_Messages(){
-    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Messages").arg("importMessage");
-    std::unique_ptr<gmail::ImportMessageArg> arg = gmail::ImportMessageArg::EXAMPLE(0, 0);
-    std::unique_ptr<messages::MessageResource> arg2 = messages::MessageResource::EXAMPLE(0, 0);
-    auto res = cl->getMessages()->importMessage(*(arg.get()) , *(arg2.get()));
-    ApiAutotest::INSTANCE() << "------ RESULT ------------------";
-    ApiAutotest::INSTANCE() << res->toString();
-    ApiAutotest::INSTANCE() << "--------------------------";
-}
-
-static void call_insert_from_Messages(){
-    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Messages").arg("insert");
-    std::unique_ptr<gmail::InsertMessageArg> arg = gmail::InsertMessageArg::EXAMPLE(0, 0);
-    std::unique_ptr<messages::MessageResource> arg2 = messages::MessageResource::EXAMPLE(0, 0);
-    auto res = cl->getMessages()->insert(*(arg.get()) , *(arg2.get()));
-    ApiAutotest::INSTANCE() << "------ RESULT ------------------";
-    ApiAutotest::INSTANCE() << res->toString();
-    ApiAutotest::INSTANCE() << "--------------------------";
-}
-
 static void call_list_from_Messages(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Messages").arg("list");
     std::unique_ptr<gmail::ListArg> arg = gmail::ListArg::EXAMPLE(0, 0);
@@ -127,11 +116,19 @@ static void call_list_from_Messages(){
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
+static void call_modify_from_Messages(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Messages").arg("modify");
+    std::unique_ptr<gmail::ModifyMessageArg> arg = gmail::ModifyMessageArg::EXAMPLE(0, 0);
+    auto res = cl->getMessages()->modify(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "------ RESULT ------------------";
+    ApiAutotest::INSTANCE() << res->toString();
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
 static void call_send_from_Messages(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Messages").arg("send");
-    std::unique_ptr<gmail::SendMessageArg> arg = gmail::SendMessageArg::EXAMPLE(0, 0);
-    std::unique_ptr<messages::MessageResource> arg2 = messages::MessageResource::EXAMPLE(0, 0);
-    auto res = cl->getMessages()->send(*(arg.get()) , *(arg2.get()));
+    std::unique_ptr<gmail::SendMimeMessageArg> arg = gmail::SendMimeMessageArg::EXAMPLE(0, 0);
+    auto res = cl->getMessages()->send(*(arg.get()) );
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();
     ApiAutotest::INSTANCE() << "--------------------------";
@@ -176,6 +173,10 @@ static void call_profile_from_Users(){
 }
 
 
+static void test_call_AttachmentsRoutes(){
+    call_get_from_Attachments();
+}
+
 static void test_call_DraftsRoutes(){
     call_get_from_Drafts();
     call_list_from_Drafts();
@@ -196,9 +197,8 @@ static void test_call_LabelsRoutes(){
 static void test_call_MessagesRoutes(){
     call_deleteOperation_from_Messages();
     call_get_from_Messages();
-    call_importMessage_from_Messages();
-    call_insert_from_Messages();
     call_list_from_Messages();
+    call_modify_from_Messages();
     call_send_from_Messages();
     call_trash_from_Messages();
     call_untrash_from_Messages();
@@ -218,6 +218,7 @@ void GmailAutotest::generateCalls(){
     ApiAutotest::INSTANCE() << "";
     ApiAutotest::INSTANCE() << "============ autotest for module: gmail ============";
     cl->autotest();
+    test_call_AttachmentsRoutes();
     test_call_DraftsRoutes();
     test_call_HistoryRoutes();
     test_call_LabelsRoutes();

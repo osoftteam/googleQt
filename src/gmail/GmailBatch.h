@@ -25,8 +25,6 @@ namespace googleQt{
         class GMailSQLiteStorage;
         class MessageData : public CacheData
         {
-            friend class GMailCacheQueryResult;
-            friend class GMailSQLiteStorage;
         public:
 			MessageData(QString id, 
                         QString from, 
@@ -58,11 +56,9 @@ namespace googleQt{
             QString plain()const { return m_plain; }
             QString html()const { return m_html; }
             qlonglong internalDate()const { return m_internalDate; }
-			/*
-#ifdef API_QT_AUTOTEST
-            static std::unique_ptr<MessageData> EXAMPLE(EDataState st);
-#endif //API_QT_AUTOTEST
-*/
+
+			bool  isStarred()const { return (m_flags.STARRED == 1); }
+
         protected:
 			void updateSnippet(QString from,
                                QString to,
@@ -81,6 +77,21 @@ namespace googleQt{
             QString m_plain;
             QString m_html;
             qlonglong m_internalDate;
+
+			union LABEL_FLAGS
+			{
+				uint32_t flag;
+				struct
+				{
+					unsigned INBOX		: 1;
+					unsigned SPAM		: 1;
+					unsigned TRASH		: 1;
+					unsigned UNREAD		: 1;
+					unsigned STARRED	: 1;
+					unsigned IMPORTANT	: 1;
+				};
+			} m_flags;
+
         private:
             MessageData(int agg_state,
                         QString id,
@@ -93,6 +104,10 @@ namespace googleQt{
                         QString plain,
                         QString html,
                         qlonglong internalDate);
+
+			friend class GMailCacheQueryResult;
+			friend class GMailSQLiteStorage;
+			friend class googleQt::GmailRoutes;
         };
 
         struct MessagesList
@@ -140,6 +155,7 @@ namespace googleQt{
             void update(EDataState state, CACHE_QUERY_RESULT_LIST<MessageData>& r)override;
             bool isValid()const override{return m_initialized;};
             void remove(const std::set<QString>& ids2remove)override;
+			void setStarred(QString msg_id, bool starred_on)override;
         protected:
             bool execQuery(QString sql);
             QSqlQuery* prepareQuery(QString sql);

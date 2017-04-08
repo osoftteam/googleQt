@@ -48,39 +48,6 @@ namespace messages{
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
-            ApiRoute('importMessage')
-
-
-            Imports a message into only this user's mailbox, with standard email
-            delivery scanning and classification similar to receiving via SMTP.
-            Does not send a message.
-
-            */
-        std::unique_ptr<MessageResource> importMessage(const gmail::ImportMessageArg& arg, const MessageResource& body);
-        GoogleTask<MessageResource>* importMessage_Async(const gmail::ImportMessageArg& arg, const MessageResource& body);
-        void importMessage_AsyncCB(
-            const gmail::ImportMessageArg&,
-            const MessageResource& body,
-            std::function<void(std::unique_ptr<MessageResource>)> completed_callback = nullptr,
-            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
-
-            /**
-            ApiRoute('insert')
-
-
-            Directly inserts a message into only this user's mailbox similar to
-            IMAP APPEND, bypassing most scanning and classification.
-
-            */
-        std::unique_ptr<MessageResource> insert(const gmail::InsertMessageArg& arg, const MessageResource& body);
-        GoogleTask<MessageResource>* insert_Async(const gmail::InsertMessageArg& arg, const MessageResource& body);
-        void insert_AsyncCB(
-            const gmail::InsertMessageArg&,
-            const MessageResource& body,
-            std::function<void(std::unique_ptr<MessageResource>)> completed_callback = nullptr,
-            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
-
-            /**
             ApiRoute('list')
 
 
@@ -95,6 +62,20 @@ namespace messages{
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
+            ApiRoute('modify')
+
+
+            Modifies the labels on the specified message.
+
+            */
+        std::unique_ptr<MessageResource> modify(const gmail::ModifyMessageArg& arg);
+        GoogleTask<MessageResource>* modify_Async(const gmail::ModifyMessageArg& arg);
+        void modify_AsyncCB(
+            const gmail::ModifyMessageArg&,
+            std::function<void(std::unique_ptr<MessageResource>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
+
+            /**
             ApiRoute('send')
 
 
@@ -102,11 +83,10 @@ namespace messages{
             headers.
 
             */
-        std::unique_ptr<MessageResource> send(const gmail::SendMessageArg& arg, const MessageResource& body);
-        GoogleTask<MessageResource>* send_Async(const gmail::SendMessageArg& arg, const MessageResource& body);
+        std::unique_ptr<MessageResource> send(const gmail::SendMimeMessageArg& arg);
+        GoogleTask<MessageResource>* send_Async(const gmail::SendMimeMessageArg& arg);
         void send_AsyncCB(
-            const gmail::SendMessageArg&,
-            const MessageResource& body,
+            const gmail::SendMimeMessageArg&,
             std::function<void(std::unique_ptr<MessageResource>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 

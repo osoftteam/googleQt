@@ -65,76 +65,6 @@ void MessagesRoutes::get_AsyncCB(
         failed_callback);
 }
 
-std::unique_ptr<MessageResource> MessagesRoutes::importMessage(const gmail::ImportMessageArg& arg, const MessageResource& body){
-    return importMessage_Async(arg, body)->waitForResultAndRelease();
-}
-
-GoogleTask<MessageResource>* MessagesRoutes::importMessage_Async(const gmail::ImportMessageArg& arg, const MessageResource& body)
-{
-    GoogleTask<MessageResource>* t = m_end_point->produceTask<MessageResource>();
-    m_end_point->rfc822UploadStyle<
-        MessageResource,
-        MessageResource::factory,
-        MessageResource>
-        (m_end_point->buildGmailUploadlUrl("messages", arg),
-        body,
-        t);
-    return t;
-}
-
-void MessagesRoutes::importMessage_AsyncCB(
-    const gmail::ImportMessageArg& arg,
-    const MessageResource& body,
-    std::function<void(std::unique_ptr<MessageResource>)> completed_callback ,
-    std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
-{
-    m_end_point->rfc822UploadStyle
-        <
-        MessageResource,
-        MessageResource::factory,
-        MessageResource
-        >
-        (m_end_point->buildGmailUploadlUrl("messages", arg),
-        body,
-        completed_callback,
-        failed_callback);
-}
-
-std::unique_ptr<MessageResource> MessagesRoutes::insert(const gmail::InsertMessageArg& arg, const MessageResource& body){
-    return insert_Async(arg, body)->waitForResultAndRelease();
-}
-
-GoogleTask<MessageResource>* MessagesRoutes::insert_Async(const gmail::InsertMessageArg& arg, const MessageResource& body)
-{
-    GoogleTask<MessageResource>* t = m_end_point->produceTask<MessageResource>();
-    m_end_point->rfc822UploadStyle<
-        MessageResource,
-        MessageResource::factory,
-        MessageResource>
-        (m_end_point->buildGmailUploadlUrl("messages", arg),
-        body,
-        t);
-    return t;
-}
-
-void MessagesRoutes::insert_AsyncCB(
-    const gmail::InsertMessageArg& arg,
-    const MessageResource& body,
-    std::function<void(std::unique_ptr<MessageResource>)> completed_callback ,
-    std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
-{
-    m_end_point->rfc822UploadStyle
-        <
-        MessageResource,
-        MessageResource::factory,
-        MessageResource
-        >
-        (m_end_point->buildGmailUploadlUrl("messages", arg),
-        body,
-        completed_callback,
-        failed_callback);
-}
-
 std::unique_ptr<MessageListRes> MessagesRoutes::list(const gmail::ListArg& arg){
     return list_Async(arg)->waitForResultAndRelease();
 }
@@ -166,37 +96,70 @@ void MessagesRoutes::list_AsyncCB(
         failed_callback);
 }
 
-std::unique_ptr<MessageResource> MessagesRoutes::send(const gmail::SendMessageArg& arg, const MessageResource& body){
-    return send_Async(arg, body)->waitForResultAndRelease();
+std::unique_ptr<MessageResource> MessagesRoutes::modify(const gmail::ModifyMessageArg& arg){
+    return modify_Async(arg)->waitForResultAndRelease();
 }
 
-GoogleTask<MessageResource>* MessagesRoutes::send_Async(const gmail::SendMessageArg& arg, const MessageResource& body)
+GoogleTask<MessageResource>* MessagesRoutes::modify_Async(const gmail::ModifyMessageArg& arg)
+{
+    GoogleTask<MessageResource>* t = m_end_point->produceTask<MessageResource>();
+    m_end_point->postStyleB<
+        MessageResource,
+        MessageResource::factory
+        ,gmail::ModifyMessageArg>
+        (m_end_point->buildGmailUrl("messages", arg),
+        arg,
+        t);
+    return t;
+}
+
+void MessagesRoutes::modify_AsyncCB(
+    const gmail::ModifyMessageArg& arg,
+    std::function<void(std::unique_ptr<MessageResource>)> completed_callback ,
+    std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+{
+    m_end_point->postStyleB
+        <
+        MessageResource,
+        MessageResource::factory
+        , gmail::ModifyMessageArg
+        >
+        (m_end_point->buildGmailUrl("messages", arg),
+        arg,
+        completed_callback,
+        failed_callback);
+}
+
+std::unique_ptr<MessageResource> MessagesRoutes::send(const gmail::SendMimeMessageArg& arg){
+    return send_Async(arg)->waitForResultAndRelease();
+}
+
+GoogleTask<MessageResource>* MessagesRoutes::send_Async(const gmail::SendMimeMessageArg& arg)
 {
     GoogleTask<MessageResource>* t = m_end_point->produceTask<MessageResource>();
     m_end_point->rfc822UploadStyle<
         MessageResource,
-        MessageResource::factory,
-        MessageResource>
+        MessageResource::factory
+        ,gmail::SendMimeMessageArg>
         (m_end_point->buildGmailUploadlUrl("messages", arg),
-        body,
+        arg,
         t);
     return t;
 }
 
 void MessagesRoutes::send_AsyncCB(
-    const gmail::SendMessageArg& arg,
-    const MessageResource& body,
+    const gmail::SendMimeMessageArg& arg,
     std::function<void(std::unique_ptr<MessageResource>)> completed_callback ,
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
 {
     m_end_point->rfc822UploadStyle
         <
         MessageResource,
-        MessageResource::factory,
-        MessageResource
+        MessageResource::factory
+        , gmail::SendMimeMessageArg
         >
         (m_end_point->buildGmailUploadlUrl("messages", arg),
-        body,
+        arg,
         completed_callback,
         failed_callback);
 }

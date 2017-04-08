@@ -23,6 +23,39 @@ void IdArg::build(const QString& link_path, QUrl& url)const
 };
 
 
+AttachmentIdArg::AttachmentIdArg(QString message_id, QString attachment_id) 
+	:m_message_id(message_id),
+	m_attachment_id(attachment_id)
+{
+};
+
+void AttachmentIdArg::build(const QString& link_path, QUrl& url)const
+{
+	UrlBuilder b(link_path + QString("%1/attachments/%2")
+		.arg(m_message_id)
+		.arg(m_attachment_id),
+		url);
+}
+
+void ModifyMessageArg::build(const QString& link_path, QUrl& url)const 
+{
+	UrlBuilder b(link_path + QString("/%1/modify").arg(m_message_id), url);
+
+};
+
+void ModifyMessageArg::toJson(QJsonObject& js)const 
+{
+	js["addLabels"] = ingrl_list2jsonarray(m_addLabels);
+	js["removeLabels"] = ingrl_list2jsonarray(m_removeLabels);
+};
+
+ModifyMessageArg::operator QJsonObject()const {
+	QJsonObject js;
+	this->toJson(js);
+	return js;
+}
+
+
 ListArg::ListArg():m_includeSpamTrash(false), m_maxResults(50)
 {
 
@@ -87,6 +120,91 @@ void SendMessageArg::build(const QString& link_path, QUrl& url)const
     b.add("uploadType", m_uploadType);
 };
 
+//...
+void MimeBodyPart::setContent(QString val, QString _type)
+{
+	m_type = _type;
+	m_content = val;
+};
+
+SendMimeMessageArg::SendMimeMessageArg()
+{
+	m_uploadType = "media";
+};
+
+SendMimeMessageArg::SendMimeMessageArg(QString from, 
+	QString to, 
+	QString subject, 
+	QString text)
+	:m_From(from),
+	m_To(to),
+	m_Subject(subject)
+{
+	MimeBodyPart pt;
+	pt.setContent(text, "text/plain");
+	addBodyPart(pt);
+};
+
+SendMimeMessageArg::SendMimeMessageArg(QString from,
+	QString to,
+	QString subject,
+	QString text_plain,
+	QString text_html) 
+	:m_From(from),
+	m_To(to),
+	m_Subject(subject)
+{
+	MimeBodyPart pt1;
+	pt1.setContent(text_plain, "text/plain");
+	addBodyPart(pt1);
+
+	MimeBodyPart pt2;
+	pt2.setContent(text_plain, "text/html");
+	addBodyPart(pt2);
+};
+
+
+void SendMimeMessageArg::build(const QString& link_path, QUrl& url)const
+{
+	UrlBuilder b(link_path + QString("/send"), url);
+	b.add("uploadType", m_uploadType);
+};
+
+QString SendMimeMessageArg::toRfc822()const 
+{
+	static QString boundary("OooOOoo17gqt");
+
+	QString rv;
+	rv =  QString("From: %1\r\n").arg(m_From);
+	rv += QString("To: %1\r\n").arg(m_To);
+	rv += QString("Subject: %1\r\n").arg(m_Subject);
+	rv += QString("Content-Type: multipart/alternative; boundary=%1\r\n\r\n").arg(boundary);
+
+	for (auto& p : m_body_parts)
+	{
+		rv += QString("--%1\r\n").arg(boundary);
+		rv += QString("Content-Type: %1; charset=UTF-8\r\n\r\n").arg(p.m_type);
+		rv += QString("%1\r\n\r\n").arg(p.m_content);
+	}
+
+	rv += QString("--%1--").arg(boundary);
+
+	return rv;
+};
+
+void SendMimeMessageArg::toJson(QJsonObject& js)const
+{
+	QString s = toRfc822();
+	QByteArray data(s.toStdString().c_str());
+	QString res = data.toBase64(QByteArray::Base64UrlEncoding);
+	js["raw"] = res;
+};
+
+SendMimeMessageArg::operator QJsonObject()const {
+	QJsonObject js;
+	this->toJson(js);
+	return js;
+}
 
 InsertMessageArg::InsertMessageArg() 
 {
@@ -136,6 +254,15 @@ std::unique_ptr<IdArg> IdArg::EXAMPLE(int, int)
     return rv;
 };
 
+std::unique_ptr<AttachmentIdArg> AttachmentIdArg::EXAMPLE(int, int)
+{
+	std::unique_ptr<AttachmentIdArg> rv(new AttachmentIdArg);
+	rv->setMessageId("id123");
+	rv->setAttachmentId("id_attch456");
+	return rv;
+};
+
+
 std::unique_ptr<ListArg> ListArg::EXAMPLE(int, int)
 { 
     std::unique_ptr<ListArg> rv(new ListArg); 
@@ -143,6 +270,19 @@ std::unique_ptr<ListArg> ListArg::EXAMPLE(int, int)
     rv->setPageToken("nextToken");
     rv->labels() = QString("label1 label2 label3").split(" ");
     return rv; 
+};
+
+std::unique_ptr<ModifyMessageArg> ModifyMessageArg::EXAMPLE(int, int)
+{
+	std::unique_ptr<ModifyMessageArg> rv(new ModifyMessageArg("id123"));
+	std::list <QString> add_label, remove_label;
+	add_label.push_back("LABEL_ADD_1");
+	add_label.push_back("LABEL_ADD_2");
+	remove_label.push_back("LABEL_DEL_1");
+	remove_label.push_back("LABEL_DEL_2");
+	rv->setAddlabels(add_label);
+	rv->setRemovelabels(remove_label);
+	return rv;
 };
 
 std::unique_ptr<HistoryListArg> HistoryListArg::EXAMPLE(int, int)
@@ -184,6 +324,26 @@ std::unique_ptr<ImportMessageArg> ImportMessageArg::EXAMPLE(int, int)
     return rv;
 };
 
+std::unique_ptr<SendMimeMessageArg> SendMimeMessageArg::EXAMPLE(int, int)
+{
+	std::unique_ptr<SendMimeMessageArg> rv(new SendMimeMessageArg);
+	rv->setSubject("subject sample");
+	rv->setFrom("from_me@gmail.com");
+	rv->setTo("to_somebody@gmail.com");
+	rv->setCC("cc_somebody@gmail.com");
+	rv->setBCC("bcc_somebody@gmail.com");
+	rv->setUploadType("multipart");
+
+	MimeBodyPart pt1;
+	pt1.setContent("*My example message text*", "text/plain");
+	rv->addBodyPart(pt1);
+
+	MimeBodyPart pt2;
+	pt2.setContent("<b>My example message text</b>", "text/html");
+	rv->addBodyPart(pt2);
+
+	return rv;
+};
 
 #endif //API_QT_AUTOTEST
 

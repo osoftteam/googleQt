@@ -4,7 +4,7 @@ CONFIG += staticlib
 CONFIG -= flat
 TEMPLATE = lib
 
-GM_MODULES = users messages labels threads drafts errors history
+GM_MODULES = users messages labels threads drafts errors history attachments
 GT_MODULES = tasks tasklists
 GD_MODULES = about files permissions comments
 
