@@ -33,7 +33,8 @@ namespace googleQt{
                         QString bcc,
                         QString subject, 
                         QString snippet, 
-                        qlonglong internalDate);
+                        qlonglong internalDate,
+                        qlonglong standardLabels);
 			MessageData(QString id, 
                         QString from, 
                         QString to, 
@@ -43,7 +44,8 @@ namespace googleQt{
                         QString snippet, 
                         QString plain, 
                         QString html, 
-                        qlonglong internalDate);
+                        qlonglong internalDate,
+                        qlonglong standardLabels);
 
             void  merge(CacheData* other);
             
@@ -57,15 +59,27 @@ namespace googleQt{
             QString html()const { return m_html; }
             qlonglong internalDate()const { return m_internalDate; }
 
-			bool  isStarred()const { return (m_flags.STARRED == 1); }
+            bool  isSpam()const { return (m_standardLabels.SPAM == 1); }
+            bool  isTrash()const { return (m_standardLabels.TRASH == 1); }
+            bool  isUnread()const { return (m_standardLabels.UNREAD == 1); }
+            bool  isStarred()const { return (m_standardLabels.STARRED == 1); }
+            bool  isImportant()const { return (m_standardLabels.IMPORTANT == 1); }
 
+            bool inLabelFilter(uint64_t data)const;
+            
+            uint64_t stardardLabelsFlags()const{return m_standardLabels.flags;}
+            std::list<QString> getLabels()const;
+            
+            static uint64_t packStardardLabels(const std::list <QString>& labels);
+            static uint64_t labelMask(QString name);
         protected:
 			void updateSnippet(QString from,
                                QString to,
                                QString cc,
                                QString bcc,
                                QString subject,
-                               QString snippet);
+                               QString snippet,
+                               qlonglong standardLabels);
             void updateBody(QString plain, QString html);
         protected:
             QString m_from;
@@ -80,17 +94,25 @@ namespace googleQt{
 
 			union LABEL_FLAGS
 			{
-				uint32_t flag;
-				struct
+				uint64_t flags;
+				struct                
 				{
+                    unsigned IMPORTANT	: 1;
+                    unsigned CHAT       : 1;
+                    unsigned SENT       : 1;
 					unsigned INBOX		: 1;
+                    unsigned TRASH		: 1;
+                    unsigned DRAFT      : 1;                    
 					unsigned SPAM		: 1;
-					unsigned TRASH		: 1;
-					unsigned UNREAD		: 1;
 					unsigned STARRED	: 1;
-					unsigned IMPORTANT	: 1;
+					unsigned UNREAD		: 1;
+                    unsigned CATEGORY_PERSONAL    :1;
+                    unsigned CATEGORY_SOCIAL      :1;
+                    unsigned CATEGORY_FORUMS      :1;
+                    unsigned CATEGORY_UPDATES     :1;
+                    unsigned CATEGORY_PROMOTIONS  :1;
 				};
-			} m_flags;
+			} m_standardLabels;
 
         private:
             MessageData(int agg_state,
@@ -103,7 +125,8 @@ namespace googleQt{
                         QString snippet,
                         QString plain,
                         QString html,
-                        qlonglong internalDate);
+                        qlonglong internalDate,
+                        qlonglong standardLabels);
 
 			friend class GMailCacheQueryResult;
 			friend class GMailSQLiteStorage;
@@ -134,6 +157,7 @@ namespace googleQt{
 							 QString& cc,
 							 QString& bcc,
                              QString& subject);
+            void loadLabels(messages::MessageResource* m, uint64_t& standardLabels);
         protected:
             GmailRoutes&  m_r;
         };
@@ -155,7 +179,8 @@ namespace googleQt{
             void update(EDataState state, CACHE_QUERY_RESULT_LIST<MessageData>& r)override;
             bool isValid()const override{return m_initialized;};
             void remove(const std::set<QString>& ids2remove)override;
-			void setStarred(QString msg_id, bool starred_on)override;
+            void updateStandardLabels(QString msg_id, uint64_t flags)override;
+
         protected:
             bool execQuery(QString sql);
             QSqlQuery* prepareQuery(QString sql);

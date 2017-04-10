@@ -172,11 +172,11 @@ mail_batch::GMailCacheQueryResult* GmailRoutes::getCacheMessages_Async(EDataStat
     return rfetcher;
 };
 
-std::unique_ptr<mail_batch::MessagesList> GmailRoutes::getCacheMessages(int numberOfMessages)
+std::unique_ptr<mail_batch::MessagesList> GmailRoutes::getCacheMessages(int numberOfMessages, uint64_t labelFilter)
 {
     ensureCache();
     mail_batch::GMailCacheQueryResult* rfetcher = newResultFetcher(EDataState::snippet);
-    m_GMailCache->cacheData(rfetcher, numberOfMessages);
+    m_GMailCache->cacheData(rfetcher, numberOfMessages, labelFilter);
     return rfetcher->waitForSortedResultListAndRelease();
 };
 
@@ -200,9 +200,20 @@ bool GmailRoutes::setupSQLiteCache(QString dbPath, QString dbName /*= "googleqt"
     return true;
 };
 
-void GmailRoutes::setStarred(mail_batch::MessageData* d, bool starred_on) 
+bool GmailRoutes::setStarred(mail_batch::MessageData* d, bool starred_on) 
 {
-	setStarred_Async(d, starred_on)->waitForResultAndRelease();
+    bool rv = false;
+    try
+    {    
+        std::unique_ptr<messages::MessageResource> m = setStarred_Async(d, starred_on)->waitForResultAndRelease();
+        rv = (!m->id().isEmpty());
+        //        qDebug() << "STAR changed" << m->id();
+    }
+    catch (GoogleException& e)
+    {
+        qWarning() << "GdriveRoutes::fileExists Exception: " << e.what();
+    }
+    return rv;    
 };
 
 GoogleTask<messages::MessageResource>* GmailRoutes::setStarred_Async(mail_batch::MessageData* d, bool starred_on)
@@ -214,12 +225,12 @@ GoogleTask<messages::MessageResource>* GmailRoutes::setStarred_Async(mail_batch:
 	if (starred_on)
 	{
 		arg.setAddlabels(labels);
-		d->m_flags.STARRED = 1;
+		d->m_standardLabels.STARRED = 1;
 	}
 	else 
 	{
 		arg.setRemovelabels(labels);
-		d->m_flags.STARRED = 0;
+		d->m_standardLabels.STARRED = 0;
 	}
 
 	messages::MessagesRoutes* msg = getMessages();
@@ -230,7 +241,7 @@ GoogleTask<messages::MessageResource>* GmailRoutes::setStarred_Async(mail_batch:
 		if (m_GMailCache &&
 			m_GMailCache->hasLocalPersistentStorate())
 		{
-			m_GMailCache->update_persistent_starred(msg_id, starred_on);
+			m_GMailCache->update_persistent_standard_labels(msg_id, d->stardardLabelsFlags());
 		}
 	};
 

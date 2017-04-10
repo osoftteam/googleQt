@@ -220,7 +220,9 @@ namespace googleQt{
         {
         public:
 			ModifyMessageArg() {};
-            ModifyMessageArg(QString idValue){m_message_id = idValue;}
+            ModifyMessageArg(QString idValue,
+                             QString add_label = "",
+                             QString remove_label = "");
 
 			QString messageId()const { return m_message_id; }
 			void setMessageId(QString mid) { m_message_id = mid; }

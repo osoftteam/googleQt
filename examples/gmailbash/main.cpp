@@ -70,6 +70,8 @@ int main(int argc, char *argv[])
     t.addAction("untrash",          "Untrash Message by ID", [&](QString arg) {cmd.untrash(arg); });
     t.addAction("send_plain",       "Send Plain Message", [&](QString arg) {cmd.send_plain(arg); });
 	t.addAction("send_as_html",		"Send Html Message", [&](QString arg) {cmd.send_as_html(arg); });
+    t.addAction("add_label",		"Add label", [&](QString arg) {cmd.add_label(arg); });
+    t.addAction("remove_label",		"Remove label", [&](QString arg) {cmd.remove_label(arg); });
     t.addSeparator();
     t.addAction("ls_labels",        "List Labels", [&](QString arg) {cmd.ls_labels(arg); });
     t.addAction("get_label",        "Get Label Info", [&](QString arg) {cmd.get_label(arg); });
@@ -92,6 +94,8 @@ int main(int argc, char *argv[])
     t.addAction("export_last_result",   "Export last response to a file", [&](QString arg) {cmd.export_last_result(arg); });
     t.addAction("print_last_result",   "Print last response", [&](QString arg) {cmd.print_last_result(arg); });
     t.addAction("print_user_id",   "Print user ID", [&](QString arg) {cmd.print_user_id(arg); });
+    t.addAction("base64url_encode",   "Base64Url encode file", [&](QString arg) {cmd.base64url_encode(arg); });
+    t.addAction("base64url_decode",   "Base64Url decode data", [&](QString arg) {cmd.base64url_decode(arg); });
     
     t.start();
     return 0;

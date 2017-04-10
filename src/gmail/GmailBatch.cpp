@@ -43,17 +43,18 @@ mail_batch::MessageData::MessageData(QString id,
                                      QString bcc,
                                      QString subject,
                                      QString snippet,
-                                     qlonglong internalDate)
+                                     qlonglong internalDate,
+                                     qlonglong standardLabels)
     :CacheData(EDataState::snippet, id),
      m_from(from),
      m_to(to),
      m_cc(cc),
      m_bcc(bcc),
      m_subject(subject),
-    m_snippet(snippet),
-    m_internalDate(internalDate)
+     m_snippet(snippet),
+     m_internalDate(internalDate)     
 {
-	m_flags.flag = 0;
+    m_standardLabels.flags = standardLabels;
 };
 
 mail_batch::MessageData::MessageData(QString id,
@@ -65,7 +66,8 @@ mail_batch::MessageData::MessageData(QString id,
                                      QString snippet,
                                      QString plain,
                                      QString html,
-                                     qlonglong internalDate)
+                                     qlonglong internalDate,
+                                     qlonglong standardLabels)
 	:CacheData(EDataState::body, id),
     m_from(from),
     m_to(to),
@@ -77,7 +79,7 @@ mail_batch::MessageData::MessageData(QString id,
     m_html(html),
     m_internalDate(internalDate)
 {
-	m_flags.flag = 0;
+    m_standardLabels.flags = standardLabels;
 };
 
 mail_batch::MessageData::MessageData(int agg_state,
@@ -90,20 +92,21 @@ mail_batch::MessageData::MessageData(int agg_state,
                                      QString snippet,
                                      QString plain,
                                      QString html,
-                                     qlonglong internalDate)
+                                     qlonglong internalDate,
+                                     qlonglong standardLabels)
 :CacheData(EDataState::body, id),
-    m_from(from),
-    m_to(to),
-    m_cc(cc),
-    m_bcc(bcc),
-    m_subject(subject),
-    m_snippet(snippet),
-    m_plain(plain),
-    m_html(html),
-    m_internalDate(internalDate)
+ m_from(from),
+ m_to(to),
+ m_cc(cc),
+ m_bcc(bcc),
+ m_subject(subject),
+ m_snippet(snippet),
+ m_plain(plain),
+ m_html(html),
+ m_internalDate(internalDate)
 {
     m_state_agg = agg_state;
-	m_flags.flag = 0;
+    m_standardLabels.flags = standardLabels;
 };
 
 void mail_batch::MessageData::updateSnippet(QString from,
@@ -111,7 +114,8 @@ void mail_batch::MessageData::updateSnippet(QString from,
                                             QString cc,
                                             QString bcc,
                                             QString subject,
-                                            QString snippet)
+                                            QString snippet,
+                                            qlonglong standardLabels)
 {
 	m_state_agg |= static_cast<int>(EDataState::snippet);
 	m_from = from;
@@ -120,6 +124,7 @@ void mail_batch::MessageData::updateSnippet(QString from,
     m_bcc = bcc;
 	m_subject = subject;
 	m_snippet = snippet;
+    m_standardLabels.flags = standardLabels;
 };
 
 void mail_batch::MessageData::updateBody(QString plain, QString html)
@@ -128,6 +133,78 @@ void mail_batch::MessageData::updateBody(QString plain, QString html)
 	m_plain = plain;
 	m_html = html;
 };
+
+uint64_t mail_batch::MessageData::packStardardLabels(const std::list <QString>& labels)
+{
+    LABEL_FLAGS f;
+    
+    if(labels.size() > 0){
+        for (auto& lb : labels) {
+            f.flags |= labelMask(lb);
+        }
+    }
+    return f.flags;
+};
+
+bool mail_batch::MessageData::inLabelFilter(uint64_t data)const
+{
+    bool rv = (data & m_standardLabels.flags) != 0;
+    return rv;
+};
+
+#define RUN_LABELS_CHECK                        \
+    CHECK_LABEL(IMPORTANT)                      \
+    CHECK_LABEL(CHAT)                           \
+    CHECK_LABEL(SENT)                           \
+    CHECK_LABEL(INBOX)                          \
+    CHECK_LABEL(TRASH)                          \
+    CHECK_LABEL(DRAFT)                          \
+    CHECK_LABEL(SPAM)                           \
+    CHECK_LABEL(STARRED)                        \
+    CHECK_LABEL(UNREAD)                         \
+    CHECK_LABEL(CATEGORY_PERSONAL)              \
+    CHECK_LABEL(CATEGORY_SOCIAL)                \
+    CHECK_LABEL(CATEGORY_FORUMS)                \
+    CHECK_LABEL(CATEGORY_UPDATES)               \
+    CHECK_LABEL(CATEGORY_PROMOTIONS)            \
+
+
+#define CHECK_LABEL(L)if(m_standardLabels.L == 1)labels.push_back(#L);
+std::list<QString> mail_batch::MessageData::getLabels()const
+{
+    std::list<QString> labels;
+    RUN_LABELS_CHECK;
+    return labels;
+};
+
+#undef CHECK_LABEL
+#define CHECK_LABEL(L) else if(lb.compare(#L, Qt::CaseInsensitive) == 0){f.L = 1;}
+
+uint64_t mail_batch::MessageData::labelMask(QString lb)
+{
+    LABEL_FLAGS f;
+    if(lb.isEmpty()){}
+    //RUN_LABELS_CHECK;
+    /*
+    if(lb.compare("INBOX", Qt::CaseInsensitive) == 0){
+        f.INBOX = 1;
+    }else if(lb.compare("SPAM", Qt::CaseInsensitive) == 0){
+        f.SPAM = 1;
+    }else if(lb.compare("TRASH", Qt::CaseInsensitive) == 0){
+        f.TRASH = 1;
+    }else if(lb.compare("UNREAD", Qt::CaseInsensitive) == 0){
+        f.UNREAD = 1;
+    }else if(lb.compare("STARRED", Qt::CaseInsensitive) == 0){
+        f.STARRED = 1;
+    }if(lb.compare("IMPORTANT", Qt::CaseInsensitive) == 0){
+        f.IMPORTANT = 1;
+    }
+    CHECK_LABEL(INBOX);
+    */
+    return f.flags;
+};
+
+#undef CHECK_LABEL
 
 void mail_batch::MessageData::merge(CacheData* other)
 {
@@ -244,12 +321,22 @@ void mail_batch::GMailCacheQueryResult::loadHeaders(messages::MessageResource* m
         }
 };
 
+void mail_batch::GMailCacheQueryResult::loadLabels(messages::MessageResource* m, uint64_t& f)
+{
+    const std::list <QString>& labels = m->labelids();
+    if(labels.size() > 0){
+        f = MessageData::packStardardLabels(labels);
+    }
+};
+
 void mail_batch::GMailCacheQueryResult::fetchMessage(messages::MessageResource* m)
 {
 	switch (m_state)
         {
         case googleQt::EDataState::snippet:
             {
+                uint64_t labels;
+                loadLabels(m, labels);
                 QString from, to, cc, bcc, subject;
 				loadHeaders(m, from, to, cc, bcc, subject);
 				std::shared_ptr<MessageData> md = std::make_shared<MessageData>(m->id(), 
@@ -259,7 +346,8 @@ void mail_batch::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
                                                                                 bcc,
                                                                                 subject, 
                                                                                 m->snippet(), 
-                                                                                m->internaldate());
+                                                                                m->internaldate(),
+                                                                                labels);
                 add(md);
             }break;
         case googleQt::EDataState::body:
@@ -310,6 +398,8 @@ void mail_batch::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
                 auto i = m_result.find(m->id());
                 if (i == m_result.end())
                     {
+                        uint64_t labels;
+                        loadLabels(m, labels);
 						QString from, to, cc, bcc, subject;
 						loadHeaders(m, from, to, cc, bcc, subject);
 						std::shared_ptr<MessageData> md = std::make_shared<MessageData>(m->id(), 
@@ -319,7 +409,8 @@ void mail_batch::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
                                                                                         bcc, 
                                                                                         subject, 
                                                                                         m->snippet(), 
-                                                                                        m->internaldate());
+                                                                                        m->internaldate(),
+                                                                                        labels);
                         add(md);
 						md->updateBody(plain_text, html_text);
                     }
@@ -327,10 +418,12 @@ void mail_batch::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
                     {
                         std::shared_ptr<MessageData> md = i->second;
 						if (!md->isLoaded(googleQt::EDataState::snippet)) 
-                            {							
+                            {
+                                uint64_t labels;
+                                loadLabels(m, labels);
                                 QString from, to, cc, bcc, subject;
                                 loadHeaders(m, from, to, cc, bcc, subject);
-                                md->updateSnippet(from, to, cc, bcc, subject, m->snippet());
+                                md->updateSnippet(from, to, cc, bcc, subject, m->snippet(), labels);
                             }
                         md->updateBody(plain_text, html_text);
                     }
@@ -379,13 +472,13 @@ bool mail_batch::GMailSQLiteStorage::init(QString dbPath, QString dbName, QStrin
 
     QString sql = QString("CREATE TABLE IF NOT EXISTS %1gmail_msg(msg_id TEXT PRIMARY KEY, msg_from TEXT, "
                           "msg_to TEXT, msg_cc TEXT, msg_bcc TEXT, msg_subject TEXT, msg_snippet TEXT, msg_plain TEXT, "
-                          "msg_html TEXT, internal_date INTEGER, msg_state INTEGER, msg_cache_lock INTEGER)").arg(m_db_meta_prefix);
+                          "msg_html TEXT, internal_date INTEGER, msg_state INTEGER, msg_cache_lock INTEGER, msg_standard_labels INTEGER)").arg(m_db_meta_prefix);
 
     if (!execQuery(sql))
         return false;
 
     sql = QString("SELECT msg_state, msg_id, msg_from, msg_to, msg_cc, msg_bcc, "
-                  "msg_subject, msg_snippet, msg_plain, msg_html, internal_date FROM %1gmail_msg ORDER BY internal_date DESC").arg(m_db_meta_prefix);
+                  "msg_subject, msg_snippet, msg_plain, msg_html, internal_date, msg_standard_labels FROM %1gmail_msg ORDER BY internal_date DESC").arg(m_db_meta_prefix);
     QSqlQuery* q = selectQuery(sql);
     if (!q)
         return false;
@@ -439,7 +532,7 @@ std::list<QString> mail_batch::GMailSQLiteStorage::load(EDataState state,
         {
             QString comma_ids = slist2commalist_decorated(lst);
             QString sql = QString("SELECT msg_state, msg_id, msg_from, msg_to, msg_cc, msg_bcc, "
-                                  "msg_subject, msg_snippet, msg_plain, msg_html, internal_date FROM %1gmail_msg WHERE msg_id IN(%2)")
+                                  "msg_subject, msg_snippet, msg_plain, msg_html, internal_date, msg_standard_labels FROM %1gmail_msg WHERE msg_id IN(%2)")
             .arg(m_db_meta_prefix)
             .arg(comma_ids);
             switch (state)
@@ -499,19 +592,19 @@ void mail_batch::GMailSQLiteStorage::update(EDataState state, CACHE_QUERY_RESULT
         case EDataState::snippet:
             {
                 sql_update = QString("UPDATE %1gmail_msg SET msg_state=?, msg_from=?, msg_to=?, "
-                                     "msg_cc=?, msg_bcc=?, msg_subject=?, msg_snippet=?, internal_date=? WHERE msg_id=?")
+                                     "msg_cc=?, msg_bcc=?, msg_subject=?, msg_snippet=?, internal_date=?, msg_standard_labels=? WHERE msg_id=?")
                     .arg(m_db_meta_prefix);
                 sql_insert = QString("INSERT INTO %1gmail_msg(msg_state, msg_from, msg_to, msg_cc, msg_bcc, msg_subject, "
-                                     "msg_snippet, internal_date, msg_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                                     "msg_snippet, internal_date, msg_standard_labels, msg_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
                     .arg(m_db_meta_prefix);
             }break;
         case EDataState::body: 
             {
                 sql_update = QString("UPDATE %1gmail_msg SET msg_state=?, msg_from=?, msg_to=?, msg_cc=?, msg_bcc=?, "
-                                     "msg_subject=?, msg_snippet=?, msg_plain=?, msg_html=?, internal_date=? WHERE msg_id=?")
+                                     "msg_subject=?, msg_snippet=?, msg_plain=?, msg_html=?, internal_date=?, msg_standard_labels=? WHERE msg_id=?")
                     .arg(m_db_meta_prefix);
                 sql_insert = QString("INSERT INTO %1gmail_msg(msg_state, msg_from, msg_to, msg_cc, msg_bcc, msg_subject, "
-                                     "msg_snippet, msg_plain, msg_html, internal_date, msg_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                                     "msg_snippet, msg_plain, msg_html, internal_date, msg_standard_labels, msg_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
                     .arg(m_db_meta_prefix);
             }break;
         }        
@@ -532,6 +625,7 @@ void mail_batch::GMailSQLiteStorage::update(EDataState state, CACHE_QUERY_RESULT
                     q->addBindValue(m->subject());
                     q->addBindValue(m->snippet());
                     q->addBindValue(m->internalDate());
+                    q->addBindValue(m->stardardLabelsFlags());
                     q->addBindValue(m->id());
                 }break;
                 case EDataState::body:
@@ -546,6 +640,7 @@ void mail_batch::GMailSQLiteStorage::update(EDataState state, CACHE_QUERY_RESULT
                     q->addBindValue(m->plain());
                     q->addBindValue(m->html());
                     q->addBindValue(m->internalDate());
+                    q->addBindValue(m->stardardLabelsFlags());
                     q->addBindValue(m->id());
                 }break;
                 }
@@ -620,9 +715,15 @@ void mail_batch::GMailSQLiteStorage::remove(const std::set<QString>& set_of_ids2
         }
 };
 
-void mail_batch::GMailSQLiteStorage::setStarred(QString msg_id, bool starred_on) 
+
+void mail_batch::GMailSQLiteStorage::updateStandardLabels(QString msg_id, uint64_t flags)
 {
-	//qDebug() << "";
+    QString sql_update;
+    sql_update = QString("UPDATE %1gmail_msg SET msg_standard_labels=%2 WHERE msg_id=%3")
+        .arg(m_db_meta_prefix)
+        .arg(flags)
+        .arg(msg_id);
+    execQuery(sql_update);
 };
 
 std::shared_ptr<mail_batch::MessageData> mail_batch::GMailSQLiteStorage::loadObjFromDB(QSqlQuery* q)
@@ -657,7 +758,8 @@ std::shared_ptr<mail_batch::MessageData> mail_batch::GMailSQLiteStorage::loadObj
             msg_html = q->value(9).toString();
         }
     qlonglong  msg_internalDate = q->value(10).toLongLong();
-
+    qlonglong  msg_standardLabels = q->value(11).toLongLong();
+    
     md = std::shared_ptr<MessageData>(new MessageData(agg_state, 
                                                       msg_id, 
                                                       msg_from, 
@@ -668,7 +770,8 @@ std::shared_ptr<mail_batch::MessageData> mail_batch::GMailSQLiteStorage::loadObj
                                                       msg_snippet, 
                                                       msg_plain, 
                                                       msg_html, 
-                                                      msg_internalDate));
+                                                      msg_internalDate,
+                                                      msg_standardLabels));
     return md;
 };
 
@@ -725,44 +828,3 @@ QSqlQuery* mail_batch::GMailSQLiteStorage::selectQuery(QString sql)
     return q;
 };
 
-#ifdef API_QT_AUTOTEST
-/*
-std::unique_ptr<mail_batch::MessageData> mail_batch::MessageData::EXAMPLE(EDataState st)
-{
-    static int idx = time(NULL);
-    QString id = QString("%1").arg(idx);
-    QString from = QString("%1_from").arg(idx);
-    QString to = QString("%1_from@gmail.com").arg(idx);
-    QString cc = QString("%1_ccm@gmail.com").arg(idx);
-    QString bcc = QString("%1_bccm@gmail.com").arg(idx);
-    QString subject = QString("%1_subject").arg(idx);
-    QString snippet = QString("%1_snippet").arg(idx);
-    qlonglong internalDate = QDateTime::currentMSecsSinceEpoch();
-
-
-    std::unique_ptr<mail_batch::MessageData> rv;
-    switch (st) 
-        {
-        case EDataState::snippet:
-            {
-                rv.reset(new mail_batch::MessageData(id, 
-                                                     from,
-                                                     to, 
-                                                     cc,
-                                                     bcc,
-                                                     subject, 
-                                                     snippet, 
-                                                     internalDate));
-            }break;
-        case EDataState::body: 
-            {
-                QString plain = QString("%1_plain").arg(idx);
-                QString html = QString("<html>%1_html</html>").arg(idx);
-				
-                rv.reset(new mail_batch::MessageData(id, from, to, cc, bcc, subject, snippet, plain, html, internalDate));
-            }break;
-        }
-    return rv;
-};
-*/
-#endif //API_QT_AUTOTEST

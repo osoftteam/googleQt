@@ -98,6 +98,31 @@ void GmailCommands::listDrafts(QString nextToken)
     }
 };
 
+void GmailCommands::base64url_encode(QString fileName)
+{
+    if (fileName.isEmpty())
+    {
+        std::cout << "Error, prepared message file expected: " << fileName << std::endl;
+        return;
+    }
+
+    QFile mf(fileName);
+    if (!mf.open(QFile::ReadOnly)) {
+        std::cout << "Error, failed to open prepared message file: " << fileName << std::endl;
+        return;
+    }
+
+    QByteArray ba = mf.readAll().toBase64(QByteArray::Base64UrlEncoding);
+    std::cout << ba.constData() << std::endl;
+};
+
+void GmailCommands::base64url_decode(QString data)
+{
+    std::string str = data.toStdString();
+    QByteArray ba = QByteArray::fromBase64(str.c_str(), QByteArray::Base64UrlEncoding);
+    std::cout << ba.constData() << std::endl;
+};
+
 bool GmailCommands::loadMessageFile(QString fileName, messages::MessageResource* msg)
 {
     if (fileName.isEmpty())
@@ -168,8 +193,8 @@ void GmailCommands::send_as_html(QString to_subject_text)
 	QString msg_to = arg_list[0];
 	QString msg_subject = arg_list[1];
 	QString msg_text = arg_list[2];
-	QString msg_html = QString("<html><body><b>%1</b></body></html>").arg(msg_text);
-
+	QString msg_html = QString("<div dir=\"ltr\">%1</div>").arg(msg_text);
+    
 	try
 	{
 		gmail::SendMimeMessageArg arg(m_c.userId(), msg_to, msg_subject, msg_text, msg_html);
@@ -196,6 +221,62 @@ void GmailCommands::trash(QString message_id)
     }
 };
 
+void GmailCommands::add_label(QString message_id_label)
+{
+	QStringList arg_list = message_id_label.split(" ",
+		QString::SkipEmptyParts);
+
+	if (arg_list.size() < 2)
+	{
+		std::cout << "Invalid parameters, expected <message-ID> <label>" << std::endl;
+		return;
+	}
+
+	QString msg_id = arg_list[0];
+	QString msg_label = arg_list[1];
+
+    
+    try
+    {
+        gmail::ModifyMessageArg arg(msg_id, msg_label);
+        std::unique_ptr<messages::MessageResource> m = m_gm->getMessages()->modify(arg);
+        std::cout << "Label added: " << msg_label << std::endl;
+        printMessage(m.get());
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
+void GmailCommands::remove_label(QString message_id_label)
+{
+	QStringList arg_list = message_id_label.split(" ",
+		QString::SkipEmptyParts);
+
+	if (arg_list.size() < 2)
+	{
+		std::cout << "Invalid parameters, expected <message-ID> <label>" << std::endl;
+		return;
+	}
+
+	QString msg_id = arg_list[0];
+	QString msg_label = arg_list[1];
+    
+    try
+    {
+        gmail::ModifyMessageArg arg(msg_id, "", msg_label);
+        std::unique_ptr<messages::MessageResource> m = m_gm->getMessages()->modify(arg);
+        std::cout << "Label removed: " << msg_label << std::endl;
+        printMessage(m.get());        
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
+
 void GmailCommands::untrash(QString message_id) 
 {
     try
@@ -213,7 +294,7 @@ void GmailCommands::printMessage(messages::MessageResource* r)
 {
     std::set<QString> headers_to_print = {"From", "To", "Subject", "CC", "BCC"};
     
-    std::cout << "rid="<< r->id() << std::endl
+    std::cout << "id="<< r->id() << std::endl
               << "tid=" << r->threadid() << std::endl
               << "snippet=" << r->snippet() << std::endl;
     const std::list <QString>& labels = r->labelids();

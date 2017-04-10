@@ -1,4 +1,4 @@
-To: someone@mail.com 
-From: me@mail.com 
+To:ykhodak@yahoo.com
+From:yuriy.khodak@gmail.com
 Subject: this is a subject 
 And this is the body of the message

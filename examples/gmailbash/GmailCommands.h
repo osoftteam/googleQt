@@ -61,6 +61,10 @@ public:
     */
     void trash(QString message_id);
 
+
+    void add_label(QString message_id_label);
+    void remove_label(QString message_id_label);
+    
     /**
         untrash - untrash message by id
     */
@@ -146,6 +150,9 @@ public:
     void export_last_result(QString fileName);
     void print_last_result(QString );
     void print_user_id(QString );
+
+    void base64url_encode(QString fileName);
+    void base64url_decode(QString data);
     
 protected:
     void listMessages(QString nextToken, QString labelIds);

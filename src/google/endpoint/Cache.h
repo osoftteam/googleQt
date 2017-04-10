@@ -155,7 +155,7 @@ namespace googleQt {
         };
         virtual void remove(const std::set<QString>& ids2remove) = 0;
         virtual bool isValid()const = 0;
-		virtual void setStarred(QString msg_id, bool starred_on) = 0;
+        virtual void updateStandardLabels(QString msg_id, uint64_t flags) = 0;
     };
     
     template <class O, class R>
@@ -230,15 +230,16 @@ namespace googleQt {
                     m_localDB->update(state, r, fetched_ids);
                 }            
         }
+
         
-		void update_persistent_starred(QString msg_id, bool starred_on) 
+		void update_persistent_standard_labels(QString msg_id, uint64_t flags)
 		{
 			if (m_localDB != nullptr &&
 				m_localDB->isValid())
 			{
-				m_localDB->setStarred(msg_id, starred_on);
+				m_localDB->updateStandardLabels(msg_id, flags);
 			}
-		}
+        }
 
         void query_Async(EDataState load, const std::list<QString>& id_list, R* rfetcher)
         {
@@ -278,18 +279,22 @@ namespace googleQt {
 				}            
         };
 
-        void cacheData(R* rfetcher, int number2load)
+        void cacheData(R* rfetcher, int number2load, uint64_t labelFilter)
         {
             int count = 0;
             for (auto& i : m_order_cache)
-            {
-                rfetcher->add(i);
-                if (number2load > 0)
                 {
-                    if (++count >= number2load)
-                        break;
+                    auto m = i;
+                    if(m->inLabelFilter(labelFilter))
+                        {
+                            rfetcher->add(i);
+                            if (number2load > 0)
+                                {
+                                    if (++count >= number2load)
+                                        break;
+                                }
+                        }
                 }
-            }
             rfetcher->notifyOnCompletedFromCache();
         }
 

@@ -37,6 +37,21 @@ void AttachmentIdArg::build(const QString& link_path, QUrl& url)const
 		url);
 }
 
+ModifyMessageArg::ModifyMessageArg(QString idValue,
+                                   QString add_label /*= ""*/,
+                                   QString remove_label /*= ""*/)
+{
+    m_message_id = idValue;
+    if(!add_label.isEmpty()){
+        m_addLabels.push_back(add_label);
+    }
+
+    if(!remove_label.isEmpty()){
+        m_removeLabels.push_back(remove_label);
+    }
+}
+
+
 void ModifyMessageArg::build(const QString& link_path, QUrl& url)const 
 {
 	UrlBuilder b(link_path + QString("/%1/modify").arg(m_message_id), url);
@@ -45,8 +60,8 @@ void ModifyMessageArg::build(const QString& link_path, QUrl& url)const
 
 void ModifyMessageArg::toJson(QJsonObject& js)const 
 {
-	js["addLabels"] = ingrl_list2jsonarray(m_addLabels);
-	js["removeLabels"] = ingrl_list2jsonarray(m_removeLabels);
+	js["addLabelIds"] = ingrl_list2jsonarray(m_addLabels);
+	js["removeLabelIds"] = ingrl_list2jsonarray(m_removeLabels);
 };
 
 ModifyMessageArg::operator QJsonObject()const {
