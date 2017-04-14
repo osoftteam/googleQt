@@ -764,13 +764,13 @@ void GmailCommands::get_cache_snippets(QString id_list)
 		return;
 	}
 
-    std::unique_ptr<mail_batch::MessagesList> lst = m_gm->getCacheMessages(EDataState::snippet, arg_list);
+    std::unique_ptr<mail_cache::MessagesList> lst = m_gm->getCacheMessages(EDataState::snippet, arg_list);
 	std::cout << "loaded from cache: " << lst->messages.size() << std::endl;
 
 	int n = 1;
 	for (auto& i : lst->messages)
 	{
-		mail_batch::MessageData* m = i.get();
+		mail_cache::MessageData* m = i.get();
 		std::cout << n << ". " << m->id() << "|";
 		std::cout << m->from() << "|";
 		std::cout << m->subject() << "|";
@@ -790,13 +790,13 @@ void GmailCommands::get_cache_details(QString id_list)
 		return;
 	}
 
-    std::unique_ptr<mail_batch::MessagesList> lst = m_gm->getCacheMessages(EDataState::body, arg_list);
+    std::unique_ptr<mail_cache::MessagesList> lst = m_gm->getCacheMessages(EDataState::body, arg_list);
 	std::cout << "loaded from cache: " << lst->messages.size() << std::endl;
 
 	int n = 1;
 	for (auto& i : lst->messages)
 	{
-		mail_batch::MessageData* m = i.get();
+		mail_cache::MessageData* m = i.get();
 		std::cout << n << ". " << m->id() << "|";
 		std::cout << m->from() << "|";
 		std::cout << m->subject() << "|";
@@ -815,13 +815,13 @@ void GmailCommands::check_email_cache(QString nextToken)
 
     try
         {    
-            std::unique_ptr<mail_batch::MessagesList> lst = m_gm->getNextCacheMessages(20, nextToken);
+            std::unique_ptr<mail_cache::MessagesList> lst = m_gm->getNextCacheMessages(20, nextToken);
             std::cout << "loaded from cache: " << lst->messages.size() << std::endl;
 
             int n = 1;
             for (auto& i : lst->messages)
                 {
-                    mail_batch::MessageData* m = i.get();
+                    mail_cache::MessageData* m = i.get();
                     std::cout << n << ". " << m->id() << "|";
                     std::cout << m->from() << "|";
                     std::cout << m->subject() << "|";
