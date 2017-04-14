@@ -164,11 +164,10 @@ QString ApiAutotest::getId(QString class_name, int default_id_num)
         IDSET::iterator j = ids.begin();
         rv = *j;
         ids.erase(j);
-        //rv = ids
     }
     else 
     {
-        rv = QString("id_%1").arg(default_id_num);
+		rv = QString("id_%1").arg(default_id_num);
     }
     return rv;
 };

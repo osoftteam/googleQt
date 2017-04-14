@@ -155,7 +155,7 @@ namespace googleQt {
         };
         virtual void remove(const std::set<QString>& ids2remove) = 0;
         virtual bool isValid()const = 0;
-        virtual void updateStandardLabels(QString msg_id, uint64_t flags) = 0;
+        virtual void updateMessageLabels(QString msg_id, uint64_t flags) = 0;
     };
     
     template <class O, class R>
@@ -163,7 +163,7 @@ namespace googleQt {
     {
     public:
         GoogleCache(ApiEndpoint& ept): m_endpoint(ept){};
-        void setupLocalStorage(LocalPersistentStorage<O, R>* localDB){m_localDB .reset(localDB);};
+        void setupLocalStorage(LocalPersistentStorage<O, R>* localDB){m_localDB.reset(localDB);};
         bool hasLocalPersistentStorate()const { return(m_localDB.get() != nullptr); };
 		//virtual R* produceCloudResultFetcher(EDataState load, ApiEndpoint& ept) = 0;
 
@@ -232,12 +232,12 @@ namespace googleQt {
         }
 
         
-		void update_persistent_standard_labels(QString msg_id, uint64_t flags)
+		void update_persistent_labels(QString msg_id, uint64_t flags)
 		{
 			if (m_localDB != nullptr &&
 				m_localDB->isValid())
 			{
-				m_localDB->updateStandardLabels(msg_id, flags);
+				m_localDB->updateMessageLabels(msg_id, flags);
 			}
         }
 

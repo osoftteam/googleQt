@@ -3,6 +3,7 @@
 #include "google/endpoint/BatchRunner.h"
 #include "google/endpoint/Cache.h"
 #include "gmail/messages/MessagesRoutes.h"
+#include "gmail/labels/LabelsLabelResource.h"
 #include <QSqlDatabase>
 #include <QSqlQuery>
 
@@ -10,7 +11,7 @@ namespace googleQt{
 	class Endpoint;
 	class GmailRoutes;
 
-	namespace mail_batch{
+	namespace mail_cache{
         class MessagesReceiver
         {
         public:
@@ -23,6 +24,16 @@ namespace googleQt{
 
         class GMailCacheQueryResult;
         class GMailSQLiteStorage;
+
+		/**
+			MessageData - local persistant rfc822 basic data.
+			Number of headers limited to CC BCC From To Subject
+			to optimize local storage. Can be partially loaded
+			with only ID, snippet or fully loaded with html text.
+			Stored as one record in SQL table. Can be deleted and 
+			later dynamically restored from Gmail using ID.
+			Containes labels as bitmap.
+		*/
         class MessageData : public CacheData
         {
         public:
@@ -34,7 +45,7 @@ namespace googleQt{
                         QString subject, 
                         QString snippet, 
                         qlonglong internalDate,
-                        qlonglong standardLabels);
+                        qlonglong labels);
 			MessageData(QString id, 
                         QString from, 
                         QString to, 
@@ -45,7 +56,7 @@ namespace googleQt{
                         QString plain, 
                         QString html, 
                         qlonglong internalDate,
-                        qlonglong standardLabels);
+                        qlonglong labels);
 
             void  merge(CacheData* other);
             
@@ -59,27 +70,19 @@ namespace googleQt{
             QString html()const { return m_html; }
             qlonglong internalDate()const { return m_internalDate; }
 
-            bool  isSpam()const { return (m_standardLabels.SPAM == 1); }
-            bool  isTrash()const { return (m_standardLabels.TRASH == 1); }
-            bool  isUnread()const { return (m_standardLabels.UNREAD == 1); }
-            bool  isStarred()const { return (m_standardLabels.STARRED == 1); }
-            bool  isImportant()const { return (m_standardLabels.IMPORTANT == 1); }
-
             bool inLabelFilter(uint64_t data)const;
             
-            uint64_t stardardLabelsFlags()const{return m_standardLabels.flags;}
-            std::list<QString> getLabels()const;
-            
-            static uint64_t packStardardLabels(const std::list <QString>& labels);
-            static uint64_t labelMask(QString name);
-        protected:
+			/// each label is a bit in int64
+            uint64_t labelsBitMap()const{return m_labels;}
+                        
+        protected:			
 			void updateSnippet(QString from,
                                QString to,
                                QString cc,
                                QString bcc,
                                QString subject,
                                QString snippet,
-                               qlonglong standardLabels);
+                               qlonglong labels);
             void updateBody(QString plain, QString html);
         protected:
             QString m_from;
@@ -91,30 +94,8 @@ namespace googleQt{
             QString m_plain;
             QString m_html;
             qlonglong m_internalDate;
-
-			union LABEL_FLAGS
-			{
-				uint64_t flags;
-				struct                
-				{
-                    unsigned IMPORTANT	: 1;
-                    unsigned CHAT       : 1;
-                    unsigned SENT       : 1;
-					unsigned INBOX		: 1;
-                    unsigned TRASH		: 1;
-                    unsigned DRAFT      : 1;                    
-					unsigned SPAM		: 1;
-					unsigned STARRED	: 1;
-					unsigned UNREAD		: 1;
-                    unsigned CATEGORY_PERSONAL    :1;
-                    unsigned CATEGORY_SOCIAL      :1;
-                    unsigned CATEGORY_FORUMS      :1;
-                    unsigned CATEGORY_UPDATES     :1;
-                    unsigned CATEGORY_PROMOTIONS  :1;
-				};
-			} m_standardLabels;
-
-        private:
+			uint64_t m_labels;
+     private:
             MessageData(int agg_state,
                         QString id,
                         QString from,
@@ -126,17 +107,49 @@ namespace googleQt{
                         QString plain,
                         QString html,
                         qlonglong internalDate,
-                        qlonglong standardLabels);
+                        qlonglong labels);
 
 			friend class GMailCacheQueryResult;
 			friend class GMailSQLiteStorage;
 			friend class googleQt::GmailRoutes;
         };
 
+		/**
+			LabelData - system/user labels in gmail, implemented as bitmap,
+			where one reference to the label is one bit in 64bit map
+		*/
+		class LabelData 
+		{
+		public:
+			LabelData();
+
+			QString		labelId()const { return m_label_id; }
+			QString		labelName()const { return m_label_name; }
+			uint64_t	labelMask()const { return m_label_mask; }
+			bool		isSystem()const { return m_is_system_label; }
+			uint64_t	unreadMessages()const { return m_unread_messages; }
+
+		protected:
+			QString		m_label_id;
+			QString		m_label_name;
+			int			m_mask_base;
+			uint64_t	m_label_mask;
+			bool		m_is_system_label;
+			uint64_t	m_unread_messages;
+		private:
+			LabelData(QString id,
+				QString name,
+				int mask_base,
+				bool as_system,
+				uint64_t unread_messages);
+
+			friend class GMailSQLiteStorage;
+		};
+
         struct MessagesList
         {
-            std::list<std::shared_ptr<mail_batch::MessageData>> messages;
-            std::map<QString, std::shared_ptr<mail_batch::MessageData>> messages_map;
+            std::list<std::shared_ptr<mail_cache::MessageData>> messages;
+            std::map<QString, std::shared_ptr<mail_cache::MessageData>> messages_map;
             EDataState state;
             QString    nextpage;
         };
@@ -157,7 +170,7 @@ namespace googleQt{
 							 QString& cc,
 							 QString& bcc,
                              QString& subject);
-            void loadLabels(messages::MessageResource* m, uint64_t& standardLabels);
+            void loadLabels(messages::MessageResource* m, uint64_t& labels);
         protected:
             GmailRoutes&  m_r;
         };
@@ -166,9 +179,13 @@ namespace googleQt{
         {
         public:
             GMailCache(ApiEndpoint& ept);
-            //void persistent_clear(const std::set<QString>& ids2delete) override;
+			GMailSQLiteStorage* sqlite_storage();
         };
 
+		/**
+			GMailSQLiteStorage - utility class as helper for GMailCache.
+			Implements SQL manipulation functions.
+		*/
         class GMailSQLiteStorage: public LocalPersistentStorage<MessageData, GMailCacheQueryResult>
         {
         public:
@@ -179,19 +196,44 @@ namespace googleQt{
             void update(EDataState state, CACHE_QUERY_RESULT_LIST<MessageData>& r)override;
             bool isValid()const override{return m_initialized;};
             void remove(const std::set<QString>& ids2remove)override;
-            void updateStandardLabels(QString msg_id, uint64_t flags)override;
+            void updateMessageLabels(QString msg_id, uint64_t flags)override;			
 
+			LabelData* findLabel(QString label_id);
+			LabelData* ensureSystemLabel(QString label_id);
+			std::list<mail_cache::LabelData*> getAllLabels();
+
+			uint64_t packLabels(const std::list <QString>& labels);
+			std::list<mail_cache::LabelData*> unpackLabels(const uint64_t& data)const;
         protected:
             bool execQuery(QString sql);
             QSqlQuery* prepareQuery(QString sql);
             QSqlQuery* selectQuery(QString sql);
-            std::shared_ptr<MessageData> loadObjFromDB(QSqlQuery* q);
+			bool loadMessagesFromDb();
+			bool loadLabelsFromDb();
+			bool updateDbLabel(QString label_id, QString name, uint64_t unread_messages);
+			LabelData* insertDbLabel(QString label_id,
+				QString name, 
+				QString label_type, 
+				uint64_t unread_messages);
+			LabelData* createAndInsertLabel(
+				QString label_id,
+				QString label_name,
+				bool label_is_system,
+				uint64_t unread_messages,
+				int mask_base
+			);
+            std::shared_ptr<MessageData> loadMessageFromDB(QSqlQuery* q);			
         protected:
             bool m_initialized {false};
             QSqlDatabase     m_db;
             std::unique_ptr<QSqlQuery>   m_query{nullptr};
             QString m_db_meta_prefix;
             GMailCache*      m_mem_cache;
+			std::map<QString, std::shared_ptr<LabelData>> m_labels;
+			std::map<int, std::shared_ptr<LabelData>> m_maskbase2labels;
+			std::set<int> m_avail_label_base;
+
+			friend class googleQt::GmailRoutes;
         };//GMailSQLiteStorage
     };
 };

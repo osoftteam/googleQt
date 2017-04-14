@@ -18,7 +18,7 @@
 namespace googleQt{
     class Endpoint;
 
-    namespace mail_batch {
+    namespace mail_cache {
         class MessagesReceiver;
         class MessageData;
         class GMailCacheQueryResult;
@@ -26,57 +26,66 @@ namespace googleQt{
     };
 
 
-    class GmailRoutes{    
+    class GmailRoutes {
     public:
 
         GmailRoutes(Endpoint*);
 
         Endpoint* endpoint(){return m_endpoint;}
 
-        messages::MessagesRoutes* getMessages();
+        messages::MessagesRoutes*	getMessages();
         attachments::AttachmentsRoutes* getAttachments();
-        labels::LabelsRoutes*     getLabels();
-        users::UsersRoutes*       getUsers();
-        threads::ThreadsRoutes*   getThreads();
-        history::HistoryRoutes*   getHistory();
-        drafts::DraftsRoutes*     getDrafts();
+        labels::LabelsRoutes*		getLabels();
+        users::UsersRoutes*			getUsers();
+        threads::ThreadsRoutes*		getThreads();
+        history::HistoryRoutes*		getHistory();
+        drafts::DraftsRoutes*		getDrafts();
+		mail_cache::GMailCache*		cache() {return m_GMailCache.get();}
 
         std::unique_ptr<UserBatchResult<QString, messages::MessageResource>>   getUserBatchMessages(EDataState, const std::list<QString>& id_list);
-        UserBatchRunner<QString, mail_batch::MessagesReceiver, messages::MessageResource>* getUserBatchMessages_Async(EDataState, const std::list<QString>& id_list);
+        UserBatchRunner<QString, mail_cache::MessagesReceiver, messages::MessageResource>* getUserBatchMessages_Async(EDataState, const std::list<QString>& id_list);
 
         /// check for new emails - get top messagesCount messages and update cache
-        std::unique_ptr<mail_batch::MessagesList> getNextCacheMessages(int messagesCount = 40, 
+        std::unique_ptr<mail_cache::MessagesList> getNextCacheMessages(int messagesCount = 40, 
                                                                        QString pageToken = "", 
                                                                        QStringList* labels = nullptr,
                                                                        std::set<QString>* msg2skip = nullptr);
-        mail_batch::GMailCacheQueryResult* getNextCacheMessages_Async(int messagesCount = 40, 
+        mail_cache::GMailCacheQueryResult* getNextCacheMessages_Async(int messagesCount = 40, 
                                                                       QString pageToken = "", 
                                                                       QStringList* labels = nullptr,
                                                                       std::set<QString>* msg2skip = nullptr);
 
         /// load emails by ID-list while updating local cache
-        std::unique_ptr<mail_batch::MessagesList> getCacheMessages(EDataState, const std::list<QString>& id_list);    
-        mail_batch::GMailCacheQueryResult* getCacheMessages_Async(EDataState, const std::list<QString>& id_list, 
-                                                                  mail_batch::GMailCacheQueryResult* rfetcher = nullptr);
+        std::unique_ptr<mail_cache::MessagesList> getCacheMessages(EDataState, const std::list<QString>& id_list);    
+        mail_cache::GMailCacheQueryResult* getCacheMessages_Async(EDataState, const std::list<QString>& id_list, 
+                                                                  mail_cache::GMailCacheQueryResult* rfetcher = nullptr);
 
         /// load messages from cache, numberOfMessages = -1 if all messages from cache
-        std::unique_ptr<mail_batch::MessagesList> getCacheMessages(int numberOfMessages, uint64_t labelFilter = 0xFFFFFFFF);
+        std::unique_ptr<mail_cache::MessagesList> getCacheMessages(int numberOfMessages, uint64_t labelFilter = 0xFFFFFFFF);
 
-        bool setStarred(mail_batch::MessageData* d, bool starred_on = true);
-        GoogleTask<messages::MessageResource>* setStarred_Async(mail_batch::MessageData* d, bool starred_on = true);
+        bool setStarred(mail_cache::MessageData* d, bool starred_on = true);
+        GoogleTask<messages::MessageResource>* setStarred_Async(mail_cache::MessageData* d, bool starred_on = true);
 
         /// init local cache table using SQlite DB, tables will have 'dbprefix' prefix
         /// file path and DB-name should be specified
         bool setupSQLiteCache(QString dbPath, QString dbName = "googleqt", QString dbprefix = "api");
 
+		/// async refresh labels DB table
+		GoogleVoidTask* refreshLabels_Async();
+		void refreshLabels();
+		std::list<mail_cache::LabelData*> getLoadedLabels();
+		std::list<mail_cache::LabelData*> getMessageLabels(mail_cache::MessageData* d);
+		bool messageHasLabel(mail_cache::MessageData* d, QString label_id)const;
+
+	public:
 #ifdef API_QT_AUTOTEST
         void autotest();
         void autotestParLoad(EDataState state, const std::list<QString>& id_list);
         void autotestParDBLoad(EDataState state, const std::list<QString>& id_list);
 #endif
     protected:
-        void ensureCache();
-        mail_batch::GMailCacheQueryResult* newResultFetcher(EDataState state);
+        void ensureCache()const;
+        mail_cache::GMailCacheQueryResult* newResultFetcher(EDataState state);
 
         std::unique_ptr<messages::MessagesRoutes>       m_MessagesRoutes;
         std::unique_ptr<attachments::AttachmentsRoutes> m_AttachmentsRoutes;
@@ -85,7 +94,7 @@ namespace googleQt{
         std::unique_ptr<threads::ThreadsRoutes>         m_ThreadsRoutes;
         std::unique_ptr<history::HistoryRoutes>         m_HistoryRoutes;
         std::unique_ptr<drafts::DraftsRoutes>           m_DraftsRoutes;
-        std::unique_ptr<mail_batch::GMailCache>			m_GMailCache;
+        mutable std::unique_ptr<mail_cache::GMailCache>	m_GMailCache;
         Endpoint*  m_endpoint;
     };
 

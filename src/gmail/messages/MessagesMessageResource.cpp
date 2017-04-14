@@ -85,7 +85,7 @@ std::unique_ptr<MessageResource> MessageResource::EXAMPLE(int context_index, int
     rv->m_threadId = QString("threadId_%1").arg(example_idx);
     std::list<QString> list_of_labelIds;
     for(int i = 0; i < 5; i++){
-        rv->m_labelIds.push_back(QString("_%1_%2").arg(i).arg(example_idx));
+        rv->m_labelIds.push_back(QString("id_%1").arg(i+1));
     }
     rv->m_snippet = QString("snippet_%1").arg(example_idx);
     rv->m_historyId = 5 + example_idx;

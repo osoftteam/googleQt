@@ -67,7 +67,7 @@ std::unique_ptr<LabelHistoryRecord> LabelHistoryRecord::EXAMPLE(int context_inde
     rv->m_message = *(messages::MessageResource::EXAMPLE(0, context_index).get());
     std::list<QString> list_of_labelIds;
     for(int i = 0; i < 5; i++){
-        rv->m_labelIds.push_back(QString("_%1_%2").arg(i).arg(example_idx));
+        rv->m_labelIds.push_back(QString("id_%1").arg(i+1));
     }
     return rv;
 }
