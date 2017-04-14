@@ -167,11 +167,11 @@ std::unique_ptr<FileResource> FileResource::EXAMPLE(int context_index, int paren
     rv->m_description = QString("description_%1").arg(example_idx);
     std::list<QString> list_of_parents;
     for(int i = 0; i < 5; i++){
-        rv->m_parents.push_back(QString("_%1_%2").arg(i).arg(example_idx));
+        rv->m_parents.push_back(QString("id_%1").arg(i+1));
     }
     std::list<QString> list_of_spaces;
     for(int i = 0; i < 5; i++){
-        rv->m_spaces.push_back(QString("_%1_%2").arg(i).arg(example_idx));
+        rv->m_spaces.push_back(QString("id_%1").arg(i+1));
     }
     rv->m_version = 11 + example_idx;
     rv->m_webContentLink = QString("webContentLink_%1").arg(example_idx);
