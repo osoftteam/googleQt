@@ -63,9 +63,6 @@ namespace googleQt{
         /// load messages from cache, numberOfMessages = -1 if all messages from cache
         std::unique_ptr<mail_cache::MessagesList> getCacheMessages(int numberOfMessages, uint64_t labelFilter = 0xFFFFFFFF);
 
-        bool setStarred(mail_cache::MessageData* d, bool starred_on = true);
-        GoogleTask<messages::MessageResource>* setStarred_Async(mail_cache::MessageData* d, bool starred_on = true);
-
         /// init local cache table using SQlite DB, tables will have 'dbprefix' prefix
         /// file path and DB-name should be specified
         bool setupSQLiteCache(QString dbPath, QString dbName = "googleqt", QString dbprefix = "api");
@@ -77,6 +74,19 @@ namespace googleQt{
 		std::list<mail_cache::LabelData*> getMessageLabels(mail_cache::MessageData* d);
 		bool messageHasLabel(mail_cache::MessageData* d, QString label_id)const;
 
+        /// STARRED label
+        bool setStarred(mail_cache::MessageData* d, bool set_it = true);
+        GoogleTask<messages::MessageResource>* setStarred_Async(mail_cache::MessageData* d, bool set_it = true);
+
+        /// UNREAD label
+        bool setUread(mail_cache::MessageData* d, bool set_it = true);
+        GoogleTask<messages::MessageResource>* setUread_Async(mail_cache::MessageData* d, bool set_it = true);
+
+        /// IMPORTANT label
+        bool setImportant(mail_cache::MessageData* d, bool set_it = true);
+        GoogleTask<messages::MessageResource>* setImportant_Async(mail_cache::MessageData* d, bool set_it = true);
+        
+        
 	public:
 #ifdef API_QT_AUTOTEST
         void autotest();
@@ -86,7 +96,11 @@ namespace googleQt{
     protected:
         void ensureCache()const;
         mail_cache::GMailCacheQueryResult* newResultFetcher(EDataState state);
-
+        GoogleTask<messages::MessageResource>* setLabel_Async(QString label_id,
+                                                              mail_cache::MessageData* d,
+                                                              bool label_on,
+                                                              bool system_label);
+        
         std::unique_ptr<messages::MessagesRoutes>       m_MessagesRoutes;
         std::unique_ptr<attachments::AttachmentsRoutes> m_AttachmentsRoutes;
         std::unique_ptr<labels::LabelsRoutes>           m_LabelsRoutes;

@@ -272,33 +272,65 @@ std::list<mail_cache::LabelData*> GmailRoutes::getMessageLabels(mail_cache::Mess
 	return storage->unpackLabels(d->labelsBitMap());
 };
 
-bool GmailRoutes::setStarred(mail_cache::MessageData* d, bool starred_on) 
+#define TRY_LABEL_MODIFY(F, M, S) bool rv = false;\
+    try                                           \
+        {                                                               \
+    std::unique_ptr<messages::MessageResource> m = F(M, S)->waitForResultAndRelease(); \
+    rv = (!m->id().isEmpty());                                          \
+        }                                                               \
+    catch (GoogleException& e)                                          \
+        {                                                               \
+            qWarning() << "setLabel Exception: " << e.what();           \
+        }                                                               \
+    return rv;                                                          \
+
+
+
+bool GmailRoutes::setStarred(mail_cache::MessageData* d, bool set_it)
 {
-    bool rv = false;
-    try
-    {    
-        std::unique_ptr<messages::MessageResource> m = setStarred_Async(d, starred_on)->waitForResultAndRelease();
-        rv = (!m->id().isEmpty());
-        //        qDebug() << "STAR changed" << m->id();
-    }
-    catch (GoogleException& e)
-    {
-        qWarning() << "GdriveRoutes::fileExists Exception: " << e.what();
-    }
-    return rv;    
+    TRY_LABEL_MODIFY(setStarred_Async, d, set_it);
 };
 
-GoogleTask<messages::MessageResource>* GmailRoutes::setStarred_Async(mail_cache::MessageData* d, bool starred_on)
+GoogleTask<messages::MessageResource>* GmailRoutes::setStarred_Async(mail_cache::MessageData* d, bool set_it)
+{
+    return setLabel_Async(mail_cache::sysLabelId(mail_cache::SysLabel::STARRED), d, set_it, true);
+};
+
+bool GmailRoutes::setUread(mail_cache::MessageData* d, bool set_it)
+{
+    TRY_LABEL_MODIFY(setUread_Async, d, set_it);
+};
+
+GoogleTask<messages::MessageResource>* GmailRoutes::setUread_Async(mail_cache::MessageData* d, bool set_it)
+{
+    return setLabel_Async(mail_cache::sysLabelId(mail_cache::SysLabel::UNREAD), d, set_it, true);
+};
+
+bool GmailRoutes::setImportant(mail_cache::MessageData* d, bool set_it)
+{
+    TRY_LABEL_MODIFY(setImportant_Async, d, set_it);
+};
+
+GoogleTask<messages::MessageResource>* GmailRoutes::setImportant_Async(mail_cache::MessageData* d, bool set_it)
+{
+    return setLabel_Async(mail_cache::sysLabelId(mail_cache::SysLabel::IMPORTANT), d, set_it, true);
+};
+
+
+GoogleTask<messages::MessageResource>* GmailRoutes::setLabel_Async(QString label_id,
+                                                                   mail_cache::MessageData* d,
+                                                                   bool label_on,
+                                                                   bool system_label)
 {
 	ensureCache();
 	auto storage = m_GMailCache->sqlite_storage();
 
-	mail_cache::LabelData* lbl = storage->ensureSystemLabel("STARRED");
+	mail_cache::LabelData* lbl = storage->ensureLabel(label_id, system_label);
 	if (!lbl) {
-		qWarning() << "failed to create STARRED label";
+		qWarning() << "failed to create label" << label_id;
 	}
 	else {
-		if (starred_on){
+		if (label_on){
 			d->m_labels |= lbl->labelMask();
 		}
 		else {
@@ -309,8 +341,8 @@ GoogleTask<messages::MessageResource>* GmailRoutes::setStarred_Async(mail_cache:
 	QString msg_id = d->id();
 	gmail::ModifyMessageArg arg(msg_id);
 	std::list <QString> labels;
-	labels.push_back("STARRED");
-	if (starred_on)
+	labels.push_back(label_id);
+	if (label_on)
 	{
 		arg.setAddlabels(labels);
 	}

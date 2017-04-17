@@ -205,6 +205,69 @@ m_unread_messages(unread_messages)
 	m_label_mask = (theone << m_mask_base);
 };
 
+bool mail_cache::LabelData::isStarred()const
+{
+    bool rv = (m_label_id.compare(sysLabelId(SysLabel::STARRED), Qt::CaseInsensitive) == 0);
+    return rv;
+};
+
+bool mail_cache::LabelData::isUnread()const
+{
+    bool rv = (m_label_id.compare(sysLabelId(SysLabel::UNREAD), Qt::CaseInsensitive) == 0);
+    return rv;
+};
+
+bool mail_cache::LabelData::isSpam()const
+{
+    bool rv = (m_label_id.compare(sysLabelId(SysLabel::SPAM), Qt::CaseInsensitive) == 0);
+    return rv;
+};
+
+bool mail_cache::LabelData::isTrash()const
+{
+    bool rv = (m_label_id.compare(sysLabelId(SysLabel::TRASH), Qt::CaseInsensitive) == 0);
+    return rv;
+};
+
+bool mail_cache::LabelData::isDraft()const
+{
+    bool rv = (m_label_id.compare(sysLabelId(SysLabel::DRAFT), Qt::CaseInsensitive) == 0);
+    return rv;
+};
+
+
+bool mail_cache::LabelData::isImportant()const
+{
+    bool rv = (m_label_id.compare(sysLabelId(SysLabel::IMPORTANT), Qt::CaseInsensitive) == 0);
+    return rv;
+};
+
+
+bool mail_cache::LabelData::isPromotionCategory()const
+{
+    bool rv = (m_label_id.compare(sysLabelId(SysLabel::CATEGORY_PROMOTIONS), Qt::CaseInsensitive) == 0);
+    return rv;
+};
+
+bool mail_cache::LabelData::isForumsCategory()const
+{
+    bool rv = (m_label_id.compare(sysLabelId(SysLabel::CATEGORY_FORUMS), Qt::CaseInsensitive) == 0);
+    return rv;
+};
+
+bool mail_cache::LabelData::isUpdatesCategory()const
+{
+    bool rv = (m_label_id.compare(sysLabelId(SysLabel::CATEGORY_UPDATES), Qt::CaseInsensitive) == 0);
+    return rv;
+};
+
+bool mail_cache::LabelData::isSocialCategory()const
+{
+    bool rv = (m_label_id.compare(sysLabelId(SysLabel::CATEGORY_SOCIAL), Qt::CaseInsensitive) == 0);
+    return rv;
+};
+
+
 ///GMailCacheQueryResult
 mail_cache::GMailCacheQueryResult::GMailCacheQueryResult(EDataState state, ApiEndpoint& ept, GmailRoutes& r, GMailCache* c)
     :CacheQueryResult<MessageData>(state, ept, c), m_r(r)
@@ -503,6 +566,41 @@ bool mail_cache::GMailSQLiteStorage::loadMessagesFromDb()
 	return true;
 };
 
+static std::vector<QString>& getSysLabels()
+{
+    static std::vector<QString> sys_labels;
+    if(sys_labels.empty()){
+        sys_labels.push_back("IMPORTANT");
+        sys_labels.push_back("CHAT");
+        sys_labels.push_back("SENT");
+        sys_labels.push_back("INBOX");
+        sys_labels.push_back("TRASH");
+        sys_labels.push_back("DRAFT");
+        sys_labels.push_back("SPAM");
+        sys_labels.push_back("STARRED");
+        sys_labels.push_back("UNREAD");
+        sys_labels.push_back("CATEGORY_PERSONAL");
+        sys_labels.push_back("CATEGORY_SOCIAL");
+        sys_labels.push_back("CATEGORY_FORUMS");
+        sys_labels.push_back("CATEGORY_UPDATES");
+        sys_labels.push_back("CATEGORY_PROMOTIONS");        
+    }
+    return sys_labels;
+}
+
+QString mail_cache::sysLabelId(SysLabel l)
+{
+    std::vector<QString>& labels_arr = getSysLabels();
+    int idx = (int)l;
+    if(idx < 0 || idx >= (int)labels_arr.size()){
+        qWarning() << "Invalid SysLabel index" << idx << labels_arr.size();
+        return "";
+    }
+    
+    QString s = getSysLabels()[idx];
+    return s;
+};
+
 bool mail_cache::GMailSQLiteStorage::loadLabelsFromDb()
 {
 	static QString sql = QString("SELECT label_id, label_name, label_type, label_unread_messages, label_mask FROM %1gmail_label ORDER BY label_id").arg(m_db_meta_prefix);
@@ -510,29 +608,12 @@ bool mail_cache::GMailSQLiteStorage::loadLabelsFromDb()
 	if (!q)
 		return false;
 
-	
-	std::set<QString> system_labels2ensure;
-
-#define RUN_LABELS		                        \
-    CHECK_LABEL(IMPORTANT)                      \
-    CHECK_LABEL(CHAT)                           \
-    CHECK_LABEL(SENT)                           \
-    CHECK_LABEL(INBOX)                          \
-    CHECK_LABEL(TRASH)                          \
-    CHECK_LABEL(DRAFT)                          \
-    CHECK_LABEL(SPAM)                           \
-    CHECK_LABEL(STARRED)                        \
-    CHECK_LABEL(UNREAD)                         \
-    CHECK_LABEL(CATEGORY_PERSONAL)              \
-    CHECK_LABEL(CATEGORY_SOCIAL)                \
-    CHECK_LABEL(CATEGORY_FORUMS)                \
-    CHECK_LABEL(CATEGORY_UPDATES)               \
-    CHECK_LABEL(CATEGORY_PROMOTIONS)            \
-
-#define CHECK_LABEL(L)system_labels2ensure.insert(#L);
-	RUN_LABELS;
-#undef CHECK_LABEL
-
+    std::set<QString> system_labels2ensure;
+    std::vector<QString>& sys_labels = getSysLabels();
+    for(auto& lbl : sys_labels){
+        system_labels2ensure.insert(lbl);
+    }
+    
 	while (q->next())
 	{
 		QString label_id = q->value(0).toString();
@@ -553,7 +634,7 @@ bool mail_cache::GMailSQLiteStorage::loadLabelsFromDb()
 
 	if (!system_labels2ensure.empty()) {
 		for (auto& s : system_labels2ensure) {
-			mail_cache::LabelData* lbl = ensureSystemLabel(s);
+			mail_cache::LabelData* lbl = ensureLabel(s, true);
 			if (!lbl) {
 				qWarning() << "failed to create label" << s << m_labels.size();
 			}
@@ -843,7 +924,13 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::findLabel(QString label_i
 	return rv;
 };
 
-mail_cache::LabelData* mail_cache::GMailSQLiteStorage::ensureSystemLabel(QString label_id)
+mail_cache::LabelData* mail_cache::GMailSQLiteStorage::findLabel(SysLabel sys_label)
+{
+    QString lable_id = sysLabelId(sys_label);
+    return findLabel(lable_id);
+};
+
+mail_cache::LabelData* mail_cache::GMailSQLiteStorage::ensureLabel(QString label_id, bool system_label)
 {
 	auto i = m_labels.find(label_id);
 	if (i != m_labels.end()) {
@@ -851,9 +938,9 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::ensureSystemLabel(QString
 	}
 
 	mail_cache::LabelData* rv = insertDbLabel(label_id,
-								label_id,
-								"system",
-								0);
+                                              label_id,
+                                              system_label ? "system" : "user",
+                                              0);
 	return rv;
 };
 

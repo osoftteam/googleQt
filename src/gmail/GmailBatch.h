@@ -114,6 +114,26 @@ namespace googleQt{
 			friend class googleQt::GmailRoutes;
         };
 
+        enum class SysLabel
+        {
+            IMPORTANT = 0,
+                CHAT,
+                SENT,
+                INBOX,
+                TRASH,
+                DRAFT,
+                SPAM,
+                STARRED,
+                UNREAD,
+                CATEGORY_PERSONAL,
+                CATEGORY_SOCIAL,
+                CATEGORY_FORUMS,
+                CATEGORY_UPDATES,
+                CATEGORY_PROMOTIONS
+        };
+
+        extern QString sysLabelId(SysLabel l);
+        
 		/**
 			LabelData - system/user labels in gmail, implemented as bitmap,
 			where one reference to the label is one bit in 64bit map
@@ -129,6 +149,17 @@ namespace googleQt{
 			bool		isSystem()const { return m_is_system_label; }
 			uint64_t	unreadMessages()const { return m_unread_messages; }
 
+            bool        isStarred()const;
+            bool        isUnread()const;
+            bool        isImportant()const;
+            bool        isSpam()const;
+            bool        isTrash()const;
+            bool        isDraft()const;            
+            bool        isPromotionCategory()const;
+            bool        isForumsCategory()const;
+            bool        isUpdatesCategory()const;
+            bool        isSocialCategory()const;
+            
 		protected:
 			QString		m_label_id;
 			QString		m_label_name;
@@ -199,7 +230,8 @@ namespace googleQt{
             void updateMessageLabels(QString msg_id, uint64_t flags)override;			
 
 			LabelData* findLabel(QString label_id);
-			LabelData* ensureSystemLabel(QString label_id);
+            LabelData* findLabel(SysLabel sys_label);
+			LabelData* ensureLabel(QString label_id, bool system_label);
 			std::list<mail_cache::LabelData*> getAllLabels();
 
 			uint64_t packLabels(const std::list <QString>& labels);
@@ -235,5 +267,7 @@ namespace googleQt{
 
 			friend class googleQt::GmailRoutes;
         };//GMailSQLiteStorage
+
+        
     };
 };
