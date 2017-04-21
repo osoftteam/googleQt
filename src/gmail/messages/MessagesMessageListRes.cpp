@@ -74,7 +74,7 @@ std::unique_ptr<MessageListRes> MessageListRes::EXAMPLE(int context_index, int p
         rv->m_messages.push_back(p);
     }
     rv->m_nextPageToken = QString("nextPageToken_%1").arg(example_idx);
-    rv->m_resultSizeEstimate = 3 + example_idx;
+    rv->m_resultSizeEstimate = ApiAutotest::INSTANCE().getInt("messages::MessageListRes", "m_resultSizeEstimate", 3 + example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

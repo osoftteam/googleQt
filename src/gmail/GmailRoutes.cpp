@@ -97,8 +97,7 @@ void GmailRoutes::ensureCache()const
 
 mail_cache::GMailCacheQueryResult* GmailRoutes::getNextCacheMessages_Async(int messagesCount /*= 40*/, 
     QString pageToken /*= ""*/, 
-	QStringList* labels /*= nullptr*/,
-    std::set<QString>* msg2skip /*= nullptr*/)
+	QStringList* labels /*= nullptr*/)
 {
     mail_cache::GMailCacheQueryResult* rfetcher = newResultFetcher(EDataState::snippet);
 
@@ -116,11 +115,7 @@ mail_cache::GMailCacheQueryResult* GmailRoutes::getNextCacheMessages_Async(int m
         std::list<QString> id_list;
         for (auto& m : mlist->messages())
         {
-            bool skip_msg = (msg2skip != nullptr && msg2skip->find(m.id()) != msg2skip->end());
-            if (!skip_msg)
-            {
-                id_list.push_back(m.id());
-            }
+			id_list.push_back(m.id());
         }
         getCacheMessages_Async(EDataState::snippet, id_list, rfetcher);
     };
@@ -139,13 +134,11 @@ mail_cache::GMailCacheQueryResult* GmailRoutes::getNextCacheMessages_Async(int m
 
 std::unique_ptr<mail_cache::MessagesList> GmailRoutes::getNextCacheMessages(int messagesCount /*= 40*/, 
     QString pageToken /*= ""*/,
-	QStringList* labels /*= nullptr*/,
-    std::set<QString>* msg2skip /*= nullptr*/)
+	QStringList* labels /*= nullptr*/)
 {
     return getNextCacheMessages_Async(messagesCount, 
 		pageToken, 
-		labels, 
-		msg2skip)->waitForSortedResultListAndRelease();
+		labels)->waitForSortedResultListAndRelease();
 };
 
 std::unique_ptr<mail_cache::MessagesList> GmailRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
@@ -258,11 +251,11 @@ void GmailRoutes::refreshLabels()
 	refreshLabels_Async()->waitForResultAndRelease();
 };
 
-std::list<mail_cache::LabelData*> GmailRoutes::getLoadedLabels() 
+std::list<mail_cache::LabelData*> GmailRoutes::getLoadedLabels(std::set<QString>* in_optional_idset)
 {
 	ensureCache();
 	auto storage = m_GMailCache->sqlite_storage();
-	return storage->getAllLabels();
+	return storage->getLabelsInSet(in_optional_idset);
 };
 
 std::list<mail_cache::LabelData*> GmailRoutes::getMessageLabels(mail_cache::MessageData* d)
@@ -411,7 +404,13 @@ void GmailRoutes::autotestParDBLoad(EDataState state, const std::list<QString>& 
 
 void GmailRoutes::autotest()
 {
-#define AUTOTEST_SIZE 1000
+#define AUTOTEST_SIZE 10
+
+	ApiAutotest::INSTANCE() << "start-mail-test";
+	ApiAutotest::INSTANCE() << "1";
+	ApiAutotest::INSTANCE() << "2";
+	ApiAutotest::INSTANCE() << "3";
+	ApiAutotest::INSTANCE() << "4";
 
 	/// check persistant cache update ///
 	if (!setupSQLiteCache("gmail_autotest.sqlite"))
@@ -424,8 +423,8 @@ void GmailRoutes::autotest()
 
 	auto m = gmail::SendMimeMessageArg::EXAMPLE(0, 0);
 	QString rfc822_sample = m->toRfc822();
-	ApiAutotest::INSTANCE() << "rcf822" << rfc822_sample;
-	ApiAutotest::INSTANCE() << "";
+	ApiAutotest::INSTANCE() << "==== rcf822 ====";
+	ApiAutotest::INSTANCE() << rfc822_sample;
 	QJsonObject js;
 	m->toJson(js);
 	ApiAutotest::INSTANCE() << js["raw"].toString();
@@ -510,12 +509,24 @@ void GmailRoutes::autotest()
 	bool randomize_labels = true;
 	if (randomize_labels)
 	{
-		std::list<mail_cache::LabelData*> labels = getLoadedLabels();				
+		std::list<mail_cache::LabelData*> labels = getLoadedLabels();
 
 		if (labels.size() > 0)
-		{			
+		{
+			std::set<QString> setG;
+			setG.insert("INBOX");
+			setG.insert("SENT");
+			setG.insert("STARRED");
+			setG.insert("IMPORTANT");
+			setG.insert("DRAFT");
+			setG.insert("TRASH");
+			std::list<mail_cache::LabelData*> imperative_groups = getLoadedLabels(&setG);
+
+
 			auto l_iterator = labels.begin();
+			auto g_iterator = imperative_groups.begin();
 			uint64_t lmask = (*l_iterator)->labelMask();
+			uint64_t gmask = (*g_iterator)->labelMask();
 			std::unique_ptr<mail_cache::MessagesList> lst = getCacheMessages(-1);
 			int counter = 0;
 			int totalNumber = lst->messages.size();
@@ -527,23 +538,21 @@ void GmailRoutes::autotest()
 			for (auto& i : lst->messages)
 			{
 				mail_cache::MessageData* m = i.get();
-				storage->updateMessageLabels(m->id(), lmask);
+				storage->updateMessageLabels(m->id(), lmask | gmask);
 
 				counter++;
+				l_iterator++; if (l_iterator == labels.end())l_iterator = labels.begin();
+				lmask = (*l_iterator)->labelMask();
 
 				if (counter > group_size) {
 					counter = 0;
-					l_iterator++;
-					if (l_iterator != labels.end()) {
-						lmask |= (*l_iterator)->labelMask();
-						qDebug() << QString("Next Label group: %1/%2")
-							.arg((*l_iterator)->labelName())
-							.arg(lmask);						
-					}
-					else 
-					{
-						break;
-					}
+					
+					g_iterator++; if (g_iterator == imperative_groups.end())g_iterator = imperative_groups.begin();					
+					gmask = (*g_iterator)->labelMask();
+
+					qDebug() << QString("Next Label group: %1/%2")
+						.arg((*g_iterator)->labelName())
+						.arg(gmask);
 				}
 			}
 		}

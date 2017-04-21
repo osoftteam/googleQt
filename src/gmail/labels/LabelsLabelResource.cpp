@@ -86,9 +86,9 @@ std::unique_ptr<LabelResource> LabelResource::EXAMPLE(int context_index, int par
     rv->m_messageListVisibility = QString("messageListVisibility_%1").arg(example_idx);
     rv->m_labelListVisibility = QString("labelListVisibility_%1").arg(example_idx);
     rv->m_type = QString("type_%1").arg(example_idx);
-    rv->m_messagesTotal = 6 + example_idx;
-    rv->m_messagesUnread = 7 + example_idx;
-    rv->m_threadsTotal = 8 + example_idx;
+    rv->m_messagesTotal = ApiAutotest::INSTANCE().getInt("labels::LabelResource", "m_messagesTotal", 6 + example_idx);
+    rv->m_messagesUnread = ApiAutotest::INSTANCE().getInt("labels::LabelResource", "m_messagesUnread", 7 + example_idx);
+    rv->m_threadsTotal = ApiAutotest::INSTANCE().getInt("labels::LabelResource", "m_threadsTotal", 8 + example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

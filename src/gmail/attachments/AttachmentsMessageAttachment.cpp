@@ -69,7 +69,7 @@ std::unique_ptr<MessageAttachment> MessageAttachment::EXAMPLE(int context_index,
     std::unique_ptr<MessageAttachment> rv(new MessageAttachment);
     rv->m_attachmentId = QString("attachmentId_%1").arg(example_idx);
     rv->m_data = ApiAutotest::INSTANCE().generateData("attachments::MessageAttachment", context_index, parent_context_index);
-    rv->m_size = 3 + example_idx;
+    rv->m_size = ApiAutotest::INSTANCE().getInt("attachments::MessageAttachment", "m_size", 3 + example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

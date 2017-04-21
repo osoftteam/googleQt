@@ -39,9 +39,9 @@ mail_cache::GMailSQLiteStorage* mail_cache::GMailCache::sqlite_storage()
 {
 	mail_cache::GMailSQLiteStorage* rv = nullptr;
 	if (m_localDB)
-	{
-		rv = dynamic_cast<mail_cache::GMailSQLiteStorage*>(m_localDB.get());
-	}
+        {
+            rv = dynamic_cast<mail_cache::GMailSQLiteStorage*>(m_localDB.get());
+        }
 	return rv;
 };
 
@@ -57,12 +57,12 @@ mail_cache::MessageData::MessageData(QString id,
                                      qlonglong labels)
     :CacheData(EDataState::snippet, id),
      m_from(from),
-     m_to(to),
-     m_cc(cc),
-     m_bcc(bcc),
-     m_subject(subject),
-     m_snippet(snippet),
-     m_internalDate(internalDate)     
+    m_to(to),
+    m_cc(cc),
+    m_bcc(bcc),
+    m_subject(subject),
+    m_snippet(snippet),
+    m_internalDate(internalDate)     
 {
     m_labels = labels;
 };
@@ -78,7 +78,7 @@ mail_cache::MessageData::MessageData(QString id,
                                      QString html,
                                      qlonglong internalDate,
                                      qlonglong labels)
-	:CacheData(EDataState::body, id),
+:CacheData(EDataState::body, id),
     m_from(from),
     m_to(to),
     m_cc(cc),
@@ -105,15 +105,15 @@ mail_cache::MessageData::MessageData(int agg_state,
                                      qlonglong internalDate,
                                      qlonglong labels)
 :CacheData(EDataState::body, id),
- m_from(from),
- m_to(to),
- m_cc(cc),
- m_bcc(bcc),
- m_subject(subject),
- m_snippet(snippet),
- m_plain(plain),
- m_html(html),
- m_internalDate(internalDate)
+    m_from(from),
+    m_to(to),
+    m_cc(cc),
+    m_bcc(bcc),
+    m_subject(subject),
+    m_snippet(snippet),
+    m_plain(plain),
+    m_html(html),
+    m_internalDate(internalDate)
 {
     m_state_agg = agg_state;
     m_labels = labels;
@@ -146,8 +146,24 @@ void mail_cache::MessageData::updateBody(QString plain, QString html)
 
 bool mail_cache::MessageData::inLabelFilter(uint64_t data)const
 {
-    bool rv = (data & m_labels) != 0;
+	bool rv = true;
+	if (data != 0) {
+		rv = (data & m_labels) != 0;
+	}
     return rv;
+};
+
+bool mail_cache::MessageData::inLabelFilter(const std::set<uint64_t>& ANDfilter)const 
+{
+	for (auto i = ANDfilter.begin(); i != ANDfilter.end(); i++) {
+		if (*i != 0) {
+			bool in_filter = (*i & m_labels) != 0;
+			if (!in_filter) {
+				return false;
+			}
+		}
+	}
+	return true;
 };
 
 void mail_cache::MessageData::merge(CacheData* other)
@@ -191,15 +207,15 @@ mail_cache::LabelData::LabelData()
 };
 
 mail_cache::LabelData::LabelData(QString id, 
-	QString name, 
-	int mask_base,
-	bool as_system,
-	uint64_t unread_messages):
-m_label_id(id), 
-m_label_name(name), 
-m_mask_base(mask_base),
-m_is_system_label(as_system),
-m_unread_messages(unread_messages)
+                                 QString name, 
+                                 int mask_base,
+                                 bool as_system,
+                                 uint64_t unread_messages):
+    m_label_id(id), 
+    m_label_name(name), 
+    m_mask_base(mask_base),
+    m_is_system_label(as_system),
+    m_unread_messages(unread_messages)
 {
 	static uint64_t theone = 1;
 	m_label_mask = (theone << m_mask_base);
@@ -281,8 +297,8 @@ void mail_cache::GMailCacheQueryResult::fetchFromCloud_Async(const std::list<QSt
         return;
     
     UserBatchRunner<QString,
-                mail_cache::MessagesReceiver,
-                messages::MessageResource>* par_runner = NULL;
+                    mail_cache::MessagesReceiver,
+                    messages::MessageResource>* par_runner = NULL;
 
     par_runner = m_r.getUserBatchMessages_Async(m_state, id_list);
  
@@ -458,8 +474,8 @@ void mail_cache::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
         }
 };
 
-static bool compare_internalDate(std::shared_ptr<mail_cache::MessageData>& f,
-                                 std::shared_ptr<mail_cache::MessageData>& s) 
+static bool compare_internalDate(mail_cache::msg_ptr& f,
+                                 mail_cache::msg_ptr& s)
 {
     return (f->internalDate() > s->internalDate());
 };
@@ -498,13 +514,13 @@ bool mail_cache::GMailSQLiteStorage::init(QString dbPath, QString dbName, QStrin
     m_query.reset(new QSqlQuery(m_db));
 
     static QString sql_messages = QString("CREATE TABLE IF NOT EXISTS %1gmail_msg(msg_id TEXT PRIMARY KEY, msg_from TEXT, "
-                          "msg_to TEXT, msg_cc TEXT, msg_bcc TEXT, msg_subject TEXT, msg_snippet TEXT, msg_plain TEXT, "
-                          "msg_html TEXT, internal_date INTEGER, msg_state INTEGER, msg_cache_lock INTEGER, msg_labels INTEGER)").arg(m_db_meta_prefix);
+                                          "msg_to TEXT, msg_cc TEXT, msg_bcc TEXT, msg_subject TEXT, msg_snippet TEXT, msg_plain TEXT, "
+                                          "msg_html TEXT, internal_date INTEGER, msg_state INTEGER, msg_cache_lock INTEGER, msg_labels INTEGER)").arg(m_db_meta_prefix);
     if (!execQuery(sql_messages))
         return false;
 
 	static QString sql_labels = QString("CREATE TABLE IF NOT EXISTS %1gmail_label(label_id TEXT PRIMARY KEY, label_name TEXT, "
-								" label_type INTEGER, label_unread_messages INTEGER, label_mask INTEGER)")
+                                        " label_type INTEGER, label_unread_messages INTEGER, label_mask INTEGER)")
 		.arg(m_db_meta_prefix);
 	if (!execQuery(sql_labels))
 		return false;
@@ -525,7 +541,7 @@ bool mail_cache::GMailSQLiteStorage::init(QString dbPath, QString dbName, QStrin
 bool mail_cache::GMailSQLiteStorage::loadMessagesFromDb()
 {
 	QString sql = QString("SELECT msg_state, msg_id, msg_from, msg_to, msg_cc, msg_bcc, "
-		"msg_subject, msg_snippet, msg_plain, msg_html, internal_date, msg_labels FROM %1gmail_msg ORDER BY internal_date DESC").arg(m_db_meta_prefix);
+                          "msg_subject, msg_snippet, msg_plain, msg_html, internal_date, msg_labels FROM %1gmail_msg ORDER BY internal_date DESC").arg(m_db_meta_prefix);
 	QSqlQuery* q = selectQuery(sql);
 	if (!q)
 		return false;
@@ -533,30 +549,30 @@ bool mail_cache::GMailSQLiteStorage::loadMessagesFromDb()
 	int loaded_objects = 0, skipped = 0;
 	bool cache_avail = true;
 	while (q->next() && cache_avail)
-	{
-		std::shared_ptr<MessageData> md = loadMessageFromDB(q);
-		if (md == nullptr)
-			continue;
+        {
+            std::shared_ptr<MessageData> md = loadMessageFromDB(q);
+            if (md == nullptr)
+                continue;
 
-		cache_avail = false;
-		if (md != nullptr)
-		{
-			if (m_mem_cache->mem_has_object(md->id()))
-			{
-				skipped++;
-			}
-			else
-			{
-				cache_avail = m_mem_cache->mem_insert(md->id(), md);
-			}
-		}
-		else
-		{
-			break;
-		}
+            cache_avail = false;
+            if (md != nullptr)
+                {
+                    if (m_mem_cache->mem_has_object(md->id()))
+                        {
+                            skipped++;
+                        }
+                    else
+                        {
+                            cache_avail = m_mem_cache->mem_insert(md->id(), md);
+                        }
+                }
+            else
+                {
+                    break;
+                }
 
-		loaded_objects++;
-	}
+            loaded_objects++;
+        }
 
 #ifdef API_QT_AUTOTEST
 	ApiAutotest::INSTANCE() << QString("DB-loaded %1 records, skipped %2, mem-cache-size: %3")
@@ -566,26 +582,33 @@ bool mail_cache::GMailSQLiteStorage::loadMessagesFromDb()
 	return true;
 };
 
+
+static std::map<QString, QString> syslabelID2Name;
+
 static std::vector<QString>& getSysLabels()
 {
+#define ADD_SYS_LABEL(L, N)sys_labels.push_back(L);syslabelID2Name[L] = N;
+
     static std::vector<QString> sys_labels;
     if(sys_labels.empty()){
-        sys_labels.push_back("IMPORTANT");
-        sys_labels.push_back("CHAT");
-        sys_labels.push_back("SENT");
-        sys_labels.push_back("INBOX");
-        sys_labels.push_back("TRASH");
-        sys_labels.push_back("DRAFT");
-        sys_labels.push_back("SPAM");
-        sys_labels.push_back("STARRED");
-        sys_labels.push_back("UNREAD");
-        sys_labels.push_back("CATEGORY_PERSONAL");
-        sys_labels.push_back("CATEGORY_SOCIAL");
-        sys_labels.push_back("CATEGORY_FORUMS");
-        sys_labels.push_back("CATEGORY_UPDATES");
-        sys_labels.push_back("CATEGORY_PROMOTIONS");        
+		ADD_SYS_LABEL("IMPORTANT", "Important");
+		ADD_SYS_LABEL("CHAT", "Chat");
+		ADD_SYS_LABEL("SENT", "Sent");
+		ADD_SYS_LABEL("INBOX", "Inbox");
+		ADD_SYS_LABEL("TRASH", "Trash");
+		ADD_SYS_LABEL("DRAFT", "Draft");
+		ADD_SYS_LABEL("SPAM", "Spam");
+		ADD_SYS_LABEL("STARRED", "Starred");
+		ADD_SYS_LABEL("UNREAD", "Unread");
+		ADD_SYS_LABEL("CATEGORY_PERSONAL", "Personal");
+		ADD_SYS_LABEL("CATEGORY_SOCIAL", "Social");
+		ADD_SYS_LABEL("CATEGORY_FORUMS", "Forum");
+		ADD_SYS_LABEL("CATEGORY_UPDATES", "Updates");
+		ADD_SYS_LABEL("CATEGORY_PROMOTIONS", "Promotions");
     }
     return sys_labels;
+
+#undef ADD_SYS_LABEL
 }
 
 QString mail_cache::sysLabelId(SysLabel l)
@@ -615,22 +638,22 @@ bool mail_cache::GMailSQLiteStorage::loadLabelsFromDb()
     }
     
 	while (q->next())
-	{
-		QString label_id = q->value(0).toString();
-		QString label_name = q->value(1).toString();
-		bool label_is_system = (q->value(2).toInt() == 1);
-		uint64_t unread_messages = q->value(3).toLongLong();
-		int mask_base = q->value(4).toInt();
+        {
+            QString label_id = q->value(0).toString();
+            QString label_name = q->value(1).toString();
+            bool label_is_system = (q->value(2).toInt() == 1);
+            uint64_t unread_messages = q->value(3).toLongLong();
+            int mask_base = q->value(4).toInt();
 
-		if (createAndInsertLabel(label_id,
-			label_name,
-			label_is_system,
-			unread_messages,
-			mask_base))
-		{
-			system_labels2ensure.erase(label_id);
-		}
-	}
+            if (createAndInsertLabel(label_id,
+                                     label_name,
+                                     label_is_system,
+                                     unread_messages,
+                                     mask_base))
+                {
+                    system_labels2ensure.erase(label_id);
+                }
+        }
 
 	if (!system_labels2ensure.empty()) {
 		for (auto& s : system_labels2ensure) {
@@ -645,18 +668,18 @@ bool mail_cache::GMailSQLiteStorage::loadLabelsFromDb()
 };
 
 mail_cache::LabelData* mail_cache::GMailSQLiteStorage::createAndInsertLabel(
-	QString label_id,
-	QString label_name,
-	bool label_is_system,
-	uint64_t unread_messages,
-	int mask_base
-) 
+                                                                            QString label_id,
+                                                                            QString label_name,
+                                                                            bool label_is_system,
+                                                                            uint64_t unread_messages,
+                                                                            int mask_base
+                                                                            ) 
 {
-	std::shared_ptr<mail_cache::LabelData> lb(new LabelData(label_id,
-		label_name,
-		mask_base,
-		label_is_system,
-		unread_messages));
+	label_ptr lb(new LabelData(label_id,
+                               label_name,
+                               mask_base,
+                               label_is_system,
+                               unread_messages));
 
 	m_avail_label_base.erase(mask_base);
 	m_labels[lb->labelId()] = lb;
@@ -676,15 +699,15 @@ bool mail_cache::GMailSQLiteStorage::updateDbLabel(QString label_id, QString nam
 };
 
 mail_cache::LabelData* mail_cache::GMailSQLiteStorage::insertDbLabel(QString label_id,
-	QString label_name,
-	QString label_type,
-	uint64_t unread_messages) 
+                                                                     QString label_name,
+                                                                     QString label_type,
+                                                                     uint64_t unread_messages) 
 {
 	if (m_avail_label_base.empty()) 
-	{
-		qWarning() << "ERROR. Exhausted labels masks. New label can not be registered." << m_avail_label_base.size() << label_id << label_name;
-		return nullptr;
-	}
+        {
+            qWarning() << "ERROR. Exhausted labels masks. New label can not be registered." << m_avail_label_base.size() << label_id << label_name;
+            return nullptr;
+        }
 
 	auto i = m_avail_label_base.begin();
 	int mask_base = *i;
@@ -709,13 +732,13 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::insertDbLabel(QString lab
 	mail_cache::LabelData* rv = nullptr;
 
 	if (q->exec())
-	{
-		rv = createAndInsertLabel(label_id,
-				label_name,
-				(label_type_as_int == 1),
-				unread_messages,
-				mask_base);
-	}
+        {
+            rv = createAndInsertLabel(label_id,
+                                      label_name,
+                                      (label_type_as_int == 1),
+                                      unread_messages,
+                                      mask_base);
+        }
 
 	return rv;
 };
@@ -851,7 +874,7 @@ void mail_cache::GMailSQLiteStorage::update(EDataState state, CACHE_QUERY_RESULT
 
     for(auto& i : r)
         {
-            std::shared_ptr<mail_cache::MessageData>& m = i;
+			msg_ptr& m = i;
             QSqlQuery* q = prepareQuery(sql_update);
             if (!q)return;
             bool ok = execWithValues(q, m.get());
@@ -874,13 +897,13 @@ void mail_cache::GMailSQLiteStorage::update(EDataState state, CACHE_QUERY_RESULT
                             rows_updated = q->numRowsAffected();
                             if (rows_updated > 0)
                                 inserted_records++;
-                            qDebug() << "insert " << i->id() << " " << rows_updated << "/" << inserted_records << "/" << r.size();
+                            qDebug() << "auto/insert " << i->id() << " " << rows_updated << "/" << inserted_records << "/" << r.size();
                         }
                 }
             else 
                 {
                     updated_records++;
-                    qDebug() << "update " << i->id() << " " << rows_updated << "/" << updated_records << "/" << r.size();
+                    qDebug() << "auto/update " << i->id() << " " << rows_updated << "/" << updated_records << "/" << r.size();
                 }
         }
 };
@@ -937,18 +960,32 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::ensureLabel(QString label
 		return i->second.get();
 	}
 
+	QString label_name = label_id;
+	if (system_label) {
+		auto i = syslabelID2Name.find(label_id);
+		if (i != syslabelID2Name.end()) {
+			label_name = i->second;
+		}
+	}
+
 	mail_cache::LabelData* rv = insertDbLabel(label_id,
-                                              label_id,
+                                              label_name,
                                               system_label ? "system" : "user",
                                               0);
 	return rv;
 };
 
-std::list<mail_cache::LabelData*> mail_cache::GMailSQLiteStorage::getAllLabels() 
+std::list<mail_cache::LabelData*> mail_cache::GMailSQLiteStorage::getLabelsInSet(std::set<QString>* in_optional_idset /*= nullptr*/)
 {
 	std::list<mail_cache::LabelData*> rv;
 	for (auto& i : m_labels) {
-		rv.push_back(i.second.get());
+		bool add_label = true;
+		if (in_optional_idset) {
+			add_label = (in_optional_idset->find(i.first) != in_optional_idset->end());
+		}
+		if (add_label) {
+			rv.push_back(i.second.get());
+		}
 	}
 	return rv;
 };
@@ -967,10 +1004,10 @@ uint64_t mail_cache::GMailSQLiteStorage::packLabels(const std::list <QString>& l
 			else {
 				static int warning_count = 0;
 				if (warning_count < 100)
-				{
-					qWarning() << "lost label (pack)" << label_id << m_labels.size();
-					warning_count++;
-				}
+                    {
+                        qWarning() << "lost label (pack)" << label_id << m_labels.size();
+                        warning_count++;
+                    }
 			}
 		}
 	}
@@ -984,26 +1021,26 @@ std::list<mail_cache::LabelData*> mail_cache::GMailSQLiteStorage::unpackLabels(c
 
 	uint64_t theone = 1;
 	for (int b = 0; b < 64; b++)
-	{
-		uint64_t m = (theone << b);
-		if (m > data)
-			break;
-		if (m & data) {
-			auto i = m_maskbase2labels.find(b);
-			if (i != m_maskbase2labels.end()){
-				labels.push_back(i->second.get());
-			}
-			else {
-				static int warning_count = 0;
-				if (warning_count < 100)
-				{
-					qWarning() << "lost label (unpack)" << b << m_maskbase2labels.size();
-					warning_count++;
-				}
-			}
+        {
+            uint64_t m = (theone << b);
+            if (m > data)
+                break;
+            if (m & data) {
+                auto i = m_maskbase2labels.find(b);
+                if (i != m_maskbase2labels.end()){
+                    labels.push_back(i->second.get());
+                }
+                else {
+                    static int warning_count = 0;
+                    if (warning_count < 100)
+                        {
+                            qWarning() << "lost label (unpack)" << b << m_maskbase2labels.size();
+                            warning_count++;
+                        }
+                }
 
-		}
-	}
+            }
+        }
 
 	return labels;
 };
@@ -1018,7 +1055,7 @@ void mail_cache::GMailSQLiteStorage::updateMessageLabels(QString msg_id, uint64_
     execQuery(sql_update);
 };
 
-std::shared_ptr<mail_cache::MessageData> mail_cache::GMailSQLiteStorage::loadMessageFromDB(QSqlQuery* q)
+mail_cache::msg_ptr mail_cache::GMailSQLiteStorage::loadMessageFromDB(QSqlQuery* q)
 {
     std::shared_ptr<MessageData> md;
 
@@ -1063,7 +1100,7 @@ std::shared_ptr<mail_cache::MessageData> mail_cache::GMailSQLiteStorage::loadMes
                                                       msg_plain, 
                                                       msg_html, 
                                                       msg_internalDate,
-														msg_labels));
+                                                      msg_labels));
     return md;
 };
 

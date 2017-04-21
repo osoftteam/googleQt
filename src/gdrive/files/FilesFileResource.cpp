@@ -173,7 +173,7 @@ std::unique_ptr<FileResource> FileResource::EXAMPLE(int context_index, int paren
     for(int i = 0; i < 5; i++){
         rv->m_spaces.push_back(QString("id_%1").arg(i+1));
     }
-    rv->m_version = 11 + example_idx;
+    rv->m_version = ApiAutotest::INSTANCE().getInt("files::FileResource", "m_version", 11 + example_idx);
     rv->m_webContentLink = QString("webContentLink_%1").arg(example_idx);
     rv->m_webViewLink = QString("webViewLink_%1").arg(example_idx);
     rv->m_iconLink = QString("iconLink_%1").arg(example_idx);
@@ -202,8 +202,8 @@ std::unique_ptr<FileResource> FileResource::EXAMPLE(int context_index, int paren
     rv->m_fullFileExtension = QString("fullFileExtension_%1").arg(example_idx);
     rv->m_fileExtension = QString("fileExtension_%1").arg(example_idx);
     rv->m_md5Checksum = QString("md5Checksum_%1").arg(example_idx);
-    rv->m_size = 34 + example_idx;
-    rv->m_quotaBytesUsed = 35 + example_idx;
+    rv->m_size = ApiAutotest::INSTANCE().getInt("files::FileResource", "m_size", 34 + example_idx);
+    rv->m_quotaBytesUsed = ApiAutotest::INSTANCE().getInt("files::FileResource", "m_quotaBytesUsed", 35 + example_idx);
     rv->m_headRevisionId = QString("headRevisionId_%1").arg(example_idx);
     rv->m_contentHints = *(files::ContentHints::EXAMPLE(0, context_index).get());
     rv->m_imageMediaMetadata = *(files::ImageMediaMetadata::EXAMPLE(0, context_index).get());

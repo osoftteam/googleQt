@@ -71,10 +71,15 @@ namespace googleQt{
             qlonglong internalDate()const { return m_internalDate; }
 
             bool inLabelFilter(uint64_t data)const;
+			bool inLabelFilter(const std::set<uint64_t>& ANDfilter)const;
             
 			/// each label is a bit in int64
             uint64_t labelsBitMap()const{return m_labels;}
-                        
+             
+			/// userPtr - custom user data pointer
+			void* userPtr()const {return m_user_ptr;}
+			void  setUserPtr(void* p)const { m_user_ptr = p; }
+
         protected:			
 			void updateSnippet(QString from,
                                QString to,
@@ -95,6 +100,7 @@ namespace googleQt{
             QString m_html;
             qlonglong m_internalDate;
 			uint64_t m_labels;
+			mutable void*    m_user_ptr{nullptr};
      private:
             MessageData(int agg_state,
                         QString id,
@@ -112,11 +118,12 @@ namespace googleQt{
 			friend class GMailCacheQueryResult;
 			friend class GMailSQLiteStorage;
 			friend class googleQt::GmailRoutes;
-        };
+        };		
 
         enum class SysLabel
         {
-            IMPORTANT = 0,
+			NONE = -1,
+                IMPORTANT = 0,
                 CHAT,
                 SENT,
                 INBOX,
@@ -130,7 +137,7 @@ namespace googleQt{
                 CATEGORY_FORUMS,
                 CATEGORY_UPDATES,
                 CATEGORY_PROMOTIONS
-        };
+                };
 
         extern QString sysLabelId(SysLabel l);
         
@@ -177,10 +184,13 @@ namespace googleQt{
 			friend class GMailSQLiteStorage;
 		};
 
+		using msg_ptr = std::shared_ptr<googleQt::mail_cache::MessageData>;
+		using label_ptr = std::shared_ptr<googleQt::mail_cache::LabelData>;
+
         struct MessagesList
         {
-            std::list<std::shared_ptr<mail_cache::MessageData>> messages;
-            std::map<QString, std::shared_ptr<mail_cache::MessageData>> messages_map;
+            std::list<msg_ptr> messages;
+            std::map<QString, msg_ptr> messages_map;
             EDataState state;
             QString    nextpage;
         };
@@ -232,7 +242,8 @@ namespace googleQt{
 			LabelData* findLabel(QString label_id);
             LabelData* findLabel(SysLabel sys_label);
 			LabelData* ensureLabel(QString label_id, bool system_label);
-			std::list<mail_cache::LabelData*> getAllLabels();
+			/// load label info by set of label IDs, if null return all available labels
+			std::list<mail_cache::LabelData*> getLabelsInSet(std::set<QString>* in_optional_idset = nullptr);
 
 			uint64_t packLabels(const std::list <QString>& labels);
 			std::list<mail_cache::LabelData*> unpackLabels(const uint64_t& data)const;

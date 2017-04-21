@@ -70,9 +70,9 @@ std::unique_ptr<GetProfileResponse> GetProfileResponse::EXAMPLE(int context_inde
     example_idx++;
     std::unique_ptr<GetProfileResponse> rv(new GetProfileResponse);
     rv->m_emailAddress = QString("emailAddress_%1").arg(example_idx);
-    rv->m_messagesTotal = 2 + example_idx;
-    rv->m_threadsTotal = 3 + example_idx;
-    rv->m_historyId = 4 + example_idx;
+    rv->m_messagesTotal = ApiAutotest::INSTANCE().getInt("users::GetProfileResponse", "m_messagesTotal", 2 + example_idx);
+    rv->m_threadsTotal = ApiAutotest::INSTANCE().getInt("users::GetProfileResponse", "m_threadsTotal", 3 + example_idx);
+    rv->m_historyId = ApiAutotest::INSTANCE().getInt("users::GetProfileResponse", "m_historyId", 4 + example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

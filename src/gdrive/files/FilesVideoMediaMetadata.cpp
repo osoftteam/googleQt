@@ -66,9 +66,9 @@ std::unique_ptr<VideoMediaMetadata> VideoMediaMetadata::EXAMPLE(int context_inde
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<VideoMediaMetadata> rv(new VideoMediaMetadata);
-    rv->m_width = 1 + example_idx;
-    rv->m_height = 2 + example_idx;
-    rv->m_durationMillis = 3 + example_idx;
+    rv->m_width = ApiAutotest::INSTANCE().getInt("files::VideoMediaMetadata", "m_width", 1 + example_idx);
+    rv->m_height = ApiAutotest::INSTANCE().getInt("files::VideoMediaMetadata", "m_height", 2 + example_idx);
+    rv->m_durationMillis = ApiAutotest::INSTANCE().getInt("files::VideoMediaMetadata", "m_durationMillis", 3 + example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

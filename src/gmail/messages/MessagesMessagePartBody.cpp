@@ -64,7 +64,7 @@ std::unique_ptr<MessagePartBody> MessagePartBody::EXAMPLE(int context_index, int
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<MessagePartBody> rv(new MessagePartBody);
-    rv->m_size = 1 + example_idx;
+    rv->m_size = ApiAutotest::INSTANCE().getInt("messages::MessagePartBody", "m_size", 1 + example_idx);
     rv->m_data = ApiAutotest::INSTANCE().generateData("messages::MessagePartBody", context_index, parent_context_index);
     return rv;
 }

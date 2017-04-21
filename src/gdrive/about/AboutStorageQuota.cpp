@@ -72,11 +72,11 @@ std::unique_ptr<StorageQuota> StorageQuota::EXAMPLE(int context_index, int paren
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<StorageQuota> rv(new StorageQuota);
-    rv->m_limit = 1 + example_idx;
-    rv->m_usage = 2 + example_idx;
-    rv->m_usageInDrive = 3 + example_idx;
-    rv->m_usageInDriveTrash = 4 + example_idx;
-    rv->m_maxUploadSize = 5 + example_idx;
+    rv->m_limit = ApiAutotest::INSTANCE().getInt("about::StorageQuota", "m_limit", 1 + example_idx);
+    rv->m_usage = ApiAutotest::INSTANCE().getInt("about::StorageQuota", "m_usage", 2 + example_idx);
+    rv->m_usageInDrive = ApiAutotest::INSTANCE().getInt("about::StorageQuota", "m_usageInDrive", 3 + example_idx);
+    rv->m_usageInDriveTrash = ApiAutotest::INSTANCE().getInt("about::StorageQuota", "m_usageInDriveTrash", 4 + example_idx);
+    rv->m_maxUploadSize = ApiAutotest::INSTANCE().getInt("about::StorageQuota", "m_maxUploadSize", 5 + example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

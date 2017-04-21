@@ -66,9 +66,9 @@ std::unique_ptr<LocationData> LocationData::EXAMPLE(int context_index, int paren
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<LocationData> rv(new LocationData);
-    rv->m_latitude = 1 + example_idx;
-    rv->m_longitude = 2 + example_idx;
-    rv->m_altitude = 3 + example_idx;
+    rv->m_latitude = ApiAutotest::INSTANCE().getInt("files::LocationData", "m_latitude", 1 + example_idx);
+    rv->m_longitude = ApiAutotest::INSTANCE().getInt("files::LocationData", "m_longitude", 2 + example_idx);
+    rv->m_altitude = ApiAutotest::INSTANCE().getInt("files::LocationData", "m_altitude", 3 + example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST

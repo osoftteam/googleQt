@@ -23,8 +23,7 @@ namespace googleQt{
         class MessageData;
         class GMailCacheQueryResult;
         class GMailCache;
-    };
-
+    };	
 
     class GmailRoutes {
     public:
@@ -48,12 +47,10 @@ namespace googleQt{
         /// check for new emails - get top messagesCount messages and update cache
         std::unique_ptr<mail_cache::MessagesList> getNextCacheMessages(int messagesCount = 40, 
                                                                        QString pageToken = "", 
-                                                                       QStringList* labels = nullptr,
-                                                                       std::set<QString>* msg2skip = nullptr);
+                                                                       QStringList* labels = nullptr);
         mail_cache::GMailCacheQueryResult* getNextCacheMessages_Async(int messagesCount = 40, 
                                                                       QString pageToken = "", 
-                                                                      QStringList* labels = nullptr,
-                                                                      std::set<QString>* msg2skip = nullptr);
+                                                                      QStringList* labels = nullptr);
 
         /// load emails by ID-list while updating local cache
         std::unique_ptr<mail_cache::MessagesList> getCacheMessages(EDataState, const std::list<QString>& id_list);    
@@ -61,7 +58,7 @@ namespace googleQt{
                                                                   mail_cache::GMailCacheQueryResult* rfetcher = nullptr);
 
         /// load messages from cache, numberOfMessages = -1 if all messages from cache
-        std::unique_ptr<mail_cache::MessagesList> getCacheMessages(int numberOfMessages, uint64_t labelFilter = 0xFFFFFFFF);
+        std::unique_ptr<mail_cache::MessagesList> getCacheMessages(int numberOfMessages, uint64_t labelFilter = 0);
 
         /// init local cache table using SQlite DB, tables will have 'dbprefix' prefix
         /// file path and DB-name should be specified
@@ -70,7 +67,7 @@ namespace googleQt{
 		/// async refresh labels DB table
 		GoogleVoidTask* refreshLabels_Async();
 		void refreshLabels();
-		std::list<mail_cache::LabelData*> getLoadedLabels();
+		std::list<mail_cache::LabelData*> getLoadedLabels(std::set<QString>* in_optional_idset = nullptr);
 		std::list<mail_cache::LabelData*> getMessageLabels(mail_cache::MessageData* d);
 		bool messageHasLabel(mail_cache::MessageData* d, QString label_id)const;
 
