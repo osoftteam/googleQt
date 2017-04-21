@@ -185,21 +185,23 @@ void SendMimeMessageArg::build(const QString& link_path, QUrl& url)const
 	b.add("uploadType", m_uploadType);
 };
 
-QString SendMimeMessageArg::toRfc822()const 
+QByteArray SendMimeMessageArg::toRfc822()const
 {
 	static QString boundary("OooOOoo17gqt");
 
-	QString rv;
-	rv =  QString("From: %1\r\n").arg(m_From);
+	QByteArray rv;
+	rv =  QString("From: %1\r\n").arg(m_From).toStdString().c_str();
 	rv += QString("To: %1\r\n").arg(m_To);
 	rv += QString("Subject: %1\r\n").arg(m_Subject);
-	rv += QString("Content-Type: multipart/alternative; boundary=%1\r\n\r\n").arg(boundary);
-
+	rv += QString("MIME-Version: 1.0\r\n");
+	rv += QString("Content-Type: multipart/alternative; boundary=\"%1\"\r\n\r\n").arg(boundary);
 	for (auto& p : m_body_parts)
 	{
 		rv += QString("--%1\r\n").arg(boundary);
-		rv += QString("Content-Type: %1; charset=UTF-8\r\n\r\n").arg(p.m_type);
-		rv += QString("%1\r\n\r\n").arg(p.m_content);
+		rv += QString("Content-Type: %1; charset=UTF-8\r\n").arg(p.m_type);
+		rv += QString("Content-Transfer-Encoding: base64\r\n\r\n");
+		QByteArray ba(p.m_content.toStdString().c_str());
+		rv += QString("%1\r\n").arg(ba.toBase64(QByteArray::Base64Encoding).constData());
 	}
 
 	rv += QString("--%1--").arg(boundary);
@@ -209,8 +211,7 @@ QString SendMimeMessageArg::toRfc822()const
 
 void SendMimeMessageArg::toJson(QJsonObject& js)const
 {
-	QString s = toRfc822();
-	QByteArray data(s.toStdString().c_str());
+	QByteArray data(toRfc822());
 	QString res = data.toBase64(QByteArray::Base64UrlEncoding);
 	js["raw"] = res;
 };

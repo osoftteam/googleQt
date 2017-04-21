@@ -331,7 +331,7 @@ namespace googleQt{
 
 			void build(const QString& link_path, QUrl& url)const override;
 			void toJson(QJsonObject& js)const override;
-			QString toRfc822()const;
+			QByteArray toRfc822()const;
 			operator QJsonObject ()const;
 
 #ifdef API_QT_AUTOTEST
