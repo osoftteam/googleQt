@@ -4,43 +4,56 @@
 using namespace googleQt;
 
 bool ApiAutotest::init(QString filePathName){
-    if(m_f.isOpen())m_f.close();
-    m_f.setFileName(filePathName);
-    if(!m_f.open(QIODevice::WriteOnly|QIODevice::Text|QIODevice::Truncate)){qWarning() << "failed to open" << filePathName; return false;}
-    m_out.setDevice(&m_f);
-    return true;
+	close();
+	m_out = fopen(filePathName.toStdString().c_str(), "wb");
+    return (m_out != nullptr);
 }
 
 void ApiAutotest::close()
 {
-    if(m_f.isOpen())
-        m_f.close();
+	if (m_out) {
+		fclose(m_out);
+		m_out = nullptr;
+	}
 };
 
 #ifdef API_QT_AUTOTEST
 
 static ApiAutotest* theInstance;
 
+void ApiAutotest::log_string(const char* s)
+{
+	if (m_out) {
+		fwrite(s, sizeof(char), strlen(s), m_out);
+		static const char* end_of_line = "\n";
+		fwrite(end_of_line, sizeof(char), strlen(end_of_line), m_out);
+	}
+};
+
 ApiAutotest& ApiAutotest::INSTANCE(){return *theInstance;};
 ApiAutotest& ApiAutotest::operator << (const char * s){
-    m_out << s << endl;
+	log_string(s);
     return *this;
 }
 
 ApiAutotest& ApiAutotest::operator << (const QString & s){
-    m_out << s << endl;
+	std::string s2 = s.toStdString();
+	log_string(s2.c_str());
     return *this;
 }
 ApiAutotest& ApiAutotest::operator << (const QByteArray & arr){
-    m_out << arr << endl;
+	log_string(arr.constData());
     return *this;
 }
 ApiAutotest& ApiAutotest::operator << (const QNetworkRequest & r){
-    m_out << "POST " << r.url().toString() << endl;
-    QList<QByteArray> lst = r.rawHeaderList();
-    for(QList<QByteArray>::iterator i = lst.begin(); i != lst.end(); i++){
-        m_out << "--header " << *i << ": " << r.rawHeader(*i) << endl;
-    }
+	QString s = QString("POST %1").arg(r.url().toString());
+	log_string(s.toStdString().c_str());
+
+	QList<QByteArray> lst = r.rawHeaderList();
+	for (QList<QByteArray>::iterator i = lst.begin(); i != lst.end(); i++) {
+		s = QString("--header %1: %2").arg(i->constData()).arg(r.rawHeader(*i).constData());
+		log_string(s.toStdString().c_str());
+	}
     return *this;
 }
 
@@ -138,7 +151,7 @@ void ApiAutotest::logRequest(QString req)
     }
 };
 
-void ApiAutotest::addId(QString class_name, QString id) 
+void ApiAutotest::addId(const char* class_name, QString id)
 {
     CLASS_ID_MAP::iterator i = m_availID.find(class_name);
     if (i != m_availID.end())
@@ -153,7 +166,7 @@ void ApiAutotest::addId(QString class_name, QString id)
     }
 };
 
-QString ApiAutotest::getId(QString class_name, int default_id_num) 
+QString ApiAutotest::getId(const char* class_name, int default_id_num)
 {
     QString rv;
 
@@ -167,11 +180,34 @@ QString ApiAutotest::getId(QString class_name, int default_id_num)
     }
     else 
     {
-		rv = QString("id_%1").arg(default_id_num);
+		if (strcmp(class_name, "messages::MessageResource") == 0)
+		{
+			rv = QString("mid_%1_%2_%3")
+				.arg(default_id_num)
+				.arg(QDateTime::currentMSecsSinceEpoch())
+				.arg(qrand());
+		}
+		else
+		{
+			rv = QString("id_%1").arg(default_id_num);
+		}
     }
     return rv;
 };
 
+quint64 ApiAutotest::getInt(const char* class_name, const char* field_name, int default_id_num)
+{
+	quint64 rv = default_id_num;
+	if (strcmp(class_name, "messages::MessageResource") == 0)
+	{
+		if (strcmp(field_name, "m_internalDate") == 0) 
+		{
+			rv = QDateTime::currentMSecsSinceEpoch() + default_id_num * 1000;
+		}
+
+	}
+	return rv;
+};
 
 #endif //API_QT_AUTOTEST
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <stdio.h>
 #include "google/endpoint/ApiUtil.h"
 #include <QFile>
 #include <QTextStream>
@@ -29,16 +30,18 @@ namespace googleQt{
 		QByteArray generateData(const char* context_class_name, int context_index, int parent_context_index);
         void logRequest(QString req);
         void enableRequestLog(bool val) { m_request_log_enabled = val; };
-        void addId(QString class_name, QString id);
-        QString getId(QString class_name, int default_id_num);
+        void addId(const char* class_name, QString id);
+        QString getId(const char* class_name, int default_id_num);
+		quint64 getInt(const char* class_name, const char* field_name, int default_id_num);
 
     protected:
         CLASS_ID_MAP m_availID;
         #endif //API_QT_AUTOTEST        
 
     protected:
-        QFile m_f;
-        QTextStream m_out;
+		FILE* m_out{nullptr};
+		void log_string(const char*);
+
         bool  m_request_log_enabled{true};
     };//ApiAutotest
 
