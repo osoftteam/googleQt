@@ -49,7 +49,7 @@ public:
     /**
         send plain text message
     */
-    void send_plain(QString to_subject_text);
+    void send_prepared_rfc822(QString messageFileName);
 
 	/**
 		send html text message

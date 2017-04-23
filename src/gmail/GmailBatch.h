@@ -253,11 +253,11 @@ namespace googleQt{
             QSqlQuery* selectQuery(QString sql);
 			bool loadMessagesFromDb();
 			bool loadLabelsFromDb();
-			bool updateDbLabel(QString label_id, QString name, uint64_t unread_messages);
+			bool updateDbLabel(const labels::LabelResource& lbl);
+			LabelData* insertDbLabel(const labels::LabelResource& lbl);
 			LabelData* insertDbLabel(QString label_id,
 				QString name, 
-				QString label_type, 
-				uint64_t unread_messages);
+				QString label_type);
 			LabelData* createAndInsertLabel(
 				QString label_id,
 				QString label_name,

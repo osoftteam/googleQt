@@ -302,33 +302,21 @@ void mail_cache::GMailCacheQueryResult::fetchFromCloud_Async(const std::list<QSt
 
     par_runner = m_r.getUserBatchMessages_Async(m_state, id_list);
  
-    std::function<void(void)> fetchMessagesOnFinished = [=]() 
-        {
-            RESULT_LIST<messages::MessageResource*> res = par_runner->get();
-            for (auto& m : res)
-                {
-                    fetchMessage(m);
-                }
-            std::set<QString> id_set;
-            for (std::list<QString>::const_iterator i = id_list.cbegin(); i != id_list.cend(); i++)
-                {
-                    id_set.insert(*i);
-                }
-            notifyFetchCompleted(m_result, id_set);
-            par_runner->deleteLater();
-        };
-
-    if (par_runner->isFinished())
-        {
-            fetchMessagesOnFinished();
-        }
-    else
-        {
-            connect(par_runner, &EndpointRunnable::finished, [=]()
-                    {
-                        fetchMessagesOnFinished();
-                    });
-        }
+	connect(par_runner, &EndpointRunnable::finished, [=]()
+	{
+		RESULT_LIST<messages::MessageResource*> res = par_runner->get();
+		for (auto& m : res)
+		{
+			fetchMessage(m);
+		}
+		std::set<QString> id_set;
+		for (std::list<QString>::const_iterator i = id_list.cbegin(); i != id_list.cend(); i++)
+		{
+			id_set.insert(*i);
+		}
+		notifyFetchCompleted(m_result, id_set);
+		par_runner->deleteLater();
+	});
 };
 
 void mail_cache::GMailCacheQueryResult::loadHeaders(messages::MessageResource* m,
@@ -520,7 +508,8 @@ bool mail_cache::GMailSQLiteStorage::init(QString dbPath, QString dbName, QStrin
         return false;
 
 	static QString sql_labels = QString("CREATE TABLE IF NOT EXISTS %1gmail_label(label_id TEXT PRIMARY KEY, label_name TEXT, "
-                                        " label_type INTEGER, label_unread_messages INTEGER, label_mask INTEGER)")
+                                        " label_type INTEGER, label_unread_messages INTEGER, label_total_messages INTEGER,"
+										" message_list_visibility TEXT, label_list_visibility TEXT, label_mask INTEGER)")
 		.arg(m_db_meta_prefix);
 	if (!execQuery(sql_labels))
 		return false;
@@ -687,21 +676,74 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::createAndInsertLabel(
 	return lb.get();
 };
 
-bool mail_cache::GMailSQLiteStorage::updateDbLabel(QString label_id, QString name, uint64_t unread_messages)
+bool mail_cache::GMailSQLiteStorage::updateDbLabel(const labels::LabelResource& lbl)
 {
+    QString name = lbl.name();
+    if(lbl.type().compare("system", Qt::CaseInsensitive) == 0){
+		auto i = syslabelID2Name.find(lbl.id());
+		if (i != syslabelID2Name.end()) {
+			name = i->second;
+		}        
+    }
+    
 	QString sql_update;
 	sql_update = QString("UPDATE %1gmail_label SET label_name='%2', label_unread_messages=%3 WHERE label_id='%4'")
 		.arg(m_db_meta_prefix)
 		.arg(name)
-		.arg(unread_messages)
-		.arg(label_id);
+		.arg(lbl.messagesunread())
+		.arg(lbl.id());
 	return execQuery(sql_update);
+};
+
+mail_cache::LabelData* mail_cache::GMailSQLiteStorage::insertDbLabel(const labels::LabelResource& lbl) 
+{
+	if (m_avail_label_base.empty())
+	{
+		qWarning() << "ERROR. Exhausted labels masks. New label can not be registered." << m_avail_label_base.size() << lbl.id() << lbl.name();
+		return nullptr;
+	}
+
+	auto i = m_avail_label_base.begin();
+	int mask_base = *i;
+
+	QString sql_insert;
+	sql_insert = QString("INSERT INTO  %1gmail_label(label_id, label_name, label_type, label_unread_messages,"
+						"label_total_messages, message_list_visibility, label_list_visibility, label_mask) VALUES(?, ?, ?, ?, ?, ?, ?, ?)")
+		.arg(m_db_meta_prefix);
+	QSqlQuery* q = prepareQuery(sql_insert);
+	if (!q)return nullptr;
+
+	int label_type_as_int = 2;
+	if (lbl.type().compare("system", Qt::CaseInsensitive) == 0) {
+		label_type_as_int = 1;
+	}
+
+	q->addBindValue(lbl.id());
+	q->addBindValue(lbl.name());
+	q->addBindValue(label_type_as_int);
+	q->addBindValue(lbl.messagesunread());
+	q->addBindValue(lbl.messagestotal());
+	q->addBindValue(lbl.messagelistvisibility());
+	q->addBindValue(lbl.labellistvisibility());
+	q->addBindValue(mask_base);
+
+	mail_cache::LabelData* rv = nullptr;
+
+	if (q->exec())
+	{
+		rv = createAndInsertLabel(lbl.id(),
+			lbl.name(),
+			(label_type_as_int == 1),
+			lbl.messagesunread(),
+			mask_base);
+	}
+
+	return rv;
 };
 
 mail_cache::LabelData* mail_cache::GMailSQLiteStorage::insertDbLabel(QString label_id,
                                                                      QString label_name,
-                                                                     QString label_type,
-                                                                     uint64_t unread_messages) 
+                                                                     QString label_type) 
 {
 	if (m_avail_label_base.empty()) 
         {
@@ -713,7 +755,7 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::insertDbLabel(QString lab
 	int mask_base = *i;
 
 	QString sql_insert;
-	sql_insert = QString("INSERT INTO  %1gmail_label(label_id, label_name, label_type, label_unread_messages, label_mask) VALUES(?, ?, ?, ?, ?)")
+	sql_insert = QString("INSERT INTO  %1gmail_label(label_id, label_name, label_type, label_mask) VALUES(?, ?, ?, ?)")
 		.arg(m_db_meta_prefix);
 	QSqlQuery* q = prepareQuery(sql_insert);
 	if (!q)return nullptr;
@@ -726,7 +768,6 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::insertDbLabel(QString lab
 	q->addBindValue(label_id);
 	q->addBindValue(label_name);
 	q->addBindValue(label_type_as_int);
-	q->addBindValue(unread_messages);
 	q->addBindValue(mask_base);
 
 	mail_cache::LabelData* rv = nullptr;
@@ -736,7 +777,7 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::insertDbLabel(QString lab
             rv = createAndInsertLabel(label_id,
                                       label_name,
                                       (label_type_as_int == 1),
-                                      unread_messages,
+                                      0,
                                       mask_base);
         }
 
@@ -970,8 +1011,7 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::ensureLabel(QString label
 
 	mail_cache::LabelData* rv = insertDbLabel(label_id,
                                               label_name,
-                                              system_label ? "system" : "user",
-                                              0);
+                                              system_label ? "system" : "user");
 	return rv;
 };
 

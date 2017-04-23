@@ -272,7 +272,6 @@ namespace googleQt{
             QString m_uploadType;
         };
 
-		//...
 		class MimeBodyPart 
 		{
 			friend class SendMimeMessageArg;
@@ -329,6 +328,13 @@ namespace googleQt{
 			QString getUploadType()const { return m_uploadType; }
 			void    setUploadType(QString val) { m_uploadType = val; }
 
+			/**
+				if rawRfc822MessageFile is set the file content as whole will be loaded
+				and sent instead of object members
+			*/
+			QString rawRfc822MessageFile()const { return m_rawRfc822MessageFile; }
+			void	setRawRfc822MessageFile(QString fileName) {m_rawRfc822MessageFile = fileName;}
+
 			void build(const QString& link_path, QUrl& url)const override;
 			void toJson(QJsonObject& js)const override;
 			QByteArray toRfc822()const;
@@ -340,15 +346,14 @@ namespace googleQt{
 
 		protected:
 			QString m_uploadType;
-			QString m_Subject;
 			QString m_From;
 			QString m_To;
 			QString m_CC;
 			QString m_BCC;
+            QString m_Subject;
+			QString m_rawRfc822MessageFile;
 			std::list<MimeBodyPart> m_body_parts;
 		};
-
-		//...
 
         class InsertMessageArg : public PathArg<path_insert, InsertMessageArg>
         {

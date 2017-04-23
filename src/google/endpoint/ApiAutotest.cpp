@@ -6,6 +6,9 @@ using namespace googleQt;
 bool ApiAutotest::init(QString filePathName){
 	close();
 	m_out = fopen(filePathName.toStdString().c_str(), "wb");
+	if (m_out) {
+		setvbuf(m_out, NULL, _IONBF, 0);
+	}
     return (m_out != nullptr);
 }
 

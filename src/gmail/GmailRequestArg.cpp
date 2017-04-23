@@ -1,4 +1,5 @@
 #include <QUrlQuery>
+#include <QFile>
 #include "GmailRequestArg.h"
 
 using namespace googleQt;
@@ -187,6 +188,17 @@ void SendMimeMessageArg::build(const QString& link_path, QUrl& url)const
 
 QByteArray SendMimeMessageArg::toRfc822()const
 {
+	if (!m_rawRfc822MessageFile.isEmpty()) {
+		QFile mf(m_rawRfc822MessageFile);
+		if (!mf.open(QFile::ReadOnly)) {
+			qWarning() << "Error, failed to open prepared message file: " << m_rawRfc822MessageFile;
+			return QByteArray();
+		}
+
+		QByteArray ba = mf.readAll();
+		return ba;
+	}
+
 	static QString boundary("OooOOoo17gqt");
 
 	QByteArray rv;

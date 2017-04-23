@@ -115,23 +115,11 @@ namespace googleQt{
             GoogleTask<RESULT>* t = m_router->route(ap);
             m_available_concurrent_routes_count--;
             
-            std::function<void(void)> processFinished = [=]() 
+            connect(t, &GoogleTask<RESULT>::finished, this, [=]()
             {
-                m_result->registerResult(ap, t);
-                afterSingleStepFinished();
-            };
-
-            if (t->isFinished())
-            {
-                processFinished();
-            }
-            else
-            {
-                connect(t, &GoogleTask<RESULT>::finished, this, [=]()
-                {
-                    processFinished();
-                });
-            }
+				m_result->registerResult(ap, t);
+				afterSingleStepFinished();
+			});
         }
 
         void afterSingleStepFinished()

@@ -205,8 +205,8 @@ GoogleVoidTask* GmailRoutes::refreshLabels_Async()
 	GoogleVoidTask* rv = m_endpoint->produceVoidTask();
 
 	googleQt::GoogleTask<labels::LabelsResultList>* t = getLabels()->list_Async();
-
-	std::function<void()> refresh_label_list = [=]()
+	QObject::connect(t, &googleQt::GoogleTask<labels::LabelsResultList>::finished,
+		[=]() 
 	{
 		if (t->isCompleted())
 		{
@@ -217,31 +217,18 @@ GoogleVoidTask* GmailRoutes::refreshLabels_Async()
 				auto db_lbl = storage->findLabel(label_id);
 				if (db_lbl)
 				{
-					storage->updateDbLabel(lbl.id(), lbl.name(), lbl.messagesunread());
+					storage->updateDbLabel(lbl);
 				}
-				else 
+				else
 				{
-					storage->insertDbLabel(lbl.id(), 
-						lbl.name(), 
-						lbl.type(),
-						lbl.messagesunread());
+					storage->insertDbLabel(lbl);
 				}
 			}
 		}
 
 		t->deleteLater();
 		rv->completed_callback();
-	};
-
-	if (t->isFinished())
-	{
-		refresh_label_list();
-	}
-	else
-	{
-		QObject::connect(t, &googleQt::GoogleTask<labels::LabelsResultList>::finished,
-			refresh_label_list);
-	}
+	});
 
 	return rv;
 };
@@ -346,27 +333,14 @@ GoogleTask<messages::MessageResource>* GmailRoutes::setLabel_Async(QString label
 
 	messages::MessagesRoutes* msg = getMessages();
 	GoogleTask<messages::MessageResource>* t = msg->modify_Async(arg);
-
-	std::function<void()> onMessageLabelUpdated = [=]()
+	QObject::connect(t, &EndpointRunnable::finished, [=]()
 	{
 		if (m_GMailCache &&
 			m_GMailCache->hasLocalPersistentStorate())
 		{
 			m_GMailCache->update_persistent_labels(msg_id, d->labelsBitMap());
 		}
-	};
-
-	if (t->isFinished())
-	{
-		onMessageLabelUpdated();
-	}
-	else
-	{
-		QObject::connect(t, &EndpointRunnable::finished, [=]()
-		{
-			onMessageLabelUpdated();
-		});
-	}
+	});
 	return t;
 };
 
@@ -404,7 +378,7 @@ void GmailRoutes::autotestParDBLoad(EDataState state, const std::list<QString>& 
 
 void GmailRoutes::autotest()
 {
-#define AUTOTEST_SIZE 10
+#define AUTOTEST_SIZE 1000
 
 	ApiAutotest::INSTANCE() << "start-mail-test";
 	ApiAutotest::INSTANCE() << "1";

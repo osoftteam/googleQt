@@ -10,6 +10,10 @@
 #include "GoogleClient.h"
 #include "gmail/errors/ErrorsErrorInfo.h"
 
+#ifdef API_QT_AUTOTEST
+#include <QTimer>
+#include <QCoreApplication>
+#endif
 
 namespace googleQt{
     class Endpoint: public googleQt::ApiEndpoint
@@ -397,9 +401,16 @@ namespace googleQt{
             if (!firstReply)
                 {
 #ifdef API_QT_AUTOTEST
+				//let finish async calls in busy autotest setup
+				qApp->processEvents();
+
+				//emulate asynchronous call as in QNetworkRequest
+				//for autotest, so all our processing would be same
                 if (completed_callback != nullptr)
-                {
-                    completed_callback(RES::EXAMPLE(0, 0));
+                {                    
+					QTimer::singleShot(100, [=]() {
+						completed_callback(RES::EXAMPLE(0, 0));
+					});
                 }
 #else
                     if (failed_callback != nullptr)

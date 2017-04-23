@@ -152,24 +152,22 @@ void GmailCommands::ls_by_labels(QString labelIds)
     listMessages("", labelIds);
 };
 
-void GmailCommands::send_plain(QString to_subject_text)
+void GmailCommands::send_prepared_rfc822(QString messageFileName)
 {
-	QStringList arg_list = to_subject_text.split(" ",
-		QString::SkipEmptyParts);
-
-	if (arg_list.size() < 3)
-	{
-		std::cout << "Invalid parameters, expected <To> <Subject> <Text>" << std::endl;
+	if (messageFileName.isEmpty()){
+		std::cout << "Invalid parameters, expected <file-name>" << std::endl;
 		return;	
 	}
 
-	QString msg_to = arg_list[0];
-	QString msg_subject = arg_list[1];
-	QString msg_text = arg_list[2];
+	if (!QFileInfo::exists(messageFileName)) {
+		std::cout << "File not found: " << messageFileName << std::endl;
+		return;
+	}
 
     try
     {
-		gmail::SendMimeMessageArg arg(m_c.userId(), msg_to, msg_subject, msg_text);
+		gmail::SendMimeMessageArg arg;
+		arg.setRawRfc822MessageFile(messageFileName);
 		auto r = m_gm->getMessages()->send(arg);
 		printMessage(r.get());
     }
