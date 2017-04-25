@@ -125,18 +125,7 @@ void DraftListArg::build(const QString& link_path, QUrl& url)const
         .add("pageToken", m_pageToken);
 }
 
-SendMessageArg::SendMessageArg()
-{
-    m_uploadType = "media";
-};
 
-void SendMessageArg::build(const QString& link_path, QUrl& url)const 
-{
-    UrlBuilder b(link_path + QString("/%1").arg(path_send::path()), url);
-    b.add("uploadType", m_uploadType);
-};
-
-//...
 void MimeBodyPart::setContent(QString val, QString _type)
 {
 	m_type = _type;
@@ -145,7 +134,6 @@ void MimeBodyPart::setContent(QString val, QString _type)
 
 SendMimeMessageArg::SendMimeMessageArg()
 {
-	m_uploadType = "media";
 };
 
 SendMimeMessageArg::SendMimeMessageArg(QString from, 
@@ -183,7 +171,6 @@ SendMimeMessageArg::SendMimeMessageArg(QString from,
 void SendMimeMessageArg::build(const QString& link_path, QUrl& url)const
 {
 	UrlBuilder b(link_path + QString("/send"), url);
-	b.add("uploadType", m_uploadType);
 };
 
 QByteArray SendMimeMessageArg::toRfc822()const
@@ -331,13 +318,6 @@ std::unique_ptr<DraftListArg> DraftListArg::EXAMPLE(int, int)
     return rv; 
 };
 
-std::unique_ptr<SendMessageArg> SendMessageArg::EXAMPLE(int, int)
-{
-    std::unique_ptr<SendMessageArg> rv(new SendMessageArg);
-    rv->setUploadType("media");
-    return rv;
-};
-
 std::unique_ptr<InsertMessageArg> InsertMessageArg::EXAMPLE(int, int)
 {
     std::unique_ptr<InsertMessageArg> rv(new InsertMessageArg);
@@ -360,7 +340,6 @@ std::unique_ptr<SendMimeMessageArg> SendMimeMessageArg::EXAMPLE(int, int)
 	rv->setTo("to_somebody@gmail.com");
 	rv->setCC("cc_somebody@gmail.com");
 	rv->setBCC("bcc_somebody@gmail.com");
-	rv->setUploadType("multipart");
 
 	MimeBodyPart pt1;
 	pt1.setContent("*My example message text*", "text/plain");

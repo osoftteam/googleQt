@@ -137,11 +137,11 @@ std::unique_ptr<MessageResource> MessagesRoutes::send(const gmail::SendMimeMessa
 GoogleTask<MessageResource>* MessagesRoutes::send_Async(const gmail::SendMimeMessageArg& arg)
 {
     GoogleTask<MessageResource>* t = m_end_point->produceTask<MessageResource>();
-    m_end_point->rfc822UploadStyle<
+    m_end_point->postStyleB<
         MessageResource,
         MessageResource::factory
         ,gmail::SendMimeMessageArg>
-        (m_end_point->buildGmailUploadlUrl("messages", arg),
+        (m_end_point->buildGmailUrl("messages", arg),
         arg,
         t);
     return t;
@@ -152,13 +152,13 @@ void MessagesRoutes::send_AsyncCB(
     std::function<void(std::unique_ptr<MessageResource>)> completed_callback ,
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
 {
-    m_end_point->rfc822UploadStyle
+    m_end_point->postStyleB
         <
         MessageResource,
         MessageResource::factory
         , gmail::SendMimeMessageArg
         >
-        (m_end_point->buildGmailUploadlUrl("messages", arg),
+        (m_end_point->buildGmailUrl("messages", arg),
         arg,
         completed_callback,
         failed_callback);

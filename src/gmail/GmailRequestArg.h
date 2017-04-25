@@ -248,30 +248,6 @@ namespace googleQt{
 
         };
     
-        class SendMessageArg: public PathArg<path_send, SendMessageArg>
-        {
-        public:
-            SendMessageArg();
-            void build(const QString& link_path, QUrl& url)const override;
-
-            /**
-            The type of upload request to the /upload URI. Acceptable values are: 
-            media - Simple upload. Upload the media only, without any metadata.
-            multipart - Multipart upload. Upload both the media and its metadata, in a single request.
-            resumable - Resumable upload. Upload the file in a resumable fashion, using a series of 
-            at least two requests where the first request includes the metadata.
-            */
-            QString getUploadType()const { return m_uploadType; }
-            void    setUploadType(QString val) { m_uploadType = val; }
-
-#ifdef API_QT_AUTOTEST
-            static std::unique_ptr<SendMessageArg> EXAMPLE(int context_index, int parent_content_index);
-#endif //API_QT_AUTOTEST
-
-        protected:
-            QString m_uploadType;
-        };
-
 		class MimeBodyPart 
 		{
 			friend class SendMimeMessageArg;
@@ -319,16 +295,6 @@ namespace googleQt{
 			void addBodyPart(const MimeBodyPart& pt) { m_body_parts.push_back(pt); };
 
 			/**
-			The type of upload request to the /upload URI. Acceptable values are:
-			media - Simple upload. Upload the media only, without any metadata.
-			multipart - Multipart upload. Upload both the media and its metadata, in a single request.
-			resumable - Resumable upload. Upload the file in a resumable fashion, using a series of
-			at least two requests where the first request includes the metadata.
-			*/
-			QString getUploadType()const { return m_uploadType; }
-			void    setUploadType(QString val) { m_uploadType = val; }
-
-			/**
 				if rawRfc822MessageFile is set the file content as whole will be loaded
 				and sent instead of object members
 			*/
@@ -345,7 +311,6 @@ namespace googleQt{
 #endif //API_QT_AUTOTEST
 
 		protected:
-			QString m_uploadType;
 			QString m_From;
 			QString m_To;
 			QString m_CC;
