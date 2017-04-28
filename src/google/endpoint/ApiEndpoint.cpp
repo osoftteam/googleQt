@@ -16,8 +16,20 @@ ApiEndpoint::ApiEndpoint(ApiClient* c):m_client(c)
 
 void ApiEndpoint::addAuthHeader(QNetworkRequest& request)
 {
+#define DEF_USER_AGENT "googleQtC++11-Client"
+
     QString bearer = QString("Bearer %1").arg(m_client->getToken());
     request.setRawHeader("Authorization", bearer.toUtf8());
+    request.setRawHeader("Host", "www.googleapis.com");
+    QString user_agent = DEF_USER_AGENT;
+    if(m_client && !m_client->userAgent().isEmpty()){
+        user_agent = QString("%1 %2")
+            .arg(m_client->userAgent())
+            .arg(DEF_USER_AGENT);
+    }
+    request.setRawHeader("User-Agent", user_agent.toUtf8());
+
+#undef DEF_USER_AGENT
 };
 
 void ApiEndpoint::runEventsLoop()const

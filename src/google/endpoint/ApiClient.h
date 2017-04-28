@@ -15,6 +15,8 @@ namespace googleQt{
         QString getAppKey()const;
         QString userId()const;
         void setUserId(QString email);
+        QString userAgent()const{return m_userAgent;}
+        void setUserAgent(QString s){m_userAgent = s;}
         virtual bool refreshToken() = 0;        
     signals:
         void downloadProgress(qint64 bytesProcessed, qint64 total);
@@ -23,5 +25,6 @@ namespace googleQt{
     protected:
         std::unique_ptr<ApiAppInfo>  m_app;
         std::unique_ptr<ApiAuthInfo> m_auth;
+        QString m_userAgent;
     };
 };
