@@ -3,6 +3,7 @@
 #include <QBuffer>
 #include <QFile>
 #include <QFileInfo>
+#include <QDir>
 #include <iomanip>
 #include "GmailCommands.h"
 #include "google/demo/ApiTerminal.h"
@@ -313,6 +314,16 @@ void GmailCommands::printMessage(messages::MessageResource* r)
                 std::cout << h.name().leftJustified(20, ' ') << h.value() << std::endl;
         }
 
+    const messages::MessageMimeBody& payload_body = p.body();
+    if(!payload_body.attachmentid().isEmpty() || payload_body.size() > 0)
+        {
+            std::cout << "payload_body "
+                      << " attId:" << payload_body.attachmentid()
+                      << " size:" << payload_body.size()
+                      << " data:" << payload_body.data().constData()
+                      << std::endl;
+        }
+    
 	if (p.mimetype().compare("text/html") == 0)
 	{
 		QByteArray payload_body = QByteArray::fromBase64(p.body().data(), QByteArray::Base64UrlEncoding);
@@ -330,6 +341,10 @@ void GmailCommands::printMessage(messages::MessageResource* r)
 				<< "part" << partID << "---------------------------------"
 				<< std::endl;
 			std::cout << pt.mimetype() << " body-size:" << pt_body.size() << std::endl;
+            if(!pt_body.attachmentid().isEmpty()){
+    			std::cout << "attachmentid:" << pt_body.attachmentid() << std::endl;            
+            }
+            
 			bool is_plain_text = false;
 			bool is_html_text = false;
 			auto pt_headers = pt.headers();
@@ -416,7 +431,7 @@ void GmailCommands::get(QString msg_id)
     catch(GoogleException& e)
         {
             std::cout << "Exception: " << e.what() << std::endl;
-        }            
+        }
 };
 
 void GmailCommands::get_raw(QString msg_id)
@@ -637,6 +652,115 @@ void GmailCommands::get_draft(QString draft_id)
     }
 };
 
+void GmailCommands::download_attachements(QString msgId)
+{
+    if(msgId.isEmpty())
+        {
+            std::cout << "Missing parameters, expected <message_id>" << std::endl;
+            return;
+        }
+
+    QString dest_dir = QString("download/%1").arg(msgId);
+    QDir att_dir;    
+    if(!att_dir.mkpath(dest_dir)){
+        std::cout << "Failed to create directory: " << dest_dir << std::endl;
+        return;
+    };
+    
+    try
+        {
+            auto r = m_gm->getMessages()->get(gmail::IdArg(msgId));
+            auto p = r->payload();
+            auto parts = p.parts();
+            for (auto pt : parts){
+                    auto b = pt.body();
+                    if(b.size() > 0 && !b.attachmentid().isEmpty()){
+                        gmail::AttachmentIdArg arg(msgId, b.attachmentid());
+                        auto r = m_gm->getAttachments()->get(arg);
+
+                        QFile file_in(dest_dir + "/" + pt.filename());
+                        if (file_in.open(QFile::WriteOnly)) {
+                            file_in.write(QByteArray::fromBase64(r->data(), QByteArray::Base64UrlEncoding));
+                            file_in.close();
+                            std::cout << pt.filename()
+                                      << " " << r->size()
+                                      << std::endl;
+                        }
+                    }
+                }            
+        }
+    catch(GoogleException& e)
+        {
+            std::cout << "Exception: " << e.what() << std::endl;
+        }
+}
+
+void GmailCommands::down_att_async(QString msgId)
+{
+    if(msgId.isEmpty())
+        {
+            std::cout << "Missing parameters, expected <message_id>" << std::endl;
+            return;
+        }
+
+    QString dest_dir = QString("download/%1").arg(msgId);
+    QDir att_dir;    
+    if(!att_dir.mkpath(dest_dir)){
+        std::cout << "Failed to create directory: " << dest_dir << std::endl;
+        return;
+    };
+
+    std::function<void(attachments::MessageAttachment* , QString )> store_attachement = [=](attachments::MessageAttachment* a, QString filename)
+        {
+            QFile file_in(dest_dir + "/" + filename);
+            if (file_in.open(QFile::WriteOnly)) {
+                file_in.write(QByteArray::fromBase64(a->data(), QByteArray::Base64UrlEncoding));
+                file_in.close();
+                std::cout << filename
+                          << " " << a->size()
+                          << std::endl;
+            }            
+        };
+
+    auto t = m_gm->getMessages()->get_Async(gmail::IdArg(msgId));
+    QObject::connect(t,
+                     &googleQt::GoogleTask<messages::MessageResource>::finished,
+                     [=]()
+                     {
+                         if(t->isCompleted()){
+                                 auto r = t->get();
+                                 auto p = r->payload();
+                                 auto parts = p.parts();
+                                 m_batch_counter = parts.size();
+                                 for (auto pt : parts){
+                                     auto b = pt.body();
+                                     if(b.size() > 0 && !b.attachmentid().isEmpty()){
+                                         gmail::AttachmentIdArg arg(msgId, b.attachmentid());
+                                         auto a = m_gm->getAttachments()->get_Async(arg);
+                                         QObject::connect(a,
+                                                          &googleQt::GoogleTask<attachments::MessageAttachment>::finished,
+                                                          [=]()
+                                                          {
+                                                              if(a->isCompleted()){
+                                                                  store_attachement(a->get(), pt.filename());
+                                                              }
+                                                              a->deleteLater();
+                                                              m_batch_counter--;
+                                                              if(m_batch_counter == 0){
+                                                                  m_c.exitEventsLoop();
+                                                              }
+                                                          });
+                                     }
+                                     else{
+                                         m_batch_counter--;
+                                     }
+                                 }
+                             }
+                         t->deleteLater();
+                     });
+
+    m_c.runEventsLoop();
+};
 
 void GmailCommands::export_last_result(QString fileName)
 {

@@ -146,6 +146,16 @@ public:
     */
     void check_email_cache(QString nextToken);
 
+    /**
+       download_attachements - download all attachements to local directory
+       The directory named download/<msg-id> will be created
+     */
+    void download_attachements(QString msgId);
+    /**
+       down_att_async - same download attachements async way
+     */
+    void down_att_async(QString msgId);
+    
 
     void export_last_result(QString fileName);
     void print_last_result(QString );
@@ -168,5 +178,6 @@ protected:
     GoogleClient& m_c;
     GmailRoutes*  m_gm;
     bool          m_cache_initialized {false};
+    int           m_batch_counter{0};
 };
 
