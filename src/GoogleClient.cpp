@@ -29,6 +29,17 @@ QString GoogleClient::lastApiCall()
     return m_endpoint->lastRequestInfo();
 }
 
+void GoogleClient::runEventsLoop()const
+{
+    m_endpoint->runEventsLoop();
+};
+
+void GoogleClient::exitEventsLoop()const
+{
+    m_endpoint->exitEventsLoop();
+};
+
+
 QByteArray GoogleClient::lastResponse()
 {
     return m_endpoint->lastResponse();

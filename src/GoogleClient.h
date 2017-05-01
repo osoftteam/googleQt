@@ -35,6 +35,13 @@ public:
     * cancell all requests and exit blocking call is any
     */
     void          cancelAllRequests();
+    
+    /**
+    * event loop functions, not needed in event-driven application,
+    * like gui-based. But in basic console app might be usefull
+    */    
+    void          runEventsLoop()const;
+    void          exitEventsLoop()const;
 
     /**
     * refresh access token
