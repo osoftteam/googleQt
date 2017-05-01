@@ -17,6 +17,10 @@ namespace messages{
                 MIME container types that have no message body or when the body
                 data is sent as a separate attachment. An attachment ID is
                 present if the body data is contained in a separate attachment.
+            field: attachment_id: When present, contains the ID of an external
+                attachment that can be retrieved in a separate
+                messages.attachments.get request. When not present, the entire
+                content of the message part body is contained in the data field.
         */
 
     public:
@@ -39,6 +43,15 @@ namespace messages{
             */
         QByteArray data()const{return m_data;};
         MessagePartBody& setData(const QByteArray& arg){m_data=arg;return *this;};
+
+            /**
+                When present, contains the ID of an external attachment that can
+                be retrieved in a separate messages.attachments.get request.
+                When not present, the entire content of the message part body is
+                contained in the data field.
+            */
+        QString attachmentid()const{return m_attachmentId;};
+        MessagePartBody& setAttachmentid(const QString& arg){m_attachmentId=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -72,6 +85,14 @@ namespace messages{
                 the body data is contained in a separate attachment.
             */
         QByteArray m_data;
+
+            /**
+                When present, contains the ID of an external attachment that can
+                be retrieved in a separate messages.attachments.get request.
+                When not present, the entire content of the message part body is
+                contained in the data field.
+            */
+        QString m_attachmentId;
 
     };//MessagePartBody
 

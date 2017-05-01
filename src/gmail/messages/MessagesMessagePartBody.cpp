@@ -23,12 +23,15 @@ void MessagePartBody::toJson(QJsonObject& js)const{
 
     js["size"] = QString("%1").arg(m_size);
     js["data"] = m_data.constData();
+    if(!m_attachmentId.isEmpty())
+        js["attachmentId"] = QString(m_attachmentId);
 }
 
 void MessagePartBody::fromJson(const QJsonObject& js){
 
     m_size = js["size"].toVariant().toString().toULongLong();
     m_data = js["data"].toVariant().toByteArray();
+    m_attachmentId = js["attachmentId"].toString();
 }
 
 QString MessagePartBody::toString(bool multiline)const
@@ -66,6 +69,7 @@ std::unique_ptr<MessagePartBody> MessagePartBody::EXAMPLE(int context_index, int
     std::unique_ptr<MessagePartBody> rv(new MessagePartBody);
     rv->m_size = ApiAutotest::INSTANCE().getInt("messages::MessagePartBody", "m_size", 1 + example_idx);
     rv->m_data = ApiAutotest::INSTANCE().generateData("messages::MessagePartBody", context_index, parent_context_index);
+    rv->m_attachmentId = QString("attachmentId_%1").arg(example_idx);
     return rv;
 }
 #endif //API_QT_AUTOTEST
