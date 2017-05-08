@@ -170,7 +170,7 @@ namespace googleQt{
 
 			friend class GMailCacheQueryResult;
 			friend class GMailSQLiteStorage;
-			friend class GmailRoutes;
+			friend class googleQt::GmailRoutes;
 		};
 
 
@@ -243,17 +243,21 @@ namespace googleQt{
             std::list<msg_ptr> messages;
             std::map<QString, msg_ptr> messages_map;
             EDataState state;
-            QString    nextpage;
         };
 
 		class GMailCache;
         class GMailCacheQueryResult: public CacheQueryResult<MessageData>
         {
         public:
-            GMailCacheQueryResult(EDataState load, ApiEndpoint& ept, GmailRoutes& r, GMailCache* c);
+            GMailCacheQueryResult(EDataState load,
+                                  ApiEndpoint& ept,
+                                  GmailRoutes& r,
+                                  GMailCache* c);
             void fetchFromCloud_Async(const std::list<QString>& id_list)override;
 
             std::unique_ptr<MessagesList> waitForSortedResultListAndRelease();
+            QString nextPageToken()const{return m_nextPageToken;}
+            
         protected:
             void fetchMessage(messages::MessageResource* m);
 			void loadHeaders(messages::MessageResource* m,
@@ -264,8 +268,11 @@ namespace googleQt{
                              QString& subject);
             void loadLabels(messages::MessageResource* m, uint64_t& labels);
 			void loadAttachments(messages::MessageResource* m, ATTACHMENTS_LIST& lst);
+            void setNextPageToken(QString pageToken){m_nextPageToken = pageToken;}
         protected:
             GmailRoutes&  m_r;
+            QString m_nextPageToken;
+            friend class googleQt::GmailRoutes;
         };
         
         class GMailCache : public GoogleCache<MessageData, GMailCacheQueryResult>

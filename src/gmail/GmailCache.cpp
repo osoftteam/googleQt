@@ -420,6 +420,7 @@ void mail_cache::GMailCacheQueryResult::loadAttachments(messages::MessageResourc
 	auto& parts = p.parts();
 	for (auto& pt : parts) {
 		auto& b = pt.body();
+        qDebug() << "GMailCacheQueryResult::loadAttachments" << m->id() << "att-size=" << b.size() << " att-id=" << b.attachmentid();
 		if (b.size() > 0 && !b.attachmentid().isEmpty()) {
 			//AttachmentData att(b.attachmentid(), pt.mimetype(), pt.filename(), b.size());
 			att_ptr att = std::make_shared<AttachmentData>(b.attachmentid(), pt.mimetype(), pt.filename(), b.size());
@@ -447,7 +448,7 @@ void mail_cache::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
                                                                                 m->snippet(), 
                                                                                 m->internaldate(),
                                                                                 labels);
-				loadAttachments(m, md->m_attachments);
+                //snipped - there will be no attachments here and no body..
                 add(md);
             }break;
         case googleQt::EDataState::body:
@@ -526,6 +527,7 @@ void mail_cache::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
                                 loadHeaders(m, from, to, cc, bcc, subject);
                                 md->updateSnippet(from, to, cc, bcc, subject, m->snippet(), labels);
                             }
+                        loadAttachments(m, md->m_attachments);
                         md->updateBody(plain_text, html_text);
                     }
             }break;//body
@@ -754,9 +756,6 @@ bool mail_cache::GMailSQLiteStorage::loadAttachmentsFromDb(MessageData& m)
 	QSqlQuery* q = selectQuery(sql);
 	if (!q)
 		return false;
-
-	qDebug() << "ykh-gq-att id=" << m.id() << " sql=" << sql << " uptr=" << m.m_user_ptr;
-	//qDebug() << "ykh-gq-att" << m.id();
 
 	while (q->next())
 	{
@@ -1102,7 +1101,7 @@ void mail_cache::GMailSQLiteStorage::update_db(EDataState state, CACHE_QUERY_RES
             QSqlQuery* q = prepareQuery(sql_update);
             if (!q)return;
             bool ok = execWithValues(q, m.get());
-            if (!ok) 
+            if(!ok) 
                 {					
                     qWarning() << "SQL update failed" << q->lastError().text() << i->id();
                 }
@@ -1121,8 +1120,12 @@ void mail_cache::GMailSQLiteStorage::update_db(EDataState state, CACHE_QUERY_RES
                             rows_updated = q->numRowsAffected();
                             if (rows_updated > 0)
                                 inserted_records++;
-                            qDebug() << "auto/insert " << i->id() << " " << rows_updated << "/" << inserted_records << "/" << r.size();
-							int att_count = m->m_attachments.size();
+                            int att_count = m->m_attachments.size();
+                            qDebug() << "gmail-db/insert " << i->id()
+                                     << " upd=" << rows_updated
+                                     << "/ins=" << inserted_records
+                                     << "/size=" << r.size()
+                                     << " att=" << att_count;
 							if (att_count > 0) {
 								insertDbAttachmentData(*m.get());
 							}
@@ -1131,7 +1134,15 @@ void mail_cache::GMailSQLiteStorage::update_db(EDataState state, CACHE_QUERY_RES
             else 
                 {
                     updated_records++;
-                    qDebug() << "auto/update " << i->id() << " " << rows_updated << "/" << updated_records << "/" << r.size();
+                    int att_count = m->m_attachments.size();
+                    qDebug() << "gmail-db/update " << i->id()
+                             << " upd=" << rows_updated
+                             << "/ins=" << updated_records
+                             << "/size" << r.size()
+                             << " att=" << att_count;
+                    if (att_count > 0) {
+                        insertDbAttachmentData(*m.get());
+                    }                    
                 }
         }
 };
