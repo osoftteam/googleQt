@@ -1,3 +1,5 @@
+#include <QDir>
+#include <QFile>
 #include "GmailRoutes.h"
 #include "Endpoint.h"
 
@@ -117,6 +119,7 @@ mail_cache::GMailCacheQueryResult* GmailRoutes::getNextCacheMessages_Async(int m
         {
 			id_list.push_back(m.id());
         }
+        rfetcher->setNextPageToken(mlist->nextpagetoken());
         getCacheMessages_Async(EDataState::snippet, id_list, rfetcher);
     };
     
@@ -173,7 +176,10 @@ std::unique_ptr<mail_cache::MessagesList> GmailRoutes::getCacheMessages(int numb
     return rfetcher->waitForSortedResultListAndRelease();
 };
 
-bool GmailRoutes::setupSQLiteCache(QString dbPath, QString dbName /*= "googleqt"*/, QString dbprefix /*= "api"*/) 
+bool GmailRoutes::setupSQLiteCache(QString dbPath, 
+	QString downloadPath, 
+	QString dbName /*= "googleqt"*/, 
+	QString dbprefix /*= "api"*/)
 {
     ensureCache();
 
@@ -183,7 +189,7 @@ bool GmailRoutes::setupSQLiteCache(QString dbPath, QString dbName /*= "googleqt"
     }
 
     std::unique_ptr<mail_cache::GMailSQLiteStorage> st(new mail_cache::GMailSQLiteStorage(m_GMailCache.get()));
-    if (!st->init(dbPath, dbName, dbprefix)) 
+    if (!st->init_db(dbPath, downloadPath, dbName, dbprefix))
     {
         qWarning() << "Failed to initialize SQLite storage" << dbPath << dbName << dbprefix;
         return false;
@@ -205,31 +211,79 @@ GoogleVoidTask* GmailRoutes::refreshLabels_Async()
 	GoogleVoidTask* rv = m_endpoint->produceVoidTask();
 
 	googleQt::GoogleTask<labels::LabelsResultList>* t = getLabels()->list_Async();
-	QObject::connect(t, &googleQt::GoogleTask<labels::LabelsResultList>::finished,
-		[=]() 
+	t->then([=](labels::LabelsResultList* lst) 
 	{
-		if (t->isCompleted())
+		for (auto& lbl : lst->labels())
 		{
-			labels::LabelsResultList* lst = t->get();
-			for (auto& lbl : lst->labels())
+			QString label_id = lbl.id();
+			auto db_lbl = storage->findLabel(label_id);
+			if (db_lbl)
 			{
-				QString label_id = lbl.id();
-				auto db_lbl = storage->findLabel(label_id);
-				if (db_lbl)
-				{
-					storage->updateDbLabel(lbl);
-				}
-				else
-				{
-					storage->insertDbLabel(lbl);
-				}
+				storage->updateDbLabel(lbl);
+			}
+			else
+			{
+				storage->insertDbLabel(lbl);
+			}
+		}
+		rv->completed_callback();
+	});
+	return rv;
+};
+
+GoogleVoidTask* GmailRoutes::downloadAttachment_Async(googleQt::mail_cache::msg_ptr m, 
+	googleQt::mail_cache::att_ptr a, 
+	QString destinationFolder)
+{
+	ensureCache();
+	GoogleVoidTask* rv = m_endpoint->produceVoidTask();
+
+	if (a->status() == mail_cache::AttachmentData::statusDownloadInProcess) {
+		qWarning() << "attachment download already in progress " << m->id() << a->attachmentId();
+	}
+
+	a->m_status = mail_cache::AttachmentData::statusDownloadInProcess;
+	gmail::AttachmentIdArg arg(m->id(), a->attachmentId());
+	auto t = getAttachments()->get_Async(arg);
+	t->then([=](attachments::MessageAttachment* att)
+	{
+		QDir dest_dir;
+		if (!dest_dir.exists(destinationFolder)) {
+			if (!dest_dir.mkpath(destinationFolder)) {
+				qWarning() << "Failed to create directory" << destinationFolder;
+				return;
+			};
+		}
+
+		QString destFile = destinationFolder + "/" + a->filename();
+		if (QFile::exists(destFile)) {
+			//create some reasonable unique file name
+			QFileInfo fi(destFile);
+			QString name = fi.baseName().left(64);
+			QString ext = fi.suffix();
+			int idx = 1;
+			while (idx < 1000) {
+				destFile = destinationFolder + "/" + name + QString("_%1").arg(idx) + "." + ext;
+				if (!QFile::exists(destFile))
+					break;
 			}
 		}
 
-		t->deleteLater();
+		QFile file_in(destFile);
+		if (file_in.open(QFile::WriteOnly)) {
+			file_in.write(QByteArray::fromBase64(att->data(), QByteArray::Base64UrlEncoding));
+			file_in.close();
+
+			QFileInfo fi(destFile);
+			auto storage = m_GMailCache->sqlite_storage();
+			storage->update_attachment_local_file_db(m, a, fi.fileName());
+			emit attachmentsDownloaded(m, a);
+		}
+		else {
+			qWarning() << "Failed to create attachment file" << destFile;
+		}
 		rv->completed_callback();
 	});
-
 	return rv;
 };
 
@@ -338,7 +392,8 @@ GoogleTask<messages::MessageResource>* GmailRoutes::setLabel_Async(QString label
 		if (m_GMailCache &&
 			m_GMailCache->hasLocalPersistentStorate())
 		{
-			m_GMailCache->update_persistent_labels(msg_id, d->labelsBitMap());
+			auto storage = m_GMailCache->sqlite_storage();
+			storage->update_message_labels_db(msg_id, d->labelsBitMap());
 		}
 	});
 	return t;
@@ -387,7 +442,7 @@ void GmailRoutes::autotest()
 	ApiAutotest::INSTANCE() << "4";
 
 	/// check persistant cache update ///
-	if (!setupSQLiteCache("gmail_autotest.sqlite"))
+	if (!setupSQLiteCache("gmail_autotest.sqlite", "downloads"))
 	{
 		ApiAutotest::INSTANCE() << "Failed to setup SQL database";
 		return;
@@ -512,7 +567,7 @@ void GmailRoutes::autotest()
 			for (auto& i : lst->messages)
 			{
 				mail_cache::MessageData* m = i.get();
-				storage->updateMessageLabels(m->id(), lmask | gmask);
+				storage->update_message_labels_db(m->id(), lmask | gmask);
 
 				counter++;
 				l_iterator++; if (l_iterator == labels.end())l_iterator = labels.begin();

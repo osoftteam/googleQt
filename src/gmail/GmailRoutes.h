@@ -12,7 +12,7 @@
 #include "gmail/history/HistoryRoutes.h"
 #include "gmail/drafts/DraftsRoutes.h"
 
-#include "gmail/GmailBatch.h"
+#include "gmail/GmailCache.h"
 #include "google/endpoint/Cache.h"
 
 namespace googleQt{
@@ -25,7 +25,8 @@ namespace googleQt{
         class GMailCache;
     };	
 
-    class GmailRoutes {
+    class GmailRoutes : public QObject {
+		Q_OBJECT
     public:
 
         GmailRoutes(Endpoint*);
@@ -62,10 +63,17 @@ namespace googleQt{
 
         /// init local cache table using SQlite DB, tables will have 'dbprefix' prefix
         /// file path and DB-name should be specified
-        bool setupSQLiteCache(QString dbPath, QString dbName = "googleqt", QString dbprefix = "api");
+		/// downloadPath - directory for attachment download
+        bool setupSQLiteCache(QString dbPath, 
+			QString downloadPath, 
+			QString dbName = "googleqt", 
+			QString dbprefix = "api");
 
 		/// async refresh labels DB table
 		GoogleVoidTask* refreshLabels_Async();
+		GoogleVoidTask* downloadAttachment_Async(googleQt::mail_cache::msg_ptr m, 
+			googleQt::mail_cache::att_ptr a, 
+			QString destinationFolder);
 		void refreshLabels();
 		std::list<mail_cache::LabelData*> getLoadedLabels(std::set<QString>* in_optional_idset = nullptr);
 		std::list<mail_cache::LabelData*> getMessageLabels(mail_cache::MessageData* d);
@@ -90,6 +98,10 @@ namespace googleQt{
         void autotestParLoad(EDataState state, const std::list<QString>& id_list);
         void autotestParDBLoad(EDataState state, const std::list<QString>& id_list);
 #endif
+
+	signals:
+		void attachmentsDownloaded(googleQt::mail_cache::msg_ptr, googleQt::mail_cache::att_ptr);
+
     protected:
         void ensureCache()const;
         mail_cache::GMailCacheQueryResult* newResultFetcher(EDataState state);
