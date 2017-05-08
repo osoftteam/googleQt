@@ -147,12 +147,12 @@ public:
     void check_email_cache(QString nextToken);
 
     /**
-       download_attachements - download all attachements to local directory
+       download_attachments - download all attachments to local directory
        The directory named download/<msg-id> will be created
      */
-    void download_attachements(QString msgId);
+    void download_attachments(QString msgId);
     /**
-       down_att_async - same download attachements async way
+       down_att_async - same download attachments async way
      */
     void down_att_async(QString msgId);
     

@@ -91,8 +91,8 @@ int main(int argc, char *argv[])
     t.addAction("get_cache_details", "Get Messages email body by ID list from cache if available, if not query cloud", [&](QString arg) {cmd.get_cache_details(arg); });    
     t.addAction("check_email_cache", "Check for new email on cloud, if found return and update cache, otherwise return cache messages", [&](QString arg) {cmd.check_email_cache(arg); });
     t.addSeparator();
-    t.addAction("download_attachements", "Download all attachements of message", [&](QString arg) {cmd.download_attachements(arg); });
-    t.addAction("down_att_async", "Download all attachements of message (async way)", [&](QString arg) {cmd.down_att_async(arg); });
+    t.addAction("download_attachments", "Download all attachments of message", [&](QString arg) {cmd.download_attachments(arg); });
+    t.addAction("down_att_async", "Download all attachments of message (async way)", [&](QString arg) {cmd.down_att_async(arg); });
     t.addSeparator();
     t.addAction("export_last_result",   "Export last response to a file", [&](QString arg) {cmd.export_last_result(arg); });
     t.addAction("print_last_result",   "Print last response", [&](QString arg) {cmd.print_last_result(arg); });

@@ -652,7 +652,7 @@ void GmailCommands::get_draft(QString draft_id)
     }
 };
 
-void GmailCommands::download_attachements(QString msgId)
+void GmailCommands::download_attachments(QString msgId)
 {
     if(msgId.isEmpty())
         {
@@ -669,7 +669,8 @@ void GmailCommands::download_attachements(QString msgId)
     
     try
         {
-            auto r = m_gm->getMessages()->get(gmail::IdArg(msgId));
+            gmail::IdArg arg(msgId);
+            auto r = m_gm->getMessages()->get(arg);
             auto p = r->payload();
             auto parts = p.parts();
             for (auto pt : parts){
@@ -710,7 +711,7 @@ void GmailCommands::down_att_async(QString msgId)
         return;
     };
 
-    std::function<void(attachments::MessageAttachment* , QString )> store_attachement = [=](attachments::MessageAttachment* a, QString filename)
+    std::function<void(attachments::MessageAttachment* , QString )> store_attachment = [=](attachments::MessageAttachment* a, QString filename)
         {
             QFile file_in(dest_dir + "/" + filename);
             if (file_in.open(QFile::WriteOnly)) {
@@ -723,6 +724,32 @@ void GmailCommands::down_att_async(QString msgId)
         };
 
     auto t = m_gm->getMessages()->get_Async(gmail::IdArg(msgId));
+	t->then([=](messages::MessageResource* r) 
+	{//we might have issue with Task autorelease
+	//so that task might have to stay locked
+		auto p = r->payload();
+		auto parts = p.parts();
+		m_batch_counter = parts.size();
+		for (auto pt : parts) {
+			auto b = pt.body();
+			if (b.size() > 0 && !b.attachmentid().isEmpty()) {
+				gmail::AttachmentIdArg arg(msgId, b.attachmentid());
+				auto a = m_gm->getAttachments()->get_Async(arg);
+				a->then([=](attachments::MessageAttachment* att)
+				{
+					store_attachment(att, pt.filename());
+					m_batch_counter--;
+					if (m_batch_counter == 0) {
+						m_c.exitEventsLoop();
+					}
+				});
+			}
+			else {
+				m_batch_counter--;
+			}
+		}//for parts
+	});
+	/*
     QObject::connect(t,
                      &googleQt::GoogleTask<messages::MessageResource>::finished,
                      [=]()
@@ -737,19 +764,14 @@ void GmailCommands::down_att_async(QString msgId)
                                      if(b.size() > 0 && !b.attachmentid().isEmpty()){
                                          gmail::AttachmentIdArg arg(msgId, b.attachmentid());
                                          auto a = m_gm->getAttachments()->get_Async(arg);
-                                         QObject::connect(a,
-                                                          &googleQt::GoogleTask<attachments::MessageAttachment>::finished,
-                                                          [=]()
-                                                          {
-                                                              if(a->isCompleted()){
-                                                                  store_attachement(a->get(), pt.filename());
-                                                              }
-                                                              a->deleteLater();
-                                                              m_batch_counter--;
-                                                              if(m_batch_counter == 0){
-                                                                  m_c.exitEventsLoop();
-                                                              }
-                                                          });
+										 a->then([=](attachments::MessageAttachment* att) 
+										 {
+											 store_attachment(att, pt.filename());
+											 m_batch_counter--;
+											 if (m_batch_counter == 0) {
+												 m_c.exitEventsLoop();
+											 }
+										 });
                                      }
                                      else{
                                          m_batch_counter--;
@@ -758,7 +780,7 @@ void GmailCommands::down_att_async(QString msgId)
                              }
                          t->deleteLater();
                      });
-
+					 */
     m_c.runEventsLoop();
 };
 
@@ -863,7 +885,7 @@ void GmailCommands::initCache()
     if(!m_cache_initialized)
         {
             QString dbPath = "gm-cache.sqlite";
-            if(!m_gm->setupSQLiteCache(dbPath))
+            if(!m_gm->setupSQLiteCache(dbPath, "downloads"))
                 {
                     std::cout << "Failed to initialize SQLite cache database: " << std::endl;
                     return;
