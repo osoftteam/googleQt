@@ -252,10 +252,25 @@ namespace googleQt{
 		{
 			friend class SendMimeMessageArg;
 		public:
-			void setContent(QString val, QString _type);
+			enum EType
+			{
+				ptypeNone,
+				ptypePlain,
+				ptypeHtml,
+				ptypeFile
+			};
+			static MimeBodyPart makePlainPart(QString text);
+			static MimeBodyPart makeHtmlPart(QString text);
+			static MimeBodyPart makeFilePart(QString file_name);
+
+			QByteArray toRfc822()const;
+
+		protected:
+			void setContent(QString val, QString _type);			
 		protected:
 			QString m_type;
 			QString m_content;
+			EType   m_ptype{ ptypeNone };
 		};
 
 		class SendMimeMessageArg : public QParamArgWithBody<SendMimeMessageArg>

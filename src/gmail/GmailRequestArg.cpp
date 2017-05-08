@@ -1,5 +1,6 @@
 #include <QUrlQuery>
 #include <QFile>
+#include <QFileInfo>
 #include "GmailRequestArg.h"
 
 using namespace googleQt;
@@ -18,24 +19,24 @@ void IdArg::build(const QString& link_path, QUrl& url)const
     UrlBuilder b(link_path + QString("/%1").arg(m_id), url);
     b.add("format", m_format);
     for (QStringList::const_iterator i = m_headers.cbegin(); i != m_headers.cend(); i++)
-    {
-        b.add("metadataHeaders", *i);
-    }   
+        {
+            b.add("metadataHeaders", *i);
+        }   
 };
 
 
 AttachmentIdArg::AttachmentIdArg(QString message_id, QString attachment_id) 
 	:m_message_id(message_id),
-	m_attachment_id(attachment_id)
+     m_attachment_id(attachment_id)
 {
 };
 
 void AttachmentIdArg::build(const QString& link_path, QUrl& url)const
 {
 	UrlBuilder b(link_path + QString("%1/attachments/%2")
-		.arg(m_message_id)
-		.arg(m_attachment_id),
-		url);
+                 .arg(m_message_id)
+                 .arg(m_attachment_id),
+                 url);
 }
 
 ModifyMessageArg::ModifyMessageArg(QString idValue,
@@ -125,6 +126,33 @@ void DraftListArg::build(const QString& link_path, QUrl& url)const
         .add("pageToken", m_pageToken);
 }
 
+MimeBodyPart MimeBodyPart::makePlainPart(QString text) 
+{
+	MimeBodyPart pt;
+	pt.setContent(text, "text/plain; charset=UTF-8");
+	pt.m_type = ptypePlain;
+	return pt;
+};
+
+MimeBodyPart MimeBodyPart::makeHtmlPart(QString text) 
+{
+	MimeBodyPart pt;
+	pt.setContent(text, "text/html; charset=UTF-8");
+	pt.m_type = ptypeHtml;
+	return pt;
+};
+
+MimeBodyPart MimeBodyPart::makeFilePart(QString file_name) 
+{
+	QFileInfo fi(file_name);
+	QString file_base = fi.baseName();
+
+	MimeBodyPart pt;
+	pt.setContent(file_name, QString("application/octet-stream; name=%1").arg(file_base));
+	pt.m_type = ptypeFile;
+	return pt;
+};
+
 
 void MimeBodyPart::setContent(QString val, QString _type)
 {
@@ -132,39 +160,69 @@ void MimeBodyPart::setContent(QString val, QString _type)
 	m_content = val;
 };
 
+QByteArray MimeBodyPart::toRfc822()const
+{
+	QByteArray rv = QString("Content-Type: %1\r\n").arg(m_type).toStdString().c_str();
+	rv += QString("Content-Transfer-Encoding: base64\r\n\r\n");
+	switch(m_ptype)
+        {
+        case ptypePlain:
+        case ptypeHtml: 
+            {		
+                QByteArray ba(m_content.toStdString().c_str());
+                rv += QString("%1\r\n").arg(ba.toBase64(QByteArray::Base64Encoding).constData());
+            }break;
+        case ptypeNone:break;
+        case ptypeFile: 
+            {
+                QFileInfo fi(m_content);
+                QString file_base = fi.baseName();
+                rv += QString("Content-Disposition: attachment; filename=%1\r\n\r\n").arg(file_base);
+                /// put the whole file here
+                QFile mf(m_content);
+                if (!mf.open(QFile::ReadOnly)) {
+                    qWarning() << "Error, failed to open attachment file: " << m_content;
+                }
+                else {
+                    QByteArray ba = mf.readAll().toBase64(QByteArray::Base64UrlEncoding);
+                    rv += QString("%1\r\n").arg(ba.constData());
+                }
+		
+            }break;
+        }
+	return rv;
+};
+
 SendMimeMessageArg::SendMimeMessageArg()
 {
 };
 
 SendMimeMessageArg::SendMimeMessageArg(QString from, 
-	QString to, 
-	QString subject, 
-	QString text)
+                                       QString to, 
+                                       QString subject, 
+                                       QString text)
 	:m_From(from),
-	m_To(to),
-	m_Subject(subject)
+     m_To(to),
+     m_Subject(subject)
 {
-	MimeBodyPart pt;
-	pt.setContent(text, "text/plain");
+	MimeBodyPart pt = MimeBodyPart::makePlainPart(text);
 	addBodyPart(pt);
 };
 
 SendMimeMessageArg::SendMimeMessageArg(QString from,
-	QString to,
-	QString subject,
-	QString text_plain,
-	QString text_html) 
+                                       QString to,
+                                       QString subject,
+                                       QString text_plain,
+                                       QString text_html) 
 	:m_From(from),
-	m_To(to),
-	m_Subject(subject)
+     m_To(to),
+     m_Subject(subject)
 {
-	MimeBodyPart pt1;
-	pt1.setContent(text_plain, "text/plain");
-	addBodyPart(pt1);
+	MimeBodyPart pt = MimeBodyPart::makePlainPart(text_plain);
+	addBodyPart(pt);
 
-	MimeBodyPart pt2;
-	pt2.setContent(text_plain, "text/html");
-	addBodyPart(pt2);
+	MimeBodyPart pt_html = MimeBodyPart::makeHtmlPart(text_html);
+	addBodyPart(pt_html);
 };
 
 
@@ -195,13 +253,17 @@ QByteArray SendMimeMessageArg::toRfc822()const
 	rv += QString("MIME-Version: 1.0\r\n");
 	rv += QString("Content-Type: multipart/alternative; boundary=\"%1\"\r\n\r\n").arg(boundary);
 	for (auto& p : m_body_parts)
-	{
-		rv += QString("--%1\r\n").arg(boundary);
-		rv += QString("Content-Type: %1; charset=UTF-8\r\n").arg(p.m_type);
-		rv += QString("Content-Transfer-Encoding: base64\r\n\r\n");
-		QByteArray ba(p.m_content.toStdString().c_str());
-		rv += QString("%1\r\n").arg(ba.toBase64(QByteArray::Base64Encoding).constData());
-	}
+        {
+            rv += QString("--%1\r\n").arg(boundary);
+            rv += p.toRfc822();
+            //rv += QString("Content-Type: %1; charset=UTF-8\r\n").arg(p.m_type);
+            /*
+              rv += QString("Content-Type: %1\r\n").arg(p.m_type);
+              rv += QString("Content-Transfer-Encoding: base64\r\n\r\n");
+              QByteArray ba(p.m_content.toStdString().c_str());
+              rv += QString("%1\r\n").arg(ba.toBase64(QByteArray::Base64Encoding).constData());
+            */
+        }
 
 	rv += QString("--%1--").arg(boundary);
 
@@ -341,13 +403,11 @@ std::unique_ptr<SendMimeMessageArg> SendMimeMessageArg::EXAMPLE(int, int)
 	rv->setCC("cc_somebody@gmail.com");
 	rv->setBCC("bcc_somebody@gmail.com");
 
-	MimeBodyPart pt1;
-	pt1.setContent("*My example message text*", "text/plain");
-	rv->addBodyPart(pt1);
+	MimeBodyPart pt_plain = MimeBodyPart::makePlainPart("*My example message text*");
+	rv->addBodyPart(pt_plain);
 
-	MimeBodyPart pt2;
-	pt2.setContent("<b>My example message text</b>", "text/html");
-	rv->addBodyPart(pt2);
+	MimeBodyPart pt_html = MimeBodyPart::makeHtmlPart("<b>My example message text</b>");
+	rv->addBodyPart(pt_html);
 
 	return rv;
 };
