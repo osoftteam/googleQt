@@ -83,6 +83,32 @@ namespace googleQt{
             return res;
         };
 
+		///composition of async calls, after async call is finished the user function
+		///is called (if not nullptr) and then task object will be scheduled to autorelease
+		void then(std::function<void(RESULT*)> after_completed_processing)
+		{
+			connect(this, &EndpointRunnable::finished,
+				[=]()
+			{
+				if (isCompleted()) {
+					if (after_completed_processing) {
+						after_completed_processing(get());
+					}
+				}
+				deleteLater();
+			});
+		};
+		///release Task after it's finished, not interested in result
+		void thenNothing() 
+		{
+			connect(this, &EndpointRunnable::finished,
+				[=]()
+			{
+				deleteLater();
+			});
+		};
+
+
         void completed_callback(std::unique_ptr<RESULT> r)
         {
             m_completed = std::move(r);
@@ -105,6 +131,11 @@ namespace googleQt{
         ///object in case os success or raise exception in case of error
         ///also this function will schedule dispose of the Task via deleteLater
         void waitForResultAndRelease();
+		///composition of async calls, after async call is finished the user function
+		///is called (if not nullptr) and then task object will be scheduled to autorelease
+		void then(std::function<void()> after_completed_processing);
+		///release Task after it's finished, not interested in result
+		void thenNothing();
 
         void completed_callback(void)
         {

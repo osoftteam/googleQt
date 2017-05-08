@@ -67,3 +67,27 @@ void GoogleVoidTask::waitForResultAndRelease()
     }
     deleteLater();
 };
+
+void GoogleVoidTask::then(std::function<void()> after_completed_processing)
+{
+	connect(this, &EndpointRunnable::finished,
+		[=]() 
+	{
+		if (isCompleted()) {
+			if (after_completed_processing) {
+				after_completed_processing();
+			}
+		}
+
+		deleteLater();
+	});
+};
+
+void GoogleVoidTask::thenNothing() 
+{
+	connect(this, &EndpointRunnable::finished,
+		[=]()
+	{
+		deleteLater();
+	});
+};
