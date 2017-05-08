@@ -108,7 +108,7 @@ QByteArray ApiAutotest::generateData(const char* context_class_name, int context
 {
 	Q_UNUSED(context_index);
 
-	QByteArray rv = QByteArray("AUTOTEST-DATA").toBase64();
+	QByteArray rv = QByteArray("AUTOTEST-DATA").toBase64(QByteArray::Base64UrlEncoding);
 	if (strcmp(context_class_name, "messages::MessagePartBody") == 0)
 	{
 		static int ref_num = 0;
