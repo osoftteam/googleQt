@@ -26,6 +26,8 @@ namespace googleQt{
         };
         void registerResult(const ARG_PARAM& ap, GoogleTask<RESULT>* t) 
         {
+			///ykh: our result map becomes owner of Tasks via unique_ptr
+			///not sure it's a good idea, see how UserBatchResult is used after
             m_results[ap] = std::unique_ptr<GoogleTask<RESULT>>(t);
         };
 
@@ -112,7 +114,7 @@ namespace googleQt{
             ARG_PARAM ap = m_arg_parameters.front();
             m_arg_parameters.pop_front();
             m_result->registerRequest(ap);
-            GoogleTask<RESULT>* t = m_router->route(ap);
+            GoogleTask<RESULT>* t = m_router->routeSingleBatchRequest(ap);
             m_available_concurrent_routes_count--;
             
             connect(t, &GoogleTask<RESULT>::finished, this, [=]()
