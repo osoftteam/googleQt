@@ -724,9 +724,8 @@ void GmailCommands::down_att_async(QString msgId)
         };
 
     auto t = m_gm->getMessages()->get_Async(gmail::IdArg(msgId));
-	t->then([=](messages::MessageResource* r) 
-	{//we might have issue with Task autorelease
-	//so that task might have to stay locked
+	t->then([=](std::unique_ptr<messages::MessageResource> r) 
+	{
 		auto p = r->payload();
 		auto parts = p.parts();
 		m_batch_counter = parts.size();
@@ -735,9 +734,9 @@ void GmailCommands::down_att_async(QString msgId)
 			if (b.size() > 0 && !b.attachmentid().isEmpty()) {
 				gmail::AttachmentIdArg arg(msgId, b.attachmentid());
 				auto a = m_gm->getAttachments()->get_Async(arg);
-				a->then([=](attachments::MessageAttachment* att)
+				a->then([=](std::unique_ptr<attachments::MessageAttachment> att)
 				{
-					store_attachment(att, pt.filename());
+					store_attachment(att.get(), pt.filename());
 					m_batch_counter--;
 					if (m_batch_counter == 0) {
 						m_c.exitEventsLoop();
@@ -749,38 +748,7 @@ void GmailCommands::down_att_async(QString msgId)
 			}
 		}//for parts
 	});
-	/*
-    QObject::connect(t,
-                     &googleQt::GoogleTask<messages::MessageResource>::finished,
-                     [=]()
-                     {
-                         if(t->isCompleted()){
-                                 auto r = t->get();
-                                 auto p = r->payload();
-                                 auto parts = p.parts();
-                                 m_batch_counter = parts.size();
-                                 for (auto pt : parts){
-                                     auto b = pt.body();
-                                     if(b.size() > 0 && !b.attachmentid().isEmpty()){
-                                         gmail::AttachmentIdArg arg(msgId, b.attachmentid());
-                                         auto a = m_gm->getAttachments()->get_Async(arg);
-										 a->then([=](attachments::MessageAttachment* att) 
-										 {
-											 store_attachment(att, pt.filename());
-											 m_batch_counter--;
-											 if (m_batch_counter == 0) {
-												 m_c.exitEventsLoop();
-											 }
-										 });
-                                     }
-                                     else{
-                                         m_batch_counter--;
-                                     }
-                                 }
-                             }
-                         t->deleteLater();
-                     });
-					 */
+
     m_c.runEventsLoop();
 };
 
@@ -908,11 +876,11 @@ void GmailCommands::get_cache_snippets(QString id_list)
 		return;
 	}
 
-    std::unique_ptr<mail_cache::MessagesList> lst = m_gm->getCacheMessages(EDataState::snippet, arg_list);
-	std::cout << "loaded from cache: " << lst->messages.size() << std::endl;
+    auto lst = m_gm->getCacheMessages(EDataState::snippet, arg_list);
+	std::cout << "loaded from cache: " << lst->result_list.size() << std::endl;
 
 	int n = 1;
-	for (auto& i : lst->messages)
+	for (auto& i : lst->result_list)
 	{
 		mail_cache::MessageData* m = i.get();
 		std::cout << n << ". " << m->id() << "|";
@@ -934,11 +902,11 @@ void GmailCommands::get_cache_details(QString id_list)
 		return;
 	}
 
-    std::unique_ptr<mail_cache::MessagesList> lst = m_gm->getCacheMessages(EDataState::body, arg_list);
-	std::cout << "loaded from cache: " << lst->messages.size() << std::endl;
+    auto lst = m_gm->getCacheMessages(EDataState::body, arg_list);
+	std::cout << "loaded from cache: " << lst->result_list.size() << std::endl;
 
 	int n = 1;
-	for (auto& i : lst->messages)
+	for (auto& i : lst->result_list)
 	{
 		mail_cache::MessageData* m = i.get();
 		std::cout << n << ". " << m->id() << "|";
@@ -959,11 +927,11 @@ void GmailCommands::check_email_cache(QString nextToken)
 
     try
         {    
-            std::unique_ptr<mail_cache::MessagesList> lst = m_gm->getNextCacheMessages(20, nextToken);
-            std::cout << "loaded from cache: " << lst->messages.size() << std::endl;
+            auto lst = m_gm->getNextCacheMessages(20, nextToken);
+            std::cout << "loaded from cache: " << lst->result_list.size() << std::endl;
 
             int n = 1;
-            for (auto& i : lst->messages)
+            for (auto& i : lst->result_list)
                 {
                     mail_cache::MessageData* m = i.get();
                     std::cout << n << ". " << m->id() << "|";
