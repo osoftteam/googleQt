@@ -74,7 +74,7 @@ std::unique_ptr<ErrorInfo> ErrorInfo::EXAMPLE(int context_index, int parent_cont
         rv->m_errors.push_back(p);
     }
     rv->m_code = ApiAutotest::INSTANCE().getInt("errors::ErrorInfo", "m_code", 2 + example_idx);
-    rv->m_message = QString("message_%1").arg(example_idx);
+    rv->m_message = ApiAutotest::INSTANCE().getString("errors::ErrorInfo", "m_message", QString("message_%1").arg(example_idx));
     return rv;
 }
 #endif //API_QT_AUTOTEST

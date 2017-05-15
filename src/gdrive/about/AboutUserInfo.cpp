@@ -77,11 +77,11 @@ std::unique_ptr<UserInfo> UserInfo::EXAMPLE(int context_index, int parent_contex
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<UserInfo> rv(new UserInfo);
-    rv->m_displayName = QString("displayName_%1").arg(example_idx);
-    rv->m_kind = QString("kind_%1").arg(example_idx);
-    rv->m_photoLink = QString("photoLink_%1").arg(example_idx);
-    rv->m_permissionId = QString("permissionId_%1").arg(example_idx);
-    rv->m_emailAddress = QString("emailAddress_%1").arg(example_idx);
+    rv->m_displayName = ApiAutotest::INSTANCE().getString("about::UserInfo", "m_displayName", QString("displayName_%1").arg(example_idx));
+    rv->m_kind = ApiAutotest::INSTANCE().getString("about::UserInfo", "m_kind", QString("kind_%1").arg(example_idx));
+    rv->m_photoLink = ApiAutotest::INSTANCE().getString("about::UserInfo", "m_photoLink", QString("photoLink_%1").arg(example_idx));
+    rv->m_permissionId = ApiAutotest::INSTANCE().getString("about::UserInfo", "m_permissionId", QString("permissionId_%1").arg(example_idx));
+    rv->m_emailAddress = ApiAutotest::INSTANCE().getString("about::UserInfo", "m_emailAddress", QString("emailAddress_%1").arg(example_idx));
     return rv;
 }
 #endif //API_QT_AUTOTEST

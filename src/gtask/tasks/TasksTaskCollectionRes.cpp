@@ -71,9 +71,9 @@ std::unique_ptr<TaskCollectionRes> TaskCollectionRes::EXAMPLE(int context_index,
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<TaskCollectionRes> rv(new TaskCollectionRes);
-    rv->m_kind = QString("kind_%1").arg(example_idx);
-    rv->m_etag = QString("etag_%1").arg(example_idx);
-    rv->m_nextPageToken = QString("nextPageToken_%1").arg(example_idx);
+    rv->m_kind = ApiAutotest::INSTANCE().getString("tasks::TaskCollectionRes", "m_kind", QString("kind_%1").arg(example_idx));
+    rv->m_etag = ApiAutotest::INSTANCE().getString("tasks::TaskCollectionRes", "m_etag", QString("etag_%1").arg(example_idx));
+    rv->m_nextPageToken = ApiAutotest::INSTANCE().getString("tasks::TaskCollectionRes", "m_nextPageToken", QString("nextPageToken_%1").arg(example_idx));
     std::list<tasks::TaskResource> list_of_items;
     for(int i = 0; i < 5; i++){
         tasks::TaskResource p = *(tasks::TaskResource::EXAMPLE(i, context_index).get());

@@ -12,16 +12,17 @@ namespace googleQt{
 	class GmailRoutes;
 
 	namespace mail_cache{
-        class GMailCacheQueryResult;
+        class GMailCacheQueryTask;
         class GMailSQLiteStorage;
 		class MessageData;
 		class LabelData;
 		class AttachmentData;
 
-		using msg_ptr	= std::shared_ptr<googleQt::mail_cache::MessageData>;
-		using label_ptr = std::shared_ptr<googleQt::mail_cache::LabelData>;
-		using att_ptr	= std::shared_ptr<googleQt::mail_cache::AttachmentData>;
-		using ATTACHMENTS_LIST = std::list<att_ptr>;
+		using msg_ptr			= std::shared_ptr<googleQt::mail_cache::MessageData>;
+		using label_ptr			= std::shared_ptr<googleQt::mail_cache::LabelData>;
+		using att_ptr			= std::shared_ptr<googleQt::mail_cache::AttachmentData>;
+		using data_list_uptr	= std::unique_ptr<CacheDataList<MessageData>>;
+		using ATTACHMENTS_LIST	= std::list<att_ptr>;
 
 		/**
 			MessageData - local persistant rfc822 basic data.
@@ -78,7 +79,6 @@ namespace googleQt{
 			void* userPtr()const {return m_user_ptr;}
 			void  setUserPtr(void* p)const { m_user_ptr = p; }
 
-			bool hasAttachment()const;
 			///will load attachments from DB if not loaded already
 			const ATTACHMENTS_LIST& getAttachments(GMailSQLiteStorage* storage);
 
@@ -103,7 +103,6 @@ namespace googleQt{
             qlonglong m_internalDate;
 			uint64_t m_labels;
 			ATTACHMENTS_LIST m_attachments;
-			int m_not_loaded_att_count{0};///indicative there is attachments info in local cache
 			mutable void*    m_user_ptr{nullptr};
      private:
             MessageData(int agg_state,
@@ -117,10 +116,10 @@ namespace googleQt{
                         QString plain,
                         QString html,
                         qlonglong internalDate,
-                        qlonglong labels,
-						int not_loaded_att_count);
+                        qlonglong labels/*,
+						int not_loaded_att_count*/);
 
-			friend class GMailCacheQueryResult;
+			friend class GMailCacheQueryTask;
 			friend class GMailSQLiteStorage;
 			friend class googleQt::GmailRoutes;
         };		
@@ -168,7 +167,7 @@ namespace googleQt{
 			quint64 m_size;
 			EStatus m_status{ statusNotDownloaded };
 
-			friend class GMailCacheQueryResult;
+			friend class GMailCacheQueryTask;
 			friend class GMailSQLiteStorage;
 			friend class googleQt::GmailRoutes;
 		};
@@ -238,24 +237,17 @@ namespace googleQt{
 			friend class GMailSQLiteStorage;
 		};
 
-        struct MessagesList
-        {
-            std::list<msg_ptr> messages;
-            std::map<QString, msg_ptr> messages_map;
-            EDataState state;
-        };
-
 		class GMailCache;
-        class GMailCacheQueryResult: public CacheQueryResult<MessageData>
+        class GMailCacheQueryTask: public CacheQueryTask<MessageData>
         {
         public:
-            GMailCacheQueryResult(EDataState load,
+            GMailCacheQueryTask(EDataState load,
                                   ApiEndpoint& ept,
                                   GmailRoutes& r,
                                   GMailCache* c);
             void fetchFromCloud_Async(const std::list<QString>& id_list)override;
 
-            std::unique_ptr<MessagesList> waitForSortedResultListAndRelease();
+			data_list_uptr waitForResultAndRelease();
             QString nextPageToken()const{return m_nextPageToken;}
             
         protected:
@@ -275,18 +267,19 @@ namespace googleQt{
             friend class googleQt::GmailRoutes;
         };
         
-        class GMailCache : public GoogleCache<MessageData, GMailCacheQueryResult>
+        class GMailCache : public GoogleCache<MessageData, GMailCacheQueryTask>
         {
         public:
             GMailCache(ApiEndpoint& ept);
 			GMailSQLiteStorage* sqlite_storage();
+			void topCacheData(GMailCacheQueryTask* rfetcher, int number2load, uint64_t labelFilter);
         };
 
 		/**
 			GMailSQLiteStorage - utility class as helper for GMailCache.
 			Implements SQL manipulation functions.
 		*/
-        class GMailSQLiteStorage: public LocalPersistentStorage<MessageData, GMailCacheQueryResult>
+        class GMailSQLiteStorage: public LocalPersistentStorage<MessageData, GMailCacheQueryTask>
         {
         public:
             GMailSQLiteStorage(GMailCache* c):m_mem_cache(c){};
@@ -295,7 +288,7 @@ namespace googleQt{
 				QString dbName, 
 				QString db_meta_prefix);
             std::list<QString> load_db(EDataState state, const std::list<QString>& id_list,
-                                    GMailCacheQueryResult* cr)override;
+                                    GMailCacheQueryTask* cr)override;
             void update_db(EDataState state, CACHE_QUERY_RESULT_LIST<MessageData>& r)override;
             bool isValid()const override{return m_initialized;};
             void remove_db(const std::set<QString>& ids2remove)override;            

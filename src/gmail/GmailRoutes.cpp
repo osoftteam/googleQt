@@ -97,11 +97,11 @@ void GmailRoutes::ensureCache()const
     }
 };
 
-mail_cache::GMailCacheQueryResult* GmailRoutes::getNextCacheMessages_Async(int messagesCount /*= 40*/, 
+mail_cache::GMailCacheQueryTask* GmailRoutes::getNextCacheMessages_Async(int messagesCount /*= 40*/, 
     QString pageToken /*= ""*/, 
 	QStringList* labels /*= nullptr*/)
 {
-    mail_cache::GMailCacheQueryResult* rfetcher = newResultFetcher(EDataState::snippet);
+    mail_cache::GMailCacheQueryTask* rfetcher = newResultFetcher(EDataState::snippet);
 
     gmail::ListArg listArg;
     listArg.setMaxResults(messagesCount);
@@ -109,8 +109,9 @@ mail_cache::GMailCacheQueryResult* GmailRoutes::getNextCacheMessages_Async(int m
 	if (labels) 
 	{
 		listArg.labels() = *labels;
-	}
+	}	
 
+	/*
     std::function<void(std::unique_ptr<messages::MessageListRes>)> id_list_completed_callback =
         [=](std::unique_ptr<messages::MessageListRes> mlist)
     {
@@ -131,33 +132,49 @@ mail_cache::GMailCacheQueryResult* GmailRoutes::getNextCacheMessages_Async(int m
     };    
 
     getMessages()->list_AsyncCB(listArg, id_list_completed_callback, failed_callback);
+	*/
+	
+	getMessages()->list_Async(listArg)->then([=](std::unique_ptr<messages::MessageListRes> mlist)
+	{
+		std::list<QString> id_list;
+		for (auto& m : mlist->messages())
+		{
+			id_list.push_back(m.id());
+		}
+		rfetcher->setNextPageToken(mlist->nextpagetoken());
+		getCacheMessages_Async(EDataState::snippet, id_list, rfetcher);
+	},
+		[=](std::unique_ptr<GoogleException> ex)
+	{
+		rfetcher->failed_callback(std::move(ex));
+	});		
 
     return rfetcher;
 };
 
-std::unique_ptr<mail_cache::MessagesList> GmailRoutes::getNextCacheMessages(int messagesCount /*= 40*/, 
+mail_cache::data_list_uptr GmailRoutes::getNextCacheMessages(int messagesCount /*= 40*/,
     QString pageToken /*= ""*/,
 	QStringList* labels /*= nullptr*/)
 {
     return getNextCacheMessages_Async(messagesCount, 
 		pageToken, 
-		labels)->waitForSortedResultListAndRelease();
+		labels)->waitForResultAndRelease();
 };
 
-std::unique_ptr<mail_cache::MessagesList> GmailRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
+mail_cache::data_list_uptr GmailRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
 {
-    return getCacheMessages_Async(state, id_list)->waitForSortedResultListAndRelease();
+    return getCacheMessages_Async(state, id_list)->waitForResultAndRelease();
 };
 
-mail_cache::GMailCacheQueryResult* GmailRoutes::newResultFetcher(EDataState state)
+mail_cache::GMailCacheQueryTask* GmailRoutes::newResultFetcher(EDataState state)
 {
-    mail_cache::GMailCacheQueryResult* rfetcher = new mail_cache::GMailCacheQueryResult(state, *m_endpoint, *this, m_GMailCache.get());
+    mail_cache::GMailCacheQueryTask* rfetcher = new mail_cache::GMailCacheQueryTask(state, *m_endpoint, *this, m_GMailCache.get());
     return rfetcher;
 };
 
-mail_cache::GMailCacheQueryResult* GmailRoutes::getCacheMessages_Async(EDataState state,
+mail_cache::GMailCacheQueryTask* GmailRoutes::getCacheMessages_Async(EDataState state,
                                                                        const std::list<QString>& id_list,
-                                                                        mail_cache::GMailCacheQueryResult* rfetcher /*= nullptr*/)
+                                                                        mail_cache::GMailCacheQueryTask* rfetcher /*= nullptr*/)
 {
     ensureCache();
     if (!rfetcher)
@@ -168,12 +185,12 @@ mail_cache::GMailCacheQueryResult* GmailRoutes::getCacheMessages_Async(EDataStat
     return rfetcher;
 };
 
-std::unique_ptr<mail_cache::MessagesList> GmailRoutes::getCacheMessages(int numberOfMessages, uint64_t labelFilter)
+mail_cache::data_list_uptr GmailRoutes::getCacheMessages(int numberOfMessages, uint64_t labelFilter)
 {
     ensureCache();
-    mail_cache::GMailCacheQueryResult* rfetcher = newResultFetcher(EDataState::snippet);
-    m_GMailCache->cacheData(rfetcher, numberOfMessages, labelFilter);
-    return rfetcher->waitForSortedResultListAndRelease();
+    mail_cache::GMailCacheQueryTask* rfetcher = newResultFetcher(EDataState::snippet);
+    m_GMailCache->topCacheData(rfetcher, numberOfMessages, labelFilter);
+    return rfetcher->waitForResultAndRelease();
 };
 
 bool GmailRoutes::setupSQLiteCache(QString dbPath, 
@@ -211,7 +228,7 @@ GoogleVoidTask* GmailRoutes::refreshLabels_Async()
 	GoogleVoidTask* rv = m_endpoint->produceVoidTask();
 
 	googleQt::GoogleTask<labels::LabelsResultList>* t = getLabels()->list_Async();
-	t->then([=](labels::LabelsResultList* lst) 
+	t->then([=](std::unique_ptr<labels::LabelsResultList> lst)
 	{
 		for (auto& lbl : lst->labels())
 		{
@@ -245,7 +262,7 @@ GoogleVoidTask* GmailRoutes::downloadAttachment_Async(googleQt::mail_cache::msg_
 	a->m_status = mail_cache::AttachmentData::statusDownloadInProcess;
 	gmail::AttachmentIdArg arg(m->id(), a->attachmentId());
 	auto t = getAttachments()->get_Async(arg);
-	t->then([=](attachments::MessageAttachment* att)
+	t->then([=](std::unique_ptr<attachments::MessageAttachment> att)
 	{
 		QDir dest_dir;
 		if (!dest_dir.exists(destinationFolder)) {
@@ -423,10 +440,10 @@ void GmailRoutes::autotestParLoad(EDataState state, const std::list<QString>& id
 
 void GmailRoutes::autotestParDBLoad(EDataState state, const std::list<QString>& id_list) 
 {
-    mail_cache::GMailCacheQueryResult* r = getCacheMessages_Async(state, id_list);
-    std::map<QString, std::shared_ptr<mail_cache::MessageData>> res = r->waitForResultAndRelease();
+    mail_cache::GMailCacheQueryTask* r = getCacheMessages_Async(state, id_list);
+	mail_cache::data_list_uptr res = r->waitForResultAndRelease();
     ApiAutotest::INSTANCE() << QString("loaded/cached %1 messages, mem_cache-hit: %2, db-cache-hit: %3")
-        .arg(res.size())
+        .arg(res->result_list.size())
         .arg(r->mem_cache_hit_count())
         .arg(r->db_cache_hit_count());    
 };
@@ -434,6 +451,8 @@ void GmailRoutes::autotestParDBLoad(EDataState state, const std::list<QString>& 
 void GmailRoutes::autotest()
 {
 #define AUTOTEST_SIZE 1000
+#define AUTOTEST_GENERATE_BODY //autotestParDBLoad(EDataState::body, id_list);
+#define AUTOTEST_GENERATE_SNIPPET autotestParDBLoad(EDataState::snippet, id_list);
 
 	ApiAutotest::INSTANCE() << "start-mail-test";
 	ApiAutotest::INSTANCE() << "1";
@@ -467,9 +486,11 @@ void GmailRoutes::autotest()
     };
 
     ApiAutotest::INSTANCE().enableRequestLog(false);
-    autotestParLoad(EDataState::snippet, id_list);
-    autotestParDBLoad(EDataState::snippet, id_list);
-    autotestParDBLoad(EDataState::body, id_list);
+	ApiAutotest::INSTANCE().enableAttachmentDataGeneration(false);
+	ApiAutotest::INSTANCE().enableProgressEmulation(false);
+	AUTOTEST_GENERATE_SNIPPET;
+	AUTOTEST_GENERATE_SNIPPET;
+	AUTOTEST_GENERATE_BODY;
 
     m_GMailCache->mem_clear();
     autotestParDBLoad(EDataState::snippet, id_list);
@@ -488,22 +509,22 @@ void GmailRoutes::autotest()
     };
 
     deleteFirst10();
-    autotestParDBLoad(EDataState::snippet, id_list);
-    autotestParDBLoad(EDataState::body, id_list);
+	AUTOTEST_GENERATE_SNIPPET;
+	AUTOTEST_GENERATE_BODY;
     
     deleteFirst10();
-    autotestParDBLoad(EDataState::body, id_list);
-    autotestParDBLoad(EDataState::snippet, id_list);
-    autotestParDBLoad(EDataState::snippet, id_list);
-    autotestParDBLoad(EDataState::body, id_list);
+	AUTOTEST_GENERATE_BODY;
+	AUTOTEST_GENERATE_SNIPPET;
+	AUTOTEST_GENERATE_SNIPPET;
+	AUTOTEST_GENERATE_BODY;
     
     int idx = 1;
     bool print_cache = true;
     if (print_cache)
     {
         using MSG_LIST = std::list<std::shared_ptr<mail_cache::MessageData>>;
-        std::unique_ptr<mail_cache::MessagesList> lst = getCacheMessages(-1);
-        for (auto& i : lst->messages)
+		mail_cache::data_list_uptr lst = getCacheMessages(-1);
+        for (auto& i : lst->result_list)
         {
             mail_cache::MessageData* m = i.get();
             QString s = QString("%1. %2 %3").arg(idx).arg(m->id()).arg(m->snippet());
@@ -515,7 +536,7 @@ void GmailRoutes::autotest()
                 break;
             }
         }
-        QString s = QString("Total messages %1").arg(lst->messages.size());
+        QString s = QString("Total messages %1").arg(lst->result_list.size());
         ApiAutotest::INSTANCE() << s;
     }
     //*** check latest emails
@@ -523,15 +544,15 @@ void GmailRoutes::autotest()
     if (check_email)
     {
         idx = 1;
-        std::unique_ptr<mail_cache::MessagesList> lst2 = getNextCacheMessages();
-        for (auto& i : lst2->messages)
+		mail_cache::data_list_uptr lst2 = getNextCacheMessages();
+        for (auto& i : lst2->result_list)
         {
             mail_cache::MessageData* m = i.get();
             QString s = QString("%1. %2 %3").arg(idx).arg(m->id()).arg(m->snippet());
             ApiAutotest::INSTANCE() << s;
             idx++;
         }
-        QString s = QString("Next(new) messages %1").arg(lst2->messages.size());
+        QString s = QString("Next(new) messages %1").arg(lst2->result_list.size());
         ApiAutotest::INSTANCE() << s;
     }
 
@@ -556,15 +577,15 @@ void GmailRoutes::autotest()
 			auto g_iterator = imperative_groups.begin();
 			uint64_t lmask = (*l_iterator)->labelMask();
 			uint64_t gmask = (*g_iterator)->labelMask();
-			std::unique_ptr<mail_cache::MessagesList> lst = getCacheMessages(-1);
+			mail_cache::data_list_uptr lst = getCacheMessages(-1);
 			int counter = 0;
-			int totalNumber = lst->messages.size();
+			int totalNumber = lst->result_list.size();
 			int group_size = totalNumber / labels.size();
 			qDebug() << QString("Resetting labels: %1 on %2 messages, with group size %3")
 				.arg(labels.size())
 				.arg(totalNumber)
 				.arg(group_size);
-			for (auto& i : lst->messages)
+			for (auto& i : lst->result_list)
 			{
 				mail_cache::MessageData* m = i.get();
 				storage->update_message_labels_db(m->id(), lmask | gmask);
@@ -586,7 +607,11 @@ void GmailRoutes::autotest()
 			}
 		}
 	}    
-
+	ApiAutotest::INSTANCE().enableProgressEmulation(true);
+	ApiAutotest::INSTANCE().enableAttachmentDataGeneration(true);
 	ApiAutotest::INSTANCE().enableRequestLog(true);
+
+#undef AUTOTEST_GENERATE_BODY
+#undef AUTOTEST_SIZE
 };
 #endif

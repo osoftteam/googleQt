@@ -292,3 +292,7 @@ QNetworkReply* ApiEndpoint::MPartUpload_requester::request(QNetworkRequest& r)
     r.setRawHeader("Content-Length", QString("%1").arg(bytes2post.size()).toStdString().c_str());
     return m_ep.postData(r, bytes2post);
 }
+
+
+#ifdef API_QT_AUTOTEST
+#endif

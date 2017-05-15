@@ -73,9 +73,9 @@ std::unique_ptr<MessagePart> MessagePart::EXAMPLE(int context_index, int parent_
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<MessagePart> rv(new MessagePart);
-    rv->m_partId = QString("partId_%1").arg(example_idx);
-    rv->m_mimeType = QString("mimeType_%1").arg(example_idx);
-    rv->m_filename = QString("filename_%1").arg(example_idx);
+    rv->m_partId = ApiAutotest::INSTANCE().getString("messages::MessagePart", "m_partId", QString("partId_%1").arg(example_idx));
+    rv->m_mimeType = ApiAutotest::INSTANCE().getString("messages::MessagePart", "m_mimeType", QString("mimeType_%1").arg(example_idx));
+    rv->m_filename = ApiAutotest::INSTANCE().getString("messages::MessagePart", "m_filename", QString("filename_%1").arg(example_idx));
     std::list<messages::MessagePayloadHeader> list_of_headers;
     for(int i = 0; i < 5; i++){
         messages::MessagePayloadHeader p = *(messages::MessagePayloadHeader::EXAMPLE(i, context_index).get());

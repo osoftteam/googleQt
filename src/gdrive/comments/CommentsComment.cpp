@@ -92,14 +92,14 @@ std::unique_ptr<Comment> Comment::EXAMPLE(int context_index, int parent_context_
     example_idx++;
     std::unique_ptr<Comment> rv(new Comment);
     rv->m_id = ApiAutotest::INSTANCE().getId("comments::Comment", example_idx);
-    rv->m_kind = QString("kind_%1").arg(example_idx);
+    rv->m_kind = ApiAutotest::INSTANCE().getString("comments::Comment", "m_kind", QString("kind_%1").arg(example_idx));
     rv->m_createdTime = QDateTime::currentDateTime();
     rv->m_modifiedTime = QDateTime::currentDateTime();
     rv->m_author = *(comments::User::EXAMPLE(0, context_index).get());
-    rv->m_htmlContent = QString("htmlContent_%1").arg(example_idx);
-    rv->m_content = QString("content_%1").arg(example_idx);
+    rv->m_htmlContent = ApiAutotest::INSTANCE().getString("comments::Comment", "m_htmlContent", QString("htmlContent_%1").arg(example_idx));
+    rv->m_content = ApiAutotest::INSTANCE().getString("comments::Comment", "m_content", QString("content_%1").arg(example_idx));
     rv->m_quotedFileContent = *(comments::QuotedFileContent::EXAMPLE(0, context_index).get());
-    rv->m_anchor = QString("anchor_%1").arg(example_idx);
+    rv->m_anchor = ApiAutotest::INSTANCE().getString("comments::Comment", "m_anchor", QString("anchor_%1").arg(example_idx));
     std::list<comments::Reply> list_of_replies;
     for(int i = 0; i < 5; i++){
         comments::Reply p = *(comments::Reply::EXAMPLE(i, context_index).get());

@@ -66,7 +66,7 @@ std::unique_ptr<ThumbnailInfo> ThumbnailInfo::EXAMPLE(int context_index, int par
     example_idx++;
     std::unique_ptr<ThumbnailInfo> rv(new ThumbnailInfo);
     rv->m_image = ApiAutotest::INSTANCE().generateData("files::ThumbnailInfo", context_index, parent_context_index);
-    rv->m_mimeType = QString("mimeType_%1").arg(example_idx);
+    rv->m_mimeType = ApiAutotest::INSTANCE().getString("files::ThumbnailInfo", "m_mimeType", QString("mimeType_%1").arg(example_idx));
     return rv;
 }
 #endif //API_QT_AUTOTEST

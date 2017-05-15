@@ -79,10 +79,10 @@ std::unique_ptr<TaskListResource> TaskListResource::EXAMPLE(int context_index, i
     example_idx++;
     std::unique_ptr<TaskListResource> rv(new TaskListResource);
     rv->m_id = ApiAutotest::INSTANCE().getId("tasklists::TaskListResource", example_idx);
-    rv->m_title = QString("title_%1").arg(example_idx);
-    rv->m_kind = QString("kind_%1").arg(example_idx);
-    rv->m_etag = QString("etag_%1").arg(example_idx);
-    rv->m_selfLink = QString("selfLink_%1").arg(example_idx);
+    rv->m_title = ApiAutotest::INSTANCE().getString("tasklists::TaskListResource", "m_title", QString("title_%1").arg(example_idx));
+    rv->m_kind = ApiAutotest::INSTANCE().getString("tasklists::TaskListResource", "m_kind", QString("kind_%1").arg(example_idx));
+    rv->m_etag = ApiAutotest::INSTANCE().getString("tasklists::TaskListResource", "m_etag", QString("etag_%1").arg(example_idx));
+    rv->m_selfLink = ApiAutotest::INSTANCE().getString("tasklists::TaskListResource", "m_selfLink", QString("selfLink_%1").arg(example_idx));
     rv->m_updated = QDateTime::currentDateTime();
     return rv;
 }

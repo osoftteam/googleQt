@@ -401,14 +401,13 @@ namespace googleQt{
             if (!firstReply)
                 {
 #ifdef API_QT_AUTOTEST
-				//let finish async calls in busy autotest setup
-				qApp->processEvents();
-
-				//emulate asynchronous call as in QNetworkRequest
-				//for autotest, so all our processing would be same
+				//emulate asynchronous call in autotest as in real net-request
+				//so client processing would be same - async based
+				//also emulate download proress
                 if (completed_callback != nullptr)
                 {                    
-					QTimer::singleShot(100, [=]() {
+					ApiAutotest::INSTANCE().emulateAutotestDownloadProgress(m_client);
+					QTimer::singleShot(10, [=]() {
 						completed_callback(RES::EXAMPLE(0, 0));
 					});
                 }

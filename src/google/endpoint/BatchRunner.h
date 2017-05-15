@@ -26,8 +26,7 @@ namespace googleQt{
         };
         void registerResult(const ARG_PARAM& ap, GoogleTask<RESULT>* t) 
         {
-			///ykh: our result map becomes owner of Tasks via unique_ptr
-			///not sure it's a good idea, see how UserBatchResult is used after
+			///result map becomes owner of Tasks via unique_ptr
             m_results[ap] = std::unique_ptr<GoogleTask<RESULT>>(t);
         };
 

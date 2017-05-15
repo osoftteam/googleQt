@@ -82,10 +82,10 @@ std::unique_ptr<LabelResource> LabelResource::EXAMPLE(int context_index, int par
     example_idx++;
     std::unique_ptr<LabelResource> rv(new LabelResource);
     rv->m_id = ApiAutotest::INSTANCE().getId("labels::LabelResource", example_idx);
-    rv->m_name = QString("name_%1").arg(example_idx);
-    rv->m_messageListVisibility = QString("messageListVisibility_%1").arg(example_idx);
-    rv->m_labelListVisibility = QString("labelListVisibility_%1").arg(example_idx);
-    rv->m_type = QString("type_%1").arg(example_idx);
+    rv->m_name = ApiAutotest::INSTANCE().getString("labels::LabelResource", "m_name", QString("name_%1").arg(example_idx));
+    rv->m_messageListVisibility = ApiAutotest::INSTANCE().getString("labels::LabelResource", "m_messageListVisibility", QString("messageListVisibility_%1").arg(example_idx));
+    rv->m_labelListVisibility = ApiAutotest::INSTANCE().getString("labels::LabelResource", "m_labelListVisibility", QString("labelListVisibility_%1").arg(example_idx));
+    rv->m_type = ApiAutotest::INSTANCE().getString("labels::LabelResource", "m_type", QString("type_%1").arg(example_idx));
     rv->m_messagesTotal = ApiAutotest::INSTANCE().getInt("labels::LabelResource", "m_messagesTotal", 6 + example_idx);
     rv->m_messagesUnread = ApiAutotest::INSTANCE().getInt("labels::LabelResource", "m_messagesUnread", 7 + example_idx);
     rv->m_threadsTotal = ApiAutotest::INSTANCE().getInt("labels::LabelResource", "m_threadsTotal", 8 + example_idx);

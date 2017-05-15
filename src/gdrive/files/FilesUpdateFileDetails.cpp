@@ -74,11 +74,11 @@ std::unique_ptr<UpdateFileDetails> UpdateFileDetails::EXAMPLE(int context_index,
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<UpdateFileDetails> rv(new UpdateFileDetails);
-    rv->m_name = QString("name_%1").arg(example_idx);
-    rv->m_mimeType = QString("mimeType_%1").arg(example_idx);
-    rv->m_description = QString("description_%1").arg(example_idx);
+    rv->m_name = ApiAutotest::INSTANCE().getString("files::UpdateFileDetails", "m_name", QString("name_%1").arg(example_idx));
+    rv->m_mimeType = ApiAutotest::INSTANCE().getString("files::UpdateFileDetails", "m_mimeType", QString("mimeType_%1").arg(example_idx));
+    rv->m_description = ApiAutotest::INSTANCE().getString("files::UpdateFileDetails", "m_description", QString("description_%1").arg(example_idx));
     rv->m_contentHints = *(files::ContentHints::EXAMPLE(0, context_index).get());
-    rv->m_originalFilename = QString("originalFilename_%1").arg(example_idx);
+    rv->m_originalFilename = ApiAutotest::INSTANCE().getString("files::UpdateFileDetails", "m_originalFilename", QString("originalFilename_%1").arg(example_idx));
     return rv;
 }
 #endif //API_QT_AUTOTEST

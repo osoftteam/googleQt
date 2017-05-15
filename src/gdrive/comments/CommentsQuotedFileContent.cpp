@@ -66,8 +66,8 @@ std::unique_ptr<QuotedFileContent> QuotedFileContent::EXAMPLE(int context_index,
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<QuotedFileContent> rv(new QuotedFileContent);
-    rv->m_mimeType = QString("mimeType_%1").arg(example_idx);
-    rv->m_value = QString("value_%1").arg(example_idx);
+    rv->m_mimeType = ApiAutotest::INSTANCE().getString("comments::QuotedFileContent", "m_mimeType", QString("mimeType_%1").arg(example_idx));
+    rv->m_value = ApiAutotest::INSTANCE().getString("comments::QuotedFileContent", "m_value", QString("value_%1").arg(example_idx));
     return rv;
 }
 #endif //API_QT_AUTOTEST

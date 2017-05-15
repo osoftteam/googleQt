@@ -67,7 +67,7 @@ std::unique_ptr<AboutResource> AboutResource::EXAMPLE(int context_index, int par
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<AboutResource> rv(new AboutResource);
-    rv->m_kind = QString("kind_%1").arg(example_idx);
+    rv->m_kind = ApiAutotest::INSTANCE().getString("about::AboutResource", "m_kind", QString("kind_%1").arg(example_idx));
     rv->m_user = *(about::UserInfo::EXAMPLE(0, context_index).get());
     rv->m_storageQuota = *(about::StorageQuota::EXAMPLE(0, context_index).get());
     return rv;

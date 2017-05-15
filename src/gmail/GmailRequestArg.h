@@ -266,11 +266,11 @@ namespace googleQt{
 			QByteArray toRfc822()const;
 
 		protected:
-			void setContent(QString val, QString _type);			
+			void setContent(QString content, QString _type);			
 		protected:
-			QString m_type;
+			QString m_content_type;
 			QString m_content;
-			EType   m_ptype{ ptypeNone };
+			EType   m_part_type{ ptypeNone };
 		};
 
 		class SendMimeMessageArg : public QParamArgWithBody<SendMimeMessageArg>
@@ -308,6 +308,7 @@ namespace googleQt{
 			void setBCC(QString bcc_val) { m_BCC = bcc_val; }
 
 			void addBodyPart(const MimeBodyPart& pt) { m_body_parts.push_back(pt); };
+			void addAttachments(const std::list<QString>& attachments);
 
 			/**
 				if rawRfc822MessageFile is set the file content as whole will be loaded

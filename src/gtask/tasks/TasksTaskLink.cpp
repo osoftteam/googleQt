@@ -69,9 +69,9 @@ std::unique_ptr<TaskLink> TaskLink::EXAMPLE(int context_index, int parent_contex
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<TaskLink> rv(new TaskLink);
-    rv->m_type = QString("type_%1").arg(example_idx);
-    rv->m_description = QString("description_%1").arg(example_idx);
-    rv->m_link = QString("link_%1").arg(example_idx);
+    rv->m_type = ApiAutotest::INSTANCE().getString("tasks::TaskLink", "m_type", QString("type_%1").arg(example_idx));
+    rv->m_description = ApiAutotest::INSTANCE().getString("tasks::TaskLink", "m_description", QString("description_%1").arg(example_idx));
+    rv->m_link = ApiAutotest::INSTANCE().getString("tasks::TaskLink", "m_link", QString("link_%1").arg(example_idx));
     return rv;
 }
 #endif //API_QT_AUTOTEST

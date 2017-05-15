@@ -85,27 +85,34 @@ namespace googleQt{
 
 		///composition of async calls, after async call is finished the user function
 		///is called (if not nullptr) and then task object will be scheduled to autorelease
-		void then(std::function<void(RESULT*)> after_completed_processing)
+		void then(std::function<void(std::unique_ptr<RESULT>)> after_completed_processing = nullptr,
+			std::function<void(std::unique_ptr<GoogleException>)> on_error = nullptr)
 		{
-			connect(this, &EndpointRunnable::finished,
-				[=]()
+			std::function<void(void)> on_finished_processing = [=]() 
 			{
 				if (isCompleted()) {
 					if (after_completed_processing) {
-						after_completed_processing(get());
+						after_completed_processing(std::move(m_completed));
+					}
+				}
+				else {
+					if (isFailed() && on_error) {
+						on_error(std::move(m_failed));
 					}
 				}
 				deleteLater();
-			});
-		};
-		///release Task after it's finished, not interested in result
-		void thenNothing() 
-		{
-			connect(this, &EndpointRunnable::finished,
-				[=]()
-			{
-				deleteLater();
-			});
+			};
+
+			if (isFinished()) {
+				on_finished_processing();
+			}
+			else {
+				connect(this, &EndpointRunnable::finished,
+					[=]()
+				{
+					on_finished_processing();
+				});
+			}
 		};
 
 
@@ -133,9 +140,8 @@ namespace googleQt{
         void waitForResultAndRelease();
 		///composition of async calls, after async call is finished the user function
 		///is called (if not nullptr) and then task object will be scheduled to autorelease
-		void then(std::function<void()> after_completed_processing);
-		///release Task after it's finished, not interested in result
-		void thenNothing();
+		void then(std::function<void()> after_completed_processing = nullptr,
+			std::function<void(std::unique_ptr<GoogleException>)> on_error = nullptr);
 
         void completed_callback(void)
         {

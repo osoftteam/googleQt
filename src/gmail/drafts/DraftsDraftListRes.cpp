@@ -73,7 +73,7 @@ std::unique_ptr<DraftListRes> DraftListRes::EXAMPLE(int context_index, int paren
         ApiAutotest::INSTANCE().prepareAutoTestObj("drafts::DraftListRes", "drafts::DraftResource", &p, i, context_index);
         rv->m_drafts.push_back(p);
     }
-    rv->m_nextPageToken = QString("nextPageToken_%1").arg(example_idx);
+    rv->m_nextPageToken = ApiAutotest::INSTANCE().getString("drafts::DraftListRes", "m_nextPageToken", QString("nextPageToken_%1").arg(example_idx));
     rv->m_resultSizeEstimate = ApiAutotest::INSTANCE().getInt("drafts::DraftListRes", "m_resultSizeEstimate", 3 + example_idx);
     return rv;
 }

@@ -82,11 +82,11 @@ std::unique_ptr<CreateFileDetails> CreateFileDetails::EXAMPLE(int context_index,
     example_idx++;
     std::unique_ptr<CreateFileDetails> rv(new CreateFileDetails);
     rv->m_id = ApiAutotest::INSTANCE().getId("files::CreateFileDetails", example_idx);
-    rv->m_mimeType = QString("mimeType_%1").arg(example_idx);
-    rv->m_description = QString("description_%1").arg(example_idx);
+    rv->m_mimeType = ApiAutotest::INSTANCE().getString("files::CreateFileDetails", "m_mimeType", QString("mimeType_%1").arg(example_idx));
+    rv->m_description = ApiAutotest::INSTANCE().getString("files::CreateFileDetails", "m_description", QString("description_%1").arg(example_idx));
     rv->m_contentHints = *(files::ContentHints::EXAMPLE(0, context_index).get());
-    rv->m_name = QString("name_%1").arg(example_idx);
-    rv->m_originalFilename = QString("originalFilename_%1").arg(example_idx);
+    rv->m_name = ApiAutotest::INSTANCE().getString("files::CreateFileDetails", "m_name", QString("name_%1").arg(example_idx));
+    rv->m_originalFilename = ApiAutotest::INSTANCE().getString("files::CreateFileDetails", "m_originalFilename", QString("originalFilename_%1").arg(example_idx));
     std::list<QString> list_of_parents;
     for(int i = 0; i < 5; i++){
         rv->m_parents.push_back(QString("id_%1").arg(i+1));

@@ -130,7 +130,7 @@ MimeBodyPart MimeBodyPart::makePlainPart(QString text)
 {
 	MimeBodyPart pt;
 	pt.setContent(text, "text/plain; charset=UTF-8");
-	pt.m_type = ptypePlain;
+	pt.m_part_type = ptypePlain;
 	return pt;
 };
 
@@ -138,33 +138,33 @@ MimeBodyPart MimeBodyPart::makeHtmlPart(QString text)
 {
 	MimeBodyPart pt;
 	pt.setContent(text, "text/html; charset=UTF-8");
-	pt.m_type = ptypeHtml;
+	pt.m_part_type = ptypeHtml;
 	return pt;
 };
 
-MimeBodyPart MimeBodyPart::makeFilePart(QString file_name) 
+MimeBodyPart MimeBodyPart::makeFilePart(QString file_path) 
 {
-	QFileInfo fi(file_name);
-	QString file_base = fi.baseName();
+	QFileInfo fi(file_path);
+	QString file_name = fi.fileName();
 
 	MimeBodyPart pt;
-	pt.setContent(file_name, QString("application/octet-stream; name=%1").arg(file_base));
-	pt.m_type = ptypeFile;
+	pt.setContent(file_path, QString("application/octet-stream; name=%1").arg(file_name));
+	pt.m_part_type = ptypeFile;
 	return pt;
 };
 
 
-void MimeBodyPart::setContent(QString val, QString _type)
+void MimeBodyPart::setContent(QString content, QString _type)
 {
-	m_type = _type;
-	m_content = val;
+	m_content = content;
+	m_content_type = _type;
 };
 
 QByteArray MimeBodyPart::toRfc822()const
 {
-	QByteArray rv = QString("Content-Type: %1\r\n").arg(m_type).toStdString().c_str();
+	QByteArray rv = QString("Content-Type: %1\r\n").arg(m_content_type).toStdString().c_str();
 	rv += QString("Content-Transfer-Encoding: base64\r\n\r\n");
-	switch(m_ptype)
+	switch(m_part_type)
         {
         case ptypePlain:
         case ptypeHtml: 
@@ -176,8 +176,8 @@ QByteArray MimeBodyPart::toRfc822()const
         case ptypeFile: 
             {
                 QFileInfo fi(m_content);
-                QString file_base = fi.baseName();
-                rv += QString("Content-Disposition: attachment; filename=%1\r\n\r\n").arg(file_base);
+                QString file_name = fi.fileName();
+                rv += QString("Content-Disposition: attachment; filename=%1\r\n\r\n").arg(file_name);
                 /// put the whole file here
                 QFile mf(m_content);
                 if (!mf.open(QFile::ReadOnly)) {
@@ -186,8 +186,7 @@ QByteArray MimeBodyPart::toRfc822()const
                 else {
                     QByteArray ba = mf.readAll().toBase64(QByteArray::Base64UrlEncoding);
                     rv += QString("%1\r\n").arg(ba.constData());
-                }
-		
+                }		
             }break;
         }
 	return rv;
@@ -213,7 +212,7 @@ SendMimeMessageArg::SendMimeMessageArg(QString from,
                                        QString to,
                                        QString subject,
                                        QString text_plain,
-                                       QString text_html) 
+                                       QString text_html)
 	:m_From(from),
      m_To(to),
      m_Subject(subject)
@@ -225,6 +224,15 @@ SendMimeMessageArg::SendMimeMessageArg(QString from,
 	addBodyPart(pt_html);
 };
 
+void SendMimeMessageArg::addAttachments(const std::list<QString>& attachments) 
+{
+	for (auto& i : attachments) {
+		if (QFile::exists(i)) {
+			MimeBodyPart pt = MimeBodyPart::makeFilePart(i);
+			addBodyPart(pt);
+		}
+	}
+};
 
 void SendMimeMessageArg::build(const QString& link_path, QUrl& url)const
 {
@@ -255,7 +263,9 @@ QByteArray SendMimeMessageArg::toRfc822()const
 	for (auto& p : m_body_parts)
         {
             rv += QString("--%1\r\n").arg(boundary);
-            rv += p.toRfc822();
+			QString part_content = p.toRfc822();
+			//qDebug() << "ykh-part-content:" << part_content;
+            rv += part_content;
             //rv += QString("Content-Type: %1; charset=UTF-8\r\n").arg(p.m_type);
             /*
               rv += QString("Content-Type: %1\r\n").arg(p.m_type);
@@ -272,9 +282,11 @@ QByteArray SendMimeMessageArg::toRfc822()const
 
 void SendMimeMessageArg::toJson(QJsonObject& js)const
 {
+	//QString ykh_rfc_string = toRfc822();
+	//qDebug() << "ykh-SendMimeMessageArg::toJson-rfc=" << ykh_rfc_string;
 	QByteArray data(toRfc822());
 	QString res = data.toBase64(QByteArray::Base64UrlEncoding);
-	js["raw"] = res;
+	js["raw"] = res;	
 };
 
 SendMimeMessageArg::operator QJsonObject()const {

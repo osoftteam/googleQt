@@ -30,7 +30,7 @@ GoogleTask<messages::MessageResource>* mail_cache::MessagesReceiver::routeSingle
 
 ///GMailCache
 mail_cache::GMailCache::GMailCache(ApiEndpoint& ept)
-	:GoogleCache<MessageData, GMailCacheQueryResult>(ept)
+	:GoogleCache<MessageData, GMailCacheQueryTask>(ept)
 {
 
 };
@@ -44,6 +44,23 @@ mail_cache::GMailSQLiteStorage* mail_cache::GMailCache::sqlite_storage()
         }
 	return rv;
 };
+
+void mail_cache::GMailCache::topCacheData(GMailCacheQueryTask* rfetcher, int number2load, uint64_t labelFilter)
+{
+	int count = 0;
+	for (auto& i : m_order_cache){
+		auto m = i;
+		if (m->inLabelFilter(labelFilter)){
+			rfetcher->add(i);
+			if (number2load > 0){
+				if (++count >= number2load)
+					break;
+			}
+		}
+	}
+	rfetcher->notifyOnCompletedFromCache();
+}
+
 
 ///MessageData
 mail_cache::MessageData::MessageData(QString id,
@@ -103,8 +120,8 @@ mail_cache::MessageData::MessageData(int agg_state,
                                      QString plain,
                                      QString html,
                                      qlonglong internalDate,
-                                     qlonglong labels,
-								 	 int not_loaded_att_count)
+                                     qlonglong labels/*,
+								 	 int not_loaded_att_count*/)
 :CacheData(EDataState::body, id),
     m_from(from),
     m_to(to),
@@ -114,8 +131,8 @@ mail_cache::MessageData::MessageData(int agg_state,
     m_snippet(snippet),
     m_plain(plain),
     m_html(html),
-    m_internalDate(internalDate),
-	m_not_loaded_att_count(not_loaded_att_count)
+    m_internalDate(internalDate)/*,
+	m_not_loaded_att_count(not_loaded_att_count)*/
 {
     m_state_agg = agg_state;
     m_labels = labels;
@@ -168,20 +185,21 @@ bool mail_cache::MessageData::inLabelFilter(const std::set<uint64_t>& ANDfilter)
 	return true;
 };
 
+/*
 bool mail_cache::MessageData::hasAttachment()const 
 {
 	return (!m_attachments.empty() || m_not_loaded_att_count > 0);
-};
+};*/
 
 const mail_cache::ATTACHMENTS_LIST& mail_cache::MessageData::getAttachments(GMailSQLiteStorage* storage)
 {
 	if (!m_attachments.empty()) {
 		return m_attachments;
 	}
-
+	/*
 	if (m_not_loaded_att_count == 0) {
 		return m_attachments;
-	}
+	}*/
 
 	storage->loadAttachmentsFromDb(*this);
 	return m_attachments;
@@ -338,14 +356,14 @@ bool mail_cache::LabelData::isSocialCategory()const
 };
 
 
-///GMailCacheQueryResult
-mail_cache::GMailCacheQueryResult::GMailCacheQueryResult(EDataState state, ApiEndpoint& ept, GmailRoutes& r, GMailCache* c)
-    :CacheQueryResult<MessageData>(state, ept, c), m_r(r)
+///GMailCacheQueryTask
+mail_cache::GMailCacheQueryTask::GMailCacheQueryTask(EDataState state, ApiEndpoint& ept, GmailRoutes& r, GMailCache* c)
+    :CacheQueryTask<MessageData>(state, ept, c), m_r(r)
 {
 
 };
 
-void mail_cache::GMailCacheQueryResult::fetchFromCloud_Async(const std::list<QString>& id_list)
+void mail_cache::GMailCacheQueryTask::fetchFromCloud_Async(const std::list<QString>& id_list)
 {
     if (id_list.empty())
         return;
@@ -354,7 +372,7 @@ void mail_cache::GMailCacheQueryResult::fetchFromCloud_Async(const std::list<QSt
                     mail_cache::MessagesReceiver,
                     messages::MessageResource>* par_runner = NULL;
 
-    par_runner = m_r.getUserBatchMessages_Async(m_state, id_list);	
+    par_runner = m_r.getUserBatchMessages_Async(m_completed->state, id_list);
 	
 	connect(par_runner, &EndpointRunnable::finished, [=]()
 	{
@@ -368,12 +386,12 @@ void mail_cache::GMailCacheQueryResult::fetchFromCloud_Async(const std::list<QSt
 		{
 			id_set.insert(*i);
 		}
-		notifyFetchCompleted(m_result, id_set);
+		notifyFetchCompleted(m_completed->result_map, id_set);
 		par_runner->deleteLater();
 	});	
 };
 
-void mail_cache::GMailCacheQueryResult::loadHeaders(messages::MessageResource* m,
+void mail_cache::GMailCacheQueryTask::loadHeaders(messages::MessageResource* m,
                                                     QString& from,
                                                     QString& to,
 													QString& cc,
@@ -406,7 +424,7 @@ void mail_cache::GMailCacheQueryResult::loadHeaders(messages::MessageResource* m
         }
 };
 
-void mail_cache::GMailCacheQueryResult::loadLabels(messages::MessageResource* m, uint64_t& f)
+void mail_cache::GMailCacheQueryTask::loadLabels(messages::MessageResource* m, uint64_t& f)
 {
     const std::list <QString>& labels = m->labelids();
     if(labels.size() > 0){
@@ -414,24 +432,22 @@ void mail_cache::GMailCacheQueryResult::loadLabels(messages::MessageResource* m,
     }
 };
 
-void mail_cache::GMailCacheQueryResult::loadAttachments(messages::MessageResource* m, ATTACHMENTS_LIST& lst)
+void mail_cache::GMailCacheQueryTask::loadAttachments(messages::MessageResource* m, ATTACHMENTS_LIST& lst)
 {
 	auto p = m->payload();
 	auto& parts = p.parts();
 	for (auto& pt : parts) {
 		auto& b = pt.body();
-        qDebug() << "GMailCacheQueryResult::loadAttachments" << m->id() << "att-size=" << b.size() << " att-id=" << b.attachmentid();
 		if (b.size() > 0 && !b.attachmentid().isEmpty()) {
-			//AttachmentData att(b.attachmentid(), pt.mimetype(), pt.filename(), b.size());
 			att_ptr att = std::make_shared<AttachmentData>(b.attachmentid(), pt.mimetype(), pt.filename(), b.size());
 			lst.push_back(att);
 		}
 	}
 };
 
-void mail_cache::GMailCacheQueryResult::fetchMessage(messages::MessageResource* m)
+void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
 {
-	switch (m_state)
+	switch (m_completed->state)
         {
         case googleQt::EDataState::snippet:
             {
@@ -496,8 +512,8 @@ void mail_cache::GMailCacheQueryResult::fetchMessage(messages::MessageResource* 
                             }// parts
                     }
 
-                auto i = m_result.find(m->id());
-                if (i == m_result.end())
+                auto i = m_completed->result_map.find(m->id());
+                if (i == m_completed->result_map.end())
                     {
                         uint64_t labels;
                         loadLabels(m, labels);
@@ -540,22 +556,15 @@ static bool compare_internalDate(mail_cache::msg_ptr& f,
     return (f->internalDate() > s->internalDate());
 };
 
-std::unique_ptr<mail_cache::MessagesList> mail_cache::GMailCacheQueryResult::waitForSortedResultListAndRelease()
+std::unique_ptr<CacheDataList<mail_cache::MessageData>> mail_cache::GMailCacheQueryTask::waitForResultAndRelease()
 {
-    if (!isFinished())
-        {
-            m_in_wait_loop = true;
-            waitUntillFinishedOrCancelled();
-        }
-
-    m_result_list.sort(compare_internalDate);
-    std::unique_ptr<mail_cache::MessagesList> rv(new mail_cache::MessagesList);
-    rv->messages = std::move(m_result_list);
-    rv->messages_map = std::move(m_result);
-    rv->state = m_state;
-
-    deleteLater();
-    return rv;
+	if (!isFinished())
+	{
+		m_in_wait_loop = true;
+		waitUntillFinishedOrCancelled();
+	}
+	m_completed->result_list.sort(compare_internalDate);
+	return std::move(m_completed);
 };
 
 ///GMailSQLiteStorage
@@ -589,7 +598,7 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
 
     QString sql_messages = QString("CREATE TABLE IF NOT EXISTS %1gmail_msg(msg_id TEXT PRIMARY KEY, msg_from TEXT, "
                                           "msg_to TEXT, msg_cc TEXT, msg_bcc TEXT, msg_subject TEXT, msg_snippet TEXT, msg_plain TEXT, "
-                                          "msg_html TEXT, internal_date INTEGER, msg_state INTEGER, msg_cache_lock INTEGER, msg_labels INTEGER, msg_att_count INTEGER)").arg(m_db_meta_prefix);
+                                          "msg_html TEXT, internal_date INTEGER, msg_state INTEGER, msg_cache_lock INTEGER, msg_labels INTEGER)").arg(m_db_meta_prefix);
     if (!execQuery(sql_messages))
         return false;
 
@@ -622,7 +631,7 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
 bool mail_cache::GMailSQLiteStorage::loadMessagesFromDb()
 {
 	QString sql = QString("SELECT msg_state, msg_id, msg_from, msg_to, msg_cc, msg_bcc, "
-                          "msg_subject, msg_snippet, msg_plain, msg_html, internal_date, msg_labels, msg_att_count FROM %1gmail_msg ORDER BY internal_date DESC").arg(m_db_meta_prefix);
+                          "msg_subject, msg_snippet, msg_plain, msg_html, internal_date, msg_labels FROM %1gmail_msg ORDER BY internal_date DESC").arg(m_db_meta_prefix);
 	QSqlQuery* q = selectQuery(sql);
 	if (!q)
 		return false;
@@ -911,7 +920,7 @@ void mail_cache::GMailSQLiteStorage::insertDbAttachmentData(const mail_cache::Me
 			continue;
 		}
 	}
-
+	/*
 	QString updateAttSql = QString("UPDATE %1gmail_msg SET msg_att_count=%2 WHERE msg_id='%3'")
 		.arg(m_db_meta_prefix)
 		.arg(m.m_attachments.size())
@@ -920,7 +929,7 @@ void mail_cache::GMailSQLiteStorage::insertDbAttachmentData(const mail_cache::Me
 	if (!execQuery(updateAttSql)) {
 		qWarning() << "Failed to execute SQL" << updateAttSql;
 		return;
-	}
+	}*/
 };
 
 mail_cache::LabelData* mail_cache::GMailSQLiteStorage::insertDbLabel(QString label_id,
@@ -968,7 +977,7 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::insertDbLabel(QString lab
 
 std::list<QString> mail_cache::GMailSQLiteStorage::load_db(EDataState state, 
                                                         const std::list<QString>& id_list,
-                                                        GMailCacheQueryResult* cr)
+                                                        GMailCacheQueryTask* cr)
 {   
     std::list<QString> rv;
     std::set<QString> db_loaded;
@@ -977,7 +986,7 @@ std::list<QString> mail_cache::GMailSQLiteStorage::load_db(EDataState state,
         {
             QString comma_ids = slist2commalist_decorated(lst);
             QString sql = QString("SELECT msg_state, msg_id, msg_from, msg_to, msg_cc, msg_bcc, "
-                                  "msg_subject, msg_snippet, msg_plain, msg_html, internal_date, msg_labels, msg_att_count FROM %1gmail_msg WHERE msg_id IN(%2)")
+                                  "msg_subject, msg_snippet, msg_plain, msg_html, internal_date, msg_labels FROM %1gmail_msg WHERE msg_id IN(%2)")
             .arg(m_db_meta_prefix)
             .arg(comma_ids);
             switch (state)
@@ -1343,7 +1352,6 @@ mail_cache::msg_ptr mail_cache::GMailSQLiteStorage::loadMessageFromDB(QSqlQuery*
         }
     qlonglong  msg_internalDate = q->value(10).toLongLong();
     qlonglong  msg_labels = q->value(11).toLongLong();
-	int msg_not_loaded_att_count = q->value(12).toInt();
 
     md = std::shared_ptr<MessageData>(new MessageData(agg_state, 
                                                       msg_id, 
@@ -1356,8 +1364,7 @@ mail_cache::msg_ptr mail_cache::GMailSQLiteStorage::loadMessageFromDB(QSqlQuery*
                                                       msg_plain, 
                                                       msg_html, 
                                                       msg_internalDate,
-                                                      msg_labels,
-		msg_not_loaded_att_count));
+                                                      msg_labels));
     return md;
 };
 

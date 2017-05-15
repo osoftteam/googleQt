@@ -21,7 +21,7 @@ namespace googleQt{
     namespace mail_cache {
         class MessagesReceiver;
         class MessageData;
-        class GMailCacheQueryResult;
+        class GMailCacheQueryTask;
         class GMailCache;
     };	
 
@@ -46,20 +46,20 @@ namespace googleQt{
         UserBatchRunner<QString, mail_cache::MessagesReceiver, messages::MessageResource>* getUserBatchMessages_Async(EDataState, const std::list<QString>& id_list);
 
         /// check for new emails - get top messagesCount messages and update cache
-        std::unique_ptr<mail_cache::MessagesList> getNextCacheMessages(int messagesCount = 40, 
-                                                                       QString pageToken = "", 
-                                                                       QStringList* labels = nullptr);
-        mail_cache::GMailCacheQueryResult* getNextCacheMessages_Async(int messagesCount = 40, 
-                                                                      QString pageToken = "", 
-                                                                      QStringList* labels = nullptr);
+		mail_cache::data_list_uptr getNextCacheMessages(int messagesCount = 40,
+														QString pageToken = "", 
+                                                        QStringList* labels = nullptr);
+        mail_cache::GMailCacheQueryTask* getNextCacheMessages_Async(int messagesCount = 40, 
+                                                        QString pageToken = "", 
+                                                        QStringList* labels = nullptr);
 
         /// load emails by ID-list while updating local cache
-        std::unique_ptr<mail_cache::MessagesList> getCacheMessages(EDataState, const std::list<QString>& id_list);    
-        mail_cache::GMailCacheQueryResult* getCacheMessages_Async(EDataState, const std::list<QString>& id_list, 
-                                                                  mail_cache::GMailCacheQueryResult* rfetcher = nullptr);
+		mail_cache::data_list_uptr getCacheMessages(EDataState, const std::list<QString>& id_list);
+        mail_cache::GMailCacheQueryTask* getCacheMessages_Async(EDataState, const std::list<QString>& id_list, 
+                                                                  mail_cache::GMailCacheQueryTask* rfetcher = nullptr);
 
         /// load messages from cache, numberOfMessages = -1 if all messages from cache
-        std::unique_ptr<mail_cache::MessagesList> getCacheMessages(int numberOfMessages, uint64_t labelFilter = 0);
+		mail_cache::data_list_uptr getCacheMessages(int numberOfMessages, uint64_t labelFilter = 0);
 
         /// init local cache table using SQlite DB, tables will have 'dbprefix' prefix
         /// file path and DB-name should be specified
@@ -104,7 +104,7 @@ namespace googleQt{
 
     protected:
         void ensureCache()const;
-        mail_cache::GMailCacheQueryResult* newResultFetcher(EDataState state);
+        mail_cache::GMailCacheQueryTask* newResultFetcher(EDataState state);
         GoogleTask<messages::MessageResource>* setLabel_Async(QString label_id,
                                                               mail_cache::MessageData* d,
                                                               bool label_on,

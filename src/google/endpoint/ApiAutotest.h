@@ -10,6 +10,8 @@ namespace googleQt{
     using IDSET = std::set<QString>;
     using CLASS_ID_MAP = std::map<QString, IDSET>;
 
+	class ApiClient;
+
     class ApiAutotest{
     public:
         ApiAutotest();
@@ -33,16 +35,28 @@ namespace googleQt{
         void addId(const char* class_name, QString id);
         QString getId(const char* class_name, int default_id_num);
 		quint64 getInt(const char* class_name, const char* field_name, int default_id_num);
+		QString getString(const char* class_name, const char* field_name, QString default_value);
+
+        bool isAttachmentDataGenerationEnabled()const{return m_attachmentDataGenerationOn;}
+        void enableAttachmentDataGeneration(bool val){m_attachmentDataGenerationOn = val;}
+
+		bool isProgressEmulationEnabled()const { return m_progress_emul_enabled; }
+		void enableProgressEmulation(bool val) { m_progress_emul_enabled = val; }
+
+		void emulateAutotestDownloadProgress(googleQt::ApiClient* cl);
+		void sleep(int millisecondsToWait);
 
     protected:
         CLASS_ID_MAP m_availID;
-        #endif //API_QT_AUTOTEST        
+        bool m_attachmentDataGenerationOn{true};
+        #endif //API_QT_AUTOTEST
 
     protected:
 		FILE* m_out{nullptr};
 		void log_string(const char*);
 
-        bool  m_request_log_enabled{true};
+        bool  m_request_log_enabled{ true };
+		bool  m_progress_emul_enabled{ true };
     };//ApiAutotest
 
 }//googleQt

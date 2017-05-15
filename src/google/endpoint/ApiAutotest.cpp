@@ -1,5 +1,7 @@
+#include <QCoreApplication>
 #include "ApiAutotest.h"
 #include "gmail/messages/MessagesMessagePayload.h"
+#include "ApiClient.h"
 
 using namespace googleQt;
 
@@ -61,47 +63,47 @@ ApiAutotest& ApiAutotest::operator << (const QNetworkRequest & r){
 }
 
 void ApiAutotest::prepareAutoTestObj(const char* context_class_name, 
-    const char* class_name, 
-    void* p, 
-    int idx,
-    int context_index)
+                                     const char* class_name, 
+                                     void* p, 
+                                     int idx,
+                                     int context_index)
 {
     if (strcmp(class_name, "messages::MessagePayloadHeader") == 0)
-    {
-        if (strcmp(context_class_name, "messages::MessagePayload") == 0)
         {
-            messages::MessagePayloadHeader* h = (messages::MessagePayloadHeader*)p;
-            switch (idx)
-            {
-            case 0: h->setName("From"); h->setValue("From_" + h->value() + "@gmail.com"); break;
-            case 1: h->setName("To"); h->setValue("To_" + h->value() + "@gmail.com"); break;
-            case 2: h->setName("Subject"); h->setValue("Subject_" + h->value() + "@gmail.com"); break;
-			case 3: h->setName("CC"); h->setValue("CC_" + h->value() + "@gmail.com"); break;
-			case 4: h->setName("BCC"); h->setValue("BCC_" + h->value() + "@gmail.com"); break;
-            }
-        }//messages::MessagePayload
-        if (strcmp(context_class_name, "messages::MessagePart") == 0) 
-        {
-            messages::MessagePayloadHeader* h = (messages::MessagePayloadHeader*)p;
-            switch (context_index)
-            {
-            case 0:
-                if (idx == 0)
+            if (strcmp(context_class_name, "messages::MessagePayload") == 0)
                 {
-                    h->setName("Content-Type");
-                    h->setValue("text/plain");
-                }
-                break;
-            case 1: 
-                if (idx == 0)
+                    messages::MessagePayloadHeader* h = (messages::MessagePayloadHeader*)p;
+                    switch (idx)
+                        {
+                        case 0: h->setName("From"); h->setValue("From_" + h->value() + "@gmail.com"); break;
+                        case 1: h->setName("To"); h->setValue("To_" + h->value() + "@gmail.com"); break;
+                        case 2: h->setName("Subject"); h->setValue("Subject_" + h->value() + "@gmail.com"); break;
+                        case 3: h->setName("CC"); h->setValue("CC_" + h->value() + "@gmail.com"); break;
+                        case 4: h->setName("BCC"); h->setValue("BCC_" + h->value() + "@gmail.com"); break;
+                        }
+                }//messages::MessagePayload
+            if (strcmp(context_class_name, "messages::MessagePart") == 0) 
                 {
-                    h->setName("Content-Type");
-                    h->setValue("text/html");
+                    messages::MessagePayloadHeader* h = (messages::MessagePayloadHeader*)p;
+                    switch (context_index)
+                        {
+                        case 0:
+                            if (idx == 0)
+                                {
+                                    h->setName("Content-Type");
+                                    h->setValue("text/plain");
+                                }
+                            break;
+                        case 1: 
+                            if (idx == 0)
+                                {
+                                    h->setName("Content-Type");
+                                    h->setValue("text/html");
+                                }
+                            break;            
+                        }
                 }
-                break;            
-            }
         }
-    }
 };
 
 QByteArray ApiAutotest::generateData(const char* context_class_name, int context_index, int parent_context_index)
@@ -110,11 +112,11 @@ QByteArray ApiAutotest::generateData(const char* context_class_name, int context
 
 	QByteArray rv = QByteArray("AUTOTEST-DATA").toBase64(QByteArray::Base64UrlEncoding);
 	if (strcmp(context_class_name, "messages::MessagePartBody") == 0)
-	{
-		static int ref_num = 0;
-		ref_num++;
+        {
+            static int ref_num = 0;
+            ref_num++;
 
-		static const char* sample_html = "<p><strong>ref# %1</strong></p>\
+            static const char* sample_html = "<p><strong>ref# %1</strong></p>\
 			<p>Mr.M.Leaf<br / >Chief of Syrup Production<br / >Old Sticky Pancake Company<br / >\
 			456 Maple Lane<br / >Forest, ON 7W8 9Y0<br / ><br / >Dear Mr.Leaf:<br / ><br / >\
 			Let me begin by thanking you for your past contributions to our Little League baseball team.\
@@ -129,44 +131,52 @@ QByteArray ApiAutotest::generateData(const char* context_class_name, int context
 			Respectfully yours,<br /><br />&nbsp;<br /><br />Derek Jeter<br />\
 			https://www.scribendi.com/advice/formal_letter_example.en.html</p>";
 
-		QString s;
-		if (parent_context_index == 0)
-		{
-			QString tmp = sample_html;
-			tmp.remove(QRegExp("<[^>]*>"));
-			s = QString(tmp).arg(ref_num);
-		}
-		else if (parent_context_index == 1)
-		{
-			s = QString(sample_html).arg(ref_num);
-		}
+            QString s;
+            if (parent_context_index == 0)
+                {
+                    QString tmp = sample_html;
+                    tmp.remove(QRegExp("<[^>]*>"));
+                    s = QString(tmp).arg(ref_num);
+                }
+            else if (parent_context_index == 1)
+                {
+                    s = QString(sample_html).arg(ref_num);
+                }
 
-		rv = QByteArray(s.toStdString().c_str()).toBase64(QByteArray::Base64UrlEncoding);
-	}
+            rv = QByteArray(s.toStdString().c_str()).toBase64(QByteArray::Base64UrlEncoding);
+        }else if (strcmp(context_class_name, "attachments::MessageAttachment") == 0){
+            if(m_attachmentDataGenerationOn){
+                rv = QByteArray("Attachment from AUTOTEST-DATA").toBase64(QByteArray::Base64UrlEncoding);                
+            }
+            else{
+                rv = QByteArray();
+            }
+        }
+
 	return rv;
 };
 
 void ApiAutotest::logRequest(QString req) 
 {
     if (m_request_log_enabled)
-    {
-        *this << req;
-    }
+        {
+            *this << req;
+        }
 };
 
 void ApiAutotest::addId(const char* class_name, QString id)
 {
     CLASS_ID_MAP::iterator i = m_availID.find(class_name);
     if (i != m_availID.end())
-    {
-        i->second.insert(id);
-    }
+        {
+            i->second.insert(id);
+        }
     else 
-    {
-        IDSET ids;
-        ids.insert(id);
-        m_availID[class_name] = ids;
-    }
+        {
+            IDSET ids;
+            ids.insert(id);
+            m_availID[class_name] = ids;
+        }
 };
 
 QString ApiAutotest::getId(const char* class_name, int default_id_num)
@@ -175,26 +185,26 @@ QString ApiAutotest::getId(const char* class_name, int default_id_num)
 
     CLASS_ID_MAP::iterator i = m_availID.find(class_name);
     if (i != m_availID.end() && !i->second.empty())
-    {
-        IDSET& ids = i->second;
-        IDSET::iterator j = ids.begin();
-        rv = *j;
-        ids.erase(j);
-    }
+        {
+            IDSET& ids = i->second;
+            IDSET::iterator j = ids.begin();
+            rv = *j;
+            ids.erase(j);
+        }
     else 
-    {
-		if (strcmp(class_name, "messages::MessageResource") == 0)
-		{
-			rv = QString("mid_%1_%2_%3")
-				.arg(default_id_num)
-				.arg(QDateTime::currentMSecsSinceEpoch())
-				.arg(qrand());
-		}
-		else
-		{
-			rv = QString("id_%1").arg(default_id_num);
-		}
-    }
+        {
+            if (strcmp(class_name, "messages::MessageResource") == 0)
+                {
+                    rv = QString("mid_%1_%2_%3")
+                        .arg(default_id_num)
+                        .arg(QDateTime::currentMSecsSinceEpoch())
+                        .arg(qrand());
+                }
+            else
+                {
+                    rv = QString("id_%1").arg(default_id_num);
+                }
+        }
     return rv;
 };
 
@@ -202,23 +212,66 @@ quint64 ApiAutotest::getInt(const char* class_name, const char* field_name, int 
 {
 	quint64 rv = default_id_num;
 	if (strcmp(class_name, "messages::MessageResource") == 0)
-	{
-		if (strcmp(field_name, "m_internalDate") == 0) 
-		{
-			rv = QDateTime::currentMSecsSinceEpoch() + default_id_num * 1000;
-		}
+        {
+            if (strcmp(field_name, "m_internalDate") == 0) 
+                {
+                    rv = QDateTime::currentMSecsSinceEpoch() + default_id_num * 1000;
+                }
 
-	}
+        }
 	return rv;
+};
+
+QString ApiAutotest::getString(const char* class_name, const char* field_name, QString default_value)
+{
+    QString rv = default_value;
+	if (strcmp(class_name, "messages::MessagePayload") == 0)
+        {
+            if (strcmp(field_name, "m_filename") == 0) 
+                {
+                    rv += ".txt";
+                }
+        }
+	else if (strcmp(class_name, "messages::MessagePart") == 0)
+	{
+		if (strcmp(field_name, "m_filename") == 0)
+		{
+			rv += ".txt";
+		}
+	}
+
+    return rv;
+};
+
+void ApiAutotest::emulateAutotestDownloadProgress(googleQt::ApiClient* cl)
+{
+	qApp->processEvents();
+	if (isProgressEmulationEnabled()) {
+		static int max_progress		= 100;
+		static int step_progress	= 20;
+		for (int progress = 0; progress < max_progress; progress += step_progress) {
+			cl->downloadProgress(progress, max_progress);
+			sleep(100);
+		}
+	}
+};
+
+void ApiAutotest::sleep(int millisecondsToWait)
+{
+	QTime endTime = QTime::currentTime().addMSecs(millisecondsToWait);
+	while (QTime::currentTime() < endTime)
+	{
+		QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+	}
 };
 
 #endif //API_QT_AUTOTEST
 
 ApiAutotest::ApiAutotest()
 {
-    #ifdef API_QT_AUTOTEST
+#ifdef API_QT_AUTOTEST
     theInstance = this;
-    #endif //API_QT_AUTOTEST
+#endif //API_QT_AUTOTEST
 }
 
 ApiAutotest::~ApiAutotest()

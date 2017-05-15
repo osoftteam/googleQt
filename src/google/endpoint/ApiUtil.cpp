@@ -96,14 +96,6 @@ UrlBuilder& UrlBuilder::add(QString name, const QDateTime& value)
 void QParamArg::ResponseFields2Builder(UrlBuilder& b)const
 {
     if(!m_Fields.isEmpty()){
-        /*
-        QString fields = "";
-        for(QString f : m_partResponseFields){
-            fields += f;
-            fields += ",";
-        }
-        fields = fields.left(fields.length() - 1);
-        */
         b.add("fields", m_Fields);
     }
 };
@@ -111,8 +103,7 @@ void QParamArg::ResponseFields2Builder(UrlBuilder& b)const
 QString googleQt::slist2commalist(const std::list<QString>& lst)
 {
     QString rv = "";
-    if(!lst.empty())
-        {
+    if(!lst.empty()){
             for(std::list<QString>::const_iterator i = lst.begin();
                 i != lst.end();
                 i++)

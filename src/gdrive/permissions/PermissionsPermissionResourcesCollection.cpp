@@ -65,7 +65,7 @@ std::unique_ptr<PermissionResourcesCollection> PermissionResourcesCollection::EX
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<PermissionResourcesCollection> rv(new PermissionResourcesCollection);
-    rv->m_kind = QString("kind_%1").arg(example_idx);
+    rv->m_kind = ApiAutotest::INSTANCE().getString("permissions::PermissionResourcesCollection", "m_kind", QString("kind_%1").arg(example_idx));
     std::list<permissions::ResourcePermission> list_of_permissions;
     for(int i = 0; i < 5; i++){
         permissions::ResourcePermission p = *(permissions::ResourcePermission::EXAMPLE(i, context_index).get());

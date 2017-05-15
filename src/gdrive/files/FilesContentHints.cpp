@@ -66,7 +66,7 @@ std::unique_ptr<ContentHints> ContentHints::EXAMPLE(int context_index, int paren
     example_idx++;
     std::unique_ptr<ContentHints> rv(new ContentHints);
     rv->m_thumbnail = *(files::ThumbnailInfo::EXAMPLE(0, context_index).get());
-    rv->m_indexableText = QString("indexableText_%1").arg(example_idx);
+    rv->m_indexableText = ApiAutotest::INSTANCE().getString("files::ContentHints", "m_indexableText", QString("indexableText_%1").arg(example_idx));
     return rv;
 }
 #endif //API_QT_AUTOTEST

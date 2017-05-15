@@ -67,7 +67,7 @@ std::unique_ptr<MessageMimeBody> MessageMimeBody::EXAMPLE(int context_index, int
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<MessageMimeBody> rv(new MessageMimeBody);
-    rv->m_attachmentId = QString("attachmentId_%1").arg(example_idx);
+    rv->m_attachmentId = ApiAutotest::INSTANCE().getString("messages::MessageMimeBody", "m_attachmentId", QString("attachmentId_%1").arg(example_idx));
     rv->m_size = ApiAutotest::INSTANCE().getInt("messages::MessageMimeBody", "m_size", 2 + example_idx);
     rv->m_data = ApiAutotest::INSTANCE().generateData("messages::MessageMimeBody", context_index, parent_context_index);
     return rv;

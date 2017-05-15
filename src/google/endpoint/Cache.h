@@ -74,62 +74,50 @@ namespace googleQt {
 		}
 	};
 
+	template <class O>
+	class CacheDataList
+	{
+	public:
+		CACHE_QUERY_RESULT_MAP<O> result_map;
+		CACHE_QUERY_RESULT_LIST<O> result_list;
+		EDataState state;
+	};
+
     template <class O>
-    class CacheQueryResult : public EndpointRunnable 
+    using CacheTaskParent = googleQt::GoogleTask<CacheDataList<O>>;
+    
+    template <class O>
+	class CacheQueryTask : public CacheTaskParent<O>//googleQt::GoogleTask<CacheDataList<O>>
     {
     public:
-        CacheQueryResult(EDataState load, ApiEndpoint& ept, GoogleCacheBase<O>* c) 
-			:EndpointRunnable(ept), m_state(load), m_cache(c){};
+        CacheQueryTask(EDataState load, ApiEndpoint& ept, GoogleCacheBase<O>* c) 
+			:GoogleTask<CacheDataList<O>>(ept), m_cache(c){CacheTaskParent<O>::m_completed.reset(new CacheDataList<O>); CacheTaskParent<O>::m_completed->state = load; };
+
 
         virtual void fetchFromCloud_Async(const std::list<QString>& id_list) = 0;
-		void notifyOnCompletedFromCache() { m_completed = true;notifyOnFinished(); };
-		void notifyFetchCompleted(CACHE_QUERY_RESULT_MAP<O>& r, const std::set<QString>& fetched_ids)
+		std::unique_ptr<CacheDataList<O>> waitForResultAndRelease() = delete;
+
+		void notifyOnCompletedFromCache(){ m_query_completed = true;CacheTaskParent<O>::notifyOnFinished(); };
+		void notifyFetchCompleted(CACHE_QUERY_RESULT_MAP<O>& r, const std::set<QString>& fetched_ids)        
 		{
-            m_completed = true;
-			m_cache->merge(m_state, r, fetched_ids);
-			notifyOnFinished();
+			m_query_completed = true;
+			m_cache->merge(CacheTaskParent<O>::m_completed->state, r, fetched_ids);
+			CacheTaskParent<O>::notifyOnFinished();
 		}
+        
+        bool isCompleted()const override { return m_query_completed; }
 
-		std::map<QString, std::shared_ptr<O>> waitForResultAndRelease()
-		{
-			if (!isFinished())
-                {
-                    m_in_wait_loop = true;
-                    waitUntillFinishedOrCancelled();
-                }
-
-			deleteLater();
-			return std::move(m_result);
-		}
-
-        std::list<std::shared_ptr<O>> waitForResultListAndRelease()
-        {
-            if (!isFinished())
-                {
-                    m_in_wait_loop = true;
-                    waitUntillFinishedOrCancelled();
-                }
-
-            deleteLater();
-            return std::move(m_result_list);
-        }
-
-        bool isCompleted()const override { return m_completed; }
-
-        void add(std::shared_ptr<O> obj) { m_result[obj->id()] = obj; m_result_list.push_back(obj); };
+        void add(std::shared_ptr<O> obj){ CacheTaskParent<O>::m_completed->result_map[obj->id()] = obj; CacheTaskParent<O>::m_completed->result_list.push_back(obj); };
         void inc_mem_cache_hit_count() { m_mem_cache_hit_count++; }
         void set_db_cache_hit_count(size_t val) { m_db_cache_hit_count = val; }
         size_t mem_cache_hit_count()const { return m_mem_cache_hit_count; }
         size_t db_cache_hit_count()const { return m_db_cache_hit_count; }
 
     protected:
-		CACHE_QUERY_RESULT_MAP<O> m_result;
-        CACHE_QUERY_RESULT_LIST<O> m_result_list;
-        EDataState m_state;
 		GoogleCacheBase<O>* m_cache;
         size_t     m_mem_cache_hit_count{0};
         size_t     m_db_cache_hit_count{0};
-        bool       m_completed{ false };
+        bool       m_query_completed{ false };
     };
     
     template <class O, class R>
@@ -268,25 +256,6 @@ namespace googleQt {
                     rfetcher->notifyOnCompletedFromCache();
 				}            
         };
-
-        void cacheData(R* rfetcher, int number2load, uint64_t labelFilter)
-        {
-            int count = 0;
-            for (auto& i : m_order_cache)
-                {
-                    auto m = i;
-                    if(m->inLabelFilter(labelFilter))
-                        {
-                            rfetcher->add(i);
-                            if (number2load > 0)
-                                {
-                                    if (++count >= number2load)
-                                        break;
-                                }
-                        }
-                }
-            rfetcher->notifyOnCompletedFromCache();
-        }
 
     protected:
         ApiEndpoint&                m_endpoint;
