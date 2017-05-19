@@ -310,6 +310,7 @@ namespace googleQt{
 			std::list<mail_cache::LabelData*> unpackLabels(const uint64_t& data)const;
 
 			bool loadAttachmentsFromDb(MessageData& m);
+			bool deleteAttachmentsFromDb(QString msg_id);
         protected:
             bool execQuery(QString sql);
             QSqlQuery* prepareQuery(QString sql);

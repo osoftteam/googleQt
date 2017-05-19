@@ -1185,6 +1185,17 @@ void mail_cache::GMailSQLiteStorage::remove_db(const std::set<QString>& set_of_i
         }
 };
 
+bool mail_cache::GMailSQLiteStorage::deleteAttachmentsFromDb(QString msg_id)
+{
+	QString sql = QString("DELETE FROM %1gmail_attachments WHERE msg_id IN('%2')")
+		.arg(m_db_meta_prefix)
+		.arg(msg_id);
+	QSqlQuery* q = prepareQuery(sql);
+	if (!q)return false;
+	if (!q->exec()) return false;
+	return true;
+};
+
 mail_cache::LabelData* mail_cache::GMailSQLiteStorage::findLabel(QString label_id)
 {
 	mail_cache::LabelData* rv = nullptr;
