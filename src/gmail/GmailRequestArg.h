@@ -321,6 +321,7 @@ namespace googleQt{
 			void toJson(QJsonObject& js)const override;
 			QByteArray toRfc822()const;
 			operator QJsonObject ()const;
+			bool saveAsRfc822(QString filePathName)const;
 
 #ifdef API_QT_AUTOTEST
 			static std::unique_ptr<SendMimeMessageArg> EXAMPLE(int context_index, int parent_content_index);

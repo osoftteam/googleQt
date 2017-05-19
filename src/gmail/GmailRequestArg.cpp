@@ -163,7 +163,8 @@ void MimeBodyPart::setContent(QString content, QString _type)
 QByteArray MimeBodyPart::toRfc822()const
 {
 	QByteArray rv = QString("Content-Type: %1\r\n").arg(m_content_type).toStdString().c_str();
-	rv += QString("Content-Transfer-Encoding: base64\r\n\r\n");
+	rv += QString("Content-Transfer-Encoding: base64\r\n");
+	//rv += QString("Content-Transfer-Encoding: base64\r\n\r\n");
 	switch(m_part_type)
         {
         case ptypePlain:
@@ -264,15 +265,7 @@ QByteArray SendMimeMessageArg::toRfc822()const
         {
             rv += QString("--%1\r\n").arg(boundary);
 			QString part_content = p.toRfc822();
-			//qDebug() << "ykh-part-content:" << part_content;
             rv += part_content;
-            //rv += QString("Content-Type: %1; charset=UTF-8\r\n").arg(p.m_type);
-            /*
-              rv += QString("Content-Type: %1\r\n").arg(p.m_type);
-              rv += QString("Content-Transfer-Encoding: base64\r\n\r\n");
-              QByteArray ba(p.m_content.toStdString().c_str());
-              rv += QString("%1\r\n").arg(ba.toBase64(QByteArray::Base64Encoding).constData());
-            */
         }
 
 	rv += QString("--%1--").arg(boundary);
@@ -280,10 +273,20 @@ QByteArray SendMimeMessageArg::toRfc822()const
 	return rv;
 };
 
+bool SendMimeMessageArg::saveAsRfc822(QString filePathName)const
+{
+	QFile file_in(filePathName);
+	if (!file_in.open(QFile::WriteOnly|QIODevice::Truncate)) {
+		qWarning() << "Error opening file: " << filePathName;
+		return false;
+	}
+	file_in.write(toRfc822());
+	file_in.close();
+	return true;
+};
+
 void SendMimeMessageArg::toJson(QJsonObject& js)const
 {
-	//QString ykh_rfc_string = toRfc822();
-	//qDebug() << "ykh-SendMimeMessageArg::toJson-rfc=" << ykh_rfc_string;
 	QByteArray data(toRfc822());
 	QString res = data.toBase64(QByteArray::Base64UrlEncoding);
 	js["raw"] = res;	
