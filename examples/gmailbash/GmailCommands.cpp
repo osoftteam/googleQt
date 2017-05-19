@@ -206,9 +206,59 @@ void GmailCommands::send_as_html(QString to_subject_text)
 	}
 };
 
+void GmailCommands::send_att(QString to_subject_text)
+{
+	QStringList arg_list = to_subject_text.split(" ",
+		QString::SkipEmptyParts);
+
+	if (arg_list.size() < 3)
+	{
+		std::cout << "Invalid parameters, expected <To> <Subject> <Text>" << std::endl;
+		return;
+	}
+
+	QString msg_to = arg_list[0];
+	QString msg_subject = arg_list[1];
+	QString msg_text = arg_list[2];
+	QString msg_html = QString("<div dir=\"ltr\">%1</div>").arg(msg_text);
+
+	QDir dir("upload");
+	if (!dir.exists()) {
+		std::cout << "Upload-directory not found." << std::endl;
+		return;
+	}
+
+	QFileInfoList flist = dir.entryInfoList(QDir::Files);
+	if (flist.size() == 0) {
+		std::cout << "Upload-directory is empty, nothing to attach" << std::endl;
+		return;
+	}
+
+	std::list<QString> attachments;
+	for (auto& fi : flist) {
+		attachments.push_back(fi.absoluteFilePath());
+	}
+
+	try
+	{
+		gmail::SendMimeMessageArg arg(m_c.userId(), msg_to, msg_subject, msg_text, msg_html);
+		arg.addAttachments(attachments);
+		auto r = m_gm->getMessages()->send(arg);
+		printMessage(r.get());
+	}
+	catch (GoogleException& e)
+	{
+		std::cout << "Exception: " << e.what() << std::endl;
+	}
+};
 
 void GmailCommands::trash(QString message_id) 
 {   
+	if (message_id.isEmpty()) {
+		std::cout << "Invalid parameters, expected <msg-id>" << std::endl;
+		return;
+	}
+
     try
     {
         gmail::TrashMessageArg arg(message_id);
@@ -219,6 +269,43 @@ void GmailCommands::trash(QString message_id)
         std::cout << "Exception: " << e.what() << std::endl;
     }
 };
+
+void GmailCommands::untrash(QString message_id)
+{
+	if (message_id.isEmpty()) {
+		std::cout << "Invalid parameters, expected <msg-id>" << std::endl;
+		return;
+	}
+
+	try
+	{
+		gmail::UntrashMessageArg arg(message_id);
+		m_gm->getMessages()->untrash(arg);
+	}
+	catch (GoogleException& e)
+	{
+		std::cout << "Exception: " << e.what() << std::endl;
+	}
+};
+
+void GmailCommands::delete_msg(QString message_id)
+{
+	if (message_id.isEmpty()) {
+		std::cout << "Invalid parameters, expected <msg-id>" << std::endl;
+		return;
+	}
+
+	try
+	{
+		gmail::IdArg arg(message_id);
+		m_gm->getMessages()->deleteOperation(arg);
+	}
+	catch (GoogleException& e)
+	{
+		std::cout << "Exception: " << e.what() << std::endl;
+	}
+};
+
 
 void GmailCommands::add_label(QString message_id_label)
 {
@@ -275,19 +362,6 @@ void GmailCommands::remove_label(QString message_id_label)
     }
 };
 
-
-void GmailCommands::untrash(QString message_id) 
-{
-    try
-    {
-        gmail::UntrashMessageArg arg(message_id);
-        m_gm->getMessages()->untrash(arg);
-    }
-    catch (GoogleException& e)
-    {
-        std::cout << "Exception: " << e.what() << std::endl;
-    }
-};
 
 void GmailCommands::printMessage(messages::MessageResource* r)
 {

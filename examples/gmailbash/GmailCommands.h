@@ -56,19 +56,28 @@ public:
 	*/
 	void send_as_html(QString to_subject_text);
 
+	/**
+	send html text message with attachments
+	*/
+	void send_att(QString to_subject_text);
+
     /**
         trash - trash message by id
     */
     void trash(QString message_id);
-
-
-    void add_label(QString message_id_label);
-    void remove_label(QString message_id_label);
     
     /**
         untrash - untrash message by id
     */
     void untrash(QString message_id);
+
+	/**
+		delete_msg - delete message by id
+	*/
+	void delete_msg(QString message_id);
+
+	void add_label(QString message_id_label);
+	void remove_label(QString message_id_label);
 
     /**
         ls_labels - list labels
