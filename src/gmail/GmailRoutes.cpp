@@ -110,29 +110,6 @@ mail_cache::GMailCacheQueryTask* GmailRoutes::getNextCacheMessages_Async(int mes
 	{
 		listArg.labels() = *labels;
 	}	
-
-	/*
-    std::function<void(std::unique_ptr<messages::MessageListRes>)> id_list_completed_callback =
-        [=](std::unique_ptr<messages::MessageListRes> mlist)
-    {
-        std::list<QString> id_list;
-        for (auto& m : mlist->messages())
-        {
-			id_list.push_back(m.id());
-        }
-        rfetcher->setNextPageToken(mlist->nextpagetoken());
-        getCacheMessages_Async(EDataState::snippet, id_list, rfetcher);
-    };
-    
-    
-    std::function<void(std::unique_ptr<GoogleException>)> failed_callback =
-        [=](std::unique_ptr<GoogleException> ex)
-    {
-        rfetcher->failed_callback(std::move(ex));
-    };    
-
-    getMessages()->list_AsyncCB(listArg, id_list_completed_callback, failed_callback);
-	*/
 	
 	getMessages()->list_Async(listArg)->then([=](std::unique_ptr<messages::MessageListRes> mlist)
 	{
@@ -191,6 +168,22 @@ mail_cache::data_list_uptr GmailRoutes::getCacheMessages(int numberOfMessages, u
     mail_cache::GMailCacheQueryTask* rfetcher = newResultFetcher(EDataState::snippet);
     m_GMailCache->topCacheData(rfetcher, numberOfMessages, labelFilter);
     return rfetcher->waitForResultAndRelease();
+};
+
+bool GmailRoutes::trashCacheMessage(QString msg_id)
+{
+	ensureCache();
+	googleQt::gmail::TrashMessageArg arg(msg_id);
+	getMessages()->trash_Async(arg)->then([=]()
+	{
+		//clean up cache
+		std::set<QString> set2remove;
+		set2remove.insert(msg_id);
+		m_GMailCache->persistent_clear(set2remove);
+		auto storage = m_GMailCache->sqlite_storage();
+		storage->deleteAttachmentsFromDb(msg_id);		
+	});
+	return true;
 };
 
 bool GmailRoutes::setupSQLiteCache(QString dbPath, 
