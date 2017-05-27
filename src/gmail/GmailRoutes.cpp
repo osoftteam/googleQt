@@ -237,7 +237,10 @@ GoogleVoidTask* GmailRoutes::refreshLabels_Async()
 			}
 		}
 		rv->completed_callback();
-	});
+	},
+    [=](std::unique_ptr<GoogleException> ex) {
+        rv->failed_callback(std::move(ex));
+    });
 	return rv;
 };
 
