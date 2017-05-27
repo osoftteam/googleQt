@@ -25,9 +25,9 @@ namespace googleQt{
     signals:
         void finished();
 
-	protected:
-		void notifyOnFinished();
-		void waitUntillFinishedOrCancelled();
+    protected:
+        void notifyOnFinished();
+        void waitUntillFinishedOrCancelled();
 
     protected:
         ApiEndpoint& m_endpoint;
@@ -83,37 +83,37 @@ namespace googleQt{
             return res;
         };
 
-		///composition of async calls, after async call is finished the user function
-		///is called (if not nullptr) and then task object will be scheduled to autorelease
-		void then(std::function<void(std::unique_ptr<RESULT>)> after_completed_processing = nullptr,
-			std::function<void(std::unique_ptr<GoogleException>)> on_error = nullptr)
-		{
-			std::function<void(void)> on_finished_processing = [=]() 
-			{
-				if (isCompleted()) {
-					if (after_completed_processing) {
-						after_completed_processing(std::move(m_completed));
-					}
-				}
-				else {
-					if (isFailed() && on_error) {
-						on_error(std::move(m_failed));
-					}
-				}
-				deleteLater();
-			};
+        ///composition of async calls, after async call is finished the user function
+        ///is called (if not nullptr) and then task object will be scheduled to autorelease
+        void then(std::function<void(std::unique_ptr<RESULT>)> after_completed_processing = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> on_error = nullptr)
+        {
+            std::function<void(void)> on_finished_processing = [=]() 
+            {
+                if (isCompleted()) {
+                    if (after_completed_processing) {
+                        after_completed_processing(std::move(m_completed));
+                    }
+                }
+                else {
+                    if (isFailed() && on_error) {
+                        on_error(std::move(m_failed));
+                    }
+                }
+                deleteLater();
+            };
 
-			if (isFinished()) {
-				on_finished_processing();
-			}
-			else {
-				connect(this, &EndpointRunnable::finished,
-					[=]()
-				{
-					on_finished_processing();
-				});
-			}
-		};
+            if (isFinished()) {
+                on_finished_processing();
+            }
+            else {
+                connect(this, &EndpointRunnable::finished,
+                    [=]()
+                {
+                    on_finished_processing();
+                });
+            }
+        };
 
 
         void completed_callback(std::unique_ptr<RESULT> r)
@@ -138,10 +138,10 @@ namespace googleQt{
         ///object in case os success or raise exception in case of error
         ///also this function will schedule dispose of the Task via deleteLater
         void waitForResultAndRelease();
-		///composition of async calls, after async call is finished the user function
-		///is called (if not nullptr) and then task object will be scheduled to autorelease
-		void then(std::function<void()> after_completed_processing = nullptr,
-			std::function<void(std::unique_ptr<GoogleException>)> on_error = nullptr);
+        ///composition of async calls, after async call is finished the user function
+        ///is called (if not nullptr) and then task object will be scheduled to autorelease
+        void then(std::function<void()> after_completed_processing = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> on_error = nullptr);
 
         void completed_callback(void)
         {

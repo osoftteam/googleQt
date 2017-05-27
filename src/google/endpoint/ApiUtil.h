@@ -146,14 +146,14 @@ namespace googleQt {
         }
     };
 
-	template<class T>
-	bool chunk_list_execution(const std::list<T>& inputList, 
+    template<class T>
+    bool chunk_list_execution(const std::list<T>& inputList, 
         std::function<bool (const std::list<T>&)> chunk_processor, 
         size_t chunk_size = 40)
-	{
-		typedef typename std::list<T>::const_iterator ITR;
-		std::list<T> subList;
-		for (ITR i = inputList.cbegin(); i != inputList.cend(); i++)
+    {
+        typedef typename std::list<T>::const_iterator ITR;
+        std::list<T> subList;
+        for (ITR i = inputList.cbegin(); i != inputList.cend(); i++)
             {
                 T o = *i;
                 subList.push_back(o);
@@ -164,13 +164,13 @@ namespace googleQt {
                         subList.clear();
                     }
             }
-		if (!subList.empty())
+        if (!subList.empty())
             {
                 if (!chunk_processor(subList))
                     return false;
             }
-		return true;
-	}
+        return true;
+    }
 
     /// converts std::list of strings -> comma separated list
     QString slist2commalist(const std::list<QString>& lst);

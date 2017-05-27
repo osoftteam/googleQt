@@ -51,15 +51,15 @@ public:
     */
     void send_prepared_rfc822(QString messageFileName);
 
-	/**
-		send html text message
-	*/
-	void send_as_html(QString to_subject_text);
+    /**
+        send html text message
+    */
+    void send_as_html(QString to_subject_text);
 
-	/**
-	send html text message with attachments
-	*/
-	void send_att(QString to_subject_text);
+    /**
+    send html text message with attachments
+    */
+    void send_att(QString to_subject_text);
 
     /**
         trash - trash message by id
@@ -71,13 +71,13 @@ public:
     */
     void untrash(QString message_id);
 
-	/**
-		delete_msg - delete message by id
-	*/
-	void delete_msg(QString message_id);
+    /**
+        delete_msg - delete message by id
+    */
+    void delete_msg(QString message_id);
 
-	void add_label(QString message_id_label);
-	void remove_label(QString message_id_label);
+    void add_label(QString message_id_label);
+    void remove_label(QString message_id_label);
 
     /**
         ls_labels - list labels
@@ -139,15 +139,15 @@ public:
     */
     void get_batch_details(QString id_list);
     
-	/**
-	get_cache_snippets - get snippents for list of messages
-	*/
-	void get_cache_snippets(QString id_list);
+    /**
+    get_cache_snippets - get snippents for list of messages
+    */
+    void get_cache_snippets(QString id_list);
 
-	/**
-	get_cache_details - get email body & snippens for list of messages
-	*/
-	void get_cache_details(QString id_list);
+    /**
+    get_cache_details - get email body & snippens for list of messages
+    */
+    void get_cache_details(QString id_list);
 
     /**
     cache_check_email - list latest messages snippets, first

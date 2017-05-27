@@ -26,14 +26,14 @@ void IdArg::build(const QString& link_path, QUrl& url)const
 
 
 AttachmentIdArg::AttachmentIdArg(QString message_id, QString attachment_id) 
-	:m_message_id(message_id),
+    :m_message_id(message_id),
      m_attachment_id(attachment_id)
 {
 };
 
 void AttachmentIdArg::build(const QString& link_path, QUrl& url)const
 {
-	UrlBuilder b(link_path + QString("%1/attachments/%2")
+    UrlBuilder b(link_path + QString("%1/attachments/%2")
                  .arg(m_message_id)
                  .arg(m_attachment_id),
                  url);
@@ -56,20 +56,20 @@ ModifyMessageArg::ModifyMessageArg(QString idValue,
 
 void ModifyMessageArg::build(const QString& link_path, QUrl& url)const 
 {
-	UrlBuilder b(link_path + QString("/%1/modify").arg(m_message_id), url);
+    UrlBuilder b(link_path + QString("/%1/modify").arg(m_message_id), url);
 
 };
 
 void ModifyMessageArg::toJson(QJsonObject& js)const 
 {
-	js["addLabelIds"] = ingrl_list2jsonarray(m_addLabels);
-	js["removeLabelIds"] = ingrl_list2jsonarray(m_removeLabels);
+    js["addLabelIds"] = ingrl_list2jsonarray(m_addLabels);
+    js["removeLabelIds"] = ingrl_list2jsonarray(m_removeLabels);
 };
 
 ModifyMessageArg::operator QJsonObject()const {
-	QJsonObject js;
-	this->toJson(js);
-	return js;
+    QJsonObject js;
+    this->toJson(js);
+    return js;
 }
 
 
@@ -128,48 +128,48 @@ void DraftListArg::build(const QString& link_path, QUrl& url)const
 
 MimeBodyPart MimeBodyPart::makePlainPart(QString text) 
 {
-	MimeBodyPart pt;
-	pt.setContent(text, "text/plain; charset=UTF-8");
-	pt.m_part_type = ptypePlain;
-	return pt;
+    MimeBodyPart pt;
+    pt.setContent(text, "text/plain; charset=UTF-8");
+    pt.m_part_type = ptypePlain;
+    return pt;
 };
 
 MimeBodyPart MimeBodyPart::makeHtmlPart(QString text) 
 {
-	MimeBodyPart pt;
-	pt.setContent(text, "text/html; charset=UTF-8");
-	pt.m_part_type = ptypeHtml;
-	return pt;
+    MimeBodyPart pt;
+    pt.setContent(text, "text/html; charset=UTF-8");
+    pt.m_part_type = ptypeHtml;
+    return pt;
 };
 
 MimeBodyPart MimeBodyPart::makeFilePart(QString file_path) 
 {
-	QFileInfo fi(file_path);
-	QString file_name = fi.fileName();
+    QFileInfo fi(file_path);
+    QString file_name = fi.fileName();
 
-	MimeBodyPart pt;
-	pt.setContent(file_path, QString("application/octet-stream; name=%1").arg(file_name));
-	pt.m_part_type = ptypeFile;
-	return pt;
+    MimeBodyPart pt;
+    pt.setContent(file_path, QString("application/octet-stream; name=%1").arg(file_name));
+    pt.m_part_type = ptypeFile;
+    return pt;
 };
 
 
 void MimeBodyPart::setContent(QString content, QString _type)
 {
-	m_content = content;
-	m_content_type = _type;
+    m_content = content;
+    m_content_type = _type;
 };
 
 QByteArray MimeBodyPart::toRfc822()const
 {
-	QByteArray rv = QString("Content-Type: %1\r\n").arg(m_content_type).toStdString().c_str();
-	rv += QString("Content-Transfer-Encoding: base64\r\n");
-	//rv += QString("Content-Transfer-Encoding: base64\r\n\r\n");
-	switch(m_part_type)
+    QByteArray rv = QString("Content-Type: %1\r\n").arg(m_content_type).toStdString().c_str();
+    rv += QString("Content-Transfer-Encoding: base64\r\n");
+    //rv += QString("Content-Transfer-Encoding: base64\r\n\r\n");
+    switch(m_part_type)
         {
         case ptypePlain:
         case ptypeHtml: 
-            {		
+            {       
                 QByteArray ba(m_content.toStdString().c_str());
                 rv += QString("%1\r\n").arg(ba.toBase64(QByteArray::Base64Encoding).constData());
             }break;
@@ -187,10 +187,10 @@ QByteArray MimeBodyPart::toRfc822()const
                 else {
                     QByteArray ba = mf.readAll().toBase64(QByteArray::Base64UrlEncoding);
                     rv += QString("%1\r\n").arg(ba.constData());
-                }		
+                }       
             }break;
         }
-	return rv;
+    return rv;
 };
 
 SendMimeMessageArg::SendMimeMessageArg()
@@ -201,12 +201,12 @@ SendMimeMessageArg::SendMimeMessageArg(QString from,
                                        QString to, 
                                        QString subject, 
                                        QString text)
-	:m_From(from),
+    :m_From(from),
      m_To(to),
      m_Subject(subject)
 {
-	MimeBodyPart pt = MimeBodyPart::makePlainPart(text);
-	addBodyPart(pt);
+    MimeBodyPart pt = MimeBodyPart::makePlainPart(text);
+    addBodyPart(pt);
 };
 
 SendMimeMessageArg::SendMimeMessageArg(QString from,
@@ -214,88 +214,88 @@ SendMimeMessageArg::SendMimeMessageArg(QString from,
                                        QString subject,
                                        QString text_plain,
                                        QString text_html)
-	:m_From(from),
+    :m_From(from),
      m_To(to),
      m_Subject(subject)
 {
-	MimeBodyPart pt = MimeBodyPart::makePlainPart(text_plain);
-	addBodyPart(pt);
+    MimeBodyPart pt = MimeBodyPart::makePlainPart(text_plain);
+    addBodyPart(pt);
 
-	MimeBodyPart pt_html = MimeBodyPart::makeHtmlPart(text_html);
-	addBodyPart(pt_html);
+    MimeBodyPart pt_html = MimeBodyPart::makeHtmlPart(text_html);
+    addBodyPart(pt_html);
 };
 
 void SendMimeMessageArg::addAttachments(const std::list<QString>& attachments) 
 {
-	for (auto& i : attachments) {
-		if (QFile::exists(i)) {
-			MimeBodyPart pt = MimeBodyPart::makeFilePart(i);
-			addBodyPart(pt);
-		}
-	}
+    for (auto& i : attachments) {
+        if (QFile::exists(i)) {
+            MimeBodyPart pt = MimeBodyPart::makeFilePart(i);
+            addBodyPart(pt);
+        }
+    }
 };
 
 void SendMimeMessageArg::build(const QString& link_path, QUrl& url)const
 {
-	UrlBuilder b(link_path + QString("/send"), url);
+    UrlBuilder b(link_path + QString("/send"), url);
 };
 
 QByteArray SendMimeMessageArg::toRfc822()const
 {
-	if (!m_rawRfc822MessageFile.isEmpty()) {
-		QFile mf(m_rawRfc822MessageFile);
-		if (!mf.open(QFile::ReadOnly)) {
-			qWarning() << "Error, failed to open prepared message file: " << m_rawRfc822MessageFile;
-			return QByteArray();
-		}
+    if (!m_rawRfc822MessageFile.isEmpty()) {
+        QFile mf(m_rawRfc822MessageFile);
+        if (!mf.open(QFile::ReadOnly)) {
+            qWarning() << "Error, failed to open prepared message file: " << m_rawRfc822MessageFile;
+            return QByteArray();
+        }
 
-		QByteArray ba = mf.readAll();
-		return ba;
-	}
+        QByteArray ba = mf.readAll();
+        return ba;
+    }
 
-	static QString boundary("OooOOoo17gqt");
+    static QString boundary("OooOOoo17gqt");
 
-	QByteArray rv;
-	rv =  QString("From: %1\r\n").arg(m_From).toStdString().c_str();
-	rv += QString("To: %1\r\n").arg(m_To);
-	rv += QString("Subject: %1\r\n").arg(m_Subject);
-	rv += QString("MIME-Version: 1.0\r\n");
-	rv += QString("Content-Type: multipart/alternative; boundary=\"%1\"\r\n\r\n").arg(boundary);
-	for (auto& p : m_body_parts)
+    QByteArray rv;
+    rv =  QString("From: %1\r\n").arg(m_From).toStdString().c_str();
+    rv += QString("To: %1\r\n").arg(m_To);
+    rv += QString("Subject: %1\r\n").arg(m_Subject);
+    rv += QString("MIME-Version: 1.0\r\n");
+    rv += QString("Content-Type: multipart/alternative; boundary=\"%1\"\r\n\r\n").arg(boundary);
+    for (auto& p : m_body_parts)
         {
             rv += QString("--%1\r\n").arg(boundary);
-			QString part_content = p.toRfc822();
+            QString part_content = p.toRfc822();
             rv += part_content;
         }
 
-	rv += QString("--%1--").arg(boundary);
+    rv += QString("--%1--").arg(boundary);
 
-	return rv;
+    return rv;
 };
 
 bool SendMimeMessageArg::saveAsRfc822(QString filePathName)const
 {
-	QFile file_in(filePathName);
-	if (!file_in.open(QFile::WriteOnly|QIODevice::Truncate)) {
-		qWarning() << "Error opening file: " << filePathName;
-		return false;
-	}
-	file_in.write(toRfc822());
-	file_in.close();
-	return true;
+    QFile file_in(filePathName);
+    if (!file_in.open(QFile::WriteOnly|QIODevice::Truncate)) {
+        qWarning() << "Error opening file: " << filePathName;
+        return false;
+    }
+    file_in.write(toRfc822());
+    file_in.close();
+    return true;
 };
 
 void SendMimeMessageArg::toJson(QJsonObject& js)const
 {
-	QByteArray data(toRfc822());
-	QString res = data.toBase64(QByteArray::Base64UrlEncoding);
-	js["raw"] = res;	
+    QByteArray data(toRfc822());
+    QString res = data.toBase64(QByteArray::Base64UrlEncoding);
+    js["raw"] = res;    
 };
 
 SendMimeMessageArg::operator QJsonObject()const {
-	QJsonObject js;
-	this->toJson(js);
-	return js;
+    QJsonObject js;
+    this->toJson(js);
+    return js;
 }
 
 InsertMessageArg::InsertMessageArg() 
@@ -348,10 +348,10 @@ std::unique_ptr<IdArg> IdArg::EXAMPLE(int, int)
 
 std::unique_ptr<AttachmentIdArg> AttachmentIdArg::EXAMPLE(int, int)
 {
-	std::unique_ptr<AttachmentIdArg> rv(new AttachmentIdArg);
-	rv->setMessageId("id123");
-	rv->setAttachmentId("id_attch456");
-	return rv;
+    std::unique_ptr<AttachmentIdArg> rv(new AttachmentIdArg);
+    rv->setMessageId("id123");
+    rv->setAttachmentId("id_attch456");
+    return rv;
 };
 
 
@@ -366,15 +366,15 @@ std::unique_ptr<ListArg> ListArg::EXAMPLE(int, int)
 
 std::unique_ptr<ModifyMessageArg> ModifyMessageArg::EXAMPLE(int, int)
 {
-	std::unique_ptr<ModifyMessageArg> rv(new ModifyMessageArg("id123"));
-	std::list <QString> add_label, remove_label;
-	add_label.push_back("LABEL_ADD_1");
-	add_label.push_back("LABEL_ADD_2");
-	remove_label.push_back("LABEL_DEL_1");
-	remove_label.push_back("LABEL_DEL_2");
-	rv->setAddlabels(add_label);
-	rv->setRemovelabels(remove_label);
-	return rv;
+    std::unique_ptr<ModifyMessageArg> rv(new ModifyMessageArg("id123"));
+    std::list <QString> add_label, remove_label;
+    add_label.push_back("LABEL_ADD_1");
+    add_label.push_back("LABEL_ADD_2");
+    remove_label.push_back("LABEL_DEL_1");
+    remove_label.push_back("LABEL_DEL_2");
+    rv->setAddlabels(add_label);
+    rv->setRemovelabels(remove_label);
+    return rv;
 };
 
 std::unique_ptr<HistoryListArg> HistoryListArg::EXAMPLE(int, int)
@@ -411,20 +411,20 @@ std::unique_ptr<ImportMessageArg> ImportMessageArg::EXAMPLE(int, int)
 
 std::unique_ptr<SendMimeMessageArg> SendMimeMessageArg::EXAMPLE(int, int)
 {
-	std::unique_ptr<SendMimeMessageArg> rv(new SendMimeMessageArg);
-	rv->setSubject("subject sample");
-	rv->setFrom("from_me@gmail.com");
-	rv->setTo("to_somebody@gmail.com");
-	rv->setCC("cc_somebody@gmail.com");
-	rv->setBCC("bcc_somebody@gmail.com");
+    std::unique_ptr<SendMimeMessageArg> rv(new SendMimeMessageArg);
+    rv->setSubject("subject sample");
+    rv->setFrom("from_me@gmail.com");
+    rv->setTo("to_somebody@gmail.com");
+    rv->setCC("cc_somebody@gmail.com");
+    rv->setBCC("bcc_somebody@gmail.com");
 
-	MimeBodyPart pt_plain = MimeBodyPart::makePlainPart("*My example message text*");
-	rv->addBodyPart(pt_plain);
+    MimeBodyPart pt_plain = MimeBodyPart::makePlainPart("*My example message text*");
+    rv->addBodyPart(pt_plain);
 
-	MimeBodyPart pt_html = MimeBodyPart::makeHtmlPart("<b>My example message text</b>");
-	rv->addBodyPart(pt_html);
+    MimeBodyPart pt_html = MimeBodyPart::makeHtmlPart("<b>My example message text</b>");
+    rv->addBodyPart(pt_html);
 
-	return rv;
+    return rv;
 };
 
 #endif //API_QT_AUTOTEST

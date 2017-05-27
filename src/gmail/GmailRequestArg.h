@@ -191,151 +191,151 @@ namespace googleQt{
             QStringList m_headers;
         };       
 
-		class AttachmentIdArg : public QParamArg
-		{
-		public:
-			AttachmentIdArg() {};
-			AttachmentIdArg(QString message_id, QString attachment_id);
+        class AttachmentIdArg : public QParamArg
+        {
+        public:
+            AttachmentIdArg() {};
+            AttachmentIdArg(QString message_id, QString attachment_id);
 
-			void build(const QString& link_path, QUrl& url)const override;
+            void build(const QString& link_path, QUrl& url)const override;
 
-			QString getMessageId()const { return m_message_id; }
-			void    setMessageId(QString id) { m_message_id = id; };
+            QString getMessageId()const { return m_message_id; }
+            void    setMessageId(QString id) { m_message_id = id; };
 
-			QString getAttachmentId()const { return m_attachment_id; }
-			void    setAttachmentId(QString id) { m_attachment_id = id; };
+            QString getAttachmentId()const { return m_attachment_id; }
+            void    setAttachmentId(QString id) { m_attachment_id = id; };
 
 
 #ifdef API_QT_AUTOTEST
-			static std::unique_ptr<AttachmentIdArg> EXAMPLE(int context_index, int parent_content_index);
+            static std::unique_ptr<AttachmentIdArg> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
 
-		protected:
-			QString     m_message_id;
-			QString     m_attachment_id;
-		};
+        protected:
+            QString     m_message_id;
+            QString     m_attachment_id;
+        };
 
 
         class ModifyMessageArg: public QParamArgWithBody<ModifyMessageArg>
         {
         public:
-			ModifyMessageArg() {};
+            ModifyMessageArg() {};
             ModifyMessageArg(QString idValue,
                              QString add_label = "",
                              QString remove_label = "");
 
-			QString messageId()const { return m_message_id; }
-			void setMessageId(QString mid) { m_message_id = mid; }
+            QString messageId()const { return m_message_id; }
+            void setMessageId(QString mid) { m_message_id = mid; }
 
-			const std::list <QString>& getAddlabels()const { return m_addLabels; };
-			void setAddlabels(const std::list <QString>& arg) { m_addLabels = arg;};
+            const std::list <QString>& getAddlabels()const { return m_addLabels; };
+            void setAddlabels(const std::list <QString>& arg) { m_addLabels = arg;};
 
-			const std::list <QString>& getRemovelabels()const { return m_removeLabels; };
-			void setRemovelabels(const std::list <QString>& arg) { m_removeLabels = arg;};
+            const std::list <QString>& getRemovelabels()const { return m_removeLabels; };
+            void setRemovelabels(const std::list <QString>& arg) { m_removeLabels = arg;};
 
-			void build(const QString& link_path, QUrl& url)const override;
-			void toJson(QJsonObject& js)const override;
-			operator QJsonObject ()const;
+            void build(const QString& link_path, QUrl& url)const override;
+            void toJson(QJsonObject& js)const override;
+            operator QJsonObject ()const;
 
 #ifdef API_QT_AUTOTEST
-			static std::unique_ptr<ModifyMessageArg> EXAMPLE(int context_index, int parent_content_index);
+            static std::unique_ptr<ModifyMessageArg> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
 
-		protected:
-			QString m_message_id;
-			std::list <QString> m_addLabels;
-			std::list <QString> m_removeLabels;
+        protected:
+            QString m_message_id;
+            std::list <QString> m_addLabels;
+            std::list <QString> m_removeLabels;
 
         };
     
-		class MimeBodyPart 
-		{
-			friend class SendMimeMessageArg;
-		public:
-			enum EType
-			{
-				ptypeNone,
-				ptypePlain,
-				ptypeHtml,
-				ptypeFile
-			};
-			static MimeBodyPart makePlainPart(QString text);
-			static MimeBodyPart makeHtmlPart(QString text);
-			static MimeBodyPart makeFilePart(QString file_name);
+        class MimeBodyPart 
+        {
+            friend class SendMimeMessageArg;
+        public:
+            enum EType
+            {
+                ptypeNone,
+                ptypePlain,
+                ptypeHtml,
+                ptypeFile
+            };
+            static MimeBodyPart makePlainPart(QString text);
+            static MimeBodyPart makeHtmlPart(QString text);
+            static MimeBodyPart makeFilePart(QString file_name);
 
-			QByteArray toRfc822()const;
+            QByteArray toRfc822()const;
 
-		protected:
-			void setContent(QString content, QString _type);			
-		protected:
-			QString m_content_type;
-			QString m_content;
-			EType   m_part_type{ ptypeNone };
-		};
+        protected:
+            void setContent(QString content, QString _type);            
+        protected:
+            QString m_content_type;
+            QString m_content;
+            EType   m_part_type{ ptypeNone };
+        };
 
-		class SendMimeMessageArg : public QParamArgWithBody<SendMimeMessageArg>
-		{
-		public:
-			SendMimeMessageArg();
+        class SendMimeMessageArg : public QParamArgWithBody<SendMimeMessageArg>
+        {
+        public:
+            SendMimeMessageArg();
 
-			///plain text message constructor
-			SendMimeMessageArg(QString from, 
-				QString to, 
-				QString subject, 
-				QString text);
+            ///plain text message constructor
+            SendMimeMessageArg(QString from, 
+                QString to, 
+                QString subject, 
+                QString text);
 
-			///plain+html text message constructor
-			SendMimeMessageArg(QString from,
-				QString to,
-				QString subject,
-				QString text_plain,
-				QString text_html);
+            ///plain+html text message constructor
+            SendMimeMessageArg(QString from,
+                QString to,
+                QString subject,
+                QString text_plain,
+                QString text_html);
 
 
-			QString getSubject()const { return m_Subject; }
-			void setSubject(QString subject) { m_Subject = subject; }
+            QString getSubject()const { return m_Subject; }
+            void setSubject(QString subject) { m_Subject = subject; }
 
-			QString getFrom()const { return m_From; }
-			void setFrom(QString from_val) { m_From = from_val; }
+            QString getFrom()const { return m_From; }
+            void setFrom(QString from_val) { m_From = from_val; }
 
-			QString getTo()const { return m_To; }
-			void setTo(QString to_val) { m_To = to_val; }
+            QString getTo()const { return m_To; }
+            void setTo(QString to_val) { m_To = to_val; }
 
-			QString getCC()const { return m_CC; }
-			void setCC(QString cc_val) { m_CC = cc_val; }
+            QString getCC()const { return m_CC; }
+            void setCC(QString cc_val) { m_CC = cc_val; }
 
-			QString getBCC()const { return m_BCC; }
-			void setBCC(QString bcc_val) { m_BCC = bcc_val; }
+            QString getBCC()const { return m_BCC; }
+            void setBCC(QString bcc_val) { m_BCC = bcc_val; }
 
-			void addBodyPart(const MimeBodyPart& pt) { m_body_parts.push_back(pt); };
-			void addAttachments(const std::list<QString>& attachments);
+            void addBodyPart(const MimeBodyPart& pt) { m_body_parts.push_back(pt); };
+            void addAttachments(const std::list<QString>& attachments);
 
-			/**
-				if rawRfc822MessageFile is set the file content as whole will be loaded
-				and sent instead of object members
-			*/
-			QString rawRfc822MessageFile()const { return m_rawRfc822MessageFile; }
-			void	setRawRfc822MessageFile(QString fileName) {m_rawRfc822MessageFile = fileName;}
+            /**
+                if rawRfc822MessageFile is set the file content as whole will be loaded
+                and sent instead of object members
+            */
+            QString rawRfc822MessageFile()const { return m_rawRfc822MessageFile; }
+            void    setRawRfc822MessageFile(QString fileName) {m_rawRfc822MessageFile = fileName;}
 
-			void build(const QString& link_path, QUrl& url)const override;
-			void toJson(QJsonObject& js)const override;
-			QByteArray toRfc822()const;
-			operator QJsonObject ()const;
-			bool saveAsRfc822(QString filePathName)const;
+            void build(const QString& link_path, QUrl& url)const override;
+            void toJson(QJsonObject& js)const override;
+            QByteArray toRfc822()const;
+            operator QJsonObject ()const;
+            bool saveAsRfc822(QString filePathName)const;
 
 #ifdef API_QT_AUTOTEST
-			static std::unique_ptr<SendMimeMessageArg> EXAMPLE(int context_index, int parent_content_index);
+            static std::unique_ptr<SendMimeMessageArg> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
 
-		protected:
-			QString m_From;
-			QString m_To;
-			QString m_CC;
-			QString m_BCC;
+        protected:
+            QString m_From;
+            QString m_To;
+            QString m_CC;
+            QString m_BCC;
             QString m_Subject;
-			QString m_rawRfc822MessageFile;
-			std::list<MimeBodyPart> m_body_parts;
-		};
+            QString m_rawRfc822MessageFile;
+            std::list<MimeBodyPart> m_body_parts;
+        };
 
         class InsertMessageArg : public PathArg<path_insert, InsertMessageArg>
         {

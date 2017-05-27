@@ -68,12 +68,12 @@ int main(int argc, char *argv[])
     t.addAction("get_html",         "Export body of Message to html file", [&](QString arg) {cmd.get_html(arg);} );
     t.addAction("trash",            "Trash Message by ID", [&](QString arg) {cmd.trash(arg); });
     t.addAction("untrash",          "Untrash Message by ID", [&](QString arg) {cmd.untrash(arg); });
-	t.addAction("delete",			"Delete Message by ID", [&](QString arg) {cmd.delete_msg(arg); });
+    t.addAction("delete",           "Delete Message by ID", [&](QString arg) {cmd.delete_msg(arg); });
     t.addAction("send_prepared_rfc822",  "Send Message stored in a file", [&](QString arg) {cmd.send_prepared_rfc822(arg); });
-	t.addAction("send_as_html",		"Send Html Message", [&](QString arg) {cmd.send_as_html(arg); });
-	t.addAction("send_att",			"Send Email with attachments", [&](QString arg) {cmd.send_att(arg); });
-    t.addAction("add_label",		"Add label", [&](QString arg) {cmd.add_label(arg); });
-    t.addAction("remove_label",		"Remove label", [&](QString arg) {cmd.remove_label(arg); });
+    t.addAction("send_as_html",     "Send Html Message", [&](QString arg) {cmd.send_as_html(arg); });
+    t.addAction("send_att",         "Send Email with attachments", [&](QString arg) {cmd.send_att(arg); });
+    t.addAction("add_label",        "Add label", [&](QString arg) {cmd.add_label(arg); });
+    t.addAction("remove_label",     "Remove label", [&](QString arg) {cmd.remove_label(arg); });
     t.addSeparator();
     t.addAction("ls_labels",        "List Labels", [&](QString arg) {cmd.ls_labels(arg); });
     t.addAction("get_label",        "Get Label Info", [&](QString arg) {cmd.get_label(arg); });

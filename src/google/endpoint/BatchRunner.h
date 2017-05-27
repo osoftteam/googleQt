@@ -26,7 +26,7 @@ namespace googleQt{
         };
         void registerResult(const ARG_PARAM& ap, GoogleTask<RESULT>* t) 
         {
-			///result map becomes owner of Tasks via unique_ptr
+            ///result map becomes owner of Tasks via unique_ptr
             m_results[ap] = std::unique_ptr<GoogleTask<RESULT>>(t);
         };
 
@@ -118,9 +118,9 @@ namespace googleQt{
             
             connect(t, &GoogleTask<RESULT>::finished, this, [=]()
             {
-				m_result->registerResult(ap, t);
-				afterSingleStepFinished();
-			});
+                m_result->registerResult(ap, t);
+                afterSingleStepFinished();
+            });
         }
 
         void afterSingleStepFinished()

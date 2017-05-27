@@ -69,32 +69,32 @@ void GoogleVoidTask::waitForResultAndRelease()
 };
 
 void GoogleVoidTask::then(std::function<void()> after_completed_processing, 
-	std::function<void(std::unique_ptr<GoogleException>)> on_error)
+    std::function<void(std::unique_ptr<GoogleException>)> on_error)
 {
-	std::function<void(void)> on_finished_processing = [=]()
-	{
-		if (isCompleted()) {
-			if (after_completed_processing) {
-				after_completed_processing();
-			}
-		}
-		else {
-			if (isFailed() && on_error) {
-				on_error(std::move(m_failed));
-			}
-		}
-		deleteLater();
-	};
+    std::function<void(void)> on_finished_processing = [=]()
+    {
+        if (isCompleted()) {
+            if (after_completed_processing) {
+                after_completed_processing();
+            }
+        }
+        else {
+            if (isFailed() && on_error) {
+                on_error(std::move(m_failed));
+            }
+        }
+        deleteLater();
+    };
 
 
-	if (isFinished()) {
-		on_finished_processing();
-	}
-	else {
-		connect(this, &EndpointRunnable::finished,
-			[=]()
-		{
-			on_finished_processing();
-		});
-	}
+    if (isFinished()) {
+        on_finished_processing();
+    }
+    else {
+        connect(this, &EndpointRunnable::finished,
+            [=]()
+        {
+            on_finished_processing();
+        });
+    }
 };

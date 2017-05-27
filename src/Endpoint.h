@@ -302,14 +302,14 @@ namespace googleQt{
             return url;
         }
 
-		template <class ARG>
-		QUrl buildGmailAttachmentUrl(const ARG& a)const
-		{
-			QUrl url;
-			a.build(QString("https://www.googleapis.com/gmail/v1/users/%1/messages/")
-				.arg(client()->userId()), url);
-			return url;
-		}
+        template <class ARG>
+        QUrl buildGmailAttachmentUrl(const ARG& a)const
+        {
+            QUrl url;
+            a.build(QString("https://www.googleapis.com/gmail/v1/users/%1/messages/")
+                .arg(client()->userId()), url);
+            return url;
+        }
 
 
         template <class ARG>
@@ -401,15 +401,15 @@ namespace googleQt{
             if (!firstReply)
                 {
 #ifdef API_QT_AUTOTEST
-				//emulate asynchronous call in autotest as in real net-request
-				//so client processing would be same - async based
-				//also emulate download proress
+                //emulate asynchronous call in autotest as in real net-request
+                //so client processing would be same - async based
+                //also emulate download proress
                 if (completed_callback != nullptr)
                 {                    
-					ApiAutotest::INSTANCE().emulateAutotestDownloadProgress(m_client);
-					QTimer::singleShot(10, [=]() {
-						completed_callback(RES::EXAMPLE(0, 0));
-					});
+                    ApiAutotest::INSTANCE().emulateAutotestDownloadProgress(m_client);
+                    QTimer::singleShot(10, [=]() {
+                        completed_callback(RES::EXAMPLE(0, 0));
+                    });
                 }
 #else
                     if (failed_callback != nullptr)

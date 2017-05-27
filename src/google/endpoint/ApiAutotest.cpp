@@ -6,20 +6,20 @@
 using namespace googleQt;
 
 bool ApiAutotest::init(QString filePathName){
-	close();
-	m_out = fopen(filePathName.toStdString().c_str(), "wb");
-	if (m_out) {
-		setvbuf(m_out, NULL, _IONBF, 0);
-	}
+    close();
+    m_out = fopen(filePathName.toStdString().c_str(), "wb");
+    if (m_out) {
+        setvbuf(m_out, NULL, _IONBF, 0);
+    }
     return (m_out != nullptr);
 }
 
 void ApiAutotest::close()
 {
-	if (m_out) {
-		fclose(m_out);
-		m_out = nullptr;
-	}
+    if (m_out) {
+        fclose(m_out);
+        m_out = nullptr;
+    }
 };
 
 #ifdef API_QT_AUTOTEST
@@ -28,37 +28,37 @@ static ApiAutotest* theInstance;
 
 void ApiAutotest::log_string(const char* s)
 {
-	if (m_out) {
-		fwrite(s, sizeof(char), strlen(s), m_out);
-		static const char* end_of_line = "\n";
-		fwrite(end_of_line, sizeof(char), strlen(end_of_line), m_out);
-	}
+    if (m_out) {
+        fwrite(s, sizeof(char), strlen(s), m_out);
+        static const char* end_of_line = "\n";
+        fwrite(end_of_line, sizeof(char), strlen(end_of_line), m_out);
+    }
 };
 
 ApiAutotest& ApiAutotest::INSTANCE(){return *theInstance;};
 ApiAutotest& ApiAutotest::operator << (const char * s){
-	log_string(s);
+    log_string(s);
     return *this;
 }
 
 ApiAutotest& ApiAutotest::operator << (const QString & s){
-	std::string s2 = s.toStdString();
-	log_string(s2.c_str());
+    std::string s2 = s.toStdString();
+    log_string(s2.c_str());
     return *this;
 }
 ApiAutotest& ApiAutotest::operator << (const QByteArray & arr){
-	log_string(arr.constData());
+    log_string(arr.constData());
     return *this;
 }
 ApiAutotest& ApiAutotest::operator << (const QNetworkRequest & r){
-	QString s = QString("POST %1").arg(r.url().toString());
-	log_string(s.toStdString().c_str());
+    QString s = QString("POST %1").arg(r.url().toString());
+    log_string(s.toStdString().c_str());
 
-	QList<QByteArray> lst = r.rawHeaderList();
-	for (QList<QByteArray>::iterator i = lst.begin(); i != lst.end(); i++) {
-		s = QString("--header %1: %2").arg(i->constData()).arg(r.rawHeader(*i).constData());
-		log_string(s.toStdString().c_str());
-	}
+    QList<QByteArray> lst = r.rawHeaderList();
+    for (QList<QByteArray>::iterator i = lst.begin(); i != lst.end(); i++) {
+        s = QString("--header %1: %2").arg(i->constData()).arg(r.rawHeader(*i).constData());
+        log_string(s.toStdString().c_str());
+    }
     return *this;
 }
 
@@ -108,28 +108,28 @@ void ApiAutotest::prepareAutoTestObj(const char* context_class_name,
 
 QByteArray ApiAutotest::generateData(const char* context_class_name, int context_index, int parent_context_index)
 {
-	Q_UNUSED(context_index);
+    Q_UNUSED(context_index);
 
-	QByteArray rv = QByteArray("AUTOTEST-DATA").toBase64(QByteArray::Base64UrlEncoding);
-	if (strcmp(context_class_name, "messages::MessagePartBody") == 0)
+    QByteArray rv = QByteArray("AUTOTEST-DATA").toBase64(QByteArray::Base64UrlEncoding);
+    if (strcmp(context_class_name, "messages::MessagePartBody") == 0)
         {
             static int ref_num = 0;
             ref_num++;
 
             static const char* sample_html = "<p><strong>ref# %1</strong></p>\
-			<p>Mr.M.Leaf<br / >Chief of Syrup Production<br / >Old Sticky Pancake Company<br / >\
-			456 Maple Lane<br / >Forest, ON 7W8 9Y0<br / ><br / >Dear Mr.Leaf:<br / ><br / >\
-			Let me begin by thanking you for your past contributions to our Little League baseball team.\
-			Your sponsorship aided in the purchase of ten full uniforms and several pieces of baseball equipment \
-			for last year's season.<br /><br />Next month, our company is planning an employee appreciation pancake \
-			breakfast honoring retired employees for their past years of service and present employees for their \
-			loyalty and dedication in spite of the current difficult economic conditions.<br /><br />\
-			We would like to place an order with your company for 25 pounds of pancake mix and five gallons \
-			of maple syrup. We hope you will be able to provide these products in the bulk quantities \
-			we require.<br /><br />As you are a committed corporate sponsor and long-time associate, \
-			we hope that you will be able to join us for breakfast on December 12, 2016.<br /><br />\
-			Respectfully yours,<br /><br />&nbsp;<br /><br />Derek Jeter<br />\
-			https://www.scribendi.com/advice/formal_letter_example.en.html</p>";
+            <p>Mr.M.Leaf<br / >Chief of Syrup Production<br / >Old Sticky Pancake Company<br / >\
+            456 Maple Lane<br / >Forest, ON 7W8 9Y0<br / ><br / >Dear Mr.Leaf:<br / ><br / >\
+            Let me begin by thanking you for your past contributions to our Little League baseball team.\
+            Your sponsorship aided in the purchase of ten full uniforms and several pieces of baseball equipment \
+            for last year's season.<br /><br />Next month, our company is planning an employee appreciation pancake \
+            breakfast honoring retired employees for their past years of service and present employees for their \
+            loyalty and dedication in spite of the current difficult economic conditions.<br /><br />\
+            We would like to place an order with your company for 25 pounds of pancake mix and five gallons \
+            of maple syrup. We hope you will be able to provide these products in the bulk quantities \
+            we require.<br /><br />As you are a committed corporate sponsor and long-time associate, \
+            we hope that you will be able to join us for breakfast on December 12, 2016.<br /><br />\
+            Respectfully yours,<br /><br />&nbsp;<br /><br />Derek Jeter<br />\
+            https://www.scribendi.com/advice/formal_letter_example.en.html</p>";
 
             QString s;
             if (parent_context_index == 0)
@@ -153,7 +153,7 @@ QByteArray ApiAutotest::generateData(const char* context_class_name, int context
             }
         }
 
-	return rv;
+    return rv;
 };
 
 void ApiAutotest::logRequest(QString req) 
@@ -210,8 +210,8 @@ QString ApiAutotest::getId(const char* class_name, int default_id_num)
 
 quint64 ApiAutotest::getInt(const char* class_name, const char* field_name, int default_id_num)
 {
-	quint64 rv = default_id_num;
-	if (strcmp(class_name, "messages::MessageResource") == 0)
+    quint64 rv = default_id_num;
+    if (strcmp(class_name, "messages::MessageResource") == 0)
         {
             if (strcmp(field_name, "m_internalDate") == 0) 
                 {
@@ -219,50 +219,50 @@ quint64 ApiAutotest::getInt(const char* class_name, const char* field_name, int 
                 }
 
         }
-	return rv;
+    return rv;
 };
 
 QString ApiAutotest::getString(const char* class_name, const char* field_name, QString default_value)
 {
     QString rv = default_value;
-	if (strcmp(class_name, "messages::MessagePayload") == 0)
+    if (strcmp(class_name, "messages::MessagePayload") == 0)
         {
             if (strcmp(field_name, "m_filename") == 0) 
                 {
                     rv += ".txt";
                 }
         }
-	else if (strcmp(class_name, "messages::MessagePart") == 0)
-	{
-		if (strcmp(field_name, "m_filename") == 0)
-		{
-			rv += ".txt";
-		}
-	}
+    else if (strcmp(class_name, "messages::MessagePart") == 0)
+    {
+        if (strcmp(field_name, "m_filename") == 0)
+        {
+            rv += ".txt";
+        }
+    }
 
     return rv;
 };
 
 void ApiAutotest::emulateAutotestDownloadProgress(googleQt::ApiClient* cl)
 {
-	qApp->processEvents();
-	if (isProgressEmulationEnabled()) {
-		static int max_progress		= 100;
-		static int step_progress	= 20;
-		for (int progress = 0; progress < max_progress; progress += step_progress) {
-			cl->downloadProgress(progress, max_progress);
-			sleep(100);
-		}
-	}
+    qApp->processEvents();
+    if (isProgressEmulationEnabled()) {
+        static int max_progress     = 100;
+        static int step_progress    = 20;
+        for (int progress = 0; progress < max_progress; progress += step_progress) {
+            cl->downloadProgress(progress, max_progress);
+            sleep(100);
+        }
+    }
 };
 
 void ApiAutotest::sleep(int millisecondsToWait)
 {
-	QTime endTime = QTime::currentTime().addMSecs(millisecondsToWait);
-	while (QTime::currentTime() < endTime)
-	{
-		QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
-	}
+    QTime endTime = QTime::currentTime().addMSecs(millisecondsToWait);
+    while (QTime::currentTime() < endTime)
+    {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+    }
 };
 
 #endif //API_QT_AUTOTEST
