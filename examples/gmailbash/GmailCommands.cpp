@@ -527,6 +527,39 @@ void GmailCommands::get_raw(QString msg_id)
         }            
 };
 
+void GmailCommands::save_raw(QString msg_id)
+{
+    if(msg_id.isEmpty())
+        {
+            std::cout << "Missing parameters, expected <message_id>" << std::endl;
+            return;
+        }
+
+    QString dest_dir = QString("download/%1").arg(msg_id);
+    QDir att_dir;    
+    if(!att_dir.mkpath(dest_dir)){
+        std::cout << "Failed to create directory: " << dest_dir << std::endl;
+        return;
+    };
+    
+    try
+        {
+            auto r = m_gm->getMessages()->get(gmail::IdArg(msg_id, "raw"));
+            QFile file_in(dest_dir + "/raw_msg.txt");
+            if (file_in.open(QFile::WriteOnly)) {
+                file_in.write(QByteArray::fromBase64(r->raw(), QByteArray::Base64UrlEncoding));
+                file_in.close();
+                std::cout << r->id()
+                          << " " << r->raw().size()
+                          << std::endl;
+            }
+        }
+    catch(GoogleException& e)
+        {
+            std::cout << "Exception: " << e.what() << std::endl;
+        }
+};
+
 void GmailCommands::get_html(QString message_id_space_fileName)
 {
     QStringList arg_list = message_id_space_fileName.split(" ",
@@ -754,7 +787,7 @@ void GmailCommands::download_attachments(QString msgId)
                         auto r = m_gm->getAttachments()->get(arg);
 
                         QFile file_in(dest_dir + "/" + pt.filename());
-                        if (file_in.open(QFile::WriteOnly)) {
+                        if (file_in.open(QFile::WriteOnly|QIODevice::Truncate)) {
                             file_in.write(QByteArray::fromBase64(r->data(), QByteArray::Base64UrlEncoding));
                             file_in.close();
                             std::cout << pt.filename()
@@ -788,7 +821,7 @@ void GmailCommands::down_att_async(QString msgId)
     std::function<void(attachments::MessageAttachment* , QString )> store_attachment = [=](attachments::MessageAttachment* a, QString filename)
         {
             QFile file_in(dest_dir + "/" + filename);
-            if (file_in.open(QFile::WriteOnly)) {
+            if (file_in.open(QFile::WriteOnly|QIODevice::Truncate)) {
                 file_in.write(QByteArray::fromBase64(a->data(), QByteArray::Base64UrlEncoding));
                 file_in.close();
                 std::cout << filename

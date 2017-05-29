@@ -41,6 +41,11 @@ public:
     void get_raw    (QString message_id);
 
     /**
+       save_raw - save message by id using raw format
+    */
+    void save_raw    (QString message_id);
+    
+    /**
        export_html_body - export message body as html file
     */
     void get_html    (QString message_id_space_fileName);
