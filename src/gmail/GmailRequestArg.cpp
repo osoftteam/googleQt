@@ -185,7 +185,7 @@ QByteArray MimeBodyPart::toRfc822()const
                     qWarning() << "Error, failed to open attachment file: " << m_content;
                 }
                 else {
-                    QByteArray ba = mf.readAll().toBase64(QByteArray::Base64UrlEncoding);
+                    QByteArray ba = mf.readAll().toBase64(QByteArray::Base64Encoding);
                     rv += QString("%1\r\n").arg(ba.constData());
                 }       
             }break;
