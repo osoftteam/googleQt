@@ -85,11 +85,14 @@ The sample implementation using blocking calls:
 
 Notice blocking calls are wrapped in try/catch block, that is because blocking functions (without Async suffix) can throw exception - when data are wrong, network issues etc. Not-blocking functions have suffix 'Async' and don't throw exceptions but return GoogleTask objects that can be connected to, chained and used to retrieve result data and error description if any. If object are not chained via 'then' and not turned into blocking calls with 'waitForResultAndRelease' they should be scheduled to delete using 'deleteLater'.
 
-### Requirements. C++11 compiler and Qt 5.xx. We used VS2015, GCC 5.xx, XCode 8.xx. Anything newer/better will do.
+### Requirements.
+C++11 compiler and Qt 5.xx. We used VS2015, GCC 5.xx, XCode 8.xx. Anything newer/better will do.
 
-### Installation Run qmake in 'prj' folder to generate Makefile, compile, see generated static library googleQt. To create sample project, cd in 'examples' and run qmake for each subfolder. There is shell script to open IDE on windows and generate project files - see folder 'bin' and win-configure-open-ide.bat or Cygwin based cygwin-build.csh. You have to add googleQt to your LIB list (as shown in sample) and add path to prj/src to the INCLUDE list.
+### Installation
+Run qmake in 'prj' folder to generate Makefile, compile, see generated static library googleQt. To create sample project, cd in 'examples' and run qmake for each subfolder. There is shell script to open IDE on windows and generate project files - see folder 'bin' and win-configure-open-ide.bat or Cygwin based cygwin-build.csh. You have to add googleQt to your LIB list (as shown in sample) and add path to prj/src to the INCLUDE list.
 
-### Current status - work in progress, getting ready for beta. Resumable uploads will be implemented later also handling slow connections, concurrent requests partially implemented for Gmail. Caching of GMail messages under development.
+### Current status.
+Work in progress, getting ready for beta. Resumable uploads will be implemented later also handling slow connections, concurrent requests partially implemented for Gmail. Caching of GMail messages under development.
 
 ### Features
 The library covers GDrive, GMail, GTask but not completely, particularly resumable downloads are not implemented. Also sending emails functions are not fully tested for various destination client (for encoding etc). 
@@ -101,6 +104,6 @@ The library covers GDrive, GMail, GTask but not completely, particularly resumab
 - parallel requests for selected services
 - caching cloud data for selected services
 
-# License
+### License
 
 LGPL v3
