@@ -46,7 +46,13 @@ public:
     /**
     * refresh access token
     */
-    virtual bool refreshToken();
+    virtual bool refreshToken()override;
+
+    /**
+     * when user ID changes and cache is setup
+     * we have to reload it for new user
+     */
+    void setUserId(QString email)override;
 
     /*
         some debug functions, we might remove them in
