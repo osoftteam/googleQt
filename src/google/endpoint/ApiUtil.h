@@ -197,6 +197,8 @@ namespace googleQt {
             url.setUrl(link);
         }
 
+		QString userId()const { return ""; }
+
 #ifdef API_QT_AUTOTEST
         static std::unique_ptr<VoidType> EXAMPLE(int, int) { return std::unique_ptr<VoidType>(new VoidType()); };
 #endif //API_QT_AUTOTEST
@@ -269,9 +271,6 @@ namespace googleQt {
             url.setUrl(link_path + QString("/%1/%2").arg(m_id).arg(P::path()));
         }
 
-#ifdef API_QT_AUTOTEST
-        static std::unique_ptr<D> EXAMPLE(int, int) { std::unique_ptr<D> rv(new D("100")); return rv; };
-#endif //API_QT_AUTOTEST
     protected:
         QString m_id;
     };
