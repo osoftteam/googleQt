@@ -90,7 +90,7 @@ namespace googleQt {
     class CacheQueryTask : public CacheTaskParent<O>//googleQt::GoogleTask<CacheDataList<O>>
     {
     public:
-        CacheQueryTask(EDataState load, ApiEndpoint& ept, GoogleCacheBase<O>* c) 
+        CacheQueryTask(EDataState load, ApiEndpoint& ept, std::shared_ptr<GoogleCacheBase<O>> c)
             :GoogleTask<CacheDataList<O>>(ept), m_cache(c){CacheTaskParent<O>::m_completed.reset(new CacheDataList<O>); CacheTaskParent<O>::m_completed->state = load; };
 
 
@@ -114,7 +114,7 @@ namespace googleQt {
         size_t db_cache_hit_count()const { return m_db_cache_hit_count; }
 
     protected:
-        GoogleCacheBase<O>* m_cache;
+        std::shared_ptr<GoogleCacheBase<O>> m_cache;
         size_t     m_mem_cache_hit_count{0};
         size_t     m_db_cache_hit_count{0};
         bool       m_query_completed{ false };
@@ -256,6 +256,8 @@ namespace googleQt {
                     rfetcher->notifyOnCompletedFromCache();
                 }            
         };
+
+		ApiEndpoint&  endpoint() { return m_endpoint; }
 
     protected:
         ApiEndpoint&                m_endpoint;
