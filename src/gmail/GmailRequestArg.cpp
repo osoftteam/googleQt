@@ -7,9 +7,10 @@ using namespace googleQt;
 using namespace gmail;
 
 
-IdArg::IdArg(QString idValue, QString format)
-    :m_id(idValue),
-     m_format(format)
+IdArg::IdArg(QString userIdValue, QString idValue, QString format)
+    :m_userId(userIdValue),
+	m_id(idValue),
+    m_format(format)
 {
 
 };
@@ -25,9 +26,10 @@ void IdArg::build(const QString& link_path, QUrl& url)const
 };
 
 
-AttachmentIdArg::AttachmentIdArg(QString message_id, QString attachment_id) 
-    :m_message_id(message_id),
-     m_attachment_id(attachment_id)
+AttachmentIdArg::AttachmentIdArg(QString user_id, QString message_id, QString attachment_id)
+    :m_userId(user_id),
+	m_message_id(message_id),
+    m_attachment_id(attachment_id)
 {
 };
 
@@ -39,11 +41,12 @@ void AttachmentIdArg::build(const QString& link_path, QUrl& url)const
                  url);
 }
 
-ModifyMessageArg::ModifyMessageArg(QString idValue,
+ModifyMessageArg::ModifyMessageArg(QString user_id, QString message_id,
                                    QString add_label /*= ""*/,
                                    QString remove_label /*= ""*/)
 {
-    m_message_id = idValue;
+	m_userId = user_id;
+    m_message_id = message_id;
     if(!add_label.isEmpty()){
         m_addLabels.push_back(add_label);
     }
@@ -73,7 +76,12 @@ ModifyMessageArg::operator QJsonObject()const {
 }
 
 
-ListArg::ListArg():m_includeSpamTrash(false), m_maxResults(50)
+ListArg::ListArg()
+{
+
+};
+
+ListArg::ListArg(QString user_id):m_userId(user_id)
 {
 
 };
@@ -92,7 +100,8 @@ void ListArg::build(const QString& link_path, QUrl& url)const
 };
 
 
-HistoryListArg::HistoryListArg(int startHistoryId):
+HistoryListArg::HistoryListArg(QString userId, int startHistoryId):
+	m_userId(userId),
     m_maxResults(50),
     m_startHistoryId(startHistoryId)
 {
@@ -112,9 +121,15 @@ void HistoryListArg::build(const QString& link_path, QUrl& url)const
     }
 }
 
-DraftListArg::DraftListArg() :m_maxResults(50)
+
+DraftListArg::DraftListArg()
 {
 
+};
+
+DraftListArg::DraftListArg(QString user_id) 
+{
+	m_userId = user_id;
 };
 
 void DraftListArg::build(const QString& link_path, QUrl& url)const
@@ -366,7 +381,7 @@ std::unique_ptr<ListArg> ListArg::EXAMPLE(int, int)
 
 std::unique_ptr<ModifyMessageArg> ModifyMessageArg::EXAMPLE(int, int)
 {
-    std::unique_ptr<ModifyMessageArg> rv(new ModifyMessageArg("id123"));
+    std::unique_ptr<ModifyMessageArg> rv(new ModifyMessageArg(ApiAutotest::INSTANCE().userId(), "id123"));
     std::list <QString> add_label, remove_label;
     add_label.push_back("LABEL_ADD_1");
     add_label.push_back("LABEL_ADD_2");
@@ -379,7 +394,7 @@ std::unique_ptr<ModifyMessageArg> ModifyMessageArg::EXAMPLE(int, int)
 
 std::unique_ptr<HistoryListArg> HistoryListArg::EXAMPLE(int, int)
 { 
-    std::unique_ptr<HistoryListArg> rv(new HistoryListArg); 
+    std::unique_ptr<HistoryListArg> rv(new HistoryListArg(ApiAutotest::INSTANCE().userId()));
     rv->setMaxResults(10);
     rv->setPageToken("nextToken");
     rv->labels() = QString("hlabel1 hlabel2 hlabel3").split(" ");
@@ -413,7 +428,7 @@ std::unique_ptr<SendMimeMessageArg> SendMimeMessageArg::EXAMPLE(int, int)
 {
     std::unique_ptr<SendMimeMessageArg> rv(new SendMimeMessageArg);
     rv->setSubject("subject sample");
-    rv->setFrom("from_me@gmail.com");
+    rv->setFrom(ApiAutotest::INSTANCE().userId());
     rv->setTo("to_somebody@gmail.com");
     rv->setCC("cc_somebody@gmail.com");
     rv->setBCC("bcc_somebody@gmail.com");
@@ -425,6 +440,18 @@ std::unique_ptr<SendMimeMessageArg> SendMimeMessageArg::EXAMPLE(int, int)
     rv->addBodyPart(pt_html);
 
     return rv;
+};
+
+std::unique_ptr<TrashMessageArg> TrashMessageArg::EXAMPLE(int, int)
+{ 
+	std::unique_ptr<TrashMessageArg> rv(new TrashMessageArg(ApiAutotest::INSTANCE().userId(), "100"));
+	return rv; 
+};
+
+std::unique_ptr<UntrashMessageArg> UntrashMessageArg::EXAMPLE(int, int)
+{ 
+	std::unique_ptr<UntrashMessageArg> rv(new UntrashMessageArg(ApiAutotest::INSTANCE().userId(), "100"));
+	return rv; 
 };
 
 #endif //API_QT_AUTOTEST
