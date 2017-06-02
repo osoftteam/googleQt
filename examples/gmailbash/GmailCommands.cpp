@@ -261,7 +261,7 @@ void GmailCommands::trash(QString message_id)
 
     try
     {
-        gmail::TrashMessageArg arg(message_id);
+        gmail::TrashMessageArg arg(m_c.userId(), message_id);
         m_gm->getMessages()->trash(arg);
     }
     catch (GoogleException& e)
@@ -279,7 +279,7 @@ void GmailCommands::untrash(QString message_id)
 
     try
     {
-        gmail::UntrashMessageArg arg(message_id);
+        gmail::UntrashMessageArg arg(m_c.userId(), message_id);
         m_gm->getMessages()->untrash(arg);
     }
     catch (GoogleException& e)
@@ -297,7 +297,7 @@ void GmailCommands::delete_msg(QString message_id)
 
     try
     {
-        gmail::IdArg arg(message_id);
+        gmail::IdArg arg(m_c.userId(), message_id);
         m_gm->getMessages()->deleteOperation(arg);
     }
     catch (GoogleException& e)
@@ -499,7 +499,7 @@ void GmailCommands::get(QString msg_id)
     
     try
         {
-            auto r = m_gm->getMessages()->get(gmail::IdArg(msg_id));
+            auto r = m_gm->getMessages()->get(gmail::IdArg(m_c.userId(), msg_id));
             printMessage(r.get());
         }
     catch(GoogleException& e)
@@ -575,7 +575,7 @@ void GmailCommands::get_html(QString message_id_space_fileName)
     
     try
         {
-            auto r = m_gm->getMessages()->get(gmail::IdArg(msg_id));
+            auto r = m_gm->getMessages()->get(gmail::IdArg(m_c.userId(), msg_id));
             exportMessageBody(r.get(), fileName);
         }
     catch(GoogleException& e)
@@ -622,7 +622,7 @@ void GmailCommands::get_label(QString label_id)
 {
     try
     {
-        auto lbl = m_gm->getLabels()->get(label_id);
+        auto lbl = m_gm->getLabels()->get(gmail::IdArg(m_c.userId(), label_id));
         printLabel(lbl.get());
     }
     catch (GoogleException& e)
@@ -650,7 +650,7 @@ void GmailCommands::delete_label(QString label_id)
 {
     try
     {
-        gmail::IdArg l_id(label_id);
+        gmail::IdArg l_id(m_c.userId(), label_id);
         m_gm->getLabels()->deleteOperation(l_id);
         std::cout << "label deleted" << std::endl;
     }
@@ -674,7 +674,7 @@ void GmailCommands::update_label(QString labelid_space_name)
     
     try
     {                
-        gmail::IdArg l_id(labelid);
+        gmail::IdArg l_id(m_c.userId(), labelid);
         labels::LabelResource lbl;
         lbl.setName(name).setMessagelistvisibility("show").setLabellistvisibility("labelShow");
         auto new_label = m_gm->getLabels()->update(l_id, lbl);
@@ -696,7 +696,7 @@ void GmailCommands::get_thread(QString thread_id)
 {
     try
     {
-        auto t = m_gm->getThreads()->get(thread_id);
+        auto t = m_gm->getThreads()->get(gmail::IdArg(m_c.userId(), thread_id));
         std::cout << "tid=" << t->id() << " snipped=" << t->snipped() << " historyid=" << t->historyid() << " messagescount=" << t->messages().size() << std::endl;
     }
     catch (GoogleException& e)
@@ -716,7 +716,7 @@ void GmailCommands::history(QString startHistoryIdStr)
     
     try
     {
-        gmail::HistoryListArg histArg(startHistoryId);
+        gmail::HistoryListArg histArg(m_c.userId(), startHistoryId);
 
         auto history = m_gm->getHistory()->list(histArg);
         for (auto h : history->history())
@@ -748,7 +748,7 @@ void GmailCommands::get_draft(QString draft_id)
 {
     try
     {
-        auto d = m_gm->getDrafts()->get(draft_id);
+        auto d = m_gm->getDrafts()->get(gmail::IdArg(m_c.userId(), draft_id));
         auto m = d->message();
         std::cout << "id=" << d->id() << std::endl;
         printMessage(&m);
@@ -776,14 +776,14 @@ void GmailCommands::download_attachments(QString msgId)
     
     try
         {
-            gmail::IdArg arg(msgId);
+            gmail::IdArg arg(m_c.userId(), msgId);
             auto r = m_gm->getMessages()->get(arg);
             auto p = r->payload();
             auto parts = p.parts();
             for (auto pt : parts){
                     auto b = pt.body();
                     if(b.size() > 0 && !b.attachmentid().isEmpty()){
-                        gmail::AttachmentIdArg arg(msgId, b.attachmentid());
+                        gmail::AttachmentIdArg arg(m_c.userId(), msgId, b.attachmentid());
                         auto r = m_gm->getAttachments()->get(arg);
 
                         QFile file_in(dest_dir + "/" + pt.filename());
@@ -830,7 +830,7 @@ void GmailCommands::down_att_async(QString msgId)
             }            
         };
 
-    auto t = m_gm->getMessages()->get_Async(gmail::IdArg(msgId));
+    auto t = m_gm->getMessages()->get_Async(gmail::IdArg(m_c.userId(), msgId));
     t->then([=](std::unique_ptr<messages::MessageResource> r) 
     {
         auto p = r->payload();
@@ -839,7 +839,7 @@ void GmailCommands::down_att_async(QString msgId)
         for (auto pt : parts) {
             auto b = pt.body();
             if (b.size() > 0 && !b.attachmentid().isEmpty()) {
-                gmail::AttachmentIdArg arg(msgId, b.attachmentid());
+                gmail::AttachmentIdArg arg(m_c.userId(), msgId, b.attachmentid());
                 auto a = m_gm->getAttachments()->get_Async(arg);
                 a->then([=](std::unique_ptr<attachments::MessageAttachment> att)
                 {
@@ -883,7 +883,7 @@ void GmailCommands::get_batch_snippets(QString id_list)
         std::cout << "Space separated messages ID list required" << std::endl;
         return;
     }
-    std::unique_ptr<UserBatchResult<QString, messages::MessageResource>> br = m_gm->getUserBatchMessages(EDataState::snippet, arg_list);
+    std::unique_ptr<UserBatchResult<QString, messages::MessageResource>> br = m_gm->getUserBatchMessages(m_c.userId(), EDataState::snippet, arg_list);
     RESULT_LIST<messages::MessageResource*> res = br->results();
     res.sort([](messages::MessageResource* f, messages::MessageResource* s) {return (f->internaldate() > s->internaldate()); });
     std::cout << "batch size: " << res.size() << std::endl;
@@ -915,7 +915,7 @@ void GmailCommands::get_batch_details(QString id_list)
         return;
     }
 
-    std::unique_ptr<UserBatchResult<QString, messages::MessageResource>> br = m_gm->getUserBatchMessages(EDataState::body, arg_list);
+    std::unique_ptr<UserBatchResult<QString, messages::MessageResource>> br = m_gm->getUserBatchMessages(m_c.userId(), EDataState::body, arg_list);
     RESULT_LIST<messages::MessageResource*> res = br->results();
     int n = 1;
     for (auto& m : res)
@@ -1034,7 +1034,7 @@ void GmailCommands::check_email_cache(QString nextToken)
 
     try
         {    
-            auto lst = m_gm->getNextCacheMessages(20, nextToken);
+            auto lst = m_gm->getNextCacheMessages(m_c.userId(), 20, nextToken);
             std::cout << "loaded from cache: " << lst->result_list.size() << std::endl;
 
             int n = 1;
