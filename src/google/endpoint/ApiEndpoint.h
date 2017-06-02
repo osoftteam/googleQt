@@ -25,6 +25,10 @@ namespace googleQt{
         QString       lastRequestInfo()const { return m_last_req_info; }
         QByteArray    lastResponse()const { return m_last_response; };
         void          setProxy(const QNetworkProxy& proxy);
+
+		ApiClient*     apiClient() { return m_client; }
+		const ApiClient*  apiClient()const { return m_client; }
+
     protected:
         virtual void addAuthHeader(QNetworkRequest& request);
         

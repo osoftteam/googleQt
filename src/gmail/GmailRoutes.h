@@ -40,22 +40,24 @@ namespace googleQt{
         threads::ThreadsRoutes*     getThreads();
         history::HistoryRoutes*     getHistory();
         drafts::DraftsRoutes*       getDrafts();
-        mail_cache::GMailCache*     cache() {return m_GMailCache.get();}
+		mail_cache::cache_ptr		cache() {return m_GMailCache;}
 
-        std::unique_ptr<UserBatchResult<QString, messages::MessageResource>>   getUserBatchMessages(EDataState, const std::list<QString>& id_list);
-        UserBatchRunner<QString, mail_cache::MessagesReceiver, messages::MessageResource>* getUserBatchMessages_Async(EDataState, const std::list<QString>& id_list);
+        std::unique_ptr<UserBatchResult<QString, messages::MessageResource>>   getUserBatchMessages(QString userId, EDataState, const std::list<QString>& id_list);
+        UserBatchRunner<QString, mail_cache::MessagesReceiver, messages::MessageResource>* getUserBatchMessages_Async(QString userId, EDataState, const std::list<QString>& id_list);
 
         /// check for new emails - get top messagesCount messages and update cache
-        mail_cache::data_list_uptr getNextCacheMessages(int messagesCount = 40,
+        mail_cache::data_list_uptr getNextCacheMessages(QString userId, 
+														int messagesCount = 40,
                                                         QString pageToken = "", 
                                                         QStringList* labels = nullptr);
-        mail_cache::GMailCacheQueryTask* getNextCacheMessages_Async(int messagesCount = 40, 
+        mail_cache::GMailCacheQueryTask* getNextCacheMessages_Async(QString userId, 
+														int messagesCount = 40,
                                                         QString pageToken = "", 
                                                         QStringList* labels = nullptr);
 
         /// load emails by ID-list while updating local cache
-        mail_cache::data_list_uptr getCacheMessages(EDataState, const std::list<QString>& id_list);
-        mail_cache::GMailCacheQueryTask* getCacheMessages_Async(EDataState, const std::list<QString>& id_list, 
+        mail_cache::data_list_uptr getCacheMessages(QString userId, EDataState, const std::list<QString>& id_list);
+        mail_cache::GMailCacheQueryTask* getCacheMessages_Async(QString userId, EDataState, const std::list<QString>& id_list,
                                                                   mail_cache::GMailCacheQueryTask* rfetcher = nullptr);
 
         /// load messages from cache, numberOfMessages = -1 if all messages from cache
@@ -70,6 +72,13 @@ namespace googleQt{
             QString downloadPath, 
             QString dbName = "googleqt", 
             QString dbprefix = "api");
+
+        /// if setupSQLiteCache was called before
+        /// used to switch to a new user
+        bool resetSQLiteCache();
+
+        /// returns true if local cache has been setup
+        bool hasCache()const;
 
         /// async refresh labels DB table
         GoogleVoidTask* refreshLabels_Async();
@@ -97,6 +106,7 @@ namespace googleQt{
     public:
 #ifdef API_QT_AUTOTEST
         void autotest();
+		void runAutotest();
         void autotestParLoad(EDataState state, const std::list<QString>& id_list);
         void autotestParDBLoad(EDataState state, const std::list<QString>& id_list);
 #endif
@@ -106,7 +116,7 @@ namespace googleQt{
 
     protected:
         void ensureCache()const;
-        mail_cache::GMailCacheQueryTask* newResultFetcher(EDataState state);
+        mail_cache::GMailCacheQueryTask* newResultFetcher(QString userId, EDataState state);
         GoogleTask<messages::MessageResource>* setLabel_Async(QString label_id,
                                                               mail_cache::MessageData* d,
                                                               bool label_on,
@@ -119,7 +129,7 @@ namespace googleQt{
         std::unique_ptr<threads::ThreadsRoutes>         m_ThreadsRoutes;
         std::unique_ptr<history::HistoryRoutes>         m_HistoryRoutes;
         std::unique_ptr<drafts::DraftsRoutes>           m_DraftsRoutes;
-        mutable std::unique_ptr<mail_cache::GMailCache> m_GMailCache;
+        mutable mail_cache::cache_ptr					m_GMailCache;
         Endpoint*  m_endpoint;
     };
 
