@@ -20,6 +20,7 @@ namespace googleQt{
         bool init(QString filePathName);
         void close();
         virtual void generateCalls() = 0;
+		virtual QString userId()const = 0;
 
         #ifdef API_QT_AUTOTEST
         static ApiAutotest& INSTANCE();

@@ -75,7 +75,8 @@ void ApiAutotest::prepareAutoTestObj(const char* context_class_name,
                     messages::MessagePayloadHeader* h = (messages::MessagePayloadHeader*)p;
                     switch (idx)
                         {
-                        case 0: h->setName("From"); h->setValue("From_" + h->value() + "@gmail.com"); break;
+                        //case 0: h->setName("From"); h->setValue("From_" + h->value() + "@gmail.com"); break;
+						case 0: h->setName("From"); h->setValue(ApiAutotest::INSTANCE().userId()); break;
                         case 1: h->setName("To"); h->setValue("To_" + h->value() + "@gmail.com"); break;
                         case 2: h->setName("Subject"); h->setValue("Subject_" + h->value() + "@gmail.com"); break;
                         case 3: h->setName("CC"); h->setValue("CC_" + h->value() + "@gmail.com"); break;
@@ -239,6 +240,16 @@ QString ApiAutotest::getString(const char* class_name, const char* field_name, Q
             rv += ".txt";
         }
     }
+	else if (strcmp(class_name, "attachments::MessageAttachment") == 0) 
+	{
+		if (strcmp(field_name, "m_attachmentId") == 0)
+		{
+			rv = QString("att_%1_%2_%3")
+				.arg(default_value)
+				.arg(QDateTime::currentMSecsSinceEpoch())
+				.arg(qrand());
+		}
+	}
 
     return rv;
 };
