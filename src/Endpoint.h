@@ -298,7 +298,7 @@ namespace googleQt{
         {
             QUrl url;
             a.build(QString("https://www.googleapis.com/gmail/v1/users/%1/%2")
-                    .arg(client()->userId()).arg(namespace_path), url);
+                    .arg(a.userId().isEmpty() ? client()->userId() : a.userId()).arg(namespace_path), url);
             return url;
         }
 
@@ -307,7 +307,7 @@ namespace googleQt{
         {
             QUrl url;
             a.build(QString("https://www.googleapis.com/gmail/v1/users/%1/messages/")
-                .arg(client()->userId()), url);
+                .arg(a.userId().isEmpty() ? client()->userId() : a.userId()), url);
             return url;
         }
 
