@@ -14,7 +14,7 @@ namespace googleQt{
         QString getToken()const;
         QString getAppKey()const;
         QString userId()const;
-        void setUserId(QString email);
+        virtual void setUserId(QString email);
         QString userAgent()const{return m_userAgent;}
         void setUserAgent(QString s){m_userAgent = s;}
         virtual bool refreshToken() = 0;        
