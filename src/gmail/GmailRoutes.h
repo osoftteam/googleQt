@@ -51,14 +51,14 @@ namespace googleQt{
                                                         QString pageToken = "", 
                                                         QStringList* labels = nullptr);
         mail_cache::GMailCacheQueryTask* getNextCacheMessages_Async(QString userId, 
-														int messagesCount = 40,
-                                                        QString pageToken = "", 
-                                                        QStringList* labels = nullptr);
+                                                                    int messagesCount = 40,
+                                                                    QString pageToken = "", 
+                                                                    QStringList* labels = nullptr);
 
         /// load emails by ID-list while updating local cache
         mail_cache::data_list_uptr getCacheMessages(QString userId, EDataState, const std::list<QString>& id_list);
         mail_cache::GMailCacheQueryTask* getCacheMessages_Async(QString userId, EDataState, const std::list<QString>& id_list,
-                                                                  mail_cache::GMailCacheQueryTask* rfetcher = nullptr);
+                                                                mail_cache::GMailCacheQueryTask* rfetcher = nullptr);
 
         /// load messages from cache, numberOfMessages = -1 if all messages from cache
         mail_cache::data_list_uptr getCacheMessages(int numberOfMessages, uint64_t labelFilter = 0);
@@ -69,9 +69,9 @@ namespace googleQt{
         /// file path and DB-name should be specified
         /// downloadPath - directory for attachment download
         bool setupSQLiteCache(QString dbPath, 
-            QString downloadPath, 
-            QString dbName = "googleqt", 
-            QString dbprefix = "api");
+                              QString downloadPath, 
+                              QString dbName = "googleqt", 
+                              QString dbprefix = "api");
 
         /// if setupSQLiteCache was called before
         /// used to switch to a new user
@@ -83,8 +83,8 @@ namespace googleQt{
         /// async refresh labels DB table
         GoogleVoidTask* refreshLabels_Async();
         GoogleVoidTask* downloadAttachment_Async(googleQt::mail_cache::msg_ptr m, 
-            googleQt::mail_cache::att_ptr a, 
-            QString destinationFolder);
+                                                 googleQt::mail_cache::att_ptr a, 
+                                                 QString destinationFolder);
         void refreshLabels();
         std::list<mail_cache::LabelData*> getLoadedLabels(std::set<QString>* in_optional_idset = nullptr);
         std::list<mail_cache::LabelData*> getMessageLabels(mail_cache::MessageData* d);
