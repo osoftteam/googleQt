@@ -983,7 +983,7 @@ void GmailCommands::get_cache_snippets(QString id_list)
         return;
     }
 
-    auto lst = m_gm->getCacheMessages(EDataState::snippet, arg_list);
+    auto lst = m_gm->getCacheMessages(m_c.userId(), EDataState::snippet, arg_list);
     std::cout << "loaded from cache: " << lst->result_list.size() << std::endl;
 
     int n = 1;
@@ -1009,7 +1009,7 @@ void GmailCommands::get_cache_details(QString id_list)
         return;
     }
 
-    auto lst = m_gm->getCacheMessages(EDataState::body, arg_list);
+    auto lst = m_gm->getCacheMessages(m_c.userId(), EDataState::body, arg_list);
     std::cout << "loaded from cache: " << lst->result_list.size() << std::endl;
 
     int n = 1;
