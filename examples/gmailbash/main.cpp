@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
     t.addAction("ls",               "List Messages", [&](QString arg) {cmd.ls(arg);} );
     t.addAction("ls_by_labels",     "List Messages by label ID", [&](QString arg) {cmd.ls_by_labels(arg);} );
     t.addAction("get",              "Get Message by ID", [&](QString arg) {cmd.get(arg);} );
+    t.addAction("get_snippet",      "Get Message snippet by ID", [&](QString arg) {cmd.get_snippet(arg);} );    
     t.addAction("get_raw",          "Get Message by ID using raw format", [&](QString arg) {cmd.get(arg);} );
     t.addAction("save_raw",         "Save Message by ID using raw format", [&](QString arg) {cmd.save_raw(arg);} );    
     t.addAction("get_html",         "Export body of Message to html file", [&](QString arg) {cmd.get_html(arg);} );

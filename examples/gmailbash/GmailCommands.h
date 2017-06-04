@@ -5,14 +5,14 @@
 using namespace googleQt;
 
 namespace googleQt{
-namespace messages
-{
-    class MessageResource;
-};
-namespace labels
-{
-    class LabelResource;
-};    
+    namespace messages
+    {
+        class MessageResource;
+    };
+    namespace labels
+    {
+        class LabelResource;
+    };    
 }
 
 class GmailCommands
@@ -36,6 +36,11 @@ public:
     void get    (QString message_id);
 
     /**
+       get_snippet - get snippet by id using default (full) format
+    */
+    void get_snippet    (QString message_id);
+    
+    /**
        get_raw - get message by id using raw format
     */
     void get_raw    (QString message_id);
@@ -52,32 +57,32 @@ public:
 
     
     /**
-        send plain text message
+       send plain text message
     */
     void send_prepared_rfc822(QString messageFileName);
 
     /**
-        send html text message
+       send html text message
     */
     void send_as_html(QString to_subject_text);
 
     /**
-    send html text message with attachments
+       send html text message with attachments
     */
     void send_att(QString to_subject_text);
 
     /**
-        trash - trash message by id
+       trash - trash message by id
     */
     void trash(QString message_id);
     
     /**
-        untrash - untrash message by id
+       untrash - untrash message by id
     */
     void untrash(QString message_id);
 
     /**
-        delete_msg - delete message by id
+       delete_msg - delete message by id
     */
     void delete_msg(QString message_id);
 
@@ -85,89 +90,89 @@ public:
     void remove_label(QString message_id_label);
 
     /**
-        ls_labels - list labels
+       ls_labels - list labels
     */
     void ls_labels(QString);
 
     /**
-    get_label - get label
+       get_label - get label
     */
     void get_label(QString label_id);
 
     /**
-    create_label - create label
+       create_label - create label
     */
     void create_label(QString name);
 
     /**
-    delete_label - delete label
+       delete_label - delete label
     */
     void delete_label(QString label_id);
 
     /**
-    update_label - update label
+       update_label - update label
     */
     void update_label(QString labelid_space_name);
     
     /**
-    ls_threads - list threads
+       ls_threads - list threads
     */
     void ls_threads(QString);
 
     /**
-    get_thread - get thread info
+       get_thread - get thread info
     */
     void get_thread(QString thread_id);
 
     /**
-    ls_drafts - list drafts
+       ls_drafts - list drafts
     */
     void ls_drafts(QString);
 
     /**
-    get_draft - get draft info
+       get_draft - get draft info
     */
     void get_draft(QString draft_id);
 
     /**
-    history - get history
+       history - get history
     */
     void history(QString startHistoryIdStr);
 
     /**
-        get_batch_snippets - get snippents for list of messages
+       get_batch_snippets - get snippents for list of messages
     */
     void get_batch_snippets(QString id_list);
 
     /**
-    get_batch_details - get email body & snippens for list of messages
+       get_batch_details - get email body & snippens for list of messages
     */
     void get_batch_details(QString id_list);
     
     /**
-    get_cache_snippets - get snippents for list of messages
+       get_cache_snippets - get snippents for list of messages
     */
     void get_cache_snippets(QString id_list);
 
     /**
-    get_cache_details - get email body & snippens for list of messages
+       get_cache_details - get email body & snippens for list of messages
     */
     void get_cache_details(QString id_list);
 
     /**
-    cache_check_email - list latest messages snippets, first
-    query for new messages then lookup snippets and update local cache
+       cache_check_email - list latest messages snippets, first
+       query for new messages then lookup snippets and update local cache
     */
     void check_email_cache(QString nextToken);
 
     /**
        download_attachments - download all attachments to local directory
        The directory named download/<msg-id> will be created
-     */
+    */
     void download_attachments(QString msgId);
     /**
        down_att_async - same download attachments async way
-     */
+    */
     void down_att_async(QString msgId);
     
 
@@ -182,6 +187,7 @@ protected:
     void listMessages(QString nextToken, QString labelIds);
     void listThreads(QString nextToken, QString labelIds);
     void listDrafts(QString nextToken);
+    void printSnippet(messages::MessageResource*);
     void printMessage(messages::MessageResource*);
     void exportMessageBody(messages::MessageResource* r, QString fileName);
     void printLabel(labels::LabelResource*);
