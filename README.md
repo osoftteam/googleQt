@@ -2,7 +2,7 @@ googleQt is C++11/Qt adaptation of Google GDrive v3, GMail v1, GTask v1 API. Und
 
 The API is based on asynchronous and blocking functions. Blocking functions return unique_ptr of typed objects using move semantics or raise exceptions in case of error. The asynchronous functions are organized around GoogleTask object, similar to QNetworkReply.
 
-googleQt is about concurrent processing, not parallel. That means library offers set of classes with asynchronous functions that are executed in free time slots of same thread where they are initiated. No parallel threads are created and to thread synchronizations are needed. The library encourages recursive calls when chaining of asynchronous operations are needed - it simplifies code and allows cleaner implementations. Sample of asynchronous chaining can be demonstrated in following sample:
+googleQt is about concurrent processing, not parallel. That means library offers set of classes with asynchronous functions that are executed in free time slots of same thread where they are initiated. No parallel threads are created and to thread synchronizations are needed. The library encourages recursive calls when chaining of asynchronous operations are needed - it simplifies code and allows cleaner implementations. The asynchronous chaining can be demonstrated in following sample:
 ```
 Problem: download last N message with attachments.
 
@@ -11,7 +11,7 @@ The task gets splitted into subtask:
 2.download N messages using Ids
 3.download attachment for each message
 ```
-All steps can be organized to run asynchronously so when one task gets finished the next would be scheduled. In real application step #1 can be implemented as series of group requests with 'next' token. To simplify implementation of such algorithms we introduced GoogleTask class with following methods:
+All steps can be organized to run asynchronously so when one task gets finished the next would be scheduled. In real application step #1 can be implemented as series of group requests with 'next' token (so really there are 4 steps and #1 is a recursive one). To simplify implementation of such algorithms we introduced GoogleTask class with following methods:
 
 ```
 GoogleTask<T>
@@ -46,7 +46,6 @@ Here is sample of chaining tasks when downloading attachments of one email:
     {
         auto p = r->payload();
         auto parts = p.parts();
-        m_batch_counter = parts.size();
         for (auto pt : parts) {
             auto b = pt.body();
             if (b.size() > 0 && !b.attachmentid().isEmpty()) {
@@ -83,7 +82,129 @@ The sample implementation using blocking calls:
         }
 ```
 
-Notice blocking calls are wrapped in try/catch block, that is because blocking functions (without Async suffix) can throw exception - when data are wrong, network issues etc. Not-blocking functions have suffix 'Async' and don't throw exceptions but return GoogleTask objects that can be connected to, chained and used to retrieve result data and error description if any. If object are not chained via 'then' and not turned into blocking calls with 'waitForResultAndRelease' they should be scheduled to delete using 'deleteLater'.
+Notice blocking calls are wrapped in try/catch block, that is because blocking functions (without Async suffix) can throw exception - when server is unhappy about request and responds with 400, network issues etc. Not-blocking functions have suffix 'Async' and don't throw exceptions but return GoogleTask objects that can be connected to, chained and used to retrieve result data and error description if any. If objects are not chained via 'then' and not turned into blocking calls with 'waitForResultAndRelease' they should be scheduled to delete using 'deleteLater'.
+
+### More examples
+Please visit examples folder, there is one console-based project for each kind of API. We call them bash-projects because they offer small menu with options to explore and test API and demonstrate code snippets. You will find gdrivebash, gmailbash, gtaskbash etc.
+
+Rename GDrive file
+```
+    try
+        {    
+            RenameFileArg arg(fileId);
+            arg.setName(fileName);
+            arg.setFields("id,name,size,mimeType,webContentLink");
+            m_gd->getFiles()->rename(arg);
+        }    
+    catch (GoogleException& e)
+        {
+            std::cout << "Exception: " << e.what() << std::endl;
+        }
+```
+
+Download GDrive file
+```
+    QFile out(fileName);
+    if (!out.open(QFile::WriteOnly | QIODevice::Truncate)) {
+        std::cout << "Error opening file: " << fileName.toStdString() << std::endl;
+        return;
+    }
+    try
+        {
+            DownloadFileArg arg(fileId);
+            m_gd->getFiles()->downloadFile(arg, &out);
+            out.flush();
+        }
+    catch (GoogleException& e)
+        {
+            std::cout << "Exception: " << e.what() << std::endl;
+        }
+```
+
+List GMail labels
+```
+    try
+        {
+            auto labels_list = m_gm->getLabels()->list();
+            for (auto lbl : labels_list->labels())
+                {
+                    std::cout << "id=" << lbl.id() 
+                              << " name=" << lbl.name() 
+                              << " type=" << lbl.type() 
+                              << " messagestotal=" << lbl.messagestotal()
+                              << " unread=" << lbl.messagesunread()
+                              << " threadstotal=" << lbl.threadstotal()
+                              << std::endl;
+                }
+
+        }
+    catch (GoogleException& e)
+        {
+            std::cout << "Exception: " << e.what() << std::endl;
+        }
+```
+
+List GMail messages
+```
+    try
+        {
+            gmail::ListArg listArg;
+            listArg.setMaxResults(10);
+            auto mlist = m_gm->getMessages()->list(listArg);
+            for(auto m : mlist->messages())
+                {
+                    std::cout << = m.id() << std::endl;
+                }
+            auto nextToken = mlist->nextpagetoken();
+            if(!nextToken.isEmpty())
+                {
+                    std::cout << "next-token: " << nextToken << std::endl;
+                }
+        }
+    catch(GoogleException& e)
+        {
+            std::cout << "Exception: " << e.what() << std::endl;
+        }
+```
+
+Send GMail message with attachments
+```
+    QString msg_to = arg_list[0];
+    QString msg_subject = arg_list[1];
+    QString msg_text = arg_list[2];
+    QString msg_html = QString("<div dir=\"ltr\">%1</div>").arg(msg_text);
+
+    QDir dir("upload");
+    if (!dir.exists()) {
+        std::cout << "Upload-directory not found." << std::endl;
+        return;
+    }
+
+    QFileInfoList flist = dir.entryInfoList(QDir::Files);
+    if (flist.size() == 0) {
+        std::cout << "Upload-directory is empty, nothing to attach" << std::endl;
+        return;
+    }
+
+    std::list<QString> attachments;
+    for (auto& fi : flist) {
+        attachments.push_back(fi.absoluteFilePath());
+    }
+
+    try
+        {
+            gmail::SendMimeMessageArg arg(m_c.userId(), msg_to, msg_subject, msg_text, msg_html);
+            arg.addAttachments(attachments);
+            auto r = m_gm->getMessages()->send(arg);
+            printMessage(r.get());
+        }
+    catch (GoogleException& e)
+        {
+            std::cout << "Exception: " << e.what() << std::endl;
+        }
+```
+
+
 
 ### Requirements.
 C++11 compiler and Qt 5.xx. We used VS2015, GCC 5.xx, XCode 8.xx. Anything newer/better will do.
@@ -101,7 +222,7 @@ The library covers GDrive, GMail, GTask but not completely, particularly resumab
 - request and autorefresh OAuth2 token
 - asynchronous and blocking interfaces
 - specialized exceptions for blocking calls
-- parallel requests for selected services
+- concurrent batch requests for gmail (up to 4 requests simultaneously)
 - caching cloud data for selected services
 
 ### License
