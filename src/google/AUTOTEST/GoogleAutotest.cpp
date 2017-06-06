@@ -24,4 +24,10 @@ void GoogleAutotest::generateCalls()
     AUTOTEST_GENERATE_CALLS(GdriveAutotest);
 #undef AUTOTEST_GENERATE_CALLS
 }
+
+QString GoogleAutotest::userId()const
+{
+	return m_cl.userId();
+}
+
 #endif//#ifdef API_QT_AUTOTEST
