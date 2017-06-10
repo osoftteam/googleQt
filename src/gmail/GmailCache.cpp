@@ -44,6 +44,19 @@ mail_cache::GMailCache::GMailCache(ApiEndpoint& ept)
 	m_userId = ept.apiClient()->userId();
 };
 
+void mail_cache::GMailCache::invalidate() 
+{ 
+	auto storage = sqlite_storage();
+	if (storage) {
+		storage->close_db();
+	};
+
+	m_mem_cache.clear();
+	m_order_cache.clear();
+
+	m_valid = false; 
+}
+
 mail_cache::GMailSQLiteStorage* mail_cache::GMailCache::sqlite_storage()
 {
     mail_cache::GMailSQLiteStorage* rv = nullptr;
@@ -435,7 +448,10 @@ void mail_cache::GMailCacheQueryTask::loadLabels(messages::MessageResource* m, u
 {
     const std::list <QString>& labels = m->labelids();
     if(labels.size() > 0){
-		f = dynamic_cast<mail_cache::GMailCache*>(m_cache.get())->sqlite_storage()->packLabels(labels);        
+		auto storage = dynamic_cast<mail_cache::GMailCache*>(m_cache.get())->sqlite_storage();
+		if (storage) {
+			f = storage->packLabels(labels);
+		}
     }
 };
 
@@ -715,6 +731,14 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
 
     m_initialized = true;
     return m_initialized;
+};
+
+void mail_cache::GMailSQLiteStorage::close_db() 
+{
+	if (m_db.isOpen()) {
+		m_db.close();
+	}
+	m_initialized = false;
 };
 
 bool mail_cache::GMailSQLiteStorage::loadMessagesFromDb()

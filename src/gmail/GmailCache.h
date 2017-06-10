@@ -300,7 +300,7 @@ namespace googleQt{
             GMailSQLiteStorage* sqlite_storage();
             void topCacheData(GMailCacheQueryTask* rfetcher, int number2load, uint64_t labelFilter);
 			bool isValid()const { return m_valid; };
-			void invalidate() { m_valid = false; }
+			void invalidate();
 			QString userId()const { return m_userId; }
 		protected:
 			bool m_valid;
@@ -319,6 +319,7 @@ namespace googleQt{
                          QString downloadPath,
                          QString dbName, 
                          QString db_meta_prefix);
+			void close_db();
             std::list<QString> load_db(EDataState state, const std::list<QString>& id_list,
                                        GMailCacheQueryTask* cr)override;
             void update_db(EDataState state, CACHE_QUERY_RESULT_LIST<MessageData>& r)override;
