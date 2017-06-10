@@ -192,7 +192,9 @@ bool GmailRoutes::trashCacheMessage(QString msg_id)
                                               set2remove.insert(msg_id);
                                               m_GMailCache->persistent_clear(set2remove);
                                               auto storage = m_GMailCache->sqlite_storage();
-                                              storage->deleteAttachmentsFromDb(msg_id);       
+											  if (storage) {
+												  storage->deleteAttachmentsFromDb(msg_id);
+											  }
                                           });
     return true;
 };
@@ -250,6 +252,10 @@ bool GmailRoutes::resetSQLiteCache()
 
     EXPECT_STRING_VAL(m_endpoint->client()->userId(), "UserId");
 	mail_cache::GMailSQLiteStorage* storage = m_GMailCache->sqlite_storage();
+	if (!storage) {
+		qWarning("DB storage of GMail cache is not defined. Please call setupSQLiteCache first.");
+		return false;
+	}
 	QString dbPath = storage->m_dbPath;
 	QString downloadPath = storage->m_downloadDir;
 	QString dbName = storage->m_dbName;
@@ -272,28 +278,29 @@ bool GmailRoutes::resetSQLiteCache()
 
 GoogleVoidTask* GmailRoutes::refreshLabels_Async()
 {
-    ensureCache();
-
-    auto storage = m_GMailCache->sqlite_storage();
+    ensureCache();    
 
     GoogleVoidTask* rv = m_endpoint->produceVoidTask();
 
     googleQt::GoogleTask<labels::LabelsResultList>* t = getLabels()->list_Async();
     t->then([=](std::unique_ptr<labels::LabelsResultList> lst)
             {
-                for (auto& lbl : lst->labels())
-                    {
-                        QString label_id = lbl.id();
-                        auto db_lbl = storage->findLabel(label_id);
-                        if (db_lbl)
-                            {
-                                storage->updateDbLabel(lbl);
-                            }
-                        else
-                            {
-                                storage->insertDbLabel(lbl);
-                            }
-                    }
+				auto storage = m_GMailCache->sqlite_storage();
+				if (storage) {
+					for (auto& lbl : lst->labels())
+					{
+						QString label_id = lbl.id();
+						auto db_lbl = storage->findLabel(label_id);
+						if (db_lbl)
+						{
+							storage->updateDbLabel(lbl);
+						}
+						else
+						{
+							storage->insertDbLabel(lbl);
+						}
+					}
+				}
                 rv->completed_callback();
             },
             [=](std::unique_ptr<GoogleException> ex) {
@@ -347,7 +354,9 @@ GoogleVoidTask* GmailRoutes::downloadAttachment_Async(googleQt::mail_cache::msg_
 
                     QFileInfo fi(destFile);
                     auto storage = m_GMailCache->sqlite_storage();
-                    storage->update_attachment_local_file_db(m, a, fi.fileName());
+					if (storage) {
+						storage->update_attachment_local_file_db(m, a, fi.fileName());
+					}
                     emit attachmentsDownloaded(m, a);
                 }
                 else {
@@ -367,6 +376,10 @@ std::list<mail_cache::LabelData*> GmailRoutes::getLoadedLabels(std::set<QString>
 {
     ensureCache();
     auto storage = m_GMailCache->sqlite_storage();
+	if (!storage) {
+		std::list<mail_cache::LabelData*> on_error;
+		return on_error;
+	}
     return storage->getLabelsInSet(in_optional_idset);
 };
 
@@ -374,6 +387,10 @@ std::list<mail_cache::LabelData*> GmailRoutes::getMessageLabels(mail_cache::Mess
 {
     ensureCache();
     auto storage = m_GMailCache->sqlite_storage();
+	if (!storage) {
+		std::list<mail_cache::LabelData*> on_error;
+		return on_error;
+	}
     return storage->unpackLabels(d->labelsBitMap());
 };
 
@@ -401,12 +418,12 @@ GoogleTask<messages::MessageResource>* GmailRoutes::setStarred_Async(mail_cache:
     return setLabel_Async(mail_cache::sysLabelId(mail_cache::SysLabel::STARRED), d, set_it, true);
 };
 
-bool GmailRoutes::setUread(mail_cache::MessageData* d, bool set_it)
+bool GmailRoutes::setUnread(mail_cache::MessageData* d, bool set_it)
 {
-    TRY_LABEL_MODIFY(setUread_Async, d, set_it);
+    TRY_LABEL_MODIFY(setUnread_Async, d, set_it);
 };
 
-GoogleTask<messages::MessageResource>* GmailRoutes::setUread_Async(mail_cache::MessageData* d, bool set_it)
+GoogleTask<messages::MessageResource>* GmailRoutes::setUnread_Async(mail_cache::MessageData* d, bool set_it)
 {
     return setLabel_Async(mail_cache::sysLabelId(mail_cache::SysLabel::UNREAD), d, set_it, true);
 };
@@ -429,19 +446,20 @@ GoogleTask<messages::MessageResource>* GmailRoutes::setLabel_Async(QString label
 {
     ensureCache();
     auto storage = m_GMailCache->sqlite_storage();
-
-    mail_cache::LabelData* lbl = storage->ensureLabel(label_id, system_label);
-    if (!lbl) {
-        qWarning() << "failed to create label" << label_id;
-    }
-    else {
-        if (label_on){
-            d->m_labels |= lbl->labelMask();
-        }
-        else {
-            d->m_labels &= ~(lbl->labelMask());
-        }
-    }
+	if (storage) {
+		mail_cache::LabelData* lbl = storage->ensureLabel(label_id, system_label);
+		if (!lbl) {
+			qWarning() << "failed to create label" << label_id;
+		}
+		else {
+			if (label_on) {
+				d->m_labels |= lbl->labelMask();
+			}
+			else {
+				d->m_labels &= ~(lbl->labelMask());
+			}
+		}
+	}
 
     QString msg_id = d->id();
     gmail::ModifyMessageArg arg(d->userId(), msg_id);
@@ -464,7 +482,9 @@ GoogleTask<messages::MessageResource>* GmailRoutes::setLabel_Async(QString label
                              m_GMailCache->hasLocalPersistentStorate())
                              {
                                  auto storage = m_GMailCache->sqlite_storage();
-                                 storage->update_message_labels_db(msg_id, d->labelsBitMap());
+								 if (storage) {
+									 storage->update_message_labels_db(msg_id, d->labelsBitMap());
+								 }
                              }
                      });
     return t;
@@ -475,10 +495,12 @@ bool GmailRoutes::messageHasLabel(mail_cache::MessageData* d, QString label_id)c
     bool rv = false;
     ensureCache();
     auto storage = m_GMailCache->sqlite_storage();
-    mail_cache::LabelData* lb = storage->findLabel(label_id);
-    if (lb) {
-        rv = d->inLabelFilter(lb->labelMask());
-    }
+	if (storage) {
+		mail_cache::LabelData* lb = storage->findLabel(label_id);
+		if (lb) {
+			rv = d->inLabelFilter(lb->labelMask());
+		}
+	}
     return rv;
 };
 

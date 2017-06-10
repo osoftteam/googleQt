@@ -95,8 +95,8 @@ namespace googleQt{
         GoogleTask<messages::MessageResource>* setStarred_Async(mail_cache::MessageData* d, bool set_it = true);
 
         /// UNREAD label
-        bool setUread(mail_cache::MessageData* d, bool set_it = true);
-        GoogleTask<messages::MessageResource>* setUread_Async(mail_cache::MessageData* d, bool set_it = true);
+        bool setUnread(mail_cache::MessageData* d, bool set_it = true);
+        GoogleTask<messages::MessageResource>* setUnread_Async(mail_cache::MessageData* d, bool set_it = true);
 
         /// IMPORTANT label
         bool setImportant(mail_cache::MessageData* d, bool set_it = true);
