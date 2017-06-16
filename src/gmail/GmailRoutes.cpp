@@ -156,7 +156,35 @@ mail_cache::data_list_uptr GmailRoutes::getCacheMessages(QString userId, EDataSt
 
 mail_cache::GMailCacheQueryTask* GmailRoutes::newResultFetcher(QString userId, EDataState state)
 {
-    mail_cache::GMailCacheQueryTask* rfetcher = new mail_cache::GMailCacheQueryTask(userId, state, *m_endpoint, *this, m_GMailCache);
+	int accId = 0;
+	if (m_GMailCache) {
+		auto storage = m_GMailCache->sqlite_storage();
+		if (!storage) {
+			qWarning() << "ERROR. Expected cache storage";
+		}
+		else {
+			/*
+			if (userId == m_endpoint->apiClient()->userId()) {
+				accId = storage->m_accId;
+			}
+			else {
+				accId = storage->findAccount(userId);
+			}
+			*/
+			accId = storage->findAccount(userId);
+		}
+	}
+	else {
+		qWarning() << "ERROR. Expected cache object";
+	}
+
+    mail_cache::GMailCacheQueryTask* rfetcher = new mail_cache::GMailCacheQueryTask(userId, 
+                                                                                    accId, 
+                                                                                    state, 
+                                                                                    *m_endpoint, 
+                                                                                    *this, 
+                                                                                    m_GMailCache);
+
     return rfetcher;
 };
 
@@ -181,19 +209,22 @@ mail_cache::data_list_uptr GmailRoutes::getCacheMessages(int numberOfMessages, u
     return rfetcher->waitForResultAndRelease();
 };
 
-bool GmailRoutes::trashCacheMessage(QString msg_id)
+bool GmailRoutes::trashCacheMessage(QString userId, QString msg_id)
 {
     ensureCache();
-    googleQt::gmail::TrashMessageArg arg(m_endpoint->apiClient()->userId(), msg_id);
+    googleQt::gmail::TrashMessageArg arg(userId, msg_id);
     getMessages()->trash_Async(arg)->then([=]()
                                           {
                                               //clean up cache
-                                              std::set<QString> set2remove;
-                                              set2remove.insert(msg_id);
-                                              m_GMailCache->persistent_clear(set2remove);
                                               auto storage = m_GMailCache->sqlite_storage();
 											  if (storage) {
-												  storage->deleteAttachmentsFromDb(msg_id);
+												  int accId = storage->findAccount(userId);
+												  if (accId != -1) {
+													  std::set<QString> set2remove;
+													  set2remove.insert(msg_id);
+													  m_GMailCache->persistent_clear(accId, set2remove);
+													  storage->deleteAttachmentsFromDb(msg_id);
+												  }
 											  }
                                           });
     return true;
@@ -288,18 +319,18 @@ GoogleVoidTask* GmailRoutes::refreshLabels_Async()
 				auto storage = m_GMailCache->sqlite_storage();
 				if (storage) {
 					for (auto& lbl : lst->labels())
-					{
-						QString label_id = lbl.id();
-						auto db_lbl = storage->findLabel(label_id);
-						if (db_lbl)
-						{
-							storage->updateDbLabel(lbl);
-						}
-						else
-						{
-							storage->insertDbLabel(lbl);
-						}
-					}
+                        {
+                            QString label_id = lbl.id();
+                            auto db_lbl = storage->findLabel(label_id);
+                            if (db_lbl)
+                                {
+                                    storage->updateDbLabel(lbl);
+                                }
+                            else
+                                {
+                                    storage->insertDbLabel(lbl);
+                                }
+                        }
 				}
                 rv->completed_callback();
             },
@@ -319,9 +350,22 @@ GoogleVoidTask* GmailRoutes::downloadAttachment_Async(googleQt::mail_cache::msg_
     if (a->status() == mail_cache::AttachmentData::statusDownloadInProcess) {
         qWarning() << "attachment download already in progress " << m->id() << a->attachmentId();
     }
+	auto storage = m_GMailCache->sqlite_storage();
+	if (!storage) {
+		qWarning() << "ERROR. Expected storage object.";
+		rv->completed_callback();
+		return rv;
+	}
+
+	QString userId = storage->findUser(m->accountId());
+	if (userId.isEmpty()) {
+		qWarning() << "ERROR. Failed to locate userId" << m->id() << m->accountId();
+		rv->completed_callback();
+		return rv;
+	}
 
     a->m_status = mail_cache::AttachmentData::statusDownloadInProcess;
-    gmail::AttachmentIdArg arg(m->userId(), m->id(), a->attachmentId());
+    gmail::AttachmentIdArg arg(userId, m->id(), a->attachmentId());
     auto t = getAttachments()->get_Async(arg);
     t->then([=](std::unique_ptr<attachments::MessageAttachment> att)
             {
@@ -445,24 +489,36 @@ GoogleTask<messages::MessageResource>* GmailRoutes::setLabel_Async(QString label
                                                                    bool system_label)
 {
     ensureCache();
+	int accId = -1;
     auto storage = m_GMailCache->sqlite_storage();
 	if (storage) {
-		mail_cache::LabelData* lbl = storage->ensureLabel(label_id, system_label);
-		if (!lbl) {
-			qWarning() << "failed to create label" << label_id;
+		accId = d->accountId();
+		if (accId == -1) {
+			qWarning() << "ERROR. Invalid account Id" << d->id();
 		}
 		else {
-			if (label_on) {
-				d->m_labels |= lbl->labelMask();
+			mail_cache::LabelData* lbl = storage->ensureLabel(accId, label_id, system_label);
+			if (!lbl) {
+				qWarning() << "failed to create label" << label_id;
 			}
 			else {
-				d->m_labels &= ~(lbl->labelMask());
+				if (label_on) {
+					d->m_labels |= lbl->labelMask();
+				}
+				else {
+					d->m_labels &= ~(lbl->labelMask());
+				}
 			}
 		}
 	}
 
+	QString userId = storage->findUser(d->accountId());
+	if (userId.isEmpty()) {
+		qWarning() << "ERROR. Failed to locate userId" << d->id() << d->accountId();
+	}
+
     QString msg_id = d->id();
-    gmail::ModifyMessageArg arg(d->userId(), msg_id);
+    gmail::ModifyMessageArg arg(userId, msg_id);
     std::list <QString> labels;
     labels.push_back(label_id);
     if (label_on)
@@ -479,11 +535,12 @@ GoogleTask<messages::MessageResource>* GmailRoutes::setLabel_Async(QString label
     QObject::connect(t, &EndpointRunnable::finished, [=]()
                      {
                          if (m_GMailCache &&
-                             m_GMailCache->hasLocalPersistentStorate())
+                             m_GMailCache->hasLocalPersistentStorate() &&
+							 accId != -1)
                              {
                                  auto storage = m_GMailCache->sqlite_storage();
 								 if (storage) {
-									 storage->update_message_labels_db(msg_id, d->labelsBitMap());
+									 storage->update_message_labels_db(accId, msg_id, d->labelsBitMap());
 								 }
                              }
                      });
@@ -595,7 +652,7 @@ void GmailRoutes::runAutotest()
                         break;
                 }
 
-            m_GMailCache->persistent_clear(set2remove);
+            m_GMailCache->persistent_clear(storage->m_accId, set2remove);
         };
 
     deleteFirst10();
@@ -678,7 +735,7 @@ void GmailRoutes::runAutotest()
                     for (auto& i : lst->result_list)
                         {
                             mail_cache::MessageData* m = i.get();
-                            storage->update_message_labels_db(m->id(), lmask | gmask);
+                            storage->update_message_labels_db(storage->m_accId, m->id(), lmask | gmask);
 
                             counter++;
                             l_iterator++; if (l_iterator == labels.end())l_iterator = labels.begin();

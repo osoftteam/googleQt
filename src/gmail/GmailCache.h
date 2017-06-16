@@ -25,7 +25,7 @@ namespace googleQt{
         using att_ptr           = std::shared_ptr<googleQt::mail_cache::AttachmentData>;
         using data_list_uptr    = std::unique_ptr<CacheDataList<MessageData>>;
         using ATTACHMENTS_LIST  = std::list<att_ptr>;
-		using acc_uptr			= std::unique_ptr<googleQt::mail_cache::AccountData>;
+		using acc_ptr			= std::shared_ptr<googleQt::mail_cache::AccountData>;
 		using cache_ptr         = std::shared_ptr<mail_cache::GMailCache>;
 
         /**
@@ -40,7 +40,7 @@ namespace googleQt{
         class MessageData : public CacheData
         {
         public:
-            MessageData(QString userid,
+            MessageData(int accId,
 					    QString id,
                         QString from, 
                         QString to, 
@@ -50,7 +50,7 @@ namespace googleQt{
                         QString snippet, 
                         qlonglong internalDate,
                         qlonglong labels);
-            MessageData(QString userid, 
+            MessageData(int accId,
 					    QString id,
                         QString from, 
                         QString to, 
@@ -65,8 +65,9 @@ namespace googleQt{
 
             void  merge(CacheData* other);
             
-			QString userId()const { return m_userId; }
-			void    setUserId(QString id) { m_userId = id; };
+			//QString userId()const { return m_userId; }
+			//void    setUserId(QString id) { m_userId = id; };
+			int     accountId()const { return m_accountId;}
 
             QString from()const { return m_from; }
             QString to()const { return m_to; }
@@ -101,7 +102,8 @@ namespace googleQt{
                                qlonglong labels);
             void updateBody(QString plain, QString html);
         protected:
-			QString m_userId;
+			//QString m_userId;
+			int     m_accountId{-1};
             QString m_from;
             QString m_to;
             QString m_cc;
@@ -115,7 +117,7 @@ namespace googleQt{
             ATTACHMENTS_LIST m_attachments;
             mutable void*    m_user_ptr{nullptr};
         private:
-            MessageData(QString userid, 
+            MessageData(int accId,
 						int agg_state,
                         QString id,
                         QString from,
@@ -266,6 +268,7 @@ namespace googleQt{
         {
         public:
             GMailCacheQueryTask(QString userId,
+								int accId,
 								EDataState load,
                                 ApiEndpoint& ept,
                                 GmailRoutes& r,
@@ -275,6 +278,8 @@ namespace googleQt{
             data_list_uptr waitForResultAndRelease();
             QString nextPageToken()const{return m_nextPageToken;}
             
+			QString userId()const { return m_userId; }			
+
         protected:
             void fetchMessage(messages::MessageResource* m);
             void loadHeaders(messages::MessageResource* m,
@@ -322,17 +327,17 @@ namespace googleQt{
 			void close_db();
             std::list<QString> load_db(EDataState state, const std::list<QString>& id_list,
                                        GMailCacheQueryTask* cr)override;
-            void update_db(EDataState state, CACHE_QUERY_RESULT_LIST<MessageData>& r)override;
+            void update_db(int accId, EDataState state, CACHE_QUERY_RESULT_LIST<MessageData>& r)override;
             bool isValid()const override{return m_initialized;};
-            void remove_db(const std::set<QString>& ids2remove)override;            
+            void remove_db(int accId, const std::set<QString>& ids2remove)override;
             ///directory for attachments
             QString downloadDir()const { return m_downloadDir; }
             QString findAttachmentFile(att_ptr att)const;
 
             LabelData* findLabel(QString label_id);
             LabelData* findLabel(SysLabel sys_label);
-            LabelData* ensureLabel(QString label_id, bool system_label);
-            void update_message_labels_db(QString msg_id, uint64_t flags);
+            LabelData* ensureLabel(int accId, QString label_id, bool system_label);
+            void update_message_labels_db(int accId, QString msg_id, uint64_t flags);
             void update_attachment_local_file_db(googleQt::mail_cache::msg_ptr m, 
                                                  googleQt::mail_cache::att_ptr a, 
                                                  QString file_name);
@@ -345,12 +350,14 @@ namespace googleQt{
             bool loadAttachmentsFromDb(MessageData& m);
             bool deleteAttachmentsFromDb(QString msg_id);
 
+			QString findUser(int accId);
+			int findAccount(QString userId);
 			/// returns accounts list, all in unique pointers and enforces move-semantics
-			std::list<acc_uptr> loadAccountsFromDb();
+			std::list<acc_ptr> getAccounts();
 			/// remove account
-			bool deleteAccountsFromDb(int accId);
+			bool deleteAccountFromDb(int accId);
 			/// update userId in DB
-			bool updateAccountsDb(int accId, QString userId);
+			bool updateAccountInDb(int accId, QString userId);
             /// only account with no messages in cache can be renamed
             bool canRenameAccount(int accId);
 			/// returns ID of new account or -1 in case of error            
@@ -364,7 +371,8 @@ namespace googleQt{
             bool loadLabelsFromDb();
             bool updateDbLabel(const labels::LabelResource& lbl);           
             LabelData* insertDbLabel(const labels::LabelResource& lbl);
-            LabelData* insertDbLabel(QString label_id,
+            LabelData* insertDbLabel(int accId,
+									 QString label_id,
                                      QString name, 
                                      QString label_type);
             LabelData* createAndInsertLabel(
@@ -375,20 +383,23 @@ namespace googleQt{
                                             int mask_base
                                             );
             void insertDbAttachmentData(const MessageData& m);
-            std::shared_ptr<MessageData> loadMessageFromDB(QSqlQuery* q);           
+            std::shared_ptr<MessageData> loadMessageFromDB(int accId, QSqlQuery* q); 
+			void reloadDbAccounts();
         protected:
             bool m_initialized {false};
             QSqlDatabase     m_db;
             std::unique_ptr<QSqlQuery>   m_query{nullptr};
             std::weak_ptr<GMailCache>    m_mem_cache;
-            std::map<QString, std::shared_ptr<LabelData>> m_labels;
-            std::map<int, std::shared_ptr<LabelData>> m_maskbase2labels;
+            std::map<QString, std::shared_ptr<LabelData>> m_acc_labels;
+            std::map<int, std::shared_ptr<LabelData>> m_acc_maskbase2labels;
             std::set<int> m_avail_label_base;
+			std::map<int, mail_cache::acc_ptr> m_id2acc;
+			std::map<QString, mail_cache::acc_ptr> m_user2acc;
             QString m_dbPath;
             QString m_downloadDir;
             QString m_dbName;
             QString m_metaPrefix;
-			int     m_accId;
+			int     m_accId{-1};
             friend class googleQt::GmailRoutes;
         };//GMailSQLiteStorage
 
