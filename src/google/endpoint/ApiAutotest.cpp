@@ -117,10 +117,13 @@ QByteArray ApiAutotest::generateData(const char* context_class_name, int context
             static int ref_num = 0;
             ref_num++;
 
-            static const char* sample_html = "<p><strong>ref# %1</strong></p>\
-            <p>Mr.M.Leaf<br / >Chief of Syrup Production<br / >Old Sticky Pancake Company<br / >\
-            456 Maple Lane<br / >Forest, ON 7W8 9Y0<br / ><br / >Dear Mr.Leaf:<br / ><br / >\
-            Let me begin by thanking you for your past contributions to our Little League baseball team.\
+			QString sample_header = QString("<p><strong>ref# %1</strong></p>\
+            <p>Mr.M. %2 <br / >Chief of Syrup Production<br / >Old Sticky Pancake Company<br / >\
+            456 Maple Lane<br / >Forest, ON 7W8 9Y0<br / ><br / >Dear Mr. %2 :<br / ><br / >")
+				.arg(ref_num)
+				.arg(userId());
+
+            QString sample_body = "Let me begin by thanking you for your past contributions to our Little League baseball team.\
             Your sponsorship aided in the purchase of ten full uniforms and several pieces of baseball equipment \
             for last year's season.<br /><br />Next month, our company is planning an employee appreciation pancake \
             breakfast honoring retired employees for their past years of service and present employees for their \
@@ -132,16 +135,18 @@ QByteArray ApiAutotest::generateData(const char* context_class_name, int context
             Respectfully yours,<br /><br />&nbsp;<br /><br />Derek Jeter<br />\
             https://www.scribendi.com/advice/formal_letter_example.en.html</p>";
 
+			QString sample_html = sample_header + sample_body;
+
             QString s;
             if (parent_context_index == 0)
                 {
                     QString tmp = sample_html;
                     tmp.remove(QRegExp("<[^>]*>"));
-                    s = QString(tmp).arg(ref_num);
+                    s = tmp;
                 }
             else if (parent_context_index == 1)
                 {
-                    s = QString(sample_html).arg(ref_num);
+                    s = sample_html;
                 }
 
             rv = QByteArray(s.toStdString().c_str()).toBase64(QByteArray::Base64UrlEncoding);
