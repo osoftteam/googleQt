@@ -176,7 +176,7 @@ public:
     void down_att_async(QString msgId);
     
 
-    void export_last_result(QString fileName);
+    void export_last_result(QString );
     void print_last_result(QString );
     void print_user_id(QString );
 

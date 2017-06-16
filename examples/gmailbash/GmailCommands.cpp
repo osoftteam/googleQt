@@ -897,9 +897,18 @@ void GmailCommands::down_att_async(QString msgId)
     m_c.runEventsLoop();
 };
 
-void GmailCommands::export_last_result(QString fileName)
+void GmailCommands::export_last_result(QString)
 {
+    QString dest_dir = QString("download");
+    QDir att_dir;    
+    if(!att_dir.mkpath(dest_dir)){
+        std::cout << "Failed to create directory: " << dest_dir << std::endl;
+        return;
+    };
+
+    QString fileName = dest_dir + "/result_export.txt";    
     m_c.exportLastResponse(fileName);
+    std::cout << "saved:" << fileName << std::endl;
 };
 
 void GmailCommands::print_last_result(QString )
