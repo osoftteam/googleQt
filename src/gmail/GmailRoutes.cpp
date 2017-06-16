@@ -209,9 +209,10 @@ mail_cache::data_list_uptr GmailRoutes::getCacheMessages(int numberOfMessages, u
     return rfetcher->waitForResultAndRelease();
 };
 
-bool GmailRoutes::trashCacheMessage(QString userId, QString msg_id)
+GoogleVoidTask* GmailRoutes::trashCacheMessage_Async(QString userId, QString msg_id)
 {
     ensureCache();
+    GoogleVoidTask* rv = m_endpoint->produceVoidTask();
     googleQt::gmail::TrashMessageArg arg(userId, msg_id);
     getMessages()->trash_Async(arg)->then([=]()
                                           {
@@ -226,8 +227,12 @@ bool GmailRoutes::trashCacheMessage(QString userId, QString msg_id)
 													  storage->deleteAttachmentsFromDb(msg_id);
 												  }
 											  }
+                                              rv->completed_callback();
+                                          }, 
+                                            [=](std::unique_ptr<GoogleException> ex) {
+                                              rv->failed_callback(std::move(ex));
                                           });
-    return true;
+    return rv;
 };
 
 #define EXPECT_STRING_VAL(S, W) if(S.isEmpty()){                        \

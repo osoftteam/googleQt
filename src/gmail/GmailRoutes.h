@@ -63,7 +63,7 @@ namespace googleQt{
         /// load messages from cache, numberOfMessages = -1 if all messages from cache
         mail_cache::data_list_uptr getCacheMessages(int numberOfMessages, uint64_t labelFilter = 0);
 
-        bool trashCacheMessage(QString userId, QString msg_id);
+        GoogleVoidTask* trashCacheMessage_Async(QString userId, QString msg_id);
 
         /// init local cache table using SQlite DB, tables will have 'dbprefix' prefix
         /// file path and DB-name should be specified
