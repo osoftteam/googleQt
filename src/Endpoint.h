@@ -57,7 +57,7 @@ namespace googleQt{
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
         {
             QJsonObject js = body;
-            std::shared_ptr<requester> rb(new POST_requester(*this, js));
+            std::shared_ptr<requester> rb(new POST_requester(*this, std::move(js)));
             runRequest<RES, 
                 RESULT_FACTORY>
                 (url,
@@ -72,8 +72,7 @@ namespace googleQt{
             std::function<void(std::unique_ptr<RES>)> completed_callback,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
         {
-            QJsonObject js = QJsonObject();
-            std::shared_ptr<requester> rb(new POST_requester(*this, js));
+            std::shared_ptr<requester> rb(new POST_requester(*this, QJsonObject()));
             runRequest<RES, 
                 RESULT_FACTORY>
                 (url,
@@ -86,7 +85,6 @@ namespace googleQt{
             std::function<void(void)> completed_callback,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
         {
-            QJsonObject js = QJsonObject();
             std::function<void(std::unique_ptr<googleQt::VoidType>)> completed_with_type = nullptr;
             if (completed_callback != nullptr)
             {
@@ -96,7 +94,7 @@ namespace googleQt{
                 };
             }
 
-            std::shared_ptr<requester> rb(new POST_requester(*this, js));
+            std::shared_ptr<requester> rb(new POST_requester(*this, QJsonObject()));
             runRequest<VoidType,VoidType>
                 (url,
                  std::move(rb),
@@ -111,7 +109,7 @@ namespace googleQt{
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
         {
             QJsonObject js = body;
-            std::shared_ptr<requester> rb(new PUT_requester(*this, js));
+            std::shared_ptr<requester> rb(new PUT_requester(*this, std::move(js)));
             runRequest<RES, 
                 RESULT_FACTORY>
                 (url,
@@ -126,7 +124,7 @@ namespace googleQt{
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
         {
             QJsonObject js = body;
-            std::shared_ptr<requester> rb(new UPDATE_requester(*this, js));
+            std::shared_ptr<requester> rb(new UPDATE_requester(*this, std::move(js)));
             runRequest<RES, 
                 RESULT_FACTORY>
                 (url,
@@ -195,7 +193,7 @@ namespace googleQt{
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr)
         {
             QJsonObject js = body;
-            std::shared_ptr<requester> rb(new MPartUpload_requester(*this, js, readFrom));
+            std::shared_ptr<requester> rb(new MPartUpload_requester(*this, std::move(js), readFrom));
             runRequest<RES, RESULT_FACTORY>
                 (url,
                  std::move(rb),
@@ -284,7 +282,7 @@ namespace googleQt{
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr)
         {
             QJsonObject js = body;
-            std::shared_ptr<requester> rb(new POST_rfc822_requester(*this, js));
+            std::shared_ptr<requester> rb(new POST_rfc822_requester(*this, std::move(js)));
             runRequest<RES, 
                 RESULT_FACTORY>
                 (url,

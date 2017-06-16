@@ -82,8 +82,8 @@ namespace googleQt{
         class POST_requester: public requester
         {
         public:
-            POST_requester(ApiEndpoint& e, const QJsonObject& js)
-                :requester(e), m_js_out(js){}
+            POST_requester(ApiEndpoint& e, QJsonObject&& js)
+                :requester(e), m_js_out(std::move(js)){}
             QNetworkReply * request(QNetworkRequest& r)override
             {
                 QByteArray bytes2post;
@@ -99,14 +99,14 @@ namespace googleQt{
                 return m_ep.postData(r, bytes2post);
             }
         protected:
-            const QJsonObject& m_js_out;
+            QJsonObject m_js_out;
         };
 
         class PUT_requester: public requester
         {
         public:
-            PUT_requester(ApiEndpoint& e, const QJsonObject& js)
-                :requester(e), m_js_out(js){}
+            PUT_requester(ApiEndpoint& e, QJsonObject&& js)
+                :requester(e), m_js_out(std::move(js)){}
             QNetworkReply * request(QNetworkRequest& r)override
             {
                 QByteArray bytes2post;
@@ -122,14 +122,14 @@ namespace googleQt{
                 return m_ep.putData(r, bytes2post);
             }
         protected:
-            const QJsonObject& m_js_out;
+            QJsonObject m_js_out;
         };
 
         class UPDATE_requester: public requester
         {
         public:
-            UPDATE_requester(ApiEndpoint& e, const QJsonObject& js)
-                :requester(e), m_js_out(js){}
+            UPDATE_requester(ApiEndpoint& e, QJsonObject&& js)
+                :requester(e), m_js_out(std::move(js)){}
             QNetworkReply * request(QNetworkRequest& r)override
             {
                 QByteArray bytes2post = QByteArray();
@@ -146,14 +146,14 @@ namespace googleQt{
                 return m_ep.patchData(r, bytes2post);
             }
         protected:
-            const QJsonObject& m_js_out;
+            QJsonObject m_js_out;
         };
         
         class POST_rfc822_requester: public requester
         {
         public:
-            POST_rfc822_requester(ApiEndpoint& e, const QJsonObject& js)
-                :requester(e), m_js_out(js) {}
+            POST_rfc822_requester(ApiEndpoint& e, QJsonObject&& js)
+                :requester(e), m_js_out(std::move(js)) {}
             QNetworkReply * request(QNetworkRequest& r)override
             {
                 QByteArray bytes2post;
@@ -170,7 +170,7 @@ namespace googleQt{
                 return m_ep.postData(r, bytes2post);
             }
         protected:
-            const QJsonObject& m_js_out;
+            QJsonObject m_js_out;
         };
 
         class SimpleUpload_requester : public requester
@@ -191,11 +191,11 @@ namespace googleQt{
         class MPartUpload_requester : public requester
         {
         public:
-            MPartUpload_requester(ApiEndpoint& e, const QJsonObject& js, QIODevice* readFrom)
-                :requester(e), m_js_out(js), m_readFrom(readFrom) {}
+            MPartUpload_requester(ApiEndpoint& e, QJsonObject&& js, QIODevice* readFrom)
+                :requester(e), m_js_out(std::move(js)), m_readFrom(readFrom) {}
             QNetworkReply * request(QNetworkRequest& r)override;
         protected:
-            const QJsonObject& m_js_out;
+            QJsonObject m_js_out;
             QIODevice* m_readFrom;
         };
 
