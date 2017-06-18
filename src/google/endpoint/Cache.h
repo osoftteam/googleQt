@@ -13,10 +13,10 @@ namespace googleQt {
     using CACHE_QUERY_RESULT_MAP  = std::map<QString, std::shared_ptr<O>>;
     template<class O>
     using CACHE_QUERY_RESULT_LIST = std::list<std::shared_ptr<O>>;
-	template<class O>
-	using CACHE_MAP = std::map<int, CACHE_QUERY_RESULT_MAP<O>>;
-	template<class O>
-	using CACHE_ORD = std::map<int, CACHE_QUERY_RESULT_LIST<O>>;
+    template<class O>
+    using CACHE_MAP = std::map<int, CACHE_QUERY_RESULT_MAP<O>>;
+    template<class O>
+    using CACHE_ORD = std::map<int, CACHE_QUERY_RESULT_LIST<O>>;
 
     enum class EDataState
     {
@@ -51,9 +51,9 @@ namespace googleQt {
         virtual void update_persistent_storage(int accId, EDataState state, CACHE_QUERY_RESULT_MAP<O>& r, const std::set<QString>& fetched_ids) = 0;
         
         void merge(int accId,
-			EDataState state, 
-			CACHE_QUERY_RESULT_MAP<O>& r, 
-			const std::set<QString>& fetched_ids)
+            EDataState state, 
+            CACHE_QUERY_RESULT_MAP<O>& r, 
+            const std::set<QString>& fetched_ids)
         {          
             
             for (typename CACHE_QUERY_RESULT_MAP<O>::iterator i = r.begin();
@@ -87,12 +87,12 @@ namespace googleQt {
     template <class O>
     using CacheTaskParent = googleQt::GoogleTask<CacheDataList<O>>;
     
-	/**
-		CacheQueryTask - account-based class that can query server and feed parsed results
-		back to the cache. Sort of cache-helper, key thing is that it's account-based
-		For gmail accoundId is DB-based ID of userId, for APIs that don't support userId
-		same accountId can be used, '0' for example. '-1' means invalid accountId
-	*/
+    /**
+        CacheQueryTask - account-based class that can query server and feed parsed results
+        back to the cache. Sort of cache-helper, key thing is that it's account-based
+        For gmail accoundId is DB-based ID of userId, for APIs that don't support userId
+        same accountId can be used, '0' for example. '-1' means invalid accountId
+    */
     template <class O>
     class CacheQueryTask : public CacheTaskParent<O>
     {
@@ -114,7 +114,7 @@ namespace googleQt {
             CacheTaskParent<O>::notifyOnFinished();
         }
         
-		int accountId()const { return m_accountId; }
+        int accountId()const { return m_accountId; }
         bool isCompleted()const override { return m_query_completed; }
 
         void add(std::shared_ptr<O> obj){ CacheTaskParent<O>::m_completed->result_map[obj->id()] = obj; CacheTaskParent<O>::m_completed->result_list.push_back(obj); };
@@ -124,7 +124,7 @@ namespace googleQt {
         size_t db_cache_hit_count()const { return m_db_cache_hit_count; }
 
     protected:
-		int		m_accountId;
+        int     m_accountId;
         std::shared_ptr<GoogleCacheBase<O>> m_cache;
         size_t     m_cache_hit_count{0};
         size_t     m_db_cache_hit_count{0};
@@ -140,9 +140,9 @@ namespace googleQt {
                                            R* cr) = 0;
         virtual void update_db(int accId, EDataState state, CACHE_QUERY_RESULT_LIST<O>& r) = 0;
         virtual void update_db(int accId, 
-			EDataState state,
-			CACHE_QUERY_RESULT_MAP<O>& r, 
-			const std::set<QString>& fetched_ids)
+            EDataState state,
+            CACHE_QUERY_RESULT_MAP<O>& r, 
+            const std::set<QString>& fetched_ids)
         {
             CACHE_QUERY_RESULT_LIST<O> lst;
             typedef typename CACHE_QUERY_RESULT_MAP<O>::iterator ITR;
@@ -169,91 +169,91 @@ namespace googleQt {
 
         bool mem_has_object(int accId, QString id)const override
         {
-			bool rv = false;
-			auto i = m_mcache.find(accId);
-			if (i != m_mcache.end()) {
-				rv = (i->second.find(id) != i->second.end());
-			}
-			return rv;
+            bool rv = false;
+            auto i = m_mcache.find(accId);
+            if (i != m_mcache.end()) {
+                rv = (i->second.find(id) != i->second.end());
+            }
+            return rv;
             //return (m_mem_cache.find(id) != m_mem_cache.end());
         };
 
         std::shared_ptr<O> mem_object(int accId, QString id)override
         {
             std::shared_ptr<O> rv;
-			auto i = m_mcache.find(accId);
-			if (i != m_mcache.end()) {
-				auto j = i->second.find(id);
-				if (j != i->second.end()) {
-					rv = j->second;
-				}
-				//rv = (i->second.find(id) != i->second.end());
-			}
-			/*
+            auto i = m_mcache.find(accId);
+            if (i != m_mcache.end()) {
+                auto j = i->second.find(id);
+                if (j != i->second.end()) {
+                    rv = j->second;
+                }
+                //rv = (i->second.find(id) != i->second.end());
+            }
+            /*
             auto i = m_mem_cache.find(id);
             if (i != m_mem_cache.end())
                 rv = i->second;
-				*/
+                */
             return rv;
         }
         void mem_insert(int accId, QString id, std::shared_ptr<O> o)override
         {
-			auto i = m_mcache.find(accId);
-			if (i != m_mcache.end()) {
-				if (i->second.insert(std::make_pair(id, o)).second) {
-					m_ord[accId].push_back(o);
-					//m_order_cache.push_back(o);
-				}
-			}
-			else {
-				CACHE_QUERY_RESULT_MAP<O> mres;
-				mres[id] = o;
-				m_mcache[accId] = mres;
-	//			m_order_cache.push_back(o);
-				m_ord[accId].push_back(o);
-			}
+            auto i = m_mcache.find(accId);
+            if (i != m_mcache.end()) {
+                if (i->second.insert(std::make_pair(id, o)).second) {
+                    m_ord[accId].push_back(o);
+                    //m_order_cache.push_back(o);
+                }
+            }
+            else {
+                CACHE_QUERY_RESULT_MAP<O> mres;
+                mres[id] = o;
+                m_mcache[accId] = mres;
+    //          m_order_cache.push_back(o);
+                m_ord[accId].push_back(o);
+            }
 
-			/*
+            /*
             if (m_mem_cache.insert(std::make_pair(id, o)).second)
                 {
                     m_order_cache.push_back(o);
                 }
-				
+                
             return true;*/
         }
 
         size_t mem_size()const override 
         {
-			size_t rv = 0;
-			for (auto i = m_mcache.begin(); i != m_mcache.end(); i++) {
-				rv += i->second.size();
-			}
-			return rv;
+            size_t rv = 0;
+            for (auto i = m_mcache.begin(); i != m_mcache.end(); i++) {
+                rv += i->second.size();
+            }
+            return rv;
          //   return m_mem_cache.size();
         }
 
         void mem_clear()override 
         {
-			m_mcache.clear();
-			m_ord.clear();
+            m_mcache.clear();
+            m_ord.clear();
             //m_order_cache.clear();
         };
 
         
         void persistent_clear(int accId, const std::set<QString>& ids2delete) override
         {
-			auto k = m_mcache.find(accId);
-			if (k != m_mcache.end()) {
-				for (auto i = ids2delete.cbegin(); i != ids2delete.cend(); i++)
-				{
-					k->second.erase(*i);
-				}
-			}
+            auto k = m_mcache.find(accId);
+            if (k != m_mcache.end()) {
+                for (auto i = ids2delete.cbegin(); i != ids2delete.cend(); i++)
+                {
+                    k->second.erase(*i);
+                }
+            }
 
-			auto r = m_ord.find(accId);
-			if (r != m_ord.end()) {
-				r->second.remove_if([&](const std::shared_ptr<O>& o) { return (ids2delete.find(o->id()) != ids2delete.end()); });
-			}
+            auto r = m_ord.find(accId);
+            if (r != m_ord.end()) {
+                r->second.remove_if([&](const std::shared_ptr<O>& o) { return (ids2delete.find(o->id()) != ids2delete.end()); });
+            }
 
             //m_order_cache.remove_if([&](const std::shared_ptr<O>& o) { return (ids2delete.find(o->id()) != ids2delete.end()); });
 
@@ -265,9 +265,9 @@ namespace googleQt {
         };
 
         void update_persistent_storage(int accId, 
-			EDataState state,
-			CACHE_QUERY_RESULT_MAP<O>& r, 
-			const std::set<QString>& fetched_ids)override
+            EDataState state,
+            CACHE_QUERY_RESULT_MAP<O>& r, 
+            const std::set<QString>& fetched_ids)override
         {
             if(m_localDB != nullptr &&
                m_localDB->isValid() &&
@@ -279,7 +279,7 @@ namespace googleQt {
 
         void query_Async(EDataState load, const std::list<QString>& id_list, R* rfetcher)
         { //cache-lookup makes sense only against account defined in 'fetcher' so cache and fetcher 
-		//	should be compatible, using userId/accId
+        //  should be compatible, using userId/accId
             std::list<QString> missed_cache;
             for (std::list<QString>::const_iterator i = id_list.begin(); i != id_list.end(); i++)
                 {
@@ -316,12 +316,12 @@ namespace googleQt {
                 }            
         };
 
-		ApiEndpoint&  endpoint() { return m_endpoint; }
+        ApiEndpoint&  endpoint() { return m_endpoint; }
 
     protected:
         ApiEndpoint&                m_endpoint;
-		CACHE_MAP<O>				m_mcache;
-		CACHE_ORD<O>				m_ord;
+        CACHE_MAP<O>                m_mcache;
+        CACHE_ORD<O>                m_ord;
         std::unique_ptr<LocalPersistentStorage<O, R>> m_localDB;
     };
 };

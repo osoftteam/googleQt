@@ -45,7 +45,7 @@ void GoogleClient::setUserId(QString email)
         ApiClient::setUserId(email);
         if(m_gmail_routes){
             if(m_gmail_routes->hasCache()){
-				m_gmail_routes->resetSQLiteCache();
+                m_gmail_routes->resetSQLiteCache();
             }
         }
     }

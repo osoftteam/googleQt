@@ -12,7 +12,7 @@ namespace googleQt{
         GoogleAutotest(GoogleClient& cl);
         virtual ~GoogleAutotest();
         void generateCalls()override;
-		QString userId()const override;
+        QString userId()const override;
     protected:
         GoogleClient& m_cl;
     };

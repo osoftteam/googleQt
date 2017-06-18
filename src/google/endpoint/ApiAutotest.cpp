@@ -76,7 +76,7 @@ void ApiAutotest::prepareAutoTestObj(const char* context_class_name,
                     switch (idx)
                         {
                         //case 0: h->setName("From"); h->setValue("From_" + h->value() + "@gmail.com"); break;
-						case 0: h->setName("From"); h->setValue(ApiAutotest::INSTANCE().userId()); break;
+                        case 0: h->setName("From"); h->setValue(ApiAutotest::INSTANCE().userId()); break;
                         case 1: h->setName("To"); h->setValue("To_" + h->value() + "@gmail.com"); break;
                         case 2: h->setName("Subject"); h->setValue("Subject_" + h->value() + "@gmail.com"); break;
                         case 3: h->setName("CC"); h->setValue("CC_" + h->value() + "@gmail.com"); break;
@@ -117,11 +117,11 @@ QByteArray ApiAutotest::generateData(const char* context_class_name, int context
             static int ref_num = 0;
             ref_num++;
 
-			QString sample_header = QString("<p><strong>ref# %1</strong></p>\
+            QString sample_header = QString("<p><strong>ref# %1</strong></p>\
             <p>Mr.M. %2 <br / >Chief of Syrup Production<br / >Old Sticky Pancake Company<br / >\
             456 Maple Lane<br / >Forest, ON 7W8 9Y0<br / ><br / >Dear Mr. %2 :<br / ><br / >")
-				.arg(ref_num)
-				.arg(userId());
+                .arg(ref_num)
+                .arg(userId());
 
             QString sample_body = "Let me begin by thanking you for your past contributions to our Little League baseball team.\
             Your sponsorship aided in the purchase of ten full uniforms and several pieces of baseball equipment \
@@ -135,7 +135,7 @@ QByteArray ApiAutotest::generateData(const char* context_class_name, int context
             Respectfully yours,<br /><br />&nbsp;<br /><br />Derek Jeter<br />\
             https://www.scribendi.com/advice/formal_letter_example.en.html</p>";
 
-			QString sample_html = sample_header + sample_body;
+            QString sample_html = sample_header + sample_body;
 
             QString s;
             if (parent_context_index == 0)
@@ -245,16 +245,16 @@ QString ApiAutotest::getString(const char* class_name, const char* field_name, Q
             rv += ".txt";
         }
     }
-	else if (strcmp(class_name, "attachments::MessageAttachment") == 0) 
-	{
-		if (strcmp(field_name, "m_attachmentId") == 0)
-		{
-			rv = QString("att_%1_%2_%3")
-				.arg(default_value)
-				.arg(QDateTime::currentMSecsSinceEpoch())
-				.arg(qrand());
-		}
-	}
+    else if (strcmp(class_name, "attachments::MessageAttachment") == 0) 
+    {
+        if (strcmp(field_name, "m_attachmentId") == 0)
+        {
+            rv = QString("att_%1_%2_%3")
+                .arg(default_value)
+                .arg(QDateTime::currentMSecsSinceEpoch())
+                .arg(qrand());
+        }
+    }
 
     return rv;
 };

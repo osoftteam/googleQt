@@ -197,7 +197,7 @@ namespace googleQt {
             url.setUrl(link);
         }
 
-		QString userId()const { return ""; }
+        QString userId()const { return ""; }
 
 #ifdef API_QT_AUTOTEST
         static std::unique_ptr<VoidType> EXAMPLE(int, int) { return std::unique_ptr<VoidType>(new VoidType()); };

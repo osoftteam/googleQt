@@ -16,10 +16,10 @@ namespace googleQt{
         {
         public:
             ListArg();
-			ListArg(QString user_id);
+            ListArg(QString user_id);
             
-			QString userId()const { return m_userId; }
-			void    setUserId(QString id) { m_userId = id; };
+            QString userId()const { return m_userId; }
+            void    setUserId(QString id) { m_userId = id; };
 
             /**
              * Include messages from SPAM and TRASH in the results. (Default: false)
@@ -59,10 +59,10 @@ namespace googleQt{
 
 
         protected:
-			QString     m_userId;
-			bool        m_includeSpamTrash{false};
+            QString     m_userId;
+            bool        m_includeSpamTrash{false};
             QStringList m_labelIds;
-			int         m_maxResults{50};
+            int         m_maxResults{50};
             QString     m_pageToken;
             QString     m_q;
         };
@@ -72,8 +72,8 @@ namespace googleQt{
         public:
             HistoryListArg(QString userId, int startHistoryId = 0);
 
-			QString userId()const { return m_userId; }
-			void    setUserId(QString id) { m_userId = id; };
+            QString userId()const { return m_userId; }
+            void    setUserId(QString id) { m_userId = id; };
 
             /**
             *   Only return messages with labels that match all of the specified label IDs.
@@ -112,7 +112,7 @@ namespace googleQt{
 #endif //API_QT_AUTOTEST
 
         protected:
-			QString     m_userId;
+            QString     m_userId;
             QStringList m_labelIds;
             int         m_maxResults;
             QString     m_pageToken;
@@ -123,10 +123,10 @@ namespace googleQt{
         {
         public:
             DraftListArg();
-			DraftListArg(QString user_id);
+            DraftListArg(QString user_id);
 
-			QString userId()const { return m_userId; }
-			void    setUserId(QString id) { m_userId = id; };
+            QString userId()const { return m_userId; }
+            void    setUserId(QString id) { m_userId = id; };
 
             /**
             * Include messages from SPAM and TRASH in the results. (Default: false)
@@ -160,9 +160,9 @@ namespace googleQt{
 #endif //API_QT_AUTOTEST
 
         protected:
-			QString     m_userId;
+            QString     m_userId;
             bool        m_includeSpamTrash;
-			int         m_maxResults{50};
+            int         m_maxResults{50};
             QString     m_pageToken;
             QString     m_q;
         };
@@ -176,8 +176,8 @@ namespace googleQt{
 
             void build(const QString& link_path, QUrl& url)const override;
 
-			QString userId()const { return m_userId; }
-			void    setUserId(QString id) { m_userId = id; };
+            QString userId()const { return m_userId; }
+            void    setUserId(QString id) { m_userId = id; };
 
             QString getId()const { return m_id; }
             void    setId(QString id) { m_id = id; };
@@ -203,7 +203,7 @@ namespace googleQt{
 #endif //API_QT_AUTOTEST
 
         protected:
-			QString     m_userId;
+            QString     m_userId;
             QString     m_id;
             QString     m_format;
             QStringList m_headers;
@@ -217,8 +217,8 @@ namespace googleQt{
 
             void build(const QString& link_path, QUrl& url)const override;
 
-			QString userId()const { return m_userId; }
-			void    setUserId(QString id) { m_userId = id; };
+            QString userId()const { return m_userId; }
+            void    setUserId(QString id) { m_userId = id; };
 
             QString getMessageId()const { return m_message_id; }
             void    setMessageId(QString id) { m_message_id = id; };
@@ -232,7 +232,7 @@ namespace googleQt{
 #endif //API_QT_AUTOTEST
 
         protected:
-			QString     m_userId;
+            QString     m_userId;
             QString     m_message_id;
             QString     m_attachment_id;
         };
@@ -243,12 +243,12 @@ namespace googleQt{
         public:
             ModifyMessageArg() {};
             ModifyMessageArg(QString user_id,
-					QString message_id,
+                    QString message_id,
                     QString add_label = "",
                     QString remove_label = "");
 
-			QString userId()const { return m_userId; }
-			void    setUserId(QString id) { m_userId = id; };
+            QString userId()const { return m_userId; }
+            void    setUserId(QString id) { m_userId = id; };
 
             QString messageId()const { return m_message_id; }
             void setMessageId(QString mid) { m_message_id = mid; }
@@ -268,7 +268,7 @@ namespace googleQt{
 #endif //API_QT_AUTOTEST
 
         protected:
-			QString m_userId;
+            QString m_userId;
             QString m_message_id;
             std::list <QString> m_addLabels;
             std::list <QString> m_removeLabels;
@@ -318,8 +318,8 @@ namespace googleQt{
                 QString text_plain,
                 QString text_html);
 
-			QString userId()const { return m_userId; }
-			void    setUserId(QString id) { m_userId = id; };
+            QString userId()const { return m_userId; }
+            void    setUserId(QString id) { m_userId = id; };
 
             QString getSubject()const { return m_Subject; }
             void setSubject(QString subject) { m_Subject = subject; }
@@ -357,7 +357,7 @@ namespace googleQt{
 #endif //API_QT_AUTOTEST
 
         protected:
-			QString m_userId;
+            QString m_userId;
             QString m_From;
             QString m_To;
             QString m_CC;
@@ -412,31 +412,31 @@ namespace googleQt{
         class TrashMessageArg: public PathWithIdArg<path_trash, TrashMessageArg>
         {
         public:
-			TrashMessageArg(QString user_id, QString idValue) { m_userId = user_id; m_id = idValue; }
-			QString userId()const { return m_userId; }
-			void    setUserId(QString id) { m_userId = id; };
+            TrashMessageArg(QString user_id, QString idValue) { m_userId = user_id; m_id = idValue; }
+            QString userId()const { return m_userId; }
+            void    setUserId(QString id) { m_userId = id; };
 
 #ifdef API_QT_AUTOTEST
-			static std::unique_ptr<TrashMessageArg> EXAMPLE(int, int);
+            static std::unique_ptr<TrashMessageArg> EXAMPLE(int, int);
 #endif //API_QT_AUTOTEST
 
-		protected:
-			QString m_userId;
+        protected:
+            QString m_userId;
         };
 
         class UntrashMessageArg: public PathWithIdArg<path_untrash, UntrashMessageArg>
         {
         public:
             UntrashMessageArg(QString user_id, QString idValue){ m_userId = user_id; m_id = idValue;}
-			QString userId()const { return m_userId; }
-			void    setUserId(QString id) { m_userId = id; };
+            QString userId()const { return m_userId; }
+            void    setUserId(QString id) { m_userId = id; };
 
 #ifdef API_QT_AUTOTEST
-			static std::unique_ptr<UntrashMessageArg> EXAMPLE(int, int);
+            static std::unique_ptr<UntrashMessageArg> EXAMPLE(int, int);
 #endif //API_QT_AUTOTEST
 
-		protected:
-			QString m_userId;
+        protected:
+            QString m_userId;
         };
 
         class ImportMessageArg: public PathArg<path_import, ImportMessageArg>

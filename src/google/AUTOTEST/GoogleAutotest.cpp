@@ -27,7 +27,7 @@ void GoogleAutotest::generateCalls()
 
 QString GoogleAutotest::userId()const
 {
-	return m_cl.userId();
+    return m_cl.userId();
 }
 
 #endif//#ifdef API_QT_AUTOTEST

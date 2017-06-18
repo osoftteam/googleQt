@@ -40,14 +40,14 @@ namespace googleQt{
         threads::ThreadsRoutes*     getThreads();
         history::HistoryRoutes*     getHistory();
         drafts::DraftsRoutes*       getDrafts();
-		mail_cache::cache_ptr		cache() {return m_GMailCache;}
+        mail_cache::cache_ptr       cache() {return m_GMailCache;}
 
         std::unique_ptr<UserBatchResult<QString, messages::MessageResource>>   getUserBatchMessages(QString userId, EDataState, const std::list<QString>& id_list);
         UserBatchRunner<QString, mail_cache::MessagesReceiver, messages::MessageResource>* getUserBatchMessages_Async(QString userId, EDataState, const std::list<QString>& id_list);
 
         /// check for new emails - get top messagesCount messages and update cache
         mail_cache::data_list_uptr getNextCacheMessages(QString userId, 
-														int messagesCount = 40,
+                                                        int messagesCount = 40,
                                                         QString pageToken = "", 
                                                         QStringList* labels = nullptr);
         mail_cache::GMailCacheQueryTask* getNextCacheMessages_Async(QString userId, 
@@ -106,7 +106,7 @@ namespace googleQt{
     public:
 #ifdef API_QT_AUTOTEST
         void autotest();
-		void runAutotest();
+        void runAutotest();
         void autotestParLoad(EDataState state, const std::list<QString>& id_list);
         void autotestParDBLoad(EDataState state, const std::list<QString>& id_list);
 #endif
@@ -129,7 +129,7 @@ namespace googleQt{
         std::unique_ptr<threads::ThreadsRoutes>         m_ThreadsRoutes;
         std::unique_ptr<history::HistoryRoutes>         m_HistoryRoutes;
         std::unique_ptr<drafts::DraftsRoutes>           m_DraftsRoutes;
-        mutable mail_cache::cache_ptr					m_GMailCache;
+        mutable mail_cache::cache_ptr                   m_GMailCache;
         Endpoint*  m_endpoint;
     };
 

@@ -9,7 +9,7 @@ using namespace gmail;
 
 IdArg::IdArg(QString userIdValue, QString idValue, QString format)
     :m_userId(userIdValue),
-	m_id(idValue),
+    m_id(idValue),
     m_format(format)
 {
 
@@ -28,7 +28,7 @@ void IdArg::build(const QString& link_path, QUrl& url)const
 
 AttachmentIdArg::AttachmentIdArg(QString user_id, QString message_id, QString attachment_id)
     :m_userId(user_id),
-	m_message_id(message_id),
+    m_message_id(message_id),
     m_attachment_id(attachment_id)
 {
 };
@@ -45,7 +45,7 @@ ModifyMessageArg::ModifyMessageArg(QString user_id, QString message_id,
                                    QString add_label /*= ""*/,
                                    QString remove_label /*= ""*/)
 {
-	m_userId = user_id;
+    m_userId = user_id;
     m_message_id = message_id;
     if(!add_label.isEmpty()){
         m_addLabels.push_back(add_label);
@@ -101,7 +101,7 @@ void ListArg::build(const QString& link_path, QUrl& url)const
 
 
 HistoryListArg::HistoryListArg(QString userId, int startHistoryId):
-	m_userId(userId),
+    m_userId(userId),
     m_maxResults(50),
     m_startHistoryId(startHistoryId)
 {
@@ -129,7 +129,7 @@ DraftListArg::DraftListArg()
 
 DraftListArg::DraftListArg(QString user_id) 
 {
-	m_userId = user_id;
+    m_userId = user_id;
 };
 
 void DraftListArg::build(const QString& link_path, QUrl& url)const
@@ -444,14 +444,14 @@ std::unique_ptr<SendMimeMessageArg> SendMimeMessageArg::EXAMPLE(int, int)
 
 std::unique_ptr<TrashMessageArg> TrashMessageArg::EXAMPLE(int, int)
 { 
-	std::unique_ptr<TrashMessageArg> rv(new TrashMessageArg(ApiAutotest::INSTANCE().userId(), "100"));
-	return rv; 
+    std::unique_ptr<TrashMessageArg> rv(new TrashMessageArg(ApiAutotest::INSTANCE().userId(), "100"));
+    return rv; 
 };
 
 std::unique_ptr<UntrashMessageArg> UntrashMessageArg::EXAMPLE(int, int)
 { 
-	std::unique_ptr<UntrashMessageArg> rv(new UntrashMessageArg(ApiAutotest::INSTANCE().userId(), "100"));
-	return rv; 
+    std::unique_ptr<UntrashMessageArg> rv(new UntrashMessageArg(ApiAutotest::INSTANCE().userId(), "100"));
+    return rv; 
 };
 
 #endif //API_QT_AUTOTEST
