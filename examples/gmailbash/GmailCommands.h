@@ -13,6 +13,10 @@ namespace googleQt{
     {
         class LabelResource;
     };    
+    namespace mail_cache
+    {
+        class GmailCacheRoutes;
+    }
 }
 
 class GmailCommands
@@ -197,6 +201,7 @@ protected:
 protected:
     GoogleClient& m_c;
     GmailRoutes*  m_gm;
+    googleQt::mail_cache::GmailCacheRoutes* m_cr;
     bool          m_cache_initialized {false};
     int           m_batch_counter{0};
 };

@@ -930,7 +930,7 @@ void GmailCommands::get_batch_snippets(QString id_list)
             std::cout << "Space separated messages ID list required" << std::endl;
             return;
         }
-    std::unique_ptr<UserBatchResult<QString, messages::MessageResource>> br = m_gm->getUserBatchMessages(m_c.userId(), EDataState::snippet, arg_list);
+    std::unique_ptr<UserBatchResult<QString, messages::MessageResource>> br = m_cr->getUserBatchMessages(m_c.userId(), EDataState::snippet, arg_list);
     RESULT_LIST<messages::MessageResource*> res = br->results();
     res.sort([](messages::MessageResource* f, messages::MessageResource* s) {return (f->internaldate() > s->internaldate()); });
     std::cout << "batch size: " << res.size() << std::endl;
@@ -962,7 +962,7 @@ void GmailCommands::get_batch_details(QString id_list)
             return;
         }
 
-    std::unique_ptr<UserBatchResult<QString, messages::MessageResource>> br = m_gm->getUserBatchMessages(m_c.userId(), EDataState::body, arg_list);
+    std::unique_ptr<UserBatchResult<QString, messages::MessageResource>> br = m_cr->getUserBatchMessages(m_c.userId(), EDataState::body, arg_list);
     RESULT_LIST<messages::MessageResource*> res = br->results();
     int n = 1;
     for (auto& m : res)
@@ -1007,7 +1007,8 @@ void GmailCommands::initCache()
     if(!m_cache_initialized)
         {
             QString dbPath = "gm-cache.sqlite";
-            if(!m_gm->setupSQLiteCache(dbPath, "downloads"))
+            m_cr = m_gm->setupCache(dbPath, "downloads");
+            if(!m_cr)
                 {
                     std::cout << "Failed to initialize SQLite cache database: " << std::endl;
                     return;
@@ -1030,7 +1031,7 @@ void GmailCommands::get_cache_snippets(QString id_list)
             return;
         }
 
-    auto lst = m_gm->getCacheMessages(m_c.userId(), EDataState::snippet, arg_list);
+    auto lst = m_cr->getCacheMessages(m_c.userId(), EDataState::snippet, arg_list);
     std::cout << "loaded from cache: " << lst->result_list.size() << std::endl;
 
     int n = 1;
@@ -1056,7 +1057,7 @@ void GmailCommands::get_cache_details(QString id_list)
             return;
         }
 
-    auto lst = m_gm->getCacheMessages(m_c.userId(), EDataState::body, arg_list);
+    auto lst = m_cr->getCacheMessages(m_c.userId(), EDataState::body, arg_list);
     std::cout << "loaded from cache: " << lst->result_list.size() << std::endl;
 
     int n = 1;
@@ -1081,7 +1082,7 @@ void GmailCommands::check_email_cache(QString nextToken)
 
     try
         {    
-            auto lst = m_gm->getNextCacheMessages(m_c.userId(), 20, nextToken);
+            auto lst = m_cr->getNextCacheMessages(m_c.userId(), 20, nextToken);
             std::cout << "loaded from cache: " << lst->result_list.size() << std::endl;
 
             int n = 1;
