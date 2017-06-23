@@ -255,8 +255,6 @@ namespace googleQt {
                 r->second.remove_if([&](const std::shared_ptr<O>& o) { return (ids2delete.find(o->id()) != ids2delete.end()); });
             }
 
-            //m_order_cache.remove_if([&](const std::shared_ptr<O>& o) { return (ids2delete.find(o->id()) != ids2delete.end()); });
-
             if (m_localDB != nullptr &&
                 m_localDB->isValid())
                 {
