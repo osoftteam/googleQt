@@ -576,7 +576,7 @@ std::unique_ptr<CreateFolderArg> CreateFolderArg::EXAMPLE(int, int)
     std::list<QString> lstParents;
     for (int i = 0; i < 5; i++)
     {
-        lstParents.push_back(QString("parent1").arg(i));
+        lstParents.push_back(QString("parent%1").arg(i));
     }
     rv->setParents(lstParents);
     return rv;
