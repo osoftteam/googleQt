@@ -736,6 +736,7 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
             q->addBindValue(userId);
             if (q->exec()) {
                 m_accId = q->lastInsertId().toInt();
+                reloadDbAccounts();
             }
         }
     qDebug() << "using acc-id" << m_accId << "for user" << userId;
