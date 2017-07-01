@@ -924,6 +924,7 @@ void GmailCommands::print_user_id(QString )
 
 void GmailCommands::get_batch_snippets(QString id_list) 
 {
+    initCache();
     std::list<QString> arg_list = split_string(id_list);
     if (arg_list.empty()) 
         {
