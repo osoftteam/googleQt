@@ -26,7 +26,7 @@ functions to query state:
 ```
 function to get access to Result class or Exception object in case of failure:
 ```
-  DropboxException* error()
+  GoogleException* error()
   T* get()
 ```
 function to turn async operation into blocking:
