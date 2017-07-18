@@ -329,21 +329,21 @@ namespace googleQt {
         };        
     };
 
-	struct CaseInsensitiveLess : std::binary_function<std::string, std::string, bool>
-	{
-		bool operator() (const QString & lhs, const QString & rhs) const {
-			return std::lexicographical_compare(lhs.begin(),
-				lhs.end(),
-				rhs.begin(),
-				rhs.end(),
-				case_insensitive_char_cmp);
-		}
-		
-		static bool case_insensitive_char_cmp(const QChar& lhs, const QChar& rhs)
-		{
-			return (lhs.toUpper() < rhs.toUpper());
-		}
-	};
+    struct CaseInsensitiveLess : std::binary_function<std::string, std::string, bool>
+    {
+        bool operator() (const QString & lhs, const QString & rhs) const {
+            return std::lexicographical_compare(lhs.begin(),
+                lhs.end(),
+                rhs.begin(),
+                rhs.end(),
+                case_insensitive_char_cmp);
+        }
+        
+        static bool case_insensitive_char_cmp(const QChar& lhs, const QChar& rhs)
+        {
+            return (lhs.toUpper() < rhs.toUpper());
+        }
+    };
 
 #define DECLARE_PATH_CLASS(P) struct path_##P{QString path()const{return #P;}}
 #define EXPECT(E, M) if(!E)qWarning() << M;
