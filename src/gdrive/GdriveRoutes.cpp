@@ -42,6 +42,15 @@ comments::CommentsRoutes* GdriveRoutes::getComments()
     return m_Comments.get();
 };
 
+revisions::RevisionsRoutes* GdriveRoutes::getRevisions()
+{
+    if (!m_Revisions) {
+        m_Revisions.reset(new revisions::RevisionsRoutes(m_endpoint));
+    }
+    return m_Revisions.get();
+};
+
+
 QString GdriveRoutes::appDataFolder() 
 {
     return "appDataFolder";

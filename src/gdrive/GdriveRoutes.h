@@ -6,6 +6,7 @@
 #include "gdrive/files/FilesRoutes.h"
 #include "gdrive/permissions/PermissionsRoutes.h"
 #include "gdrive/comments/CommentsRoutes.h"
+#include "gdrive/revisions/RevisionsRoutes.h"
 
 namespace googleQt
 {
@@ -21,6 +22,7 @@ namespace googleQt
         about::AboutRoutes* getAbout();
         permissions::PermissionsRoutes* getPermissions();
         comments::CommentsRoutes* getComments();
+        revisions::RevisionsRoutes* getRevisions();
 
         class FolderContentMap 
         {
@@ -82,6 +84,7 @@ namespace googleQt
         std::unique_ptr<about::AboutRoutes> m_About;
         std::unique_ptr<permissions::PermissionsRoutes> m_Permissions;
         std::unique_ptr<comments::CommentsRoutes> m_Comments;
+        std::unique_ptr<revisions::RevisionsRoutes> m_Revisions;
         Endpoint*  m_endpoint;
     };
 };//googleQt
