@@ -68,7 +68,6 @@ int main(int argc, char *argv[])
     t.addAction("find_by_name",     "Find by File Name",  [&](QString arg) {cmd.find_by_name(arg); });
     t.addAction("mkdir",            "Create New Folder",[&](QString arg) {cmd.mkdir(arg); });
     t.addAction("rename",           "Rename File",  [&](QString arg) {cmd.rename(arg); });
-    //    t.addAction("change_mime",      "Change File Mime type", [&](QString arg) {cmd.change_mime(arg); });
     t.addAction("move",             "Move File (Add/Remove parents)",  [&](QString arg) {cmd.move_file(arg); });
     t.addAction("download",         "Download file",  [&](QString arg) {cmd.download(arg); });
     t.addAction("cat",              "Print file content on screen", [&](QString arg) {cmd.cat(arg); });
@@ -76,8 +75,8 @@ int main(int argc, char *argv[])
     t.addAction("create",           "Create a new file using 'multipart' method", [&](QString arg) {cmd.create(arg); });
     t.addAction("upload_simple",    "Upload file using 'simple' method", [&](QString arg) {cmd.upload_simple(arg); });
     t.addAction("upgrade_file",    "Replace remote file with local using 'upgrade' utility", [&](QString arg) {cmd.upgrade_file(arg); });    
-//    t.addAction("upload_mpart",     "Upload file using 'multipart' method", [&](QString arg) {cmd.upload_mpart(arg); });
     t.addAction("rm",               "Delete file or folder", [&](QString arg) {cmd.rm(arg); });
+    t.addAction("generate_ids", "generate(reserve) some ids for future create call.", [&](QString arg) {cmd.generate_ids(arg); });
     t.addSeparator();
     t.addAction("create_in_appdata","Create file in appDataFolder", [&](QString arg) {cmd.create_in_appdata(arg); });
     t.addAction("ls_space_content", "Show space content (appDataFolder, drive, photos)",   [&](QString arg) {cmd.ls_space_content(arg); });    

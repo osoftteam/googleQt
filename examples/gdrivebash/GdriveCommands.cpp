@@ -821,6 +821,23 @@ void GdriveCommands::mkdir(QString title_Space_parentFolderId)
         }
 };
 
+void GdriveCommands::generate_ids(QString) 
+{
+    try
+    {
+        GenerateIdArg arg;
+        auto f = m_gd->getFiles()->generateIds(arg);
+        auto lst = f->ids();
+        for (QString& id : lst) {
+            std::cout << id << std::endl;
+        }
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
 void GdriveCommands::ls_comments(QString fileId)
 {
     if (fileId.isEmpty())

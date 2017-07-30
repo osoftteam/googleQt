@@ -63,7 +63,9 @@ public:
     void rm(QString fileId);
     ///create folder
     void mkdir(QString title_Space_parentFolderId);
-
+    ///generate some ids
+    void generate_ids(QString);
+    
     void ls_comments(QString fileId);
     void rm_comment(QString fileId_Space_commentId);
     void get_comment(QString fileId_Space_commentId);
