@@ -122,6 +122,15 @@ static void call_emptyTrash_from_Files(){
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
+static void call_generateIds_from_Files(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("generateIds");
+    std::unique_ptr<gdrive::GenerateIdArg> arg = gdrive::GenerateIdArg::EXAMPLE(0, 0);
+    auto res = cl->getFiles()->generateIds(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "------ RESULT ------------------";
+    ApiAutotest::INSTANCE() << res->toString();
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
 static void call_get_from_Files(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Files").arg("get");
     std::unique_ptr<gdrive::GetFileArg> arg = gdrive::GetFileArg::EXAMPLE(0, 0);
@@ -211,6 +220,40 @@ static void call_list_from_Permissions(){
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
+static void call_deleteOperation_from_Revisions(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Revisions").arg("deleteOperation");
+    std::unique_ptr<gdrive::DeleteRevisionArg> arg = gdrive::DeleteRevisionArg::EXAMPLE(0, 0);
+    cl->getRevisions()->deleteOperation(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
+static void call_get_from_Revisions(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Revisions").arg("get");
+    std::unique_ptr<gdrive::GetRevisionArg> arg = gdrive::GetRevisionArg::EXAMPLE(0, 0);
+    auto res = cl->getRevisions()->get(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "------ RESULT ------------------";
+    ApiAutotest::INSTANCE() << res->toString();
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
+static void call_list_from_Revisions(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Revisions").arg("list");
+    std::unique_ptr<gdrive::ListRevisionArg> arg = gdrive::ListRevisionArg::EXAMPLE(0, 0);
+    auto res = cl->getRevisions()->list(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "------ RESULT ------------------";
+    ApiAutotest::INSTANCE() << res->toString();
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
+static void call_update_from_Revisions(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Revisions").arg("update");
+    std::unique_ptr<gdrive::UpdateRevisionArg> arg = gdrive::UpdateRevisionArg::EXAMPLE(0, 0);
+    auto res = cl->getRevisions()->update(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "------ RESULT ------------------";
+    ApiAutotest::INSTANCE() << res->toString();
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
 
 static void test_call_AboutRoutes(){
     call_get_from_About();
@@ -231,6 +274,7 @@ static void test_call_FilesRoutes(){
     call_deleteOperation_from_Files();
     call_downloadFile_from_Files();
     call_emptyTrash_from_Files();
+    call_generateIds_from_Files();
     call_get_from_Files();
     call_list_from_Files();
     call_moveFile_from_Files();
@@ -246,6 +290,13 @@ static void test_call_PermissionsRoutes(){
     call_list_from_Permissions();
 }
 
+static void test_call_RevisionsRoutes(){
+    call_deleteOperation_from_Revisions();
+    call_get_from_Revisions();
+    call_list_from_Revisions();
+    call_update_from_Revisions();
+}
+
 
 void GdriveAutotest::generateCalls(){
     ApiAutotest::INSTANCE() << "";
@@ -255,6 +306,7 @@ void GdriveAutotest::generateCalls(){
     test_call_CommentsRoutes();
     test_call_FilesRoutes();
     test_call_PermissionsRoutes();
+    test_call_RevisionsRoutes();
 }
 
 GdriveAutotest::GdriveAutotest(GoogleClient& c)
