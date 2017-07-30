@@ -11,6 +11,7 @@
 #include "GoogleRouteBase.h"
 #include "gdrive/files/FilesFileResource.h"
 #include "gdrive/files/FilesFileResourcesCollection.h"
+#include "gdrive/files/FilesGeneratedIdsCollection.h"
 
 namespace googleQt{
 namespace files{
@@ -123,6 +124,21 @@ namespace files{
         void emptyTrash_AsyncCB(
             const gdrive::EmptyTrashArg&,
             std::function<void()> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
+
+            /**
+            ApiRoute('generateIds')
+
+
+            Generates a set of file IDs which can be provided in create
+            requests.
+
+            */
+        std::unique_ptr<GeneratedIdsCollection> generateIds(const gdrive::GenerateIdArg& arg);
+        GoogleTask<GeneratedIdsCollection>* generateIds_Async(const gdrive::GenerateIdArg& arg);
+        void generateIds_AsyncCB(
+            const gdrive::GenerateIdArg&,
+            std::function<void(std::unique_ptr<GeneratedIdsCollection>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**

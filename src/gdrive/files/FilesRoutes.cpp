@@ -225,6 +225,37 @@ void FilesRoutes::emptyTrash_AsyncCB(
         failed_callback);
 }
 
+std::unique_ptr<GeneratedIdsCollection> FilesRoutes::generateIds(const gdrive::GenerateIdArg& arg){
+    return generateIds_Async(arg)->waitForResultAndRelease();
+}
+
+GoogleTask<GeneratedIdsCollection>* FilesRoutes::generateIds_Async(const gdrive::GenerateIdArg& arg)
+{
+    GoogleTask<GeneratedIdsCollection>* t = m_end_point->produceTask<GeneratedIdsCollection>();
+    m_end_point->getStyle<
+        GeneratedIdsCollection,
+        GeneratedIdsCollection::factory
+        >
+        (m_end_point->buildGdriveUrl("files", arg),
+        t);
+    return t;
+}
+
+void FilesRoutes::generateIds_AsyncCB(
+    const gdrive::GenerateIdArg& arg,
+    std::function<void(std::unique_ptr<GeneratedIdsCollection>)> completed_callback ,
+    std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+{
+    m_end_point->getStyle
+        <
+        GeneratedIdsCollection,
+        GeneratedIdsCollection::factory
+        >
+        (m_end_point->buildGdriveUrl("files", arg),
+        completed_callback,
+        failed_callback);
+}
+
 std::unique_ptr<FileResource> FilesRoutes::get(const gdrive::GetFileArg& arg){
     return get_Async(arg)->waitForResultAndRelease();
 }
