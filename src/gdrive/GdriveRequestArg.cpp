@@ -3,6 +3,8 @@
 #include "GdriveRequestArg.h"
 #include "gdrive/files/FilesCreateFileDetails.h"
 #include "gdrive/files/FilesUpdateFileDetails.h"
+#include "gdrive/revisions/RevisionsUpdateRevisionDetails.h"
+
 
 using namespace googleQt;
 using namespace gdrive;
@@ -58,7 +60,7 @@ GetFileArg::GetFileArg(QString fileId)
 
 void GetFileArg::build(const QString& link_path, QUrl& url)const
 {
-    UrlBuilder b(link_path + QString("/files/%2").arg(m_fileId), url);
+    UrlBuilder b(link_path + QString("/files/%1").arg(m_fileId), url);
     b.add("acknowledgeAbuse", m_acknowledgeAbuse);
     ResponseFields2Builder(b);
 }
@@ -75,7 +77,7 @@ DownloadFileArg::DownloadFileArg(QString fileId)
 
 void DownloadFileArg::build(const QString& link_path, QUrl& url)const
 {
-    UrlBuilder b(link_path + QString("/files/%2").arg(m_fileId), url);
+    UrlBuilder b(link_path + QString("/files/%1").arg(m_fileId), url);
     b.add("alt", "media");
     ResponseFields2Builder(b);
 }
@@ -196,14 +198,15 @@ UpdateFileArg::UpdateFileArg(QString fileId /*= ""*/)
     m_update_file.reset(new files::UpdateFileDetails());
 };
 
-UpdateFileArg::~UpdateFileArg() 
+UpdateFileArg::~UpdateFileArg()
 {
 
 };
 
+
 void UpdateFileArg::build(const QString& link_path, QUrl& url)const
 {
-    UrlBuilder b(link_path + QString("/files/%2").arg(m_fileId), url);
+    UrlBuilder b(link_path + QString("/files/%1").arg(m_fileId), url);
     b.add("ocrLanguage", m_ocrLanguage);
     QString parents2remove = slist2commalist(m_removeParents);
     if(!parents2remove.isEmpty())
@@ -367,7 +370,7 @@ RenameFileArg::RenameFileArg(QString fileId)
 
 void RenameFileArg::build(const QString& link_path, QUrl& url)const
 {
-    UrlBuilder b(link_path + QString("/files/%2").arg(m_fileId), url);
+    UrlBuilder b(link_path + QString("/files/%1").arg(m_fileId), url);
     ResponseFields2Builder(b);
 }
 
@@ -391,7 +394,7 @@ void MoveFileArg::build(const QString& link_path, QUrl& url)const
     QString parents2add = slist2commalist(m_addParents);
     QString parents2remove = slist2commalist(m_removeParents);
     
-    UrlBuilder b(link_path + QString("/files/%2").arg(m_fileId), url);
+    UrlBuilder b(link_path + QString("/files/%1").arg(m_fileId), url);
     if(!parents2add.isEmpty())
         b.add("addParents", parents2add);
     if(!parents2remove.isEmpty())
@@ -432,6 +435,102 @@ void CommentListArg::build(const QString& link_path, QUrl& url)const
         .add("pageToken", m_pageToken)
         .add("startModifiedTime", m_startModifiedTime);
     ResponseFields2Builder(b);
+};
+
+/**
+GenerateIdArg
+*/
+GenerateIdArg::GenerateIdArg(QString space)
+    :m_space(space), m_count(10)
+{
+
+};
+
+void GenerateIdArg::build(const QString& link_path, QUrl& url)const
+{
+    UrlBuilder b(link_path + QString("/files/generateIds"), url);
+    b.add("space", m_space);
+    b.add("count", m_count);
+    ResponseFields2Builder(b);
+}
+
+/**
+GetRevisionArg
+*/
+GetRevisionArg::GetRevisionArg(QString fileId, QString revisionId)
+    :m_fileId(fileId), m_revisionId(revisionId), m_acknowledgeAbuse(false)
+{
+
+};
+
+void GetRevisionArg::build(const QString& link_path, QUrl& url)const
+{
+    UrlBuilder b(link_path + QString("/files/%1/revisions/%2").arg(m_fileId).arg(m_revisionId), url);
+    b.add("acknowledgeAbuse", m_acknowledgeAbuse);
+    ResponseFields2Builder(b);
+}
+
+/**
+DeleteRevisionArg
+*/
+DeleteRevisionArg::DeleteRevisionArg(QString fileId, QString revisionId)
+    :m_fileId(fileId), m_revisionId(revisionId)
+{
+
+};
+
+void DeleteRevisionArg::build(const QString& link_path, QUrl& url)const
+{
+    UrlBuilder b(link_path + QString("/files/%1/revisions/%2").arg(m_fileId).arg(m_revisionId), url);
+    ResponseFields2Builder(b);
+}
+
+/**
+ListRevisionArg
+*/
+ListRevisionArg::ListRevisionArg(QString fileId, QString pageToken)
+    :m_fileId(fileId), m_pageToken(pageToken), m_pageSize(200)
+{
+
+};
+
+void ListRevisionArg::build(const QString& link_path, QUrl& url)const
+{
+    UrlBuilder b(link_path + QString("/files/%1/revisions").arg(m_fileId), url);
+    b.add("pageSize", m_pageSize)
+        .add("pageToken", m_pageToken);
+    ResponseFields2Builder(b);
+}
+
+/**
+UpdateRevisionArg
+*/
+UpdateRevisionArg::UpdateRevisionArg(QString fileId, QString revisionId)
+    :m_fileId(fileId),
+    m_revisionId(revisionId)
+{
+    m_update_revision.reset(new revisions::UpdateRevisionDetails());
+};
+
+UpdateRevisionArg::~UpdateRevisionArg() 
+{
+
+};
+
+void UpdateRevisionArg::build(const QString& link_path, QUrl& url)const
+{
+    UrlBuilder b(link_path + QString("/files/%1/revisions/%2").arg(m_fileId).arg(m_revisionId), url);
+    ResponseFields2Builder(b);
+}
+
+void UpdateRevisionArg::toJson(QJsonObject& js)const
+{
+    m_update_revision->toJson(js);
+};
+
+revisions::UpdateRevisionDetails& UpdateRevisionArg::revisionDetailes()
+{
+    return *(m_update_revision.get());
 };
 
 
@@ -579,6 +678,42 @@ std::unique_ptr<CreateFolderArg> CreateFolderArg::EXAMPLE(int, int)
         lstParents.push_back(QString("parent%1").arg(i));
     }
     rv->setParents(lstParents);
+    return rv;
+};
+
+std::unique_ptr<GenerateIdArg> GenerateIdArg::EXAMPLE(int, int)
+{
+    std::unique_ptr<GenerateIdArg> rv(new GenerateIdArg);    
+    return rv;
+};
+
+std::unique_ptr<GetRevisionArg> GetRevisionArg::EXAMPLE(int, int)
+{
+    std::unique_ptr<GetRevisionArg> rv(new GetRevisionArg);
+    rv->setFileId("file1");
+    rv->setRevisionId("revision1");
+    return rv;
+};
+
+std::unique_ptr<DeleteRevisionArg> DeleteRevisionArg::EXAMPLE(int, int)
+{
+    std::unique_ptr<DeleteRevisionArg> rv(new DeleteRevisionArg);
+    rv->setFileId("file1");
+    rv->setRevisionId("revision1");
+    return rv;
+};
+
+std::unique_ptr<ListRevisionArg> ListRevisionArg::EXAMPLE(int, int)
+{
+    std::unique_ptr<ListRevisionArg> rv(new ListRevisionArg);
+    rv->setPageToken("next-page");
+    return rv;
+};
+
+std::unique_ptr<UpdateRevisionArg> UpdateRevisionArg::EXAMPLE(int, int)
+{
+    std::unique_ptr<UpdateRevisionArg> rv(new UpdateRevisionArg("file1", "rev1"));
+    rv->m_update_revision.reset(revisions::UpdateRevisionDetails::EXAMPLE(1, 0).release());
     return rv;
 };
 

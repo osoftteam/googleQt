@@ -8,6 +8,11 @@ namespace googleQt {
         class UpdateFileDetails;
     };
 
+    namespace revisions 
+    {
+        class UpdateRevisionDetails;
+    };
+
     namespace gdrive {
         DECLARE_PATH_CLASS(about);
         DECLARE_PATH_CLASS(trash);
@@ -652,6 +657,173 @@ namespace googleQt {
             QString m_pageToken;
             QDateTime m_startModifiedTime;
         };
+
+        class GenerateIdArg : public QParamArg
+        {
+        public:
+            GenerateIdArg(QString space = "appDataFolder");
+            void build(const QString& link_path, QUrl& url)const override;
+
+            /**
+            The number of IDs to return. Acceptable values are 1 to 1000, inclusive. (Default: 10)
+            */
+            int getCount()const { return m_count; }
+            void    setCount(int val) { m_count = val; }
+
+            /**
+            The space in which the IDs can be used to create new files. Supported values are 'drive' and 'appDataFolder'.
+            */
+            QString getSpace()const { return m_space; }
+            void    setSpace(QString val) { m_space = val; }
+
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<GenerateIdArg> EXAMPLE(int context_index, int parent_context_index);
+#endif //API_QT_AUTOTEST
+
+        protected:            
+            int     m_count;
+            QString m_space;
+        };//GenerateIdArg
+
+        //........
+        class GetRevisionArg : public QParamArg
+        {
+        public:
+            GetRevisionArg(QString fileId = "", QString revisionId = "");
+            void build(const QString& link_path, QUrl& url)const override;
+
+            /**
+            The ID of the file.
+            */
+            QString getFileId()const { return m_fileId; }
+            void    setFileId(QString val) { m_fileId = val; }
+
+            /**
+            The ID of the revision.
+            */
+            QString getRevisionId()const { return m_revisionId; }
+            void    setRevisionId(QString val) { m_revisionId = val; }
+
+            /**
+            Whether the user is acknowledging the risk of downloading known malware or other abusive files. 
+            This is only applicable when alt=media. (Default: false)
+            */
+            bool    getAcknowledgeAbuse()const { return m_acknowledgeAbuse; }
+            void    setAcknowledgeAbuse(bool val) { m_acknowledgeAbuse = val; }
+
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<GetRevisionArg> EXAMPLE(int context_index, int parent_context_index);
+#endif //API_QT_AUTOTEST
+
+        protected:
+            QString m_fileId;
+            QString m_revisionId;
+            bool    m_acknowledgeAbuse;
+        };//GetRevisionArg
+
+        class DeleteRevisionArg : public QParamArg
+        {
+        public:
+            DeleteRevisionArg(QString fileId = "", QString revisionId = "");
+            void build(const QString& link_path, QUrl& url)const override;
+
+            /**
+            The ID of the file.
+            */
+            QString getFileId()const { return m_fileId; }
+            void    setFileId(QString val) { m_fileId = val; }
+
+            /**
+            The ID of the revision.
+            */
+            QString getRevisionId()const { return m_revisionId; }
+            void    setRevisionId(QString val) { m_revisionId = val; }
+
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<DeleteRevisionArg> EXAMPLE(int context_index, int parent_context_index);
+#endif //API_QT_AUTOTEST
+
+        protected:
+            QString m_fileId;
+            QString m_revisionId;
+        };//DeleteRevisionArg
+
+
+        class ListRevisionArg : public QParamArg
+        {
+        public:
+            ListRevisionArg(QString fileId = "", QString pageToken = "");
+
+            void build(const QString& link_path, QUrl& url)const override;
+
+            /**
+            The ID of the file.
+            */
+            QString getFileId()const { return m_fileId; }
+            void    setFileId(QString val) { m_fileId = val; }
+
+            /**
+            The maximum number of revisions to return per page. Acceptable values are 1 to 1000, inclusive. (Default: 200)
+            */
+            int     getPageSize()const { return m_pageSize; }
+            void    setPageSize(int val) { m_pageSize = val; }
+
+            /**
+            The token for continuing a previous list request on the next page. 
+            This should be set to the value of 'nextPageToken' from the previous response.
+            */
+            QString getPageToken()const { return m_pageToken; }
+            void    setPageToken(QString val) { m_pageToken = val; }
+
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<ListRevisionArg> EXAMPLE(int context_index, int parent_context_index);
+#endif //API_QT_AUTOTEST
+
+        protected:
+            QString m_fileId;
+            QString m_pageToken;
+            int     m_pageSize;
+        };
+
+
+        class UpdateRevisionArg : public QParamArgWithBody<UpdateRevisionArg>
+        {
+        public:
+            UpdateRevisionArg(QString fileId = "", QString revisionId = "");
+            virtual ~UpdateRevisionArg();
+            void build(const QString& link_path, QUrl& url)const override;
+            void toJson(QJsonObject& js)const override;
+
+            /**
+            The ID of the file.
+            */
+            QString getFileId()const { return m_fileId; }
+            void    setFileId(QString val) { m_fileId = val; }
+
+            /**
+            The ID of the revision.
+            */
+            QString getRevisionId()const { return m_revisionId; }
+            void    setRevisionId(QString val) { m_revisionId = val; }
+
+            /**
+            A details for file.
+            */
+            revisions::UpdateRevisionDetails& revisionDetailes();
+
+
+
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<UpdateRevisionArg> EXAMPLE(int context_index, int parent_context_index);
+#endif //API_QT_AUTOTEST
+
+        protected:
+            QString m_fileId;
+            QString m_revisionId;
+            std::unique_ptr<revisions::UpdateRevisionDetails> m_update_revision;
+        };
+
+        //.........
 
     };//gdrive
 };//googleQt
