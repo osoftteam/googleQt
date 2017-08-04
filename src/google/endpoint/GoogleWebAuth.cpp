@@ -40,6 +40,21 @@ QUrl GoogleWebAuth::getCodeAuthorizeUrl(const ApiAppInfo* appInfo, const std::li
 
 bool GoogleWebAuth::updateToken(const QUrl& url, ApiAuthInfo* auth, const QString& str)
 {
+#ifdef API_QT_AUTOTEST
+    Q_UNUSED(url);
+    Q_UNUSED(str);
+
+    QJsonObject js;
+    js["access_token"]  = "access_token_value_123";
+    js["refresh_token"] = "refresh_token_value_456";
+    js["token_type"]    = "my_token_type";
+    js["expires_in"]    = QDateTime::currentDateTime().toString(Qt::ISODate);;
+    js["expire_time"]   = QDateTime::currentDateTime().toString(Qt::ISODate);;
+    js["update_time"]   = QDateTime::currentDateTime().toString(Qt::ISODate);
+
+    bool rv = auth->updateToken(js);
+    return rv;
+#else
     QNetworkAccessManager mgr;
     QEventLoop            loop;    
     QNetworkRequest req(url);
@@ -82,6 +97,7 @@ bool GoogleWebAuth::updateToken(const QUrl& url, ApiAuthInfo* auth, const QStrin
                      });
     loop.exec();
     return rv;
+#endif
 }
 
 bool GoogleWebAuth::getTokenFromCode(const ApiAppInfo* appInfo, QString code, ApiAuthInfo* auth)
