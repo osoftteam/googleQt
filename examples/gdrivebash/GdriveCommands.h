@@ -65,14 +65,27 @@ public:
     void mkdir(QString title_Space_parentFolderId);
     ///generate some ids
     void generate_ids(QString);
-    
+
+    ///list comments
     void ls_comments(QString fileId);
+    ///remove comment
     void rm_comment(QString fileId_Space_commentId);
+    ///get comment
     void get_comment(QString fileId_Space_commentId);
+    ///create comment
     void new_comment(QString fileId_Space_content);
 
+    ///list permissions
     void ls_permissions(QString fileId);
+    ///get permission
     void get_permission(QString fileId_Space_permissionId);
+
+    ///list revisions
+    void ls_revisions(QString fileId);
+    ///get revision details
+    void get_revision(QString fileId_Space_revisionId);
+
+
     void print_last_result(QString );
     void set_local_proxy(QString port);
 protected:

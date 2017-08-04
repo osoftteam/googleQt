@@ -986,6 +986,64 @@ void GdriveCommands::get_permission(QString fileId_Space_permissionId)
         }
 };
 
+void GdriveCommands::ls_revisions(QString fileId)
+{
+    if (fileId.isEmpty())
+    {
+        std::cout << "fileId required" << std::endl;
+        return;
+    }
+
+    try
+    {
+        ListRevisionArg arg(fileId);
+        auto col = m_gd->getRevisions()->list(arg);
+        std::list <revisions::RevisionResource> r_list = col->files();
+        int idx = 1;
+        for (const revisions::RevisionResource& r : r_list) {
+            std::cout << idx++ << ". " << r.id() << 
+                " " << r.modifiedtime().toString() << 
+                " " << r.mimetype() <<
+                " " << r.md5Checksum() << std::endl;
+        }
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
+void GdriveCommands::get_revision(QString fileId_Space_revisionId)
+{
+    QStringList arg_list = fileId_Space_revisionId.split(" ",
+        QString::SkipEmptyParts);
+    if (arg_list.size() < 2)
+    {
+        std::cout << "Invalid parameters, expected <file_id> <revision_id>" << std::endl;
+        return;
+    }
+
+    QString fileId = arg_list[0];
+    QString revisionId = arg_list[1];
+    try
+    {
+        GetRevisionArg arg(fileId, revisionId);
+        auto r = m_gd->getRevisions()->get(arg);
+        std::cout << r->id() <<
+            " modifiedtime=" << r->modifiedtime().toString() <<
+            " mimetype=" << r->mimetype() <<
+            " md5=" << r->md5Checksum() <<
+            " keepforever=" << r->keepforever() <<
+            " published=" << r->published() <<
+            " publishauto=" << r->publishauto() << std::endl;
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
+
 void GdriveCommands::print_last_result(QString )
 {
     m_c.printLastResponse();

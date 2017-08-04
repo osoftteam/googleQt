@@ -91,6 +91,9 @@ int main(int argc, char *argv[])
     t.addAction("ls_permissions",   "List permissions",  [&](QString arg) {cmd.ls_permissions(arg); });
     t.addAction("get_permission",   "Get permission",    [&](QString arg) {cmd.get_permission(arg); });
     t.addSeparator();
+    t.addAction("ls_revisions", "List revisions", [&](QString arg) {cmd.ls_revisions(arg); });
+    t.addAction("get_revision", "Get revision", [&](QString arg) {cmd.get_revision(arg); });
+    t.addSeparator();
     t.addAction("print_last_result", "Print last response",    [&](QString arg) {cmd.print_last_result(arg); });
     t.addAction("set_local_proxy",  "Setup Local Proxy connection",    [&](QString arg) {cmd.set_local_proxy(arg); });
     t.start();
