@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
     appInfo->setKeySecret("my-key", "my-secret");
     std::unique_ptr<ApiAuthInfo> authInfo(new ApiAuthInfo());
     authInfo->setEmail("me@gmail.com");
-    GoogleClient c(appInfo.release(), authInfo.release());
+    std::shared_ptr<GoogleClient > c(new GoogleClient(appInfo.release(), authInfo.release()));
     {
         GoogleAutotest autotest(c);
         if (!autotest.init(argResFile)) {
