@@ -1252,7 +1252,7 @@ void mail_cache::GMailSQLiteStorage::update_db(int accId,
                     q->addBindValue(m->subject());
                     q->addBindValue(m->snippet());
                     q->addBindValue(m->internalDate());
-                    q->addBindValue(m->labelsBitMap());
+                    q->addBindValue(static_cast<qint64>(m->labelsBitMap()));
                     q->addBindValue(m->id());
                     q->addBindValue(accId);
                 }break;
@@ -1268,7 +1268,7 @@ void mail_cache::GMailSQLiteStorage::update_db(int accId,
                     q->addBindValue(m->plain());
                     q->addBindValue(m->html());
                     q->addBindValue(m->internalDate());
-                    q->addBindValue(m->labelsBitMap());
+                    q->addBindValue(static_cast<qint64>(m->labelsBitMap()));
                     q->addBindValue(m->id());
                     q->addBindValue(accId);
                 }break;

@@ -680,12 +680,11 @@ namespace googleQt {
             static std::unique_ptr<GenerateIdArg> EXAMPLE(int context_index, int parent_context_index);
 #endif //API_QT_AUTOTEST
 
-        protected:            
-            int     m_count;
+        protected:
             QString m_space;
+            int     m_count;
         };//GenerateIdArg
 
-        //........
         class GetRevisionArg : public QParamArg
         {
         public:
