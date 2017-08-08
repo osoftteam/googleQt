@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     authInfo->setEmail("me@gmail.com");
     std::shared_ptr<GoogleClient > c(new GoogleClient(appInfo.release(), authInfo.release()));
     {
-        GoogleAutotest autotest(c);
+        GoogleAutotest autotest(*(c.get()));
         if (!autotest.init(argResFile)) {
             std::cout << "Error opening destination file " << argResFile.toStdString() << std::endl;
             std::cin.ignore();
