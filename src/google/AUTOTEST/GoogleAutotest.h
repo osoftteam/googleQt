@@ -9,12 +9,13 @@ namespace googleQt{
 
     class GoogleAutotest: public ApiAutotest{
     public:
-        GoogleAutotest(GoogleClient& cl);
+        GoogleAutotest(std::shared_ptr<GoogleClient> cl);
         virtual ~GoogleAutotest();
         void generateCalls()override;
         QString userId()const override;
+        void setClient(std::shared_ptr<GoogleClient> cl);
     protected:
-        GoogleClient& m_cl;
+        std::shared_ptr<GoogleClient> m_cl;
     };
 };//googleQt
 #endif//#ifdef API_QT_AUTOTEST
