@@ -59,9 +59,16 @@ if(!isEmpty( ARD_AUTOTEST )){
     HEADERS += $${GM_DIR}/AUTOTEST/*.h $${GT_DIR}/AUTOTEST/*.h $${GD_DIR}/AUTOTEST/*.h
     SOURCES += $${GM_DIR}/AUTOTEST/*.cpp $${GT_DIR}/AUTOTEST/*.cpp $${GD_DIR}/AUTOTEST/*.cpp
     DEFINES += API_QT_AUTOTEST
+    !build_pass:message("+autotest")
 }
 ################################################################
-
+ARD_DEBUG = $$(ARD_DEBUG)
+if(!isEmpty( ARD_DEBUG )){
+	  CONFIG += debug
+	  CONFIG -= release
+      QMAKE_CXXFLAGS += -O0
+      !build_pass:message("+debug")
+}
 
 INCLUDEPATH += $${SRC_DIR}
 
