@@ -416,12 +416,13 @@ void GdriveCommands::get(QString fileId)
     try
         {
             GetFileArg arg(fileId);
-            arg.setFields("id,name,size,mimeType,webContentLink,parents,spaces");
+            arg.setFields("id,name,size,mimeType,webContentLink,parents,spaces,modifiedByMeTime");
             auto f = m_gd->getFiles()->get(arg);
             std::cout << "id= " << f->id() << std::endl
                       << "name= " << f->name() << std::endl
                       << "type= " << f->mimetype() << std::endl
-                      << "size= " << f->size() << std::endl;
+                      << "size= " << f->size() << std::endl
+                      << "modified= " << f->modifiedbymetime().toString() << std::endl;
             if(!f->webcontentlink().isEmpty())
                 {
                     std::cout << "webLink= " << f->webcontentlink() << std::endl;
