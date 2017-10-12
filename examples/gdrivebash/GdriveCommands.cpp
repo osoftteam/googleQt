@@ -766,6 +766,33 @@ void GdriveCommands::upgrade_file(QString localFile_parentFolderId)
         }
 };
 
+void GdriveCommands::create_using_id(QString fileName_space_fileId)
+{
+    QStringList arg_list = fileName_space_fileId.split(" ",
+        QString::SkipEmptyParts);
+    if (arg_list.size() != 2)
+    {
+        std::cout << "<fileName> required(local-path) <fileId>" << std::endl;
+        return;
+    }
+
+    QString filePath = arg_list[0];
+    QString fileId = arg_list[1];
+
+    QFileInfo fi(filePath);
+    QString fileName = fi.fileName();
+
+    bool ok = m_gd->uploadFileUsingId(filePath, fileName, fileId);
+    if (!ok)
+    {
+        std::cout << "error creating file" << std::endl;
+    }
+    else
+    {
+        std::cout << "created: " << fileId << std::endl;
+    }
+};
+
 void GdriveCommands::rm(QString arg) 
 {
     if (arg.isEmpty())
@@ -826,7 +853,7 @@ void GdriveCommands::generate_ids(QString)
 {
     try
     {
-        GenerateIdArg arg;
+        GenerateIdArg arg("drive");
         auto f = m_gd->getFiles()->generateIds(arg);
         auto lst = f->ids();
         for (QString& id : lst) {

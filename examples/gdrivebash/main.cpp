@@ -73,6 +73,7 @@ int main(int argc, char *argv[])
     t.addAction("cat",              "Print file content on screen", [&](QString arg) {cmd.cat(arg); });
     t.addAction("hash",             "Calc file content hash", [&](QString arg) {cmd.hash_file(arg); });    
     t.addAction("create",           "Create a new file using 'multipart' method", [&](QString arg) {cmd.create(arg); });
+    t.addAction("create_using_id",  "Create a new file using 'multipart' method, using ID. see generate_ids", [&](QString arg) {cmd.create_using_id(arg); });
     t.addAction("upload_simple",    "Upload file using 'simple' method", [&](QString arg) {cmd.upload_simple(arg); });
     t.addAction("upgrade_file",    "Replace remote file with local using 'upgrade' utility", [&](QString arg) {cmd.upgrade_file(arg); });    
     t.addAction("rm",               "Delete file or folder", [&](QString arg) {cmd.rm(arg); });

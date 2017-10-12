@@ -51,6 +51,8 @@ public:
     void hash_file(QString fileId);    
     ///create new file by uploading local file
     void create(QString fileName);
+    ///create new file with ID by uploading local file
+    void create_using_id(QString fileName_space_fileId);
     ///create new file in ApplicationDataFolder by uploading local file
     void create_in_appdata(QString fileName);
     ///delete files in appDataFolder by name except ID
