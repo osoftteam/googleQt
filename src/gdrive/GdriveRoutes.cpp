@@ -85,6 +85,30 @@ QString GdriveRoutes::fileExists(QString name, QString parentId)
     return rv;
 };
 
+QString GdriveRoutes::fileIdExists(QString fileId)
+{
+    if (fileId.isEmpty()) {
+        qWarning() << "Expecting non-empty file ID";
+        return "";
+    }
+
+    QString rv = "";
+
+    try
+        {
+            gdrive::GetFileArg arg(fileId);
+            arg.setFields("id,mimeType");
+            auto f = getFiles()->get(arg);
+            rv = f->mimetype();
+        }
+    catch (GoogleException& e)
+        {
+            qWarning() << "Exception: " << e.what();
+        }
+
+    return rv;
+};
+
 QString GdriveRoutes::folderExists(QString name, QString parentId)
 {
     QString rv = "";
@@ -246,6 +270,62 @@ bool GdriveRoutes::moveFile(QString fileID, QString removeParentFolderID, QStrin
     addParentFolderIDs.push_back(addParentFolderID);
     return moveFile(fileID, removeParentFolderIDs, addParentFolderIDs);
 };
+
+//...
+bool GdriveRoutes::uploadFileUsingId(QString localFilePath, 
+    QString destFileName, 
+    QString fileId, 
+    QString parentFolderId /*= ""*/, 
+    QString mimeType /*= ""*/)
+{
+    if (fileId.isEmpty()) {
+        qWarning() << "Expecting non-empty file ID for uploadFileUsingId";
+        return false;
+    }
+
+    QFile file_in(localFilePath);
+    if (!file_in.open(QFile::ReadOnly)) {
+        qWarning() << "Error opening file: " << localFilePath;
+        return false;
+    }
+
+    bool rv = false;
+    QFileInfo fi(localFilePath);
+
+    try
+    {
+        gdrive::CreateFileArg arg(destFileName);
+        files::CreateFileDetails& file_details = arg.fileDetailes();
+        file_details.setId(fileId);
+        if (!parentFolderId.isEmpty())
+        {
+            std::list <QString> parent_folders;
+            parent_folders.push_back(parentFolderId);
+            file_details.setParents(parent_folders);
+        }
+        if (!mimeType.isEmpty())
+        {
+            file_details.setMimetype(mimeType);
+        }
+        else
+        {
+            arg.calcMimeType();
+        }
+        auto f = getFiles()->create(arg, &file_in);
+        rv = true;
+        if (f->id().compare(fileId, Qt::CaseInsensitive) != 0) {
+            qWarning() << "File ID created by server is different than requested" << f->id() << fileId;
+            rv = false;
+        }        
+    }
+    catch (GoogleException& e)
+    {
+        qWarning() << "Exception: " << e.what();
+    }
+    file_in.close();
+    return rv;
+};
+//...
 
 QString GdriveRoutes::uploadFile(QString localFilePath, QString destFileName, QString parentFolderId, QString mimeType)
 {

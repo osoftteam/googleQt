@@ -33,6 +33,8 @@ namespace googleQt
 
         ///reserved folder for app-settings&files
         static QString appDataFolder();
+        /// returns mime type if file or folder exist by ID, empty otherwise
+        QString  fileIdExists(QString fileId);
         /// returns file ID if file exist, empty string otherwise
         QString  fileExists(QString name, QString parentFolderId = "");
         /// returns file ID if file exist in appDataFolder, empty string otherwise
@@ -55,6 +57,8 @@ namespace googleQt
         bool moveFile(QString fileID, const std::list<QString>& removeParentFolderIDs, const std::list<QString>& addParentFolderIDs);
         /// move file by ID from one parent to another
         bool moveFile(QString fileID, QString removeParentFolderID, QString addParentFolderID);
+        /// upload file using file ID obtained before, return true if succeded
+        bool uploadFileUsingId(QString localFilePath, QString destFileName, QString fileId, QString parentFolderId = "", QString mimeType = "");
         /// upload file, delete existing, return ID of the new file
         QString uploadFile(QString localFilePath, QString destFileName, QString parentFolderId = "", QString mimeType = "");
         /// upload file, keep existing, return ID of the new file
