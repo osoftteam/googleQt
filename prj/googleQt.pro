@@ -66,9 +66,9 @@ ARD_DEBUG = $$(ARD_DEBUG)
 if(!isEmpty( ARD_DEBUG )){
 	  CONFIG += debug
 	  CONFIG -= release
-unix{
-      QMAKE_CXXFLAGS += -O0
-}
+      unix {
+           QMAKE_CXXFLAGS += -O0
+           }
       !build_pass:message("+debug")
 }
 
