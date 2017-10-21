@@ -24,6 +24,7 @@ namespace googleQt {
 
     bool loadJsonFromFile(QString path, QJsonObject& js);
     bool storeJsonToFile(QString path, const QJsonObject js);
+    bool isConnectedToNetwork();
 
     template<class T>
     QJsonArray struct_list2jsonarray(const std::list<T>& lst)

@@ -1,5 +1,6 @@
 #include <QFile>
 #include <QJsonParseError>
+#include <QNetworkInterface>
 #include <functional>
 #include "ApiUtil.h"
 
@@ -31,6 +32,24 @@ bool googleQt::storeJsonToFile(QString path, const QJsonObject js)
     jf.write(jd.toJson());
     jf.close();
     return true;
+};
+
+bool googleQt::isConnectedToNetwork()
+{
+    QList<QNetworkInterface> ifaces = QNetworkInterface::allInterfaces();
+    for (int i = 0; i < ifaces.count(); i++)
+    {
+        QNetworkInterface iface = ifaces.at(i);
+        if (iface.flags().testFlag(QNetworkInterface::IsUp)
+            && !iface.flags().testFlag(QNetworkInterface::IsLoopBack))
+        {
+            if (iface.addressEntries().count() > 0)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
 };
 
 
