@@ -815,27 +815,28 @@ bool mail_cache::GMailSQLiteStorage::loadMessagesFromDb()
 
 
 static std::map<QString, QString> syslabelID2Name;
+static std::map<mail_cache::SysLabel, QString> syslabel2Name;
 
 static std::vector<QString>& getSysLabels()
 {
-#define ADD_SYS_LABEL(L, N)sys_labels.push_back(L);syslabelID2Name[L] = N;
+#define ADD_SYS_LABEL(L, N)sys_labels.push_back(#L);syslabelID2Name[#L] = N;syslabel2Name[mail_cache::SysLabel::L] = N;
 
     static std::vector<QString> sys_labels;
     if(sys_labels.empty()){
-        ADD_SYS_LABEL("IMPORTANT", "Important");
-        ADD_SYS_LABEL("CHAT", "Chat");
-        ADD_SYS_LABEL("SENT", "Sent");
-        ADD_SYS_LABEL("INBOX", "Inbox");
-        ADD_SYS_LABEL("TRASH", "Trash");
-        ADD_SYS_LABEL("DRAFT", "Draft");
-        ADD_SYS_LABEL("SPAM", "Spam");
-        ADD_SYS_LABEL("STARRED", "Starred");
-        ADD_SYS_LABEL("UNREAD", "Unread");
-        ADD_SYS_LABEL("CATEGORY_PERSONAL", "Personal");
-        ADD_SYS_LABEL("CATEGORY_SOCIAL", "Social");
-        ADD_SYS_LABEL("CATEGORY_FORUMS", "Forum");
-        ADD_SYS_LABEL("CATEGORY_UPDATES", "Updates");
-        ADD_SYS_LABEL("CATEGORY_PROMOTIONS", "Promotions");
+        ADD_SYS_LABEL(IMPORTANT, "Important");        
+        ADD_SYS_LABEL(CHAT, "Chat");
+        ADD_SYS_LABEL(SENT, "Sent");
+        ADD_SYS_LABEL(INBOX, "Inbox");
+        ADD_SYS_LABEL(TRASH, "Trash");
+        ADD_SYS_LABEL(DRAFT, "Draft");
+        ADD_SYS_LABEL(SPAM, "Spam");
+        ADD_SYS_LABEL(STARRED, "Starred");
+        ADD_SYS_LABEL(UNREAD, "Unread");
+        ADD_SYS_LABEL(CATEGORY_PERSONAL, "Personal");
+        ADD_SYS_LABEL(CATEGORY_SOCIAL, "Social");
+        ADD_SYS_LABEL(CATEGORY_FORUMS, "Forum");
+        ADD_SYS_LABEL(CATEGORY_UPDATES, "Updates");
+        ADD_SYS_LABEL(CATEGORY_PROMOTIONS, "Promotions");        
     }
     return sys_labels;
 
@@ -853,6 +854,21 @@ QString mail_cache::sysLabelId(SysLabel l)
     
     QString s = getSysLabels()[idx];
     return s;
+};
+
+QString mail_cache::sysLabelName(SysLabel l)
+{
+    if (syslabel2Name.empty()) {
+        getSysLabels();
+    }
+
+    auto idx = syslabel2Name.find(l);
+    if (idx == syslabel2Name.end()) {
+        qWarning() << "ERROR. Invalid SysLabel" << (int)l << syslabel2Name.size();
+        return "";
+    }
+
+    return idx->second;
 };
 
 bool mail_cache::GMailSQLiteStorage::loadLabelsFromDb()

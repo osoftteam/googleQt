@@ -205,6 +205,7 @@ namespace googleQt{
                 };
 
         extern QString sysLabelId(SysLabel l);
+        extern QString sysLabelName(SysLabel l);
         
         /**
            LabelData - system/user labels in gmail, implemented as bitmap,
