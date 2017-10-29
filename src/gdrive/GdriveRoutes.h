@@ -58,7 +58,7 @@ namespace googleQt
         /// move file by ID from one parent to another
         bool moveFile(QString fileID, QString removeParentFolderID, QString addParentFolderID);
         /// upload file using file ID obtained before, return true if succeded
-        bool uploadFileUsingId(QString localFilePath, QString destFileName, QString fileId, QString parentFolderId = "", QString mimeType = "");
+        std::pair<bool, int> uploadFileUsingId(QString localFilePath, QString destFileName, QString fileId, QString parentFolderId = "", QString mimeType = "");
         /// upload file, delete existing, return ID of the new file
         QString uploadFile(QString localFilePath, QString destFileName, QString parentFolderId = "", QString mimeType = "");
         /// upload file, keep existing, return ID of the new file

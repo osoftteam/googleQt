@@ -271,25 +271,28 @@ bool GdriveRoutes::moveFile(QString fileID, QString removeParentFolderID, QStrin
     return moveFile(fileID, removeParentFolderIDs, addParentFolderIDs);
 };
 
-//...
-bool GdriveRoutes::uploadFileUsingId(QString localFilePath, 
+std::pair<bool, int> GdriveRoutes::uploadFileUsingId(QString localFilePath, 
     QString destFileName, 
     QString fileId, 
     QString parentFolderId /*= ""*/, 
     QString mimeType /*= ""*/)
 {
+    std::pair<bool, int> rv;
+    rv.first = false;
+    rv.second = 0;
+    
     if (fileId.isEmpty()) {
         qWarning() << "Expecting non-empty file ID for uploadFileUsingId";
-        return false;
+        return rv;
     }
 
     QFile file_in(localFilePath);
     if (!file_in.open(QFile::ReadOnly)) {
         qWarning() << "Error opening file: " << localFilePath;
-        return false;
+        rv.second = 1;
+        return rv;
     }
 
-    bool rv = false;
     QFileInfo fi(localFilePath);
 
     try
@@ -312,20 +315,23 @@ bool GdriveRoutes::uploadFileUsingId(QString localFilePath,
             arg.calcMimeType();
         }
         auto f = getFiles()->create(arg, &file_in);
-        rv = true;
+        rv.first = true;
         if (f->id().compare(fileId, Qt::CaseInsensitive) != 0) {
             qWarning() << "File ID created by server is different than requested" << f->id() << fileId;
-            rv = false;
+            rv.first = false;
+            rv.second = 2;
         }        
     }
     catch (GoogleException& e)
     {
         qWarning() << "Exception: " << e.what();
+        rv.first = true;
+        rv.second = e.statusCode();
     }
     file_in.close();
     return rv;
 };
-//...
+
 
 QString GdriveRoutes::uploadFile(QString localFilePath, QString destFileName, QString parentFolderId, QString mimeType)
 {
