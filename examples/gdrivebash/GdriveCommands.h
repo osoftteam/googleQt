@@ -44,7 +44,7 @@ public:
     ///download file media data to local folder,
     ///required fileID and local file name separated
     ///by space
-    void download(QString fileId_space_localFileName);
+    void download(QString fileId);
     ///download and print file content on the screen, good for text files
     void cat(QString fileId);
     ///download, calculate and print hash calculated on file content

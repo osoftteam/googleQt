@@ -6,6 +6,7 @@
 #include <QNetworkProxy>
 #include <QCryptographicHash>
 #include <iomanip>
+#include <QDir>
 #include "GdriveCommands.h"
 #include "google/demo/ApiTerminal.h"
 #include "gdrive/GdriveRoutes.h"
@@ -365,6 +366,13 @@ void GdriveCommands::find_by_name(QString name_space_parentId)
         name = arg_list[0];
     if(arg_list.size() > 1)
         parentId = arg_list[1];
+
+    if(arg_list.size() == 0)
+        {
+            std::cout << "Invalid parameters, expected <fileName> " << std::endl;
+            return;
+        }
+    
     
     try
         {
@@ -553,27 +561,34 @@ void GdriveCommands::move_file(QString fileId)
         }
 };
 
-void GdriveCommands::download(QString fileId_space_localFileName) 
+void GdriveCommands::download(QString fileId) 
 {
-    QStringList arg_list = fileId_space_localFileName.split(" ",
-                                                            QString::SkipEmptyParts);
-    if (arg_list.size() < 2)
+    if(fileId.isEmpty())
         {
-            std::cout << "Invalid parameters, expected <fileID> <fileName>" << std::endl;
+            std::cout << "fileId required" << std::endl;
             return;
         }
-
-    QString fileId = arg_list[0];
-    QString fileName = arg_list[1];
-
-    QFile out(fileName);
-    if (!out.open(QFile::WriteOnly | QIODevice::Truncate)) {
-        std::cout << "Error opening file: " << fileName.toStdString() << std::endl;
-        return;
-    }
-
+    
+    QFile out;
     try
         {
+            GetFileArg arg1(fileId);
+            arg1.setFields("name");
+            auto f = m_gd->getFiles()->get(arg1);
+            std::cout << "loading file: " << f->name() << std::endl;
+
+            QDir d;
+            if(!d.mkpath("downloads")){
+                std::cout << "Failed to create 'downloads' directory." << std::endl;
+                return;
+            }
+            
+            out.setFileName("downloads/" + f->name());
+            if (!out.open(QFile::WriteOnly | QIODevice::Truncate)) {
+                std::cout << "Error opening file: " << out.fileName() << std::endl;
+                return;
+            }            
+            
             DownloadFileArg arg(fileId);
             m_gd->getFiles()->downloadFile(arg, &out);
             out.flush();
