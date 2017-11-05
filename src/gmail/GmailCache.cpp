@@ -369,6 +369,13 @@ bool mail_cache::LabelData::isUpdatesCategory()const
     return rv;
 };
 
+bool mail_cache::LabelData::isPersonalCategory()const
+{
+    bool rv = (m_label_id.compare(sysLabelId(SysLabel::CATEGORY_PERSONAL), Qt::CaseInsensitive) == 0);
+    return rv;
+};
+
+
 bool mail_cache::LabelData::isSocialCategory()const
 {
     bool rv = (m_label_id.compare(sysLabelId(SysLabel::CATEGORY_SOCIAL), Qt::CaseInsensitive) == 0);

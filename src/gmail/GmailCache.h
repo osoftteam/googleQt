@@ -232,6 +232,7 @@ namespace googleQt{
             bool        isForumsCategory()const;
             bool        isUpdatesCategory()const;
             bool        isSocialCategory()const;
+            bool        isPersonalCategory()const;
             
         protected:
             QString     m_label_id;
