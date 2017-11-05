@@ -41,20 +41,26 @@ void AttachmentIdArg::build(const QString& link_path, QUrl& url)const
                  url);
 }
 
-ModifyMessageArg::ModifyMessageArg(QString user_id, QString message_id,
-                                   QString add_label /*= ""*/,
-                                   QString remove_label /*= ""*/)
+ModifyMessageArg::ModifyMessageArg(QString user_id, QString message_id)
 {
     m_userId = user_id;
     m_message_id = message_id;
-    if(!add_label.isEmpty()){
-        m_addLabels.push_back(add_label);
-    }
-
-    if(!remove_label.isEmpty()){
-        m_removeLabels.push_back(remove_label);
-    }
 }
+
+
+void ModifyMessageArg::addAddLabel(QString name)
+{
+    if(!name.isEmpty()){
+        m_addLabels.push_back(name);
+    }
+};
+
+void ModifyMessageArg::addRemoveLabel(QString name)
+{
+    if(!name.isEmpty()){
+        m_removeLabels.push_back(name);
+    }
+};
 
 
 void ModifyMessageArg::build(const QString& link_path, QUrl& url)const 

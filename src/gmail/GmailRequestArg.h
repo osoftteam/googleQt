@@ -243,9 +243,7 @@ namespace googleQt{
         public:
             ModifyMessageArg() {};
             ModifyMessageArg(QString user_id,
-                    QString message_id,
-                    QString add_label = "",
-                    QString remove_label = "");
+                    QString message_id);
 
             QString userId()const { return m_userId; }
             void    setUserId(QString id) { m_userId = id; };
@@ -255,10 +253,12 @@ namespace googleQt{
 
             const std::list <QString>& getAddlabels()const { return m_addLabels; };
             void setAddlabels(const std::list <QString>& arg) { m_addLabels = arg;};
-
             const std::list <QString>& getRemovelabels()const { return m_removeLabels; };
             void setRemovelabels(const std::list <QString>& arg) { m_removeLabels = arg;};
 
+            void addAddLabel(QString name);
+            void addRemoveLabel(QString name);
+            
             void build(const QString& link_path, QUrl& url)const override;
             void toJson(QJsonObject& js)const override;
             operator QJsonObject ()const;

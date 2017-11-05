@@ -324,7 +324,8 @@ void GmailCommands::add_label(QString message_id_label)
     
     try
         {
-            gmail::ModifyMessageArg arg(msg_id, msg_label);
+            gmail::ModifyMessageArg arg(m_c.userId(), msg_id);
+            arg.addAddLabel(msg_label);
             std::unique_ptr<messages::MessageResource> m = m_gm->getMessages()->modify(arg);
             std::cout << "Label added: " << msg_label << std::endl;
             printMessage(m.get());
@@ -351,7 +352,8 @@ void GmailCommands::remove_label(QString message_id_label)
     
     try
         {
-            gmail::ModifyMessageArg arg(msg_id, "", msg_label);
+            gmail::ModifyMessageArg arg(m_c.userId(), msg_id);
+            arg.addRemoveLabel(msg_label);
             std::unique_ptr<messages::MessageResource> m = m_gm->getMessages()->modify(arg);
             std::cout << "Label removed: " << msg_label << std::endl;
             printMessage(m.get());        
