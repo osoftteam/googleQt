@@ -1060,7 +1060,7 @@ void GdriveCommands::delete_permissions(QString fileId_Space_permissionId)
         QString::SkipEmptyParts);
     if (arg_list.size() < 2)
     {
-        std::cout << "Invalid parameters, expected <file_id> <comment_id>" << std::endl;
+        std::cout << "Invalid parameters, expected <file_id> <permission_id>" << std::endl;
         return;
     }
 
