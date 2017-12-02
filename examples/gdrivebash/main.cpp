@@ -91,6 +91,9 @@ int main(int argc, char *argv[])
     t.addSeparator();
     t.addAction("ls_permissions",   "List permissions",  [&](QString arg) {cmd.ls_permissions(arg); });
     t.addAction("get_permission",   "Get permission",    [&](QString arg) {cmd.get_permission(arg); });
+    t.addAction("create_permissions", "Create permission", [&](QString arg) {cmd.create_permissions(arg); });
+    t.addAction("delete_permissions", "Delete permission", [&](QString arg) {cmd.delete_permissions(arg); });
+
     t.addSeparator();
     t.addAction("ls_revisions", "List revisions", [&](QString arg) {cmd.ls_revisions(arg); });
     t.addAction("get_revision", "Get revision", [&](QString arg) {cmd.get_revision(arg); });

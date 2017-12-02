@@ -81,6 +81,10 @@ public:
     void ls_permissions(QString fileId);
     ///get permission
     void get_permission(QString fileId_Space_permissionId);
+    ///create permission
+    void create_permissions(QString fileId);
+    ///delete permission
+    void delete_permissions(QString fileId_Space_permissionId);
 
     ///list revisions
     void ls_revisions(QString fileId);

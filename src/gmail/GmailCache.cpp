@@ -662,7 +662,7 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
         qWarning() << "ERROR. Expected userid (email) for gmail cache";
         return false;
     }
-    qDebug() << "Initializing cache for userid: " << userId;
+   // qDebug() << "Initializing cache for userid: " << userId;
 
 
     m_dbPath = dbPath;
@@ -746,7 +746,7 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
                 reloadDbAccounts();
             }
         }
-    qDebug() << "using acc-id" << m_accId << "for user" << userId;
+   // qDebug() << "using acc-id" << m_accId << "for user" << userId;
     
     m_acc_labels.clear();
     m_acc_maskbase2labels.clear();
@@ -1328,6 +1328,7 @@ void mail_cache::GMailSQLiteStorage::update_db(int accId,
                             if (rows_affected > 0)
                                 inserted_records++;
                             int att_count = m->m_attachments.size();
+                            /*
 #ifdef _DEBUG
                             qDebug() << "gm-db+" 
                                      << cache->endpoint().apiClient()->userId()
@@ -1337,6 +1338,7 @@ void mail_cache::GMailSQLiteStorage::update_db(int accId,
                                      << "size=" << r.size()
                                      << "att=" << att_count;
 #endif //_DEBUG
+*/
                             if (att_count > 0) {
                                 insertDbAttachmentData(*m.get());
                             }
@@ -1346,6 +1348,7 @@ void mail_cache::GMailSQLiteStorage::update_db(int accId,
                 {
                     updated_records++;
                     int att_count = m->m_attachments.size();
+                    /*
 #ifdef _DEBUG
                     qDebug() << "g-db*" 
                              << cache->endpoint().apiClient()->userId()
@@ -1355,6 +1358,7 @@ void mail_cache::GMailSQLiteStorage::update_db(int accId,
                              << "size" << r.size()
                              << "att=" << att_count;
 #endif //_DEBUG
+*/
                     if (att_count > 0) {
                         insertDbAttachmentData(*m.get());
                     }                    
@@ -1750,12 +1754,14 @@ bool mail_cache::GMailSQLiteStorage::execQuery(QString sql)
             return false;
         }
     else {
+        /*
 #ifdef _DEBUG
         qDebug() << "db-affected" << m_query->numRowsAffected();
         if (m_query->numRowsAffected() == 0 && sql.indexOf("CREATE") == -1) {
             qDebug() << "last0rows" << sql;
         }
 #endif
+*/
     }
 
     return true;

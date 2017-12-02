@@ -797,10 +797,10 @@ void GdriveCommands::create_using_id(QString fileName_space_fileId)
     QFileInfo fi(filePath);
     QString fileName = fi.fileName();
 
-    bool ok = m_gd->uploadFileUsingId(filePath, fileName, fileId);
-    if (!ok)
+    auto res = m_gd->uploadFileUsingId(filePath, fileName, fileId);
+    if (!res.first)
     {
-        std::cout << "error creating file" << std::endl;
+        std::cout << "error creating file: " << res.second << std::endl;
     }
     else
     {
@@ -1027,6 +1027,55 @@ void GdriveCommands::get_permission(QString fileId_Space_permissionId)
         {
             std::cout << "Exception: " << e.what() << std::endl;
         }
+};
+
+void GdriveCommands::create_permissions(QString fileId) 
+{
+    if (fileId.isEmpty())
+    {
+        std::cout << "fileId required" << std::endl;
+        return;
+    }
+
+    try
+    {
+        permissions::ResourcePermission p_new;
+        p_new.setRole("reader");
+        p_new.setType("anyone");
+
+        CreatePermissionArg arg;
+        arg.setFileId(fileId);
+        auto p = m_gd->getPermissions()->create(arg, p_new);
+        std::cout << "permission created " << p->id() << " " << p->role() << " " << p->type() << std::endl;
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
+void GdriveCommands::delete_permissions(QString fileId_Space_permissionId)
+{
+    QStringList arg_list = fileId_Space_permissionId.split(" ",
+        QString::SkipEmptyParts);
+    if (arg_list.size() < 2)
+    {
+        std::cout << "Invalid parameters, expected <file_id> <comment_id>" << std::endl;
+        return;
+    }
+
+    QString fileId = arg_list[0];
+    QString permissionId = arg_list[1];
+    try
+    {
+        PermissionArg arg(fileId, permissionId);
+        m_gd->getPermissions()->deleteOperation(arg);
+        std::cout << "permission deleted" << std::endl;
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 void GdriveCommands::ls_revisions(QString fileId)

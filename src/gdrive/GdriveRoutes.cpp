@@ -422,7 +422,7 @@ QString GdriveRoutes::upgradeAppDataFile(QString localFilePath, QString destFile
         return "";
     }
     int n = cleanUpAppDataFolder(destFileName, fID);
-    qDebug() << "cleaned-up files" << n;
+    Q_UNUSED(n);
     return fID;
 };
 
