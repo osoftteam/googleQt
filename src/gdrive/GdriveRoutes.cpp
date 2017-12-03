@@ -536,3 +536,41 @@ GdriveRoutes::FolderContentMap GdriveRoutes::mapNonFolders(QString parentId)
     QString q = QString("mimeType != 'application/vnd.google-apps.folder' and trashed = false");
     return mapFolderContent(parentId, q);
 };
+
+std::pair<QString, QString> GdriveRoutes::shareFile(QString localFilePath, QString destFileName,
+    QString parentFolderId /*= ""*/, 
+    QString mimeType /*= ""*/)
+{
+    std::pair<QString, QString> rv;
+
+    QString folderCloudID = "";
+    if (!parentFolderId.isEmpty()) {
+        folderCloudID = ensureFolder(parentFolderId);
+    }
+
+    QString fileCloudID = uploadFile(localFilePath, destFileName, folderCloudID, mimeType);
+    if (!fileCloudID.isEmpty()) {
+        try
+        {
+            permissions::ResourcePermission p_new;
+            p_new.setRole("reader");
+            p_new.setType("anyone");
+
+            googleQt::gdrive::CreatePermissionArg arg;
+            arg.setFileId(fileCloudID);
+            getPermissions()->create(arg, p_new);
+
+            googleQt::gdrive::GetFileArg arg2(fileCloudID);
+            arg2.setFields("id,webContentLink");
+            auto f = getFiles()->get(arg2);
+            rv.first = f->id();
+            rv.second = f->webcontentlink();
+        }
+        catch (GoogleException& e)
+        {
+            qWarning() << "Exception: " << e.what();
+        }
+    }
+
+    return rv;
+};

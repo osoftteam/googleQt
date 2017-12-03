@@ -79,7 +79,8 @@ namespace googleQt
         FolderContentMap mapNonFolders(QString parentFolderId);
         /// returns name->fileid map for a parent folder using query parameter
         FolderContentMap mapFolderContent(QString parentFolderId, QString q = "trashed = false");
-
+        /// upload and share file to 'anyone', returns pair<fileId, webLink> of new shared file
+        std::pair<QString, QString> shareFile(QString localFilePath, QString destFileName, QString parentFolderId = "", QString mimeType = "");
 #ifdef API_QT_AUTOTEST
         void autotest() {};
 #endif

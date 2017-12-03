@@ -177,6 +177,12 @@ bool CreateFileArg::calcMimeType()
         {
             mime = "audio/mpeg";
         }
+        else if (ext.compare("txt") == 0 ||
+            ext.compare("log") == 0)
+        {
+            mime = "text/plain";
+        }
+
 
         rv = !mime.isEmpty();
 
