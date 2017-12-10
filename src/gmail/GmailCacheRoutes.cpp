@@ -326,7 +326,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::downloadAttachment_Async(googleQt:
                 return;
             };
         }
-
+        
         QString destFile = destinationFolder + "/" + a->filename();
         if (QFile::exists(destFile)) {
             //create some reasonable unique file name

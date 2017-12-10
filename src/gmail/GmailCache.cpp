@@ -975,6 +975,19 @@ QString mail_cache::GMailSQLiteStorage::findAttachmentFile(att_ptr att)const
     return rv;
 };
 
+void mail_cache::GMailSQLiteStorage::invalidateAttachmentLocalCacheFile(att_ptr att)
+{
+    att->m_status = AttachmentData::statusNotDownloaded;
+    QString local_path = downloadDir() + "/" + att->localFilename();
+    if (QFile::exists(local_path)) {
+        bool ok = QFile::remove(local_path);
+        if(!ok){
+            qWarning() << "failed to delete cache file" << local_path;
+        }
+    }
+};
+
+
 mail_cache::LabelData* mail_cache::GMailSQLiteStorage::createAndInsertLabel(
                                                                             QString label_id,
                                                                             QString label_name,

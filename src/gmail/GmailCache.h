@@ -170,7 +170,7 @@ namespace googleQt{
             QString localFilename()const { return m_local_filename; }
 
             EStatus status()const { return m_status; }
-
+            
         protected:
             QString m_attachment_id;
             QString m_mimetype;
@@ -335,6 +335,7 @@ namespace googleQt{
             ///directory for attachments
             QString downloadDir()const { return m_downloadDir; }
             QString findAttachmentFile(att_ptr att)const;
+            void invalidateAttachmentLocalCacheFile(att_ptr att);
 
             LabelData* findLabel(QString label_id);
             LabelData* findLabel(SysLabel sys_label);
