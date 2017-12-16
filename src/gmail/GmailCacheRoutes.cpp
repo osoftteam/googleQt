@@ -334,7 +334,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::downloadAttachment_Async(googleQt:
             QString name = fi.baseName().left(64);
             QString ext = fi.suffix();
             int idx = 1;
-            while (idx < 1000) {
+            while (idx++ < 1000) {
                 destFile = destinationFolder + "/" + name + QString("_%1").arg(idx) + "." + ext;
                 if (!QFile::exists(destFile))
                     break;
