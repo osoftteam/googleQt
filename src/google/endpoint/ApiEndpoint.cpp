@@ -7,11 +7,26 @@
 #define LOG_REQUEST     ApiAutotest::INSTANCE().logRequest(m_last_req_info);
 #endif
 
+#ifdef API_QT_DIAGNOSTICS
+#define TRACE_REQUEST(C, R, D)     QString rinfo = QString(C) + " " + R.url().toString() + "\n";\
+                                    QList<QByteArray> lst = R.rawHeaderList();\
+                                    for (QList<QByteArray>::iterator i = lst.begin(); i != lst.end(); i++)\
+                                    rinfo += QString("--header %1 : %2 \n").arg(i->constData()).arg(R.rawHeader(*i).constData());\
+                                    if(!QString(D).isEmpty())QString("--data %1").arg(D);\
+                                    updateLastRequestInfo(rinfo);\
+
+
+#else
+    #define TRACE_REQUEST(C, R, D)
+#endif
+
 using namespace googleQt;
 
 ApiEndpoint::ApiEndpoint(ApiClient* c):m_client(c)
 {
-
+#ifndef API_QT_DIAGNOSTICS
+    m_last_req_info = "WARNING: last_req_info is not available because googleQt lib was compiled without API_QT_DIAGNOSTICS tracing option.";
+#endif
 }
 
 void ApiEndpoint::addAuthHeader(QNetworkRequest& request)
@@ -100,13 +115,8 @@ void ApiEndpoint::updateLastRequestInfo(QString s)
 
 QNetworkReply* ApiEndpoint::getData(const QNetworkRequest &req)
 {
-    QString rinfo = "GET " + req.url().toString() + "\n";
-    QList<QByteArray> lst = req.rawHeaderList();
-    for(QList<QByteArray>::iterator i = lst.begin(); i != lst.end(); i++)
-        rinfo += QString("--header %1 : %2 \n").arg(i->constData()).arg(req.rawHeader(*i).constData());
+    TRACE_REQUEST("GET", req, "");
 
-    updateLastRequestInfo(rinfo);
-    
 #ifdef API_QT_AUTOTEST
     LOG_REQUEST;
     return nullptr;
@@ -118,33 +128,8 @@ QNetworkReply* ApiEndpoint::getData(const QNetworkRequest &req)
 
 QNetworkReply* ApiEndpoint::postData(const QNetworkRequest &req, const QByteArray& data)
 {
-    QString rinfo = "POST " + req.url().toString() + "\n";
-    QList<QByteArray> lst = req.rawHeaderList();
-    for(QList<QByteArray>::iterator i = lst.begin(); i != lst.end(); i++)
-        rinfo += QString("--header %1 : %2 \n").arg(i->constData()).arg(req.rawHeader(*i).constData());
-    rinfo += QString("--data %1").arg(data.constData());
+    TRACE_REQUEST("POST", req, data.constData());
 
-    /*
-    std::cout << "hexl-POST =====" << std::endl;
-    std::string hstr = QString(data.toHex()).toStdString();
-    int len = hstr.length();
-    int idx = 0;
-    while(idx < len)
-        {
-            for(int i = 0; i < 32; i+= 2)
-                {
-                    std::cout << hstr[idx] << hstr[idx+1] << " ";
-                    idx += 2;
-                    if(idx >= len)break;                    
-                }
-            std::cout << std::endl;
-        }
-    std::cout << std::endl;
-    std::cout << "hexl-POST =====" << std::endl;
-    */ 
-
-    updateLastRequestInfo(rinfo);
-    
 #ifdef API_QT_AUTOTEST
     LOG_REQUEST;
     return nullptr;
@@ -156,13 +141,7 @@ QNetworkReply* ApiEndpoint::postData(const QNetworkRequest &req, const QByteArra
 
 QNetworkReply* ApiEndpoint::postData(const QNetworkRequest &req, QHttpMultiPart* mpart)
 {
-    QString rinfo = "POST " + req.url().toString() + "\n";
-    QList<QByteArray> lst = req.rawHeaderList();
-    for (QList<QByteArray>::iterator i = lst.begin(); i != lst.end(); i++)
-        rinfo += QString("--header %1 : %2 \n").arg(i->constData()).arg(req.rawHeader(*i).constData());
-    rinfo += QString("--data %1").arg("multipart");
-
-    updateLastRequestInfo(rinfo);
+    TRACE_REQUEST("POST", req, "multipart");
 
 #ifdef API_QT_AUTOTEST
     Q_UNUSED(mpart);
@@ -176,13 +155,8 @@ QNetworkReply* ApiEndpoint::postData(const QNetworkRequest &req, QHttpMultiPart*
 
 QNetworkReply* ApiEndpoint::putData(const QNetworkRequest &req, const QByteArray& data)
 {    
-    QString rinfo = "PUT " + req.url().toString() + "\n";
-    QList<QByteArray> lst = req.rawHeaderList();
-    for(QList<QByteArray>::iterator i = lst.begin(); i != lst.end(); i++)
-        rinfo += QString("--header %1 : %2 \n").arg(i->constData()).arg(req.rawHeader(*i).constData());
-    rinfo += QString("--data %1").arg(data.constData());
-    updateLastRequestInfo(rinfo);
-    
+    TRACE_REQUEST("PUT", req, data.constData());
+
 #ifdef API_QT_AUTOTEST
     LOG_REQUEST;
     return nullptr;
@@ -194,13 +168,8 @@ QNetworkReply* ApiEndpoint::putData(const QNetworkRequest &req, const QByteArray
 
 QNetworkReply* ApiEndpoint::deleteData(const QNetworkRequest &req)
 {    
-    QString rinfo = "DELETE " + req.url().toString() + "\n";
-    QList<QByteArray> lst = req.rawHeaderList();
-    for(QList<QByteArray>::iterator i = lst.begin(); i != lst.end(); i++)
-        rinfo += QString("--header %1 : %2 \n").arg(i->constData()).arg(req.rawHeader(*i).constData());
+    TRACE_REQUEST("DELETE", req, "");
 
-    updateLastRequestInfo(rinfo);
-    
 #ifdef API_QT_AUTOTEST
     LOG_REQUEST;
     return nullptr;
@@ -212,13 +181,8 @@ QNetworkReply* ApiEndpoint::deleteData(const QNetworkRequest &req)
 
 QNetworkReply* ApiEndpoint::patchData(const QNetworkRequest &req, const QByteArray& data)
 {
-    QString rinfo = "PATCH " + req.url().toString() + "\n";
-    QList<QByteArray> lst = req.rawHeaderList();
-    for(QList<QByteArray>::iterator i = lst.begin(); i != lst.end(); i++)
-        rinfo += QString("--header %1 : %2 \n").arg(i->constData()).arg(req.rawHeader(*i).constData());
-    rinfo += QString("--data %1").arg(data.constData());
+    TRACE_REQUEST("PATCH", req, data.constData());
 
-    updateLastRequestInfo(rinfo);
 #ifdef API_QT_AUTOTEST
     LOG_REQUEST;
     return nullptr;
@@ -245,29 +209,6 @@ QNetworkReply* ApiEndpoint::MPartUpload_requester::request(QNetworkRequest& r)
         QJsonDocument doc(m_js_out);
         meta_bytes = doc.toJson(QJsonDocument::Compact);
     }
-
-    /*
-      QHttpMultiPart *mpart = new QHttpMultiPart(QHttpMultiPart::RelatedType);
-
-      QHttpPart metaPart;
-      metaPart.setRawHeader("Content-Type", "application/json; charset = UTF-8");
-      metaPart.setBody(meta_bytes);
-
-      QHttpPart dataPart;
-      dataPart.setRawHeader("Content-Type", "application/octet-stream");
-      dataPart.setRawHeader("Content-Transfer-Encoding", "base64");
-      if(m_readFrom){
-      dataPart.setBody(m_readFrom->readAll().toBase64(QByteArray::Base64UrlEncoding));
-      }
-
-      mpart->append(metaPart);
-      mpart->append(dataPart);
-
-      QNetworkReply* reply = m_ep.postData(r, mpart);
-      mpart->setParent(reply);
-      return reply;
-    */
-
                 
     QString delimiter("OooOOoo17gqt");
     QByteArray bytes2post = QString("--%1\r\n").arg(delimiter).toStdString().c_str();

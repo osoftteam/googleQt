@@ -69,6 +69,17 @@ namespace googleQt{
             }
         };
 
+        class GET_requester4Contact : public requester
+        {
+        public:
+            GET_requester4Contact(ApiEndpoint& e) :requester(e) {}
+            QNetworkReply * request(QNetworkRequest& r)override
+            {
+                r.setRawHeader("GData-Version", "3.0");
+                return m_ep.getData(r);
+            }
+        };
+
         class DELETE_requester: public requester
         {
         public:
