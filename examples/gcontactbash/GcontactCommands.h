@@ -19,6 +19,7 @@ public:
     */
     void ls_contacts();
 
+    void export_last_result();
 protected:
     GoogleClient& m_c;
     GcontactRoutes*  m_gt;

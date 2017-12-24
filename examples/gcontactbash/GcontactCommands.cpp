@@ -3,6 +3,7 @@
 #include <QBuffer>
 #include <QFile>
 #include <QFileInfo>
+#include <QDir>
 #include <iomanip>
 #include "GcontactCommands.h"
 #include "google/demo/ApiTerminal.h"
@@ -31,3 +32,17 @@ void GcontactCommands::ls_contacts()
         std::cout << "Exception: " << e.what() << std::endl;
     }    
 }
+
+void GcontactCommands::export_last_result()
+{
+    QString dest_dir = QString("download");
+    QDir att_dir;    
+    if(!att_dir.mkpath(dest_dir)){
+        std::cout << "Failed to create directory: " << dest_dir << std::endl;
+        return;
+    };
+
+    QString fileName = dest_dir + "/result_export.txt";    
+    m_c.exportLastResponse(fileName);
+    std::cout << "saved:" << fileName << std::endl;
+};

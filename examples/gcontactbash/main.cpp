@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
     GcontactCommands cmd(c);
     demo::Terminal t("gcontact");
     t.addAction("ls_contacts",     "List Contacts", [&](QString ) {cmd.ls_contacts(); });
+    t.addAction("export_last_result",     "Export last response to a file", [&](QString ) {cmd.export_last_result(); });
     t.start();
     return 0;
 };
