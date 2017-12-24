@@ -30,6 +30,7 @@ namespace googleQt{
         DECL_STD_BOUND_TASK_CB      (updateStyle);
         DECL_STD_BOUND_TASK_CB      (postStyleB);
         DECL_BODYLESS_BOUND_TASK_CB (getStyle);
+        DECL_BODYLESS_BOUND_TASK_CB (getContactStyle);
         DECL_BODYLESS_BOUND_TASK_CB (postStyle);
         DECL_VOID_BOUND_TASK_CB     (postStyle);
         DECL_VOID_BOUND_TASK_CB     (deleteStyle);
@@ -46,7 +47,20 @@ namespace googleQt{
                  completed_callback,
                  failed_callback);
         }
-        
+
+        template <class RES, class RESULT_FACTORY>
+        void getContactStyle(QUrl url,
+            std::function<void(std::unique_ptr<RES>)> completed_callback,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+        {
+            std::shared_ptr<requester> rb(new GET_requester4Contact(*this));
+            runRequest<RES, RESULT_FACTORY>
+                (url,
+                    std::move(rb),
+                    completed_callback,
+                    failed_callback);
+        }
+
 
         template <class RES, 
             class RESULT_FACTORY, 
@@ -361,6 +375,14 @@ namespace googleQt{
             return url;
         }
 
+        template <class ARG>
+        QUrl buildContactUrl(const ARG& a)const
+        {
+            QUrl url;        
+            a.build(QString("https://www.google.com/m8/feeds/contacts/%1/full")
+                .arg(client()->userId()), url);
+            return url;
+        }
 
         virtual void onErrorUnauthorized(const errors::ErrorInfo* er);
 
