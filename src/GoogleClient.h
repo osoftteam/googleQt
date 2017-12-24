@@ -9,6 +9,7 @@ namespace googleQt{
     class GmailRoutes;
     class GtaskRoutes;
     class GdriveRoutes;
+    class GcontactRoutes;
 
 class GoogleClient: public googleQt::ApiClient{
     Q_OBJECT
@@ -30,6 +31,12 @@ public:
     * gdrive - v3 Google Drive API
     */
     GdriveRoutes* gdrive();
+
+
+    /**
+     * gcontact - v3 Google Contacts API 
+     */
+    GcontactRoutes* gcontact();
 
     /**
     * cancell all requests and exit blocking call is any
@@ -69,6 +76,7 @@ protected:
     std::unique_ptr<GmailRoutes>           m_gmail_routes;
     std::unique_ptr<GtaskRoutes>           m_gtask_routes;
     std::unique_ptr<GdriveRoutes>          m_gdrive_routes;
+    std::unique_ptr<GcontactRoutes>       m_contact_routes;
     std::unique_ptr<Endpoint>              m_endpoint;
 };
 

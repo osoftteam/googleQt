@@ -5,6 +5,7 @@
 #include "gmail/GmailRoutes.h"
 #include "gtask/GtaskRoutes.h"
 #include "gdrive/GdriveRoutes.h"
+#include "gcontact/GcontactRoutes.h"
 
 using namespace googleQt;
 
@@ -107,6 +108,15 @@ GdriveRoutes* GoogleClient::gdrive()
     }
     return m_gdrive_routes.get();
 };
+
+GcontactRoutes* GoogleClient::gcontact()
+{
+    if (!m_contact_routes) {
+        m_contact_routes.reset(new GcontactRoutes(m_endpoint.get()));
+    }
+    return m_contact_routes.get();
+};
+
 
 bool GoogleClient::refreshToken()
 {
