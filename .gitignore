@@ -17,8 +17,11 @@ examples/authorize/scope-auth-url.info
 examples/gdrivebash/gdrivebash
 examples/gmailbash/gmailbash
 examples/gtaskbash/gtaskbash
+examples/gcontactbash/gcontactbash
+examples/gcontactbash/download/
 examples/token.info
 examples/app.info
 examples/gmailbash/data/
 examples/gmailbash/download
 examples/gdrivebash/downloads/
+examples/gcontactbash/download/
