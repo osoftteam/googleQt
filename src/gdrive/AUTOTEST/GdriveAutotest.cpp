@@ -9,7 +9,6 @@
 #include <QBuffer>
 #include <QByteArray>
 using namespace googleQt;
-using namespace googleQt;
 
 static GdriveRoutes* cl;
 

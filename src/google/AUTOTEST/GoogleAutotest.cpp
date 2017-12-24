@@ -2,6 +2,7 @@
 #include "gmail/AUTOTEST/GmailAutotest.h"
 #include "gtask/AUTOTEST/GtaskAutotest.h"
 #include "gdrive/AUTOTEST/GdriveAutotest.h"
+#include "gcontact/AUTOTEST/GcontactAutotest.h"
 
 using namespace googleQt;
 
@@ -24,6 +25,7 @@ void GoogleAutotest::generateCalls()
         AUTOTEST_GENERATE_CALLS(GmailAutotest);
         AUTOTEST_GENERATE_CALLS(GtaskAutotest);
         AUTOTEST_GENERATE_CALLS(GdriveAutotest);
+        AUTOTEST_GENERATE_CALLS(GcontactAutotest);
 #undef AUTOTEST_GENERATE_CALLS
     }
 }
