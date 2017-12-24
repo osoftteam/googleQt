@@ -3,13 +3,17 @@
 .qmake.stash
 Makefile
 moc_*.cpp
+moc_*.h
+*.user
 *.vcxproj
 *.vcxproj.filters
 *.sqlite
 *.DS_Store
 res.txt
 
+autotest/autotest
 examples/authorize/authorize
+examples/authorize/scope-auth-url.info
 examples/gdrivebash/gdrivebash
 examples/gmailbash/gmailbash
 examples/gtaskbash/gtaskbash
@@ -17,3 +21,4 @@ examples/token.info
 examples/app.info
 examples/gmailbash/data/
 examples/gmailbash/download
+examples/gdrivebash/downloads/
