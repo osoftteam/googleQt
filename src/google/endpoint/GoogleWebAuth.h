@@ -82,6 +82,17 @@ namespace googleQt{
         */
         static QString authScope_gdrive_appdata();
         
+        /**
+        * read/write access to Contacts and Contact Groups
+        */
+        static QString authScope_contacts_modify();
+
+        /**
+        * read-only access to Contacts and Contact Groups
+        */
+        static QString authScope_contacts_read_only();
+
+
     protected:
         static bool updateToken(const QUrl& url, ApiAuthInfo* auth, const QString& str);
     };

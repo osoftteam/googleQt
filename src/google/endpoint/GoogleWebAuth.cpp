@@ -137,5 +137,7 @@ DEFINE_SCOPE(authScope_tasks_readonly,  "https://www.googleapis.com/auth/tasks.r
 DEFINE_SCOPE(authScope_gdrive,          "https://www.googleapis.com/auth/drive");
 DEFINE_SCOPE(authScope_gdrive_readonly, "https://www.googleapis.com/auth/drive.readonly");
 DEFINE_SCOPE(authScope_gdrive_appdata,  "https://www.googleapis.com/auth/drive.appdata");
+DEFINE_SCOPE(authScope_contacts_modify,  "https://www.google.com/m8/feeds");
+DEFINE_SCOPE(authScope_contacts_read_only,  "https://www.googleapis.com/auth/contacts.readonly");
 
 #undef DEFINE_SCOPE
