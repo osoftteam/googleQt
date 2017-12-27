@@ -14,7 +14,15 @@ ContactsListArg::ContactsListArg()
 
 void ContactsListArg::build(const QString& link_path, QUrl& url)const{
     UrlBuilder b(link_path, url);
-    b.add("alt", "json");
+    if(!m_alt.isEmpty()){
+        b.add("alt", m_alt);
+    }
+    if(!m_q.isEmpty()){
+        b.add("q", m_q);
+    }
+    if(m_max_results > 0){
+        b.add("max-results", m_max_results);
+    }
 };
 
 #ifdef API_QT_AUTOTEST
