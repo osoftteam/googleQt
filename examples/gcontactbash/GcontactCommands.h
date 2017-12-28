@@ -19,6 +19,12 @@ public:
     */
     void ls_contacts();
 
+    /**
+    * ls_as_json - list contacts using json
+    */
+    void ls_as_json();
+
+    
     void export_last_result();
 protected:
     GoogleClient& m_c;
