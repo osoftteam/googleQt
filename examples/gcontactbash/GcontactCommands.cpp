@@ -33,6 +33,22 @@ void GcontactCommands::ls_contacts()
     }    
 }
 
+void GcontactCommands::ls_as_json()
+{
+    try
+    {
+        ContactsListArg arg;
+        arg.setAlt("json");
+        auto contacts_list = m_gt->getContacts()->list(arg);
+        m_c.printLastResponse();
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }    
+}
+
+
 void GcontactCommands::export_last_result()
 {
     QString dest_dir = QString("download");
