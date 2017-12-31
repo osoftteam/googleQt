@@ -12,7 +12,7 @@
                                     QList<QByteArray> lst = R.rawHeaderList();\
                                     for (QList<QByteArray>::iterator i = lst.begin(); i != lst.end(); i++)\
                                     rinfo += QString("--header %1 : %2 \n").arg(i->constData()).arg(R.rawHeader(*i).constData());\
-                                    if(!QString(D).isEmpty())QString("--data %1").arg(D);\
+                                    if(!QString(D).isEmpty())rinfo += QString("--data %1").arg(D);\
                                     updateLastRequestInfo(rinfo);\
 
 

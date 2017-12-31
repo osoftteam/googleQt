@@ -113,6 +113,22 @@ namespace googleQt{
             QJsonObject m_js_out;
         };
 
+        class POST_requester4Contact : public requester
+        {
+        public:
+            POST_requester4Contact(ApiEndpoint& e, QString&& xml)
+                :requester(e), m_xml(std::move(xml)) {}
+            QNetworkReply * request(QNetworkRequest& r)override
+            {
+                QByteArray bytes2post(m_xml.toStdString().c_str());
+                r.setRawHeader("Content-Type", "application/atom+xml");
+                r.setRawHeader("GData-Version", "3.0");
+                return m_ep.postData(r, bytes2post);
+            }
+        protected:
+            QString m_xml;
+        };
+
         class PUT_requester: public requester
         {
         public:
