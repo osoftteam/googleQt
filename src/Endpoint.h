@@ -29,6 +29,7 @@ namespace googleQt{
         DECL_STD_BOUND_TASK_CB      (rfc822UploadStyle);
         DECL_STD_BOUND_TASK_CB      (updateStyle);
         DECL_STD_BOUND_TASK_CB      (postStyleB);
+        DECL_STD_BOUND_TASK_CB      (postContactStyleB);
         DECL_BODYLESS_BOUND_TASK_CB (getStyle);
         DECL_BODYLESS_BOUND_TASK_CB (getContactStyle);
         DECL_BODYLESS_BOUND_TASK_CB (postStyle);
@@ -47,20 +48,6 @@ namespace googleQt{
                  completed_callback,
                  failed_callback);
         }
-
-        template <class RES, class RESULT_FACTORY>
-        void getContactStyle(QUrl url,
-            std::function<void(std::unique_ptr<RES>)> completed_callback,
-            std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
-        {
-            std::shared_ptr<requester> rb(new GET_requester4Contact(*this));
-            runRequest<RES, RESULT_FACTORY>
-                (url,
-                    std::move(rb),
-                    completed_callback,
-                    failed_callback);
-        }
-
 
         template <class RES, 
             class RESULT_FACTORY, 
@@ -146,6 +133,39 @@ namespace googleQt{
                  completed_callback,
                  failed_callback);
         }
+
+        //...
+        template <class RES, class RESULT_FACTORY>
+        void getContactStyle(QUrl url,
+            std::function<void(std::unique_ptr<RES>)> completed_callback,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+        {
+            std::shared_ptr<requester> rb(new GET_requester4Contact(*this));
+            runRequest<RES, RESULT_FACTORY>
+                (url,
+                    std::move(rb),
+                    completed_callback,
+                    failed_callback);
+        }
+
+        template <class RES,
+            class RESULT_FACTORY,
+            class BODY>
+            void postContactStyleB(QUrl url,
+                const BODY& body,
+                std::function<void(std::unique_ptr<RES>)> completed_callback,
+                std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+        {
+            QString xml = body.toXmlString();
+            std::shared_ptr<requester> rb(new POST_requester4Contact(*this, std::move(xml)));
+            runRequest<RES,
+                RESULT_FACTORY>
+                (url,
+                    std::move(rb),
+                    completed_callback,
+                    failed_callback);
+        }
+        //...
 
         template <class RES, class RESULT_FACTORY, class BODY>
         void postStyleB(QUrl url, const BODY& body,
