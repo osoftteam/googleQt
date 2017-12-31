@@ -9,7 +9,6 @@
 #include "google/endpoint/ApiUtil.h"
 #include "gcontact/GcontactRequestArg.h"
 #include "GoogleRouteBase.h"
-#include "gcontact/contacts/ContactsContactCollectionRes.h"
 
 namespace googleQt{
 namespace contacts{
@@ -19,17 +18,31 @@ namespace contacts{
     public:
         ContactsRoutes(Endpoint* ep):GoogleRouteBase(ep){};
             /**
+            ApiRoute('create')
+
+
+            Create a new contact
+
+            */
+        std::unique_ptr<gcontact::ContactsListResult> create(const gcontact::CreateContactArg& arg);
+        GoogleTask<gcontact::ContactsListResult>* create_Async(const gcontact::CreateContactArg& arg);
+        void create_AsyncCB(
+            const gcontact::CreateContactArg&,
+            std::function<void(std::unique_ptr<gcontact::ContactsListResult>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
+
+            /**
             ApiRoute('list')
 
 
             Returns all contacts for a user as a list
 
             */
-        std::unique_ptr<ContactCollectionRes> list(const gcontact::ContactsListArg& arg);
-        GoogleTask<ContactCollectionRes>* list_Async(const gcontact::ContactsListArg& arg);
+        std::unique_ptr<gcontact::ContactsListResult> list(const gcontact::ContactsListArg& arg);
+        GoogleTask<gcontact::ContactsListResult>* list_Async(const gcontact::ContactsListArg& arg);
         void list_AsyncCB(
             const gcontact::ContactsListArg&,
-            std::function<void(std::unique_ptr<ContactCollectionRes>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<gcontact::ContactsListResult>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
     protected:
