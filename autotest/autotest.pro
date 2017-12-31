@@ -4,7 +4,7 @@
 ################################################################
 
 
-QT       += core network sql
+QT       += core network sql xml
 QT       -= gui
 CONFIG   += console
 CONFIG   -= app_bundle

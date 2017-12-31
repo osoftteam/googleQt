@@ -3,6 +3,10 @@
 #include "GoogleClient.h"
 #include "google/AUTOTEST/GoogleAutotest.h"
 
+#ifndef API_QT_AUTOTEST
+#error API_QT_AUTOTEST is not defined. If you need autotest functionality please reconfigure with 'ARD_AUTOTEST YES' env variable, rebuild library and autotest projects.
+#endif
+
 using namespace googleQt;
 
 int main(int argc, char *argv[]) {
