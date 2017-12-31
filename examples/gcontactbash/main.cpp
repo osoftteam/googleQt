@@ -63,9 +63,11 @@ int main(int argc, char *argv[])
 
     GcontactCommands cmd(c);
     demo::Terminal t("gcontact");
-    t.addAction("ls_contacts",     "List Contacts as xml", [&](QString ) {cmd.ls_contacts(); });
+    t.addAction("ls_contacts",     "List Contacts", [&](QString ) {cmd.ls_contacts(); });
+    t.addAction("get_contact", "get single contact entry", [&](QString arg) {cmd.get_contact(arg); });
     t.addAction("ls_as_json",     "List Contacts as json", [&](QString ) {cmd.ls_as_json(); });
     t.addAction("export_last_result",     "Export last response to a file", [&](QString ) {cmd.export_last_result(); });
+    t.addAction("parse_contacts_xml", "Read and parse xml contacts file", [&](QString arg) {cmd.parse_contacts_xml(arg); });
     t.start();
     return 0;
 };

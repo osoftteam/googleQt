@@ -15,14 +15,22 @@ public:
     GcontactCommands(GoogleClient& c);
     
     /**
-    * ls - list contacts
+    * ls_contacts - list contacts
     */
     void ls_contacts();
+
+    /**
+    * get_contact - get single contact entry
+    */
+    void get_contact(QString contactid);
 
     /**
     * ls_as_json - list contacts using json
     */
     void ls_as_json();
+
+    ///parse xml contacts file
+    void parse_contacts_xml(QString xmlFileName);
 
     
     void export_last_result();
