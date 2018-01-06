@@ -50,6 +50,15 @@ ApiAutotest& ApiAutotest::operator << (const QByteArray & arr){
     log_string(arr.constData());
     return *this;
 }
+
+ApiAutotest& ApiAutotest::operator << (const int & val) 
+{
+    QString s = QString("%1").arg(val);
+    std::string s2 = s.toStdString();
+    log_string(s2.c_str());
+    return *this;
+};
+
 ApiAutotest& ApiAutotest::operator << (const QNetworkRequest & r){
     QString s = QString("POST %1").arg(r.url().toString());
     log_string(s.toStdString().c_str());

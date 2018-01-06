@@ -28,6 +28,7 @@ namespace googleQt{
         ApiAutotest& operator << (const QString & string);
         ApiAutotest& operator << (const QByteArray & array);
         ApiAutotest& operator << (const QNetworkRequest & req);
+        ApiAutotest& operator << (const int & val);
 
         void prepareAutoTestObj(const char* context_class_name, const char* class_name, void* p, int idx, int context_index);
         QByteArray generateData(const char* context_class_name, int context_index, int parent_context_index);

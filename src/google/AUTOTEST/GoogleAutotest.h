@@ -18,4 +18,14 @@ namespace googleQt{
         std::shared_ptr<GoogleClient> m_cl;
     };
 };//googleQt
+
+#define DECLARE_AUTOTEST_INSTANCE(C, F) GoogleAutotest autotest(c);                     \
+if (!autotest.init(F)) {                                                                \
+    std::cout << "Error opening autotest output file " << F << std::endl;               \
+    std::cin.ignore();                                                                  \
+    return 0;                                                                           \
+}                                                                                       \
+
+#else
+#define DECLARE_AUTOTEST_INSTANCE(C, F)
 #endif//#ifdef API_QT_AUTOTEST
