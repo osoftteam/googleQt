@@ -25,9 +25,21 @@ public:
     void get_contact(QString contactid);
 
     /**
+    * create_contact - create single contact entry
+    * requires email adddress, first name, last name - space separated
+    */
+    void create_contact(QString email_first_last);
+
+
+    /**
     * ls_as_json - list contacts using json
     */
     void ls_as_json();
+
+    /**
+    * test_contact_xml - create contact obj, export to XML and import back
+    */
+    void test_contact_xml();
 
     ///parse xml contacts file
     void parse_contacts_xml(QString xmlFileName);
