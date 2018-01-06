@@ -65,7 +65,7 @@ void CreateContactArg::build(const QString& link_path, QUrl& url)const
 
 QString CreateContactArg::toXmlString()const 
 {
-    return "";
+    return m_contact_info.toXmlString();
 };
 
 #ifdef API_QT_AUTOTEST

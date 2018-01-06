@@ -64,12 +64,17 @@ namespace googleQt {
 
             void build(const QString& link_path, QUrl& url)const override;
 
+            const ContactInfo& data()const { return m_contact_info; }
+            void setData(const ContactInfo& c) { m_contact_info = c; };
+
             QString toXmlString()const;
 
 #ifdef API_QT_AUTOTEST
             static std::unique_ptr<CreateContactArg> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
 
+        protected:
+            ContactInfo m_contact_info;
         };
 
 
