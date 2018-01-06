@@ -3,6 +3,8 @@
 #include "GmailCacheRoutes.h"
 #include "GmailRoutes.h"
 #include "Endpoint.h"
+#include "gcontact/GcontactRoutes.h"
+#include "gcontact/GcontactCache.h"
 
 using namespace googleQt;
 
@@ -16,7 +18,7 @@ mail_cache::GmailCacheRoutes::GmailCacheRoutes(Endpoint& endpoint,
     :m_endpoint(endpoint),
     m_gmail_routes(gmail_routes)
 {
-
+    m_GMailCache.reset(new mail_cache::GMailCache(endpoint));
 };
 
 std::unique_ptr<UserBatchResult<QString, 
@@ -26,14 +28,6 @@ std::unique_ptr<UserBatchResult<QString,
 {
     return getUserBatchMessages_Async(userId, f, id_list)->waitForResultAndRelease();
 };
-
-void mail_cache::GmailCacheRoutes::ensureCache()const
-{
-    if (!m_GMailCache) {
-        m_GMailCache.reset(new mail_cache::GMailCache(m_endpoint));
-    }
-};
-
 
 mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::newResultFetcher(QString userId, EDataState state)
 {
@@ -89,7 +83,6 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheMessages_
     const std::list<QString>& id_list,
     mail_cache::GMailCacheQueryTask* rfetcher /*= nullptr*/)
 {
-    ensureCache();
     if (!rfetcher)
     {
         rfetcher = newResultFetcher(userId, state);
@@ -100,7 +93,6 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheMessages_
 
 mail_cache::data_list_uptr mail_cache::GmailCacheRoutes::getCacheMessages(int numberOfMessages, uint64_t labelFilter)
 {
-    ensureCache();
     mail_cache::GMailCacheQueryTask* rfetcher = newResultFetcher(m_endpoint.apiClient()->userId(), EDataState::snippet);
     m_GMailCache->topCacheData(rfetcher, numberOfMessages, labelFilter);
     return rfetcher->waitForResultAndRelease();
@@ -153,7 +145,6 @@ mail_cache::data_list_uptr mail_cache::GmailCacheRoutes::getNextCacheMessages(QS
 
 GoogleVoidTask* mail_cache::GmailCacheRoutes::trashCacheMessage_Async(QString userId, QString msg_id)
 {
-    ensureCache();
     GoogleVoidTask* rv = m_endpoint.produceVoidTask();
     googleQt::gmail::TrashMessageArg arg(userId, msg_id);
     m_gmail_routes.getMessages()->trash_Async(arg)->then([=]()
@@ -182,8 +173,6 @@ bool mail_cache::GmailCacheRoutes::setupSQLiteCache(QString dbPath,
     QString dbName /*= "googleqt"*/,
     QString dbprefix /*= "api"*/)
 {
-    ensureCache();
-
     if (m_GMailCache->hasLocalPersistentStorate())
     {
         return true;
@@ -195,8 +184,10 @@ bool mail_cache::GmailCacheRoutes::setupSQLiteCache(QString dbPath,
     EXPECT_STRING_VAL(dbName, "DB name");
     EXPECT_STRING_VAL(dbprefix, "DB prefix");
 
+    gcontact::contact_cache_ptr cc = m_endpoint.client()->gcontact()->cacheRoutes()->cache();
+    std::shared_ptr<mail_cache::GMailSQLiteStorage> st(new mail_cache::GMailSQLiteStorage(m_GMailCache, cc));
+    cc->attachSQLStorage(st);
 
-    std::unique_ptr<mail_cache::GMailSQLiteStorage> st(new mail_cache::GMailSQLiteStorage(m_GMailCache));
     if (!st->init_db(dbPath, downloadPath, dbName, dbprefix))
     {
         m_GMailCache->invalidate();
@@ -204,7 +195,7 @@ bool mail_cache::GmailCacheRoutes::setupSQLiteCache(QString dbPath,
         return false;
     }
 
-    m_GMailCache->setupLocalStorage(st.release());
+    m_GMailCache->setupLocalStorage(st);
 
     if (googleQt::isConnectedToNetwork()) {
         refreshLabels();
@@ -259,8 +250,6 @@ bool mail_cache::GmailCacheRoutes::hasCache()const
 
 GoogleVoidTask* mail_cache::GmailCacheRoutes::refreshLabels_Async()
 {
-    ensureCache();
-
     GoogleVoidTask* rv = m_endpoint.produceVoidTask();
 
     googleQt::GoogleTask<labels::LabelsResultList>* t = m_gmail_routes.getLabels()->list_Async();
@@ -294,7 +283,6 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::downloadAttachment_Async(googleQt:
     googleQt::mail_cache::att_ptr a,
     QString destinationFolder)
 {
-    ensureCache();
     GoogleVoidTask* rv = m_endpoint.produceVoidTask();
 
     if (a->status() == mail_cache::AttachmentData::statusDownloadInProcess) {
@@ -368,7 +356,6 @@ void mail_cache::GmailCacheRoutes::refreshLabels()
 
 std::list<mail_cache::LabelData*> mail_cache::GmailCacheRoutes::getLoadedLabels(std::set<QString>* in_optional_idset)
 {
-    ensureCache();
     auto storage = m_GMailCache->sqlite_storage();
     if (!storage) {
         std::list<mail_cache::LabelData*> on_error;
@@ -379,7 +366,6 @@ std::list<mail_cache::LabelData*> mail_cache::GmailCacheRoutes::getLoadedLabels(
 
 std::list<mail_cache::LabelData*> mail_cache::GmailCacheRoutes::getMessageLabels(mail_cache::MessageData* d)
 {
-    ensureCache();
     auto storage = m_GMailCache->sqlite_storage();
     if (!storage) {
         std::list<mail_cache::LabelData*> on_error;
@@ -438,7 +424,6 @@ GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setLabel_As
     bool label_on,
     bool system_label)
 {
-    ensureCache();
     int accId = -1;
     auto storage = m_GMailCache->sqlite_storage();
     if (storage) {
@@ -500,7 +485,6 @@ GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setLabel_As
 bool mail_cache::GmailCacheRoutes::messageHasLabel(mail_cache::MessageData* d, QString label_id)const
 {
     bool rv = false;
-    ensureCache();
     auto storage = m_GMailCache->sqlite_storage();
     if (storage) {
         mail_cache::LabelData* lb = storage->findLabel(label_id);
@@ -524,7 +508,8 @@ void mail_cache::GmailCacheRoutes::autotestParDBLoad(EDataState state, const std
 
 void mail_cache::GmailCacheRoutes::runAutotest()
 {
-#define AUTOTEST_SIZE 100
+//#define AUTOTEST_SIZE 100
+#define AUTOTEST_SIZE 10
 #define AUTOTEST_GENERATE_BODY //autotestParDBLoad(EDataState::body, id_list);
 #define AUTOTEST_GENERATE_SNIPPET autotestParDBLoad(EDataState::snippet, id_list);
 

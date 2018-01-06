@@ -11,6 +11,10 @@ namespace googleQt{
     class Endpoint;
     class GmailRoutes;
 
+    namespace gcontact {
+        class GContactCache;
+    };
+
     namespace mail_cache{
         class GMailCacheQueryTask;
         class GMailSQLiteStorage;
@@ -321,7 +325,7 @@ namespace googleQt{
         class GMailSQLiteStorage: public LocalPersistentStorage<MessageData, GMailCacheQueryTask>
         {
         public:
-            GMailSQLiteStorage(cache_ptr c);
+            GMailSQLiteStorage(cache_ptr c, std::shared_ptr<gcontact::GContactCache> cc);
             bool init_db(QString dbPath, 
                          QString downloadPath,
                          QString dbName, 
@@ -388,11 +392,13 @@ namespace googleQt{
             void insertDbAttachmentData(const MessageData& m);
             std::shared_ptr<MessageData> loadMessageFromDB(int accId, QSqlQuery* q); 
             void reloadDbAccounts();
+            bool ensureMailTables();            
         protected:
             bool m_initialized {false};
             QSqlDatabase     m_db;
             std::unique_ptr<QSqlQuery>   m_query{nullptr};
             std::weak_ptr<GMailCache>    m_mem_cache;
+            std::weak_ptr<gcontact::GContactCache>    m_contact_cache;
             std::map<QString, std::shared_ptr<LabelData>> m_acc_labels;
             std::map<int, std::shared_ptr<LabelData>> m_acc_maskbase2labels;
             std::set<int> m_avail_label_base;
@@ -404,6 +410,7 @@ namespace googleQt{
             QString m_metaPrefix;
             int     m_accId{-1};
             friend class googleQt::mail_cache::GmailCacheRoutes;
+            friend class googleQt::gcontact::GContactCache;
         };//GMailSQLiteStorage
 
         class MessagesReceiver

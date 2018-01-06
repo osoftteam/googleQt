@@ -89,6 +89,10 @@ googleQt::mail_cache::GmailCacheRoutes* GmailRoutes::setupCache(QString dbPath,
 
 googleQt::mail_cache::GmailCacheRoutes* GmailRoutes::cacheRoutes()
 {
+    if (!m_CacheRoutes) {
+        qCritical() << "DB-Cache was not setup, please call GmailRoutes::setupCache first.";
+    }
+
     return m_CacheRoutes.get();
 };
 
@@ -104,8 +108,16 @@ void GmailRoutes::onUserReset()
 #ifdef API_QT_AUTOTEST
 void GmailRoutes::autotest() 
 {
+    QString autotest_db_file = "gmail_autotest.sqlite";
+    if (QFile::exists(autotest_db_file)) {
+        if (!QFile::remove(autotest_db_file)) {
+            qWarning() << "Failed to delete autotest DB file" << autotest_db_file;
+            return;
+        }
+    }
+
     QString userId = m_endpoint->client()->userId();
-    if (!setupCache("gmail_autotest.sqlite", "downloads"))
+    if (!setupCache(autotest_db_file, "downloads"))
     {
         ApiAutotest::INSTANCE() << "Failed to setup SQL database";
         return;

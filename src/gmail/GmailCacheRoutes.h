@@ -99,7 +99,6 @@ namespace googleQt
             void attachmentsDownloaded(googleQt::mail_cache::msg_ptr, googleQt::mail_cache::att_ptr);
 
         protected:
-            void ensureCache()const;
             mail_cache::GMailCacheQueryTask* newResultFetcher(QString userId, EDataState state);
             GoogleTask<messages::MessageResource>* setLabel_Async(QString label_id,
                 mail_cache::MessageData* d,

@@ -4,6 +4,7 @@
 #include <ctime>
 #include <QDir>
 #include "GmailCacheRoutes.h"
+#include "gcontact/GcontactCache.h"
 
 using namespace googleQt;
 
@@ -31,6 +32,7 @@ GoogleTask<messages::MessageResource>* mail_cache::MessagesReceiver::routeSingle
         {
         
         }
+
 #ifdef API_QT_AUTOTEST
     ApiAutotest::INSTANCE().addId("messages::MessageResource", message_id);
 #endif
@@ -605,9 +607,10 @@ std::unique_ptr<CacheDataList<mail_cache::MessageData>> mail_cache::GMailCacheQu
 };
 
 ///GMailSQLiteStorage
-mail_cache::GMailSQLiteStorage::GMailSQLiteStorage(cache_ptr c)
+mail_cache::GMailSQLiteStorage::GMailSQLiteStorage(cache_ptr c, std::shared_ptr<gcontact::GContactCache> cc)
 {
     m_mem_cache = c;
+    m_contact_cache = cc;
 };
 
 mail_cache::cache_ptr mail_cache::GMailSQLiteStorage::lock_cache()
@@ -644,6 +647,53 @@ QString mail_cache::GMailSQLiteStorage::findUser(int accId)
         userId = i->second->userId();
     }
     return userId;
+};
+
+bool mail_cache::GMailSQLiteStorage::ensureMailTables() 
+{
+    /// accounts ///
+    QString sql_accounts = QString("CREATE TABLE IF NOT EXISTS %1gmail_account(acc_id INTEGER PRIMARY KEY, userid TEXT NOT NULL COLLATE NOCASE)").arg(m_metaPrefix);
+    if (!execQuery(sql_accounts))
+        return false;
+
+    if (!execQuery(QString("CREATE UNIQUE INDEX IF NOT EXISTS %1acc_userid_idx ON %1gmail_account(userid)").arg(m_metaPrefix)))
+        return false;
+
+
+    /// messages ///
+    QString sql_messages = QString("CREATE TABLE IF NOT EXISTS %1gmail_msg(acc_id INTEGER NOT NULL, msg_id TEXT NOT NULL, msg_from TEXT, "
+        "msg_to TEXT, msg_cc TEXT, msg_bcc TEXT, msg_subject TEXT, msg_snippet TEXT, msg_plain TEXT, "
+        "msg_html TEXT, internal_date INTEGER, msg_state INTEGER, msg_cache_lock INTEGER, msg_labels INTEGER)").arg(m_metaPrefix);
+    if (!execQuery(sql_messages))
+        return false;
+
+    if (!execQuery(QString("CREATE UNIQUE INDEX IF NOT EXISTS %1msg_accid_idx ON %1gmail_msg(acc_id, msg_id)").arg(m_metaPrefix)))
+        return false;
+
+
+    //// labels ///
+    QString sql_labels = QString("CREATE TABLE IF NOT EXISTS %1gmail_label(acc_id INTEGER NOT NULL, label_id TEXT NOT NULL, label_name TEXT, "
+        " label_type INTEGER, label_unread_messages INTEGER, label_total_messages INTEGER,"
+        " message_list_visibility TEXT, label_list_visibility TEXT, label_mask INTEGER)")
+        .arg(m_metaPrefix);
+    if (!execQuery(sql_labels))
+        return false;
+
+    if (!execQuery(QString("CREATE UNIQUE INDEX IF NOT EXISTS %1lbl_accid_idx ON %1gmail_label(acc_id, label_id)").arg(m_metaPrefix)))
+        return false;
+
+
+    /// attachments ///
+    QString sql_att = QString("CREATE TABLE IF NOT EXISTS %1gmail_attachments(att_id TEXT, acc_id INTEGER NOT NULL, msg_id TEXT NOT NULL, file_name TEXT, "
+        "local_file_name TEXT, mime_type TEXT, size INTEGER, PRIMARY KEY (att_id, msg_id))")
+        .arg(m_metaPrefix);
+    if (!execQuery(sql_att))
+        return false;
+
+    if (!execQuery(QString("CREATE UNIQUE INDEX IF NOT EXISTS %1att_accid_idx ON %1gmail_attachments(acc_id, msg_id, att_id)").arg(m_metaPrefix)))
+        return false;
+
+    return true;
 };
 
 bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath, 
@@ -690,47 +740,22 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
 
     m_query.reset(new QSqlQuery(m_db));
 
-    /// accounts ///
-    QString sql_accounts = QString("CREATE TABLE IF NOT EXISTS %1gmail_account(acc_id INTEGER PRIMARY KEY, userid TEXT NOT NULL COLLATE NOCASE)").arg(m_metaPrefix);
-    if (!execQuery(sql_accounts))
+    if (!ensureMailTables()) {
+        qWarning() << "ERROR. Failed to create GMail cache tables" << dbName << dbPath;
         return false;
+    }
 
-    if (!execQuery(QString("CREATE UNIQUE INDEX IF NOT EXISTS %1acc_userid_idx ON %1gmail_account(userid)").arg(m_metaPrefix)))
+    auto cc = m_contact_cache.lock();
+    if (!cc) {
+        qWarning() << "ERROR. Expected GContact cache. Failed to init Gcontact cache tables" << dbName << dbPath;
         return false;
+    }
 
 
-    /// messages ///
-    QString sql_messages = QString("CREATE TABLE IF NOT EXISTS %1gmail_msg(acc_id INTEGER NOT NULL, msg_id TEXT NOT NULL, msg_from TEXT, "
-                                   "msg_to TEXT, msg_cc TEXT, msg_bcc TEXT, msg_subject TEXT, msg_snippet TEXT, msg_plain TEXT, "
-                                   "msg_html TEXT, internal_date INTEGER, msg_state INTEGER, msg_cache_lock INTEGER, msg_labels INTEGER)").arg(m_metaPrefix);
-    if (!execQuery(sql_messages))
+    if (!cc->ensureContactTables()) {
+        qWarning() << "ERROR. Failed to create GContacts cache tables" << dbName << dbPath;
         return false;
-
-    if (!execQuery(QString("CREATE UNIQUE INDEX IF NOT EXISTS %1msg_accid_idx ON %1gmail_msg(acc_id, msg_id)").arg(m_metaPrefix)))
-        return false;
-
-
-    //// labels ///
-    QString sql_labels = QString("CREATE TABLE IF NOT EXISTS %1gmail_label(acc_id INTEGER NOT NULL, label_id TEXT NOT NULL, label_name TEXT, "
-                                 " label_type INTEGER, label_unread_messages INTEGER, label_total_messages INTEGER,"
-                                 " message_list_visibility TEXT, label_list_visibility TEXT, label_mask INTEGER)")
-        .arg(m_metaPrefix);
-    if (!execQuery(sql_labels))
-        return false;
-
-    if (!execQuery(QString("CREATE UNIQUE INDEX IF NOT EXISTS %1lbl_accid_idx ON %1gmail_label(acc_id, label_id)").arg(m_metaPrefix)))
-        return false;
-
-    
-    /// attachments ///
-    QString sql_att = QString("CREATE TABLE IF NOT EXISTS %1gmail_attachments(att_id TEXT, acc_id INTEGER NOT NULL, msg_id TEXT NOT NULL, file_name TEXT, "
-                              "local_file_name TEXT, mime_type TEXT, size INTEGER, PRIMARY KEY (att_id, msg_id))")
-        .arg(m_metaPrefix);
-    if (!execQuery(sql_att))
-        return false;        
-    
-    if (!execQuery(QString("CREATE UNIQUE INDEX IF NOT EXISTS %1att_accid_idx ON %1gmail_attachments(acc_id, msg_id, att_id)").arg(m_metaPrefix)))
-        return false;
+    }
 
     /// locate accountID
     reloadDbAccounts();
@@ -812,10 +837,12 @@ bool mail_cache::GMailSQLiteStorage::loadMessagesFromDb()
             loaded_objects++;
         }
 
+    
 #ifdef API_QT_AUTOTEST
     ApiAutotest::INSTANCE() << QString("DB-loaded %1 records, skipped %2, mem-cache-size: %3")
         .arg(loaded_objects).arg(skipped).arg(cache->mem_size());
 #endif
+
 
     return true;
 };
