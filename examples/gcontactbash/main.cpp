@@ -10,6 +10,8 @@
 #include "google/demo/ApiTerminal.h"
 #include "google/demo/ApiListener.h"
 #include "GcontactCommands.h"
+#include "gmail/GmailRoutes.h"
+#include "google/AUTOTEST/GoogleAutotest.h"
 
 using namespace googleQt;
 
@@ -55,19 +57,31 @@ int main(int argc, char *argv[])
     authInfo->setEmail(argEmail);
     
     std::cout << std::endl << std::endl;
-    std::cout << "Contacts list" << std::endl;
+    std::cout << "GContacts" << std::endl;
     
     demo::ApiListener lsn;
-    GoogleClient c(appInfo.release(), authInfo.release());
-    QObject::connect(&c, &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);
+    std::shared_ptr<GoogleClient > c(new GoogleClient(appInfo.release(), authInfo.release()));
+    QObject::connect(c.get(), &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);
 
-    GcontactCommands cmd(c);
+    DECLARE_AUTOTEST_INSTANCE(c, "autotest-res.txt");
+
+    /// setup DB-cache ///
+    const QString dbPath = "gm-cache.sqlite";
+    auto mr = c->gmail();
+    if (!mr->setupCache(dbPath, "downloads")) {
+        std::cout << "Failed to initialize SQLite cache database: " << dbPath.toStdString() << std::endl;
+        return 0;
+    };
+
+    GcontactCommands cmd(*(c.get()));
     demo::Terminal t("gcontact");
-    t.addAction("ls_contacts",     "List Contacts", [&](QString ) {cmd.ls_contacts(); });
-    t.addAction("get_contact", "get single contact entry", [&](QString arg) {cmd.get_contact(arg); });
-    t.addAction("ls_as_json",     "List Contacts as json", [&](QString ) {cmd.ls_as_json(); });
+    t.addAction("ls_contacts",      "List Contacts", [&](QString ) {cmd.ls_contacts(); });
+    t.addAction("get_contact",      "get single contact entry", [&](QString arg) {cmd.get_contact(arg); });
+    t.addAction("create_contact",   "create new contact entry", [&](QString arg) {cmd.create_contact(arg); });
+    t.addAction("ls_as_json",       "List Contacts as json", [&](QString ) {cmd.ls_as_json(); });
     t.addAction("export_last_result",     "Export last response to a file", [&](QString ) {cmd.export_last_result(); });
     t.addAction("parse_contacts_xml", "Read and parse xml contacts file", [&](QString arg) {cmd.parse_contacts_xml(arg); });
+    t.addAction("test_contact_xml", "Test xml-serialization of a contact entry", [&](QString) {cmd.test_contact_xml(); });
     t.start();
     return 0;
 };

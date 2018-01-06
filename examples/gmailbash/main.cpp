@@ -10,6 +10,9 @@
 #include "google/demo/ApiTerminal.h"
 #include "google/demo/ApiListener.h"
 #include "GmailCommands.h"
+#include "gmail/GmailRoutes.h"
+#include "google/AUTOTEST/GoogleAutotest.h"
+
 
 using namespace googleQt;
 
@@ -56,10 +59,20 @@ int main(int argc, char *argv[])
     authInfo->setEmail(argEmail);
 
     demo::ApiListener lsn;
-    GoogleClient c(appInfo.release(), authInfo.release());
-    QObject::connect(&c, &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);
+    std::shared_ptr<GoogleClient > c(new GoogleClient(appInfo.release(), authInfo.release()));
+    QObject::connect(c.get(), &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);
+
+    DECLARE_AUTOTEST_INSTANCE(c, "autotest-res.txt");
+
+    /// setup DB-cache ///
+    const QString dbPath = "gm-cache.sqlite";
+    auto mr = c->gmail();
+    if (!mr->setupCache(dbPath, "downloads")) {
+        std::cout << "Failed to initialize SQLite cache database: " << dbPath.toStdString() << std::endl;
+        return 0;
+    };
     
-    GmailCommands cmd(c);
+    GmailCommands cmd(*(c.get()));
     demo::Terminal t("gmail");
     t.addAction("ls",               "List Messages", [&](QString arg) {cmd.ls(arg);} );
     t.addAction("ls_by_labels",     "List Messages by label ID", [&](QString arg) {cmd.ls_by_labels(arg);} );

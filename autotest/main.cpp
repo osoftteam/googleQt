@@ -24,24 +24,21 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    QString argResFile = argv[1];
+    const char* argResFile = argv[1];
     std::unique_ptr<ApiAppInfo>appInfo(new ApiAppInfo);
     appInfo->setKeySecret("my-key", "my-secret");
     std::unique_ptr<ApiAuthInfo> authInfo(new ApiAuthInfo());
     authInfo->setEmail("me@gmail.com");
     std::shared_ptr<GoogleClient > c(new GoogleClient(appInfo.release(), authInfo.release()));
-    {
-        GoogleAutotest autotest(c);
-        if (!autotest.init(argResFile)) {
-            std::cout << "Error opening destination file " << argResFile.toStdString() << std::endl;
-            std::cin.ignore();
-            return 0;
-        }
-        std::cout << "Press ENTER to start autotest. The result will be generated: " << argResFile.toStdString() << std::endl;
-        std::cin.ignore();
-        autotest.generateCalls();
-        std::cout << "finished" << std::endl;
-    }
+    
+    std::cout << "Press ENTER to start autotest. The result will be generated: " << argResFile << std::endl;
+
+    DECLARE_AUTOTEST_INSTANCE(c, argResFile);
+    
+    std::cin.ignore();
+    autotest.generateCalls();
+    std::cout << "finished" << std::endl;
+    
     std::cin.ignore();
 
     return 0;
