@@ -196,13 +196,10 @@ protected:
     void exportMessageBody(messages::MessageResource* r, QString fileName);
     void printLabel(labels::LabelResource*);
     bool loadMessageFile(QString fileName, messages::MessageResource*);
-    void initCache();
     
 protected:
     GoogleClient& m_c;
     GmailRoutes*  m_gm;
-    googleQt::mail_cache::GmailCacheRoutes* m_cr;
-    bool          m_cache_initialized {false};
     int           m_batch_counter{0};
 };
 
