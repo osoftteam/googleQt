@@ -164,7 +164,8 @@ namespace googleQt {
     {
     public:
         GoogleCache(ApiEndpoint& ept): m_endpoint(ept){};
-        void setupLocalStorage(LocalPersistentStorage<O, R>* localDB){m_localDB.reset(localDB);};
+        //void setupLocalStorage(LocalPersistentStorage<O, R>* localDB){m_localDB.reset(localDB);};
+        void setupLocalStorage(std::shared_ptr<LocalPersistentStorage<O, R>> localDB) { m_localDB = localDB; };
         bool hasLocalPersistentStorate()const { return(m_localDB.get() != nullptr); };
 
         bool mem_has_object(int accId, QString id)const override
@@ -175,7 +176,6 @@ namespace googleQt {
                 rv = (i->second.find(id) != i->second.end());
             }
             return rv;
-            //return (m_mem_cache.find(id) != m_mem_cache.end());
         };
 
         std::shared_ptr<O> mem_object(int accId, QString id)override
@@ -187,13 +187,7 @@ namespace googleQt {
                 if (j != i->second.end()) {
                     rv = j->second;
                 }
-                //rv = (i->second.find(id) != i->second.end());
             }
-            /*
-            auto i = m_mem_cache.find(id);
-            if (i != m_mem_cache.end())
-                rv = i->second;
-                */
             return rv;
         }
         void mem_insert(int accId, QString id, std::shared_ptr<O> o)override
@@ -202,24 +196,14 @@ namespace googleQt {
             if (i != m_mcache.end()) {
                 if (i->second.insert(std::make_pair(id, o)).second) {
                     m_ord[accId].push_back(o);
-                    //m_order_cache.push_back(o);
                 }
             }
             else {
                 CACHE_QUERY_RESULT_MAP<O> mres;
                 mres[id] = o;
                 m_mcache[accId] = mres;
-    //          m_order_cache.push_back(o);
                 m_ord[accId].push_back(o);
             }
-
-            /*
-            if (m_mem_cache.insert(std::make_pair(id, o)).second)
-                {
-                    m_order_cache.push_back(o);
-                }
-                
-            return true;*/
         }
 
         size_t mem_size()const override 
@@ -229,14 +213,12 @@ namespace googleQt {
                 rv += i->second.size();
             }
             return rv;
-         //   return m_mem_cache.size();
         }
 
         void mem_clear()override 
         {
             m_mcache.clear();
             m_ord.clear();
-            //m_order_cache.clear();
         };
 
         
@@ -320,6 +302,6 @@ namespace googleQt {
         ApiEndpoint&                m_endpoint;
         CACHE_MAP<O>                m_mcache;
         CACHE_ORD<O>                m_ord;
-        std::unique_ptr<LocalPersistentStorage<O, R>> m_localDB;
+        std::shared_ptr<LocalPersistentStorage<O, R>> m_localDB;
     };
 };
