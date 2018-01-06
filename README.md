@@ -213,7 +213,8 @@ C++11 compiler and Qt 5.xx. We used VS2015, GCC 5.xx, XCode 8.xx. Anything newer
 Run qmake in 'prj' folder to generate Makefile, compile, see generated static library googleQt. To create sample project, cd in 'examples' and run qmake for each subfolder. There is shell script to open IDE on windows and generate project files - see folder 'bin' and win-configure-open-ide.bat or Cygwin based cygwin-build.csh. You have to add googleQt to your LIB list (as shown in sample) and add path to prj/src to the INCLUDE list.
 
 ### Current status.
-Work in progress, getting ready for beta. Resumable uploads will be implemented later also handling slow connections, concurrent requests partially implemented for Gmail. Caching of GMail messages under development.
+gcontacts namespace no stable, currently under development, others should be OK.
+
 
 ### Design and development.
 At the core of library are basic interfaces that provide access to Google services using documented HTTP/JSON protocols. Those classes are geneated from doc-specifications called STONE. STONE was designed by Dropbox as declarative languague to maintain their APIs. We addapted STONE python machinery for C++11/Qt/Dropbox interfaces first and then for selected Google APIs. Our main goal was Gmail and GDrive as future engines for Ardi-application (see prokarpaty.net). At one point we desided to abstruct caching classes from Ardi into googleQt as well. We estimated development of stable GMail cache and core interfaces for GDrive, GTask in 1 year. It includes also autotests and sample projects. 7 months already passed and we have beta of rich GUI hosting application using all this code (except GTasks).
