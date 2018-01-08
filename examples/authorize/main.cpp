@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
                     scopes.push_back(GoogleWebAuth::authScope_tasks());
                     scopes.push_back(GoogleWebAuth::authScope_gdrive());
                     scopes.push_back(GoogleWebAuth::authScope_gdrive_appdata());
-                    scopes.push_back(GoogleWebAuth::authScope_contacts_read_only());
+                    scopes.push_back(GoogleWebAuth::authScope_contacts_modify());
                     QUrl url = GoogleWebAuth::getCodeAuthorizeUrl(appInfo.get(), scopes);
                     saveScopeUrl(url);
 
