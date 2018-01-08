@@ -31,6 +31,41 @@ void ContactsListArg::build(const QString& link_path, QUrl& url)const{
     if (m_updated_min.isValid()) {
         b.add("updated-min", m_updated_min.toString(Qt::ISODate));
     }
+
+    if(!m_orderby.isEmpty()){
+        b.add("orderby", m_orderby);
+    }
+
+    if(m_showdeleted){
+        b.add("showdeleted", "true");
+    }
+
+    if(m_requirealldeleted){
+        b.add("requirealldeleted", "true");
+    }
+    
+    if(!m_sortorder.isEmpty()){
+        b.add("sortorder", m_sortorder);
+    }
+    
+    if(!m_group.isEmpty()){
+        b.add("group", m_group);
+    }    
+};
+
+DeleteContactArg::DeleteContactArg(QString contact_id, QString etag):
+    m_contact_id(contact_id), m_etag(etag) 
+{
+
+};
+
+void DeleteContactArg::build(const QString& link_path, QUrl& url)const
+{
+    QString s_link_path = link_path;
+    if (!m_contact_id.isEmpty()) {
+        s_link_path = link_path + QString("/%1").arg(m_contact_id);
+    }
+    UrlBuilder b(s_link_path, url);
 };
 
 /**
