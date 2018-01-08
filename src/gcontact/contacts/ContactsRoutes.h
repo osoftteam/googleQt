@@ -32,6 +32,20 @@ namespace contacts{
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
+            ApiRoute('deleteContact')
+
+
+            Delete contact
+
+            */
+        void deleteContact(const gcontact::DeleteContactArg& );
+        GoogleVoidTask* deleteContact_Async(const gcontact::DeleteContactArg& arg);
+        void deleteContact_AsyncCB(
+            const gcontact::DeleteContactArg&,
+            std::function<void()> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
+
+            /**
             ApiRoute('list')
 
 

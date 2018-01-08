@@ -44,6 +44,37 @@ void ContactsRoutes::create_AsyncCB(
         failed_callback);
 }
 
+void ContactsRoutes::deleteContact(const gcontact::DeleteContactArg& arg ){
+    deleteContact_Async(arg)->waitForResultAndRelease();
+}
+
+GoogleVoidTask* ContactsRoutes::deleteContact_Async(const gcontact::DeleteContactArg& arg)
+{
+    GoogleVoidTask* t = m_end_point->produceVoidTask();
+    /* this thing is broken
+    m_end_point->deleteContactStyleB
+        (m_end_point->buildContactUrl(arg),
+        arg,
+        t);
+    */
+    return t;
+}
+
+void ContactsRoutes::deleteContact_AsyncCB(
+    const gcontact::DeleteContactArg& arg,
+    std::function<void()> completed_callback ,
+    std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+{
+    /*broken compilation
+    m_end_point->deleteContactStyleB
+        , gcontact::DeleteContactArg
+        (m_end_point->buildContactUrl(arg),
+        arg,
+        completed_callback,
+        failed_callback);
+    */
+}
+
 std::unique_ptr<gcontact::ContactsListResult> ContactsRoutes::list(const gcontact::ContactsListArg& arg){
     return list_Async(arg)->waitForResultAndRelease();
 }

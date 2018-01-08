@@ -80,6 +80,21 @@ namespace googleQt{
             }
         };
 
+        class DELETE_requester4Contact: public requester
+        {
+        public:
+            DELETE_requester4Contact(ApiEndpoint& e, QString&& xml)
+                :requester(e), m_etag(std::move(xml)){}
+            QNetworkReply * request(QNetworkRequest& r)override
+            {
+                r.setRawHeader("If-Match", m_etag.toStdString().c_str());
+                return m_ep.deleteData(r);
+            }
+        protected:
+            QString m_etag;
+        };
+        
+        
         class DELETE_requester: public requester
         {
         public:
