@@ -22,6 +22,13 @@ static void call_create_from_Contacts(){
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
+static void call_deleteContact_from_Contacts(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Contacts").arg("deleteContact");
+    std::unique_ptr<gcontact::DeleteContactArg> arg = gcontact::DeleteContactArg::EXAMPLE(0, 0);
+    cl->getContacts()->deleteContact(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
 static void call_list_from_Contacts(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Contacts").arg("list");
     std::unique_ptr<gcontact::ContactsListArg> arg = gcontact::ContactsListArg::EXAMPLE(0, 0);
@@ -34,6 +41,7 @@ static void call_list_from_Contacts(){
 
 static void test_call_ContactsRoutes(){
     call_create_from_Contacts();
+    call_deleteContact_from_Contacts();
     call_list_from_Contacts();
 }
 

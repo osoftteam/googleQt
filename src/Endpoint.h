@@ -30,6 +30,7 @@ namespace googleQt{
         DECL_STD_BOUND_TASK_CB      (updateStyle);
         DECL_STD_BOUND_TASK_CB      (postStyleB);
         DECL_STD_BOUND_TASK_CB      (postContactStyleB);
+        DECL_STD_BOUND_TASK_CB      (deleteContactStyleB);
         DECL_BODYLESS_BOUND_TASK_CB (getStyle);
         DECL_BODYLESS_BOUND_TASK_CB (getContactStyle);
         DECL_BODYLESS_BOUND_TASK_CB (postStyle);
@@ -134,7 +135,7 @@ namespace googleQt{
                  failed_callback);
         }
 
-        //...
+        /// BEGIN contact routes ///
         template <class RES, class RESULT_FACTORY>
         void getContactStyle(QUrl url,
             std::function<void(std::unique_ptr<RES>)> completed_callback,
@@ -165,7 +166,31 @@ namespace googleQt{
                     completed_callback,
                     failed_callback);
         }
-        //...
+
+        template <class BODY>
+            void deleteContactStyleB(QUrl url,
+                const BODY& body,
+                std::function<void(void)> completed_callback,
+                std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+        {
+            std::function<void(std::unique_ptr<googleQt::VoidType>)> completed_with_type = nullptr;
+            if (completed_callback != nullptr)
+            {
+                completed_with_type = [=](std::unique_ptr<googleQt::VoidType>)
+                {
+                    completed_callback();
+                };
+            }
+            
+            QString etag = body.etag();
+            std::shared_ptr<requester> rb(new DELETE_requester4Contact(*this, std::move(etag)));
+            runRequest<VoidType, VoidType>
+                (url,
+                    std::move(rb),
+                    completed_with_type,
+                    failed_callback);
+        }        
+        /// END contact routes ///
 
         template <class RES, class RESULT_FACTORY, class BODY>
         void postStyleB(QUrl url, const BODY& body,
@@ -473,6 +498,7 @@ namespace googleQt{
                                  switch (status_code)
                                      {
                                      case 200:
+                                     case 201:
                                          {
                                              if (completed_callback != nullptr)
                                                  {
