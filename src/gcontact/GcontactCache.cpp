@@ -11,7 +11,7 @@
 using namespace googleQt;
 using namespace gcontact;
 
-#define COMPARE_NO_CASE(N) if (N.compare(o.N, Qt::CaseInsensitive)){qDebug() << "ykh-NEQ" << N << o.N;return false;}
+#define COMPARE_NO_CASE(N) if (N.compare(o.N, Qt::CaseInsensitive)){return false;}
 
 /**
    NameInfo
@@ -843,7 +843,6 @@ bool autoTestContactInfoXml(ContactInfo* ci)
 
     bool rv = (*ci == ci2);
     if (!rv) {
-        qDebug() << "ykh-identity-err";
         rv = (*ci == ci2);
     }
     return rv;

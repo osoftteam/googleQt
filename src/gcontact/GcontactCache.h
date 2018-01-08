@@ -260,7 +260,9 @@ namespace googleQt {
                 return !(*this == o);
             };
 
-
+            size_t size()const{return m_parts.size();}
+            const P& operator[](size_t idx)const{return m_parts[idx];}
+            
         protected:
             std::vector<P> m_parts;
         };
