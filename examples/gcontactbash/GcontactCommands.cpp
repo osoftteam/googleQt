@@ -25,8 +25,28 @@ void GcontactCommands::ls_contacts()
     try
     {
         ContactsListArg arg;
+        arg.setMaxResults(100);
+        arg.setOrderby("lastmodified");
+        arg.setSortorder("descending");
         auto contacts_list = m_gt->getContacts()->list(arg);
-        m_c.printLastResponse();
+        auto& arr = contacts_list->data()->contacts();
+        int idx = 1;
+        std::cout << "------------------------------------------------------------" << std::endl;
+        std::cout << "  #      ID              etag                       updated " << std::endl;
+        std::cout << "------------------------------------------------------------" << std::endl;
+        for(auto& c : arr){
+            QString info = c->title();
+            if(info.isEmpty()){
+                if(c->emails().size() > 0){
+                    info = c->emails()[0].address();
+                }
+            }
+            std::cout << std::setw(3) << idx++ << ". "
+                      << c->id() << " "
+                      << c->etag() << " "
+                      << c->updated().toString("dd.MM.yyyy") << " "
+                      << info << std::endl;
+        }
     }
     catch (GoogleException& e)
     {
@@ -50,8 +70,7 @@ void GcontactCommands::get_contact(QString contactid)
         auto& arr = contacts_list->data()->contacts();
         if(arr.size() > 0){
             std::cout << arr[0]->toXmlString() << std::endl;   
-        }        
-        // m_c.printLastResponse();
+        }
     }
     catch (GoogleException& e)
     {
