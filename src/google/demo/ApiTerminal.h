@@ -39,7 +39,8 @@ Terminal(QString prompt):m_prompt(prompt){};
             
             void start()
             {
-                std::string exit_option("exit");
+                std::string exit_option("x");
+                std::string repeat_option("r");
 
                 while(true)
                     {
@@ -55,16 +56,25 @@ Terminal(QString prompt):m_prompt(prompt){};
                                 }
                             std::cout << " " << pad(name.toStdString(), 20) << " " << i->description << std::endl;
                         }
-                        std::cout << " " << pad(exit_option, 20) << " " << "Exit terminal" << std::endl << std::endl;
-std::cout << " " << m_prompt << "> ";
+                        std::cout << " " << pad(exit_option, 20) << " " << "Exit terminal" << std::endl;
+                        if (!m_last_cmd.isEmpty()) {
+                            std::cout << " " << pad(repeat_option, 20) << " " << "Repeat last command" << std::endl;
+                        }
+                        std::cout << std::endl << " " << m_prompt << "> ";
 
                         std::string tmp;            
                         getline(std::cin, tmp);
-                        QString str = tmp.c_str();
-                        QStringList arg_list = str.split(" ", QString::SkipEmptyParts);
+                        QString str_cmd = tmp.c_str();
+
+                        if (str_cmd.compare(repeat_option.c_str(), Qt::CaseInsensitive) == 0)
+                        {
+                            str_cmd = m_last_cmd;
+                        }
+                                                   
+                        QStringList arg_list = str_cmd.split(" ", QString::SkipEmptyParts);
                         if(!arg_list.empty()){
-                            str = arg_list[0];
-                            if(str.compare("exit", Qt::CaseInsensitive) == 0)
+                            QString str = arg_list[0];
+                            if(str.compare(exit_option.c_str(), Qt::CaseInsensitive) == 0)
                                 break;
 
                             arg_list.removeFirst();
@@ -76,6 +86,7 @@ std::cout << " " << m_prompt << "> ";
                             }
                             else{
                                 i->second.action(arg);
+                                m_last_cmd = str_cmd;
                             }
                         }
                     }
@@ -108,6 +119,7 @@ std::cout << " " << m_prompt << "> ";
             SELECTION_LIST  m_sel;
             SELECTION_MAP   m_sel_map;
             QString         m_prompt;
+            QString         m_last_cmd;
         };
     }//demo
 };//googleQt
