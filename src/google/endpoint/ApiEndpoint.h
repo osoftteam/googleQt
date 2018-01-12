@@ -83,8 +83,8 @@ namespace googleQt{
         class DELETE_requester4Contact: public requester
         {
         public:
-            DELETE_requester4Contact(ApiEndpoint& e, QString&& xml)
-                :requester(e), m_etag(std::move(xml)){}
+            DELETE_requester4Contact(ApiEndpoint& e, QString&& etag)
+                :requester(e), m_etag(std::move(etag)){}
             QNetworkReply * request(QNetworkRequest& r)override
             {
                 r.setRawHeader("If-Match", m_etag.toStdString().c_str());
@@ -143,6 +143,27 @@ namespace googleQt{
         protected:
             QString m_xml;
         };
+
+        //..
+        class PUT_requester4Contact : public requester
+        {
+        public:
+            PUT_requester4Contact(ApiEndpoint& e, QString&& etag, QString&& xml)
+                :requester(e), m_etag(std::move(etag)), m_xml(std::move(xml)){}
+            QNetworkReply * request(QNetworkRequest& r)override
+            {
+                QByteArray bytes2post(m_xml.toStdString().c_str());
+                r.setRawHeader("If-Match", m_etag.toStdString().c_str());
+                r.setRawHeader("GData-Version", "3.0");
+                r.setRawHeader("Content-Type", "application/atom+xml");                
+                return m_ep.putData(r, bytes2post);
+            }
+        protected:
+            QString m_etag;
+            QString m_xml;
+        };
+
+        //..
 
         class PUT_requester: public requester
         {
