@@ -179,3 +179,52 @@ QString googleQt::size_human(qreal num)
         }
     return QString().setNum(num, 'f', 2) + " " + unit;
 }
+
+/**
+    xml_util
+*/
+QDomElement googleQt::xml_util::addNode(QDomDocument& doc, QDomNode& parent_node, QString name)
+{
+    QDomElement t = doc.createElement(QString(name));
+    parent_node.appendChild(t);
+    return t;
+};
+
+QDomElement googleQt::xml_util::ensureNode(QDomDocument& doc, QDomNode& parent_node, QString name)
+{
+    QDomElement t = parent_node.firstChildElement(name);
+    if (t.isNull()) {
+        t = doc.createElement(QString(name));
+        parent_node.appendChild(t);
+    }
+    return t;
+};
+
+void googleQt::xml_util::removeNodes(QDomNode& parent_node, QString name)
+{
+    QDomElement t = parent_node.firstChildElement(name);
+    while (!t.isNull()) {
+        parent_node.removeChild(t);
+        t = parent_node.firstChildElement(name);
+    }
+};
+
+void googleQt::xml_util::updateNode(QDomDocument& doc, QDomNode& parent_node, QString child_name, QString child_value)
+{
+    auto t = ensureNode(doc, parent_node, child_name);
+    auto c = t.firstChild();
+    if (!c.isNull()) {
+        c.setNodeValue(child_value);
+    }
+    else {
+        QDomText tn = doc.createTextNode(QString(child_value));
+        t.appendChild(tn);
+    }
+};
+
+QDomText googleQt::xml_util::addText(QDomDocument& doc, QDomElement parent_elem, QString text)
+{
+    QDomText tn = doc.createTextNode(QString(text));
+    parent_elem.appendChild(tn);
+    return tn;
+};

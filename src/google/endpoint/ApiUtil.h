@@ -14,6 +14,9 @@
 #include <QNetworkReply>
 #include <QStringList>
 #include <QUrlQuery>
+#include <QDomDocument>
+#include <QDomNodeList>
+
 #include "ApiException.h"
 #include "GoogleTask.h"
 #ifdef API_QT_AUTOTEST
@@ -346,6 +349,20 @@ namespace googleQt {
         }
     };
 
+    namespace xml_util 
+    {
+        ///create or edit node
+        void    updateNode(QDomDocument& doc, QDomNode& parent_node, QString child_name, QString child_value);
+        ///add new node
+        QDomElement addNode(QDomDocument& doc, QDomNode& parent_node, QString name);
+        ///find node if none - create a new one
+        QDomElement ensureNode(QDomDocument& doc, QDomNode& parent_node, QString name);
+        ///remve all child nodes with the name in parent
+        void removeNodes(QDomNode& parent_node, QString name);
+        ///add text to existing node
+        QDomText addText(QDomDocument& doc, QDomElement parent_elem, QString text);
+    };
+
 #define DECLARE_PATH_CLASS(P) struct path_##P{QString path()const{return #P;}}
 #define EXPECT(E, M) if(!E)qWarning() << M;
     
@@ -416,4 +433,28 @@ namespace googleQt {
                                                                         \
         ENDP_FUNC(url, completed_CB, failed_CB);                        \
     }                                                                   \
+
+
+#define DECL_BODY_VOID_RES_BOUND_TASK_CB(ENDP_FUNC)                      \
+    template <class BODY>                                               \
+    void ENDP_FUNC(QUrl url,                                            \
+                   const BODY& body,                                    \
+                   GoogleVoidTask* t)                                  \
+    {                                                                   \
+        std::function<void(void)> completed_CB =                        \
+            [=](void)                                                   \
+            {                                                           \
+                t->completed_callback();                                \
+            };                                                          \
+                                                                        \
+        std::function<void(std::unique_ptr<GoogleException>)> failed_CB = \
+            [=](std::unique_ptr<GoogleException> ex)                    \
+            {                                                           \
+                t->failed_callback(std::move(ex));                      \
+            };                                                          \
+                                                                        \
+        ENDP_FUNC<BODY>                                                 \
+            (url, body, completed_CB, failed_CB);                       \
+    }                                                                   \
+
 
