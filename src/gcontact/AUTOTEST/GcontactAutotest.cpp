@@ -38,11 +38,21 @@ static void call_list_from_Contacts(){
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
+static void call_update_from_Contacts(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Contacts").arg("update");
+    std::unique_ptr<gcontact::UpdateContactArg> arg = gcontact::UpdateContactArg::EXAMPLE(0, 0);
+    auto res = cl->getContacts()->update(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "------ RESULT ------------------";
+    ApiAutotest::INSTANCE() << res->toString();
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
 
 static void test_call_ContactsRoutes(){
     call_create_from_Contacts();
     call_deleteContact_from_Contacts();
     call_list_from_Contacts();
+    call_update_from_Contacts();
 }
 
 

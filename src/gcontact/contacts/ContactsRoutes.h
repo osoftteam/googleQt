@@ -59,6 +59,20 @@ namespace contacts{
             std::function<void(std::unique_ptr<gcontact::ContactsListResult>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
+            /**
+            ApiRoute('update')
+
+
+            Update contact
+
+            */
+        std::unique_ptr<gcontact::ContactsListResult> update(const gcontact::UpdateContactArg& arg);
+        GoogleTask<gcontact::ContactsListResult>* update_Async(const gcontact::UpdateContactArg& arg);
+        void update_AsyncCB(
+            const gcontact::UpdateContactArg&,
+            std::function<void(std::unique_ptr<gcontact::ContactsListResult>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
+
     protected:
     };//ContactsRoutes
 

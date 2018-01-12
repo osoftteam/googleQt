@@ -51,12 +51,10 @@ void ContactsRoutes::deleteContact(const gcontact::DeleteContactArg& arg ){
 GoogleVoidTask* ContactsRoutes::deleteContact_Async(const gcontact::DeleteContactArg& arg)
 {
     GoogleVoidTask* t = m_end_point->produceVoidTask();
-    /* this thing is broken
     m_end_point->deleteContactStyleB
         (m_end_point->buildContactUrl(arg),
         arg,
         t);
-    */
     return t;
 }
 
@@ -65,14 +63,14 @@ void ContactsRoutes::deleteContact_AsyncCB(
     std::function<void()> completed_callback ,
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
 {
-    /*broken compilation
     m_end_point->deleteContactStyleB
-        , gcontact::DeleteContactArg
+        <
+        gcontact::DeleteContactArg
+        >
         (m_end_point->buildContactUrl(arg),
         arg,
         completed_callback,
         failed_callback);
-    */
 }
 
 std::unique_ptr<gcontact::ContactsListResult> ContactsRoutes::list(const gcontact::ContactsListArg& arg){
@@ -102,6 +100,40 @@ void ContactsRoutes::list_AsyncCB(
         gcontact::ContactsListResult::factory
         >
         (m_end_point->buildContactUrl(arg),
+        completed_callback,
+        failed_callback);
+}
+
+std::unique_ptr<gcontact::ContactsListResult> ContactsRoutes::update(const gcontact::UpdateContactArg& arg){
+    return update_Async(arg)->waitForResultAndRelease();
+}
+
+GoogleTask<gcontact::ContactsListResult>* ContactsRoutes::update_Async(const gcontact::UpdateContactArg& arg)
+{
+    GoogleTask<gcontact::ContactsListResult>* t = m_end_point->produceTask<gcontact::ContactsListResult>();
+    m_end_point->putContactStyleB<
+        gcontact::ContactsListResult,
+        gcontact::ContactsListResult::factory
+        ,gcontact::UpdateContactArg>
+        (m_end_point->buildContactUrl(arg),
+        arg,
+        t);
+    return t;
+}
+
+void ContactsRoutes::update_AsyncCB(
+    const gcontact::UpdateContactArg& arg,
+    std::function<void(std::unique_ptr<gcontact::ContactsListResult>)> completed_callback ,
+    std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+{
+    m_end_point->putContactStyleB
+        <
+        gcontact::ContactsListResult,
+        gcontact::ContactsListResult::factory
+        , gcontact::UpdateContactArg
+        >
+        (m_end_point->buildContactUrl(arg),
+        arg,
         completed_callback,
         failed_callback);
 }
