@@ -30,12 +30,13 @@ namespace googleQt{
         DECL_STD_BOUND_TASK_CB      (updateStyle);
         DECL_STD_BOUND_TASK_CB      (postStyleB);
         DECL_STD_BOUND_TASK_CB      (postContactStyleB);
-        DECL_STD_BOUND_TASK_CB      (deleteContactStyleB);
+        DECL_STD_BOUND_TASK_CB      (putContactStyleB);
         DECL_BODYLESS_BOUND_TASK_CB (getStyle);
         DECL_BODYLESS_BOUND_TASK_CB (getContactStyle);
         DECL_BODYLESS_BOUND_TASK_CB (postStyle);
         DECL_VOID_BOUND_TASK_CB     (postStyle);
         DECL_VOID_BOUND_TASK_CB     (deleteStyle);
+        DECL_BODY_VOID_RES_BOUND_TASK_CB(deleteContactStyleB);
 
         template <class RES, class RESULT_FACTORY>
         void getStyle(QUrl url,
@@ -157,8 +158,27 @@ namespace googleQt{
                 std::function<void(std::unique_ptr<RES>)> completed_callback,
                 std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
         {
-            QString xml = body.toXmlString();
+            QString xml = body.toXml(client()->userId());
             std::shared_ptr<requester> rb(new POST_requester4Contact(*this, std::move(xml)));
+            runRequest<RES,
+                RESULT_FACTORY>
+                (url,
+                    std::move(rb),
+                    completed_callback,
+                    failed_callback);
+        }
+
+        template <class RES,
+            class RESULT_FACTORY,
+            class BODY>
+            void putContactStyleB(QUrl url,
+                const BODY& body,
+                std::function<void(std::unique_ptr<RES>)> completed_callback,
+                std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+        {
+            QString etag = body.etag();
+            QString xml = body.toXml(client()->userId());
+            std::shared_ptr<requester> rb(new PUT_requester4Contact(*this, std::move(etag), std::move(xml)));
             runRequest<RES,
                 RESULT_FACTORY>
                 (url,
