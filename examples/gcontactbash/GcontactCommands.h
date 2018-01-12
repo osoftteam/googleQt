@@ -30,6 +30,10 @@ public:
     */
     void create_contact(QString email_first_last);
 
+    /**
+        modify contact title
+    */
+    void update_contact_title(QString contactId_title);
 
     /**
     * ls_as_json - list contacts using json
@@ -41,8 +45,13 @@ public:
     */
     void test_contact_xml();
 
+    /**
+    * test_merge_xml - import XML file, create contact with custom data and merge into the file
+    */
+    void test_merge(QString xmlFileName);
+
     ///parse xml contacts file
-    void parse_contacts_xml(QString xmlFileName);
+    void parse_file(QString xmlFileName);
 
     
     void export_last_result();

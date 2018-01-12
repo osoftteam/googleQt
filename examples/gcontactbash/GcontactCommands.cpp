@@ -69,7 +69,7 @@ void GcontactCommands::get_contact(QString contactid)
         std::cout << contacts_list->toString() << std::endl;
         auto& arr = contacts_list->data()->contacts();
         if(arr.size() > 0){
-            std::cout << arr[0]->toXmlString() << std::endl;   
+            std::cout << arr[0]->toXml(m_c.userId()) << std::endl;
         }
     }
     catch (GoogleException& e)
@@ -126,7 +126,7 @@ void GcontactCommands::create_contact(QString email_first_last)
         std::cout << contacts_list->toString() << std::endl;
         auto& arr = contacts_list->data()->contacts();
         if (arr.size() > 0) {
-            std::cout << arr[0]->toXmlString() << std::endl;
+            std::cout << arr[0]->toXml(m_c.userId()) << std::endl;
         }
 
         //m_c.printLastResponse();
@@ -152,7 +152,7 @@ void GcontactCommands::test_contact_xml()
 
     n.setFamilyName(last).setGivenName(first).setFullName(first + " " + last);
     e1.setAddress(email).setDisplayName(first + " " + last).setPrimary(true).setTypeLabel("home");
-    e2.setAddress(QString("2") + email).setDisplayName(first + " " + last).setPrimary(false).setTypeLabel("home");
+    e2.setAddress(QString("2") + email).setDisplayName(first + " " + last).setPrimary(false).setTypeLabel("work");
     p.setNumber("1-111-1111").setPrimary(true);
     o.setName("organization-name").setTitle("title-in-the-organization");
     a.setCity("Mountain View").setStreet("1600 Amphitheatre Pkwy").setRegion("CA").setPostcode("94043").setCountry("United States").setPrimary(true);
@@ -164,43 +164,63 @@ void GcontactCommands::test_contact_xml()
         .setOrganizationInfo(o)
         .addAddress(a);
 
-    QString xml = ci.toXmlString();
+    QString xml = ci.toXml(m_c.userId());
     std::cout << "=== XML/begin ==== " << std::endl;
     std::cout << xml << std::endl;
     std::cout << "=== XML/end ==== " << std::endl;
 
-    QByteArray data(xml.toStdString().c_str());
+    bool checkXmlExport = true;
 
-    QDomDocument doc;
-    QString errorMsg = 0;
-    int errorLine;
-    int errorColumn;
-    if (!doc.setContent(data, &errorMsg, &errorLine, &errorColumn)) {
-        std::cout << "Failed to export contacts XML document: " << errorMsg << " line=" << errorLine << " column=" << errorColumn << std::endl;
-        return;
+    if (checkXmlExport) {
+        QByteArray data(xml.toStdString().c_str());
+
+        QDomDocument doc;
+        QString errorMsg = 0;
+        int errorLine;
+        int errorColumn;
+        if (!doc.setContent(data, &errorMsg, &errorLine, &errorColumn)) {
+            std::cout << "Failed to export contacts XML document: " << errorMsg << " line=" << errorLine << " column=" << errorColumn << std::endl;
+            return;
+        }
+
+        std::cout << ci.toString() << std::endl;
+        std::cout << "======= " << std::endl;
+
+        std::cout << "xml export - OK" << std::endl;
+
+        ContactInfo ci2;
+        if (!ci2.parseXml(data)) {
+            std::cout << "Xml parse error" << std::endl;
+            return;
+        };
+        std::cout << "xml import - OK" << std::endl;
+
+        if (ci != ci2) {
+            std::cout << "Exported != Imported obj." << std::endl;
+            QString xml = ci2.toXml(m_c.userId());
+            std::cout << "=== XML#2/begin ==== " << std::endl;
+            std::cout << xml << std::endl;
+            std::cout << "=== XML#2/end ==== " << std::endl;
+            return;
+        }
+        std::cout << "identity   - OK" << std::endl;
+
+        ContactInfo ci3;
+        if (!ci3.parseXml(ci2.originalXml())) {
+            std::cout << "Original Xml parse error" << std::endl;
+            return;
+        };
+
+        if (ci != ci3) {
+            std::cout << "Original Exported != Imported obj." << std::endl;
+            QString xml = ci3.toXml(m_c.userId());
+            std::cout << "=== Original XML#2/begin ==== " << std::endl;
+            std::cout << xml << std::endl;
+            std::cout << "=== Original XML#2/end ==== " << std::endl;
+            return;
+        }
+        std::cout << "identity2  - OK" << std::endl;
     }
-
-    std::cout << ci.toString() << std::endl;
-    std::cout << "======= " << std::endl;
-
-    std::cout << "xml export - OK" << std::endl;
-
-    ContactInfo ci2;
-    if (!ci2.parseXml(data)) {
-        std::cout << "Xml parse error" << std::endl;
-        return;
-    };
-    std::cout << "xml import - OK" << std::endl;
-    
-    if (ci != ci2) {
-        std::cout << "Exported != Imported obj." << std::endl;
-        QString xml = ci2.toXmlString();
-        std::cout << "=== XML#2/begin ==== " << std::endl;
-        std::cout << xml << std::endl;
-        std::cout << "=== XML#2/end ==== " << std::endl;
-        return;
-    }
-    std::cout << "identity   - OK" << std::endl;
 };
 
 void GcontactCommands::ls_as_json()
@@ -233,7 +253,7 @@ void GcontactCommands::export_last_result()
     std::cout << "saved:" << fileName << std::endl;
 };
 
-void GcontactCommands::parse_contacts_xml(QString xmlFileName) 
+void GcontactCommands::parse_file(QString xmlFileName) 
 {
     if (xmlFileName.isEmpty()) {
         std::cout << "file name required" << std::endl;
@@ -253,7 +273,97 @@ void GcontactCommands::parse_contacts_xml(QString xmlFileName)
         std::cout << "===============" << std::endl;
 
         for (auto& c : cl.contacts()) {
-            std::cout << c->toXmlString() << std::endl << std::endl;
+            std::cout << c->toXml(m_c.userId()) << std::endl << std::endl;
         }
+    }
+};
+
+void GcontactCommands::test_merge(QString xmlFileName)
+{
+    if (xmlFileName.isEmpty()) {
+        std::cout << "file name required" << std::endl;
+        return;
+    }
+
+    QFile file(xmlFileName);
+    if (!file.open(QIODevice::ReadOnly)) {
+        std::cout << "failed to open file:" << xmlFileName << std::endl;
+        return;
+    }
+
+    ContactInfo c;
+    c.parseXml(file.readAll());
+    std::cout << "=============== BEGIN " << xmlFileName << std::endl;
+    std::cout << c.toXml(m_c.userId()) << std::endl << std::endl;
+    std::cout << "=============== END " << xmlFileName << std::endl;
+    c.setTitle(c.title() + "=NEW-TITLE=");
+    c.setContent("=NEW-CONTENT=");
+
+    OrganizationInfo o;
+    o.setName("=NEW-organization-name=").setTitle("=NEW-title-in-the-organization=");
+    c.setOrganizationInfo(o);
+    NameInfo n;
+    n.setFamilyName("=NEW-last=").setGivenName("=NEW-first").setFullName("=NEW-first_and_last=");
+    c.setName(n);
+
+    PhoneInfo p1, p2;
+    std::list<PhoneInfo> lst;
+    p1.setNumber("=NEW-1-111-1111=").setPrimary(true);
+    p2.setNumber("=NEW-2-222-2222=").setPrimary(false);
+    lst.push_back(p1);
+    lst.push_back(p2);
+    c.replacePhones(lst);
+
+    EmailInfo e1, e2;
+    e1.setAddress("=NEW-first-email=").setDisplayName("=NEW-first-last=").setPrimary(true).setTypeLabel("home");
+    e2.setAddress("=NEW-second-email=").setDisplayName("=NEW-second-first-last=").setPrimary(false).setTypeLabel("work");
+    std::list<EmailInfo> e_lst;
+    e_lst.push_back(e1);
+    e_lst.push_back(e2);
+    c.replaceEmails(e_lst);
+
+    PostalAddress a1, a2;
+    a1.setCity("=NEW-ADDR-1=").setStreet("=NEW-STREET1=").setRegion("=NEW-REGION1=").setPostcode("=NEW-ZIP1=").setCountry("=NEW-COUNTRY1=").setPrimary(true);
+    a2.setCity("=NEW-ADDR-2=").setStreet("=NEW-STREET2=").setRegion("=NEW-REGION2=").setPostcode("=NEW-ZIP2=").setCountry("=NEW-COUNTRY2=").setPrimary(false);
+    std::list<PostalAddress> a_lst;
+    a_lst.push_back(a1);
+    a_lst.push_back(a2);
+    c.replaceAddressList(a_lst);
+
+    std::cout << c.mergedXml(m_c.userId(), c.originalXml()) << std::endl << std::endl;
+};
+
+void GcontactCommands::update_contact_title(QString contactId_title) 
+{
+    ///first we get contact, make changes, merge them and upload modified xml
+    QStringList arg_list = contactId_title.split(" ",
+        QString::SkipEmptyParts);
+
+    if (arg_list.size() < 2)
+    {
+        std::cout << "Invalid parameters, expected <contactId> <Title>" << std::endl;
+        return;
+    }
+
+    QString contactid = arg_list[0];
+    QString new_title = arg_list[1];
+
+    try
+    {
+        ContactsListArg arg;
+        arg.setContactId(contactid);
+        auto contacts_list = m_gt->getContacts()->list(arg);        
+        auto& arr = contacts_list->data()->contacts();
+        if (arr.size() > 0) {
+            auto c = arr[0];
+            c->setTitle(new_title);
+            UpdateContactArg upd(*(c.get()));
+            auto contacts_list = m_gt->getContacts()->update(upd);
+            std::cout << contacts_list->toString() << std::endl;
+        }
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
     }
 };

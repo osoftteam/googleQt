@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
     
     demo::ApiListener lsn;
     std::shared_ptr<GoogleClient > c(new GoogleClient(appInfo.release(), authInfo.release()));
-    QObject::connect(c.get(), &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);
+    //QObject::connect(c.get(), &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);
 
     DECLARE_AUTOTEST_INSTANCE(c, "autotest-res.txt");
 
@@ -78,10 +78,12 @@ int main(int argc, char *argv[])
     t.addAction("ls_contacts",      "List Contacts", [&](QString ) {cmd.ls_contacts(); });
     t.addAction("get_contact",      "get single contact entry", [&](QString arg) {cmd.get_contact(arg); });
     t.addAction("create_contact",   "create new contact entry", [&](QString arg) {cmd.create_contact(arg); });
+    t.addAction("update_contact_title", "change title of a contact entry", [&](QString arg) {cmd.update_contact_title(arg); });
     t.addAction("ls_as_json",       "List Contacts as json", [&](QString ) {cmd.ls_as_json(); });
     t.addAction("export_last_result",     "Export last response to a file", [&](QString ) {cmd.export_last_result(); });
-    t.addAction("parse_contacts_xml", "Read and parse xml contacts file", [&](QString arg) {cmd.parse_contacts_xml(arg); });
+    t.addAction("parse_file", "Read and parse xml contacts file", [&](QString arg) {cmd.parse_file(arg); });
     t.addAction("test_contact_xml", "Test xml-serialization of a contact entry", [&](QString) {cmd.test_contact_xml(); });
+    t.addAction("test_merge", "Read xml contacts file, merge with custom data, print result", [&](QString arg) {cmd.test_merge(arg); });
     t.start();
     return 0;
 };
