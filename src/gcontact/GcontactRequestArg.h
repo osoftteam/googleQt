@@ -97,16 +97,42 @@ namespace googleQt {
         class CreateContactArg : public QParamArg
         {
         public:
+            CreateContactArg();
+            CreateContactArg(const ContactInfo& ci);
 
             void build(const QString& link_path, QUrl& url)const override;
 
             const ContactInfo& data()const { return m_contact_info; }
             void setData(const ContactInfo& c) { m_contact_info = c; };
 
-            QString toXmlString()const;
+            QString toXml(QString userId)const;
 
 #ifdef API_QT_AUTOTEST
             static std::unique_ptr<CreateContactArg> EXAMPLE(int context_index, int parent_content_index);
+#endif //API_QT_AUTOTEST
+
+        protected:
+            ContactInfo m_contact_info;
+        };
+
+        /**
+            argument class for updating contact
+        */
+        class UpdateContactArg : public QParamArg
+        {
+        public:
+            UpdateContactArg();
+            UpdateContactArg(const ContactInfo& ci);
+            void build(const QString& link_path, QUrl& url)const override;
+
+            const ContactInfo& data()const { return m_contact_info; }
+            void setData(const ContactInfo& c) { m_contact_info = c; };
+
+            QString toXml(QString userId)const;
+            QString etag()const;
+
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<UpdateContactArg> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
 
         protected:
@@ -119,6 +145,7 @@ namespace googleQt {
         class DeleteContactArg : public QParamArg
         {
         public:
+            DeleteContactArg();
             DeleteContactArg(QString contact_id, QString etag);
             void build(const QString& link_path, QUrl& url)const override;
 
@@ -160,5 +187,6 @@ namespace googleQt {
             std::unique_ptr<ContactList> m_data;
             bool m_is_null{true};
         };//ContactsListResult
+        
     }
 };

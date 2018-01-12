@@ -53,6 +53,11 @@ void ContactsListArg::build(const QString& link_path, QUrl& url)const{
     }    
 };
 
+DeleteContactArg::DeleteContactArg()
+{
+
+};
+
 DeleteContactArg::DeleteContactArg(QString contact_id, QString etag):
     m_contact_id(contact_id), m_etag(etag) 
 {
@@ -93,14 +98,57 @@ QString ContactsListResult::toString(bool /*multiline = true*/)const
     return m_data->toString();
 };
 
+/**
+    CreateContactArg
+*/
+CreateContactArg::CreateContactArg() 
+{
+
+};
+
+CreateContactArg::CreateContactArg(const ContactInfo& ci) :m_contact_info(ci)
+{
+
+};
+
 void CreateContactArg::build(const QString& link_path, QUrl& url)const
 {
     UrlBuilder b(link_path, url);
 };
 
-QString CreateContactArg::toXmlString()const 
+QString CreateContactArg::toXml(QString userId)const
 {
-    return m_contact_info.toXmlString();
+    return m_contact_info.toXml(userId);
+};
+
+/**
+UpdateContactArg
+*/
+UpdateContactArg::UpdateContactArg() 
+{
+
+};
+
+UpdateContactArg::UpdateContactArg(const ContactInfo& ci) :m_contact_info(ci)
+{
+
+};
+
+void UpdateContactArg::build(const QString& link_path, QUrl& url)const
+{
+    QString s_link_path = link_path;
+    s_link_path = link_path + QString("/%1").arg(m_contact_info.id());
+    UrlBuilder b(s_link_path, url);
+};
+
+QString UpdateContactArg::toXml(QString userId)const
+{
+    return m_contact_info.mergedXml(userId, m_contact_info.originalXml());
+};
+
+QString UpdateContactArg::etag()const 
+{
+    return m_contact_info.etag();
 };
 
 #ifdef API_QT_AUTOTEST
@@ -147,9 +195,23 @@ std::unique_ptr<ContactsListResult> ContactsListResult::EXAMPLE(int , int )
     return rv;
 };
 
-std::unique_ptr<CreateContactArg> CreateContactArg::EXAMPLE(int , int )
+std::unique_ptr<CreateContactArg> CreateContactArg::EXAMPLE(int context_index, int parent_content_index)
 {
-    std::unique_ptr<CreateContactArg> rv(new CreateContactArg);
+    std::unique_ptr<ContactInfo> ci = ContactInfo::EXAMPLE(context_index, parent_content_index);
+    std::unique_ptr<CreateContactArg> rv(new CreateContactArg(*(ci.get())));
+    return rv;
+};
+
+std::unique_ptr<DeleteContactArg> DeleteContactArg::EXAMPLE(int, int )
+{
+    std::unique_ptr<DeleteContactArg> rv(new DeleteContactArg("my-contact-id", "my-etag4contact"));
+    return rv;
+};
+
+std::unique_ptr<UpdateContactArg> UpdateContactArg::EXAMPLE(int context_index, int parent_content_index)
+{
+    std::unique_ptr<ContactInfo> ci = ContactInfo::EXAMPLE(context_index, parent_content_index);
+    std::unique_ptr<UpdateContactArg> rv(new UpdateContactArg(*(ci.get())));
     return rv;
 };
 

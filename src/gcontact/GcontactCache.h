@@ -1,8 +1,15 @@
 #pragma once
-#include <QDomDocument>
-#include <QDomNodeList>
+#include <QSqlQuery>
 
 #include "google/endpoint/ApiUtil.h"
+
+/**
+    GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD - lib will store structures as records in detail table, one row per structure
+    One table will be used to store all kind of record parts, mutliple groups supported as well.
+    Not used by default compilation, instead contact info is stored as two xml strings - original and modified
+    On server update modified xml is merged with original xml.
+*/
+// #define GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
 
 namespace googleQt {
     class GcontactRoutes;
@@ -19,7 +26,7 @@ namespace googleQt {
         /**
            basic xml parsing product, can be invalid
          */
-        class ContactInfoPart 
+        class NullablePart 
         {
         public:
             bool isNull()const {return m_is_null;}
@@ -28,7 +35,10 @@ namespace googleQt {
             bool    m_is_null{ false };            
         };
 
-        class DbPersistant 
+        /**
+            object can be stored as one record and dbID is primary key
+        */
+        class DbPersistant: public NullablePart
         {
         public:
             bool    isDbIdNull()const { return (m_db_id == -1); }
@@ -38,10 +48,41 @@ namespace googleQt {
             int     m_db_id{ -1 };
         };
 
+#ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
+        /**
+            object can be stored as series os records, each with it's own ID and label
+        */
+        class MRecordDbPersistant : public NullablePart 
+        {
+        public:
+            using   ID2NAME = std::map<int, QString>;
+            using   NAME2ID = std::map<QString, int>;
+            /// one obj can have multiple records, they all will have same kind id
+            virtual int  objKind()const = 0;
+            virtual bool insertDb(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx) = 0;
+        protected:
+            void clearDbMaps();
+            bool insertDbRecord(QSqlQuery* q, std::function<void (QSqlQuery*)> header_binder, int group_idx, QString recordName, QString recordValue);
+            bool insertDbRecord(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx, QString recordName, bool recordValue);
+        protected:
+            ID2NAME m_id2name;
+            NAME2ID m_name2id;
+        };
+
+        enum ContactPartKind 
+        {
+            pkindEmail = 1,
+            pkindPhone = 2,
+            pkindAddress = 3
+        };
+#else
+        using MRecordDbPersistant = NullablePart;
+#endif //GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
+
         /**
            name - full, given, family
          */
-        class NameInfo: public ContactInfoPart
+        class NameInfo: public NullablePart
         {    
         public:
 
@@ -68,8 +109,9 @@ namespace googleQt {
 
             static NameInfo parse(QDomNode n);
             QString toString()const;
+            void toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const;
             bool operator==(const NameInfo&) const;
-            bool operator!=(const NameInfo&) const;
+            bool operator!=(const NameInfo&) const;            
 
         protected:
             QString m_fullName;
@@ -80,7 +122,7 @@ namespace googleQt {
         /**
             organization details - name, title
         */
-        class OrganizationInfo : public ContactInfoPart
+        class OrganizationInfo : public NullablePart
         {
         public:
             OrganizationInfo();
@@ -94,6 +136,7 @@ namespace googleQt {
             static OrganizationInfo parse(QDomNode n);
             QString toString()const;
             QString toXmlString()const;
+            void toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const;
             bool operator==(const OrganizationInfo&) const;
             bool operator!=(const OrganizationInfo&) const;
 
@@ -105,7 +148,7 @@ namespace googleQt {
         /**
             PostalAddress - city, street etc.
         */
-        class PostalAddress : public ContactInfoPart
+        class PostalAddress : public MRecordDbPersistant
         {
         public:
 
@@ -133,6 +176,10 @@ namespace googleQt {
             bool operator==(const PostalAddress&) const;
             bool operator!=(const PostalAddress&) const;
 
+#ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
+            int  objKind()const override { return pkindAddress; }
+            bool insertDb(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx)override;
+#endif
         protected:
             QString m_city, m_street, m_region, m_postcode, m_country;
             QString m_type_label;
@@ -144,7 +191,7 @@ namespace googleQt {
         /**
             single phone details
         */
-        class PhoneInfo : public ContactInfoPart
+        class PhoneInfo : public MRecordDbPersistant
         {
         public:
 
@@ -174,8 +221,12 @@ namespace googleQt {
 
             QString toString()const;
             bool operator==(const PhoneInfo&) const;
-            bool operator!=(const PhoneInfo&) const;
+            bool operator!=(const PhoneInfo&) const;            
 
+#ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
+            int  objKind()const override { return pkindPhone; }
+            bool insertDb(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx)override;
+#endif
         protected:
             QString m_number;
             QString m_uri;
@@ -187,7 +238,7 @@ namespace googleQt {
         /**
         single email details
         */
-        class EmailInfo : public ContactInfoPart
+        class EmailInfo : public MRecordDbPersistant
         {
         public:
             EmailInfo();
@@ -219,6 +270,11 @@ namespace googleQt {
             QString toString()const;
             bool operator==(const EmailInfo&) const;
             bool operator!=(const EmailInfo&) const;
+
+#ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
+            int  objKind()const override { return pkindEmail; }
+            bool insertDb(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx)override;
+#endif
 
         protected:
             QString m_address;
@@ -260,6 +316,20 @@ namespace googleQt {
                 return !(*this == o);
             };
 
+#ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
+            bool insertDb(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder) 
+            {
+                int idx = 1;
+                for (auto& p : m_parts) {
+                    if (!p.insertDb(q, header_binder, idx)) {
+                        return false;
+                    }
+                    idx++;
+                }
+                return true;
+            }
+#endif
+
             size_t size()const{return m_parts.size();}
             const P& operator[](size_t idx)const{return m_parts[idx];}
             
@@ -275,6 +345,7 @@ namespace googleQt {
         public:
             static EmailInfoList parse(QDomNode n);
             QString toXmlString()const;
+            void toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const;
 
         protected:
             friend class ContactInfo;
@@ -288,6 +359,7 @@ namespace googleQt {
         public:
             static PhoneInfoList parse(QDomNode n);
             QString toXmlString()const;
+            void toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const;
         protected:
             friend class ContactInfo;
         };
@@ -302,6 +374,7 @@ namespace googleQt {
 
             static PostalAddressList parse(QDomNode n);
             QString toXmlString()const;
+            void toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const;
         protected:
             friend class ContactInfo;
         };
@@ -309,8 +382,7 @@ namespace googleQt {
         /**
             single contact entry
         */
-        class ContactInfo : public ContactInfoPart,
-                            public DbPersistant
+        class ContactInfo : public DbPersistant
         {
         public:
 
@@ -327,6 +399,8 @@ namespace googleQt {
             const NameInfo&            name()const { return m_name; }
             const OrganizationInfo&    organization()const { return m_organization; }
             const PostalAddressList&   addresses()const { return m_address_list; }
+
+            QString                     originalXml()const { return m_original_xml_string; }
 
             /**
                 set title
@@ -349,9 +423,19 @@ namespace googleQt {
             ContactInfo& addEmail(const EmailInfo& e);
 
             /**
+                delete old emails and add new
+            */
+            ContactInfo& replaceEmails(const std::list<EmailInfo>& lst);
+
+            /**
                 add new phone info
             */
             ContactInfo& addPhone(const PhoneInfo& p);
+
+            /**
+                delete old phone and add new
+            */
+            ContactInfo& replacePhones(const std::list<PhoneInfo>& lst);
 
             /**
                 set organization information
@@ -363,11 +447,18 @@ namespace googleQt {
             */
             ContactInfo& addAddress(const PostalAddress& p);
 
+            /**
+                delete old address list and put a new one
+            */
+            ContactInfo& replaceAddressList(const std::list<PostalAddress>& lst);
+
             bool parse(QDomNode n);
             QString toString()const;
-            QString toXmlString()const;
+            QString toXml(QString userEmail)const;
+            QString mergedXml(QString userEmail, QString mergeOrigin)const;
             void updateDateTime();
             bool parseXml(const QByteArray & data);
+            bool parseXml(const QString & xml);
             bool operator==(const ContactInfo&) const;
             bool operator!=(const ContactInfo&) const;
 
@@ -376,14 +467,19 @@ namespace googleQt {
             static std::unique_ptr<ContactInfo> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
 
+#ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
+            bool insertDbRecords(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder);
+#endif
+
         protected:
-            QString m_etag, m_id, m_title, m_content;
+            QString             m_etag, m_id, m_title, m_content;
             QDateTime           m_updated;
             NameInfo            m_name;
             OrganizationInfo    m_organization;
             EmailInfoList       m_emails;
             PhoneInfoList       m_phones;            
-            PostalAddressList   m_address_list;            
+            PostalAddressList   m_address_list;
+            QString             m_original_xml_string;
         };
 
         /**
@@ -423,6 +519,7 @@ namespace googleQt {
         protected:
             std::shared_ptr<mail_cache::GMailSQLiteStorage> m_sql_storage;
             ContactList m_contacts;
+            ApiEndpoint& m_endpoint;
 
             friend class mail_cache::GMailSQLiteStorage;
         };
