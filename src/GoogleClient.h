@@ -71,12 +71,16 @@ public:
     void printLastResponse();
     void exportLastResponse(QString fileName);    
     void setNetworkProxy(const QNetworkProxy& proxy);
+
+    ///it should be protected method, normally some specialized
+    ///methods must be used. But for debugging purpose it's ok
+    Endpoint* endpoint();
     
 protected:
     std::unique_ptr<GmailRoutes>           m_gmail_routes;
     std::unique_ptr<GtaskRoutes>           m_gtask_routes;
     std::unique_ptr<GdriveRoutes>          m_gdrive_routes;
-    std::unique_ptr<GcontactRoutes>       m_contact_routes;
+    std::unique_ptr<GcontactRoutes>        m_contact_routes;
     std::unique_ptr<Endpoint>              m_endpoint;
 };
 

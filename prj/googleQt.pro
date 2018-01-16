@@ -7,7 +7,7 @@ TEMPLATE = lib
 GM_MODULES = users messages labels threads drafts errors history attachments
 GT_MODULES = tasks tasklists
 GD_MODULES = about files permissions comments revisions
-GC_MODULES = contacts
+GC_MODULES = contacts contact_group
 
 SRC_DIR = ../src
 G_DIR = $${SRC_DIR}/google

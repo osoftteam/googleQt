@@ -707,6 +707,14 @@ QString ContactInfo::mergedXml(QString userEmail, QString mergeOrigin)const
         return "";
     }
 
+    QDomElement entry_elem = entry_node.toElement();
+    if (entry_elem.isNull()) {
+        qWarning() << "Invalid entry element";
+    }
+    else {
+        entry_elem.setAttribute("gd:etag", m_etag);
+    }    
+
     xml_util::updateNode(doc, entry_node, "title", m_title);
     xml_util::updateNode(doc, entry_node, "content", m_content);
     m_organization.toXmlDoc(doc, entry_node);

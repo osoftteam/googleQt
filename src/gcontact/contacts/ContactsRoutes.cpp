@@ -73,6 +73,33 @@ void ContactsRoutes::deleteContact_AsyncCB(
         failed_callback);
 }
 
+void ContactsRoutes::getContactPhoto(const gcontact::DownloadPhotoArg& arg , QIODevice* data){
+    getContactPhoto_Async(arg, data)->waitForResultAndRelease();
+}
+
+GoogleVoidTask* ContactsRoutes::getContactPhoto_Async(const gcontact::DownloadPhotoArg& arg, QIODevice* data)
+{
+    GoogleVoidTask* t = m_end_point->produceVoidTask();
+    m_end_point->downloadContactPhotoStyle
+        (m_end_point->buildContactPhotoUrl(arg),
+        data,
+        t);
+    return t;
+}
+
+void ContactsRoutes::getContactPhoto_AsyncCB(
+    const gcontact::DownloadPhotoArg& arg,
+    QIODevice* data,
+    std::function<void()> completed_callback ,
+    std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+{
+    m_end_point->downloadContactPhotoStyle
+        (m_end_point->buildContactPhotoUrl(arg),
+        data,
+        completed_callback,
+        failed_callback);
+}
+
 std::unique_ptr<gcontact::ContactsListResult> ContactsRoutes::list(const gcontact::ContactsListArg& arg){
     return list_Async(arg)->waitForResultAndRelease();
 }

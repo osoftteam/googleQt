@@ -46,10 +46,26 @@ namespace contacts{
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
+            ApiRoute('getContactPhoto')
+
+
+            Get contact photo content.
+
+            */
+        void getContactPhoto(const gcontact::DownloadPhotoArg& , QIODevice* writeTo);
+        GoogleVoidTask* getContactPhoto_Async(const gcontact::DownloadPhotoArg& arg, QIODevice* data);
+        void getContactPhoto_AsyncCB(
+            const gcontact::DownloadPhotoArg&,
+            QIODevice* data,
+            std::function<void()> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
+
+            /**
             ApiRoute('list')
 
 
-            Returns all contacts for a user as a list
+            Returns all contacts for a user as a list or one contact details if
+            contactid is specified
 
             */
         std::unique_ptr<gcontact::ContactsListResult> list(const gcontact::ContactsListArg& arg);

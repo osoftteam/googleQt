@@ -13,6 +13,15 @@ using namespace googleQt;
 static GcontactRoutes* cl;
 
 
+static void call_list_from_ContactGroup(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("ContactGroup").arg("list");
+    std::unique_ptr<gcontact::ContactGroupListArg> arg = gcontact::ContactGroupListArg::EXAMPLE(0, 0);
+    auto res = cl->getContactGroup()->list(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "------ RESULT ------------------";
+    ApiAutotest::INSTANCE() << res->toString();
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
 static void call_create_from_Contacts(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Contacts").arg("create");
     std::unique_ptr<gcontact::CreateContactArg> arg = gcontact::CreateContactArg::EXAMPLE(0, 0);
@@ -26,6 +35,16 @@ static void call_deleteContact_from_Contacts(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Contacts").arg("deleteContact");
     std::unique_ptr<gcontact::DeleteContactArg> arg = gcontact::DeleteContactArg::EXAMPLE(0, 0);
     cl->getContacts()->deleteContact(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
+static void call_getContactPhoto_from_Contacts(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Contacts").arg("getContactPhoto");
+    std::unique_ptr<gcontact::DownloadPhotoArg> arg = gcontact::DownloadPhotoArg::EXAMPLE(0, 0);
+    QByteArray data("Hello World! 123454321 (.) :: (b -> c) -> (a -> b) -> (a -> c)");
+    QBuffer io(&data);
+    io.open(QIODevice::ReadOnly);
+    cl->getContacts()->getContactPhoto(*(arg.get()) , &io);
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
@@ -48,9 +67,14 @@ static void call_update_from_Contacts(){
 }
 
 
+static void test_call_ContactGroupRoutes(){
+    call_list_from_ContactGroup();
+}
+
 static void test_call_ContactsRoutes(){
     call_create_from_Contacts();
     call_deleteContact_from_Contacts();
+    call_getContactPhoto_from_Contacts();
     call_list_from_Contacts();
     call_update_from_Contacts();
 }
@@ -60,6 +84,7 @@ void GcontactAutotest::generateCalls(){
     ApiAutotest::INSTANCE() << "";
     ApiAutotest::INSTANCE() << "============ autotest for module: gcontact ============";
     cl->autotest();
+    test_call_ContactGroupRoutes();
     test_call_ContactsRoutes();
 }
 

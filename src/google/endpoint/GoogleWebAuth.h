@@ -92,7 +92,11 @@ namespace googleQt{
         */
         static QString authScope_contacts_read_only();
 
-
+        /**
+        * read/write access to People Contacts and Contact Groups
+        
+        static QString authScope_contacts();
+        */
     protected:
         static bool updateToken(const QUrl& url, ApiAuthInfo* auth, const QString& str);
     };

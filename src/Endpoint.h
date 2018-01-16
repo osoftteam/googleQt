@@ -353,6 +353,45 @@ namespace googleQt{
                     failed_callback);
         }
 
+        //..
+        void downloadContactPhotoStyle(QUrl url, QIODevice* writeTo, GoogleVoidTask* t)
+        {
+            std::function<void(void)> completed_callback =
+                [=](void)
+            {
+                t->completed_callback();
+            };
+
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback =
+                [=](std::unique_ptr<GoogleException> ex)
+            {
+                t->failed_callback(std::move(ex));
+            };
+            downloadContactPhotoStyle(url, writeTo, completed_callback, failed_callback);
+        };
+
+        void downloadContactPhotoStyle(QUrl url,
+            QIODevice* writeTo,
+            std::function<void(void)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr)
+        {
+            std::function<void(std::unique_ptr<googleQt::VoidType>)> completed_with_type = nullptr;
+            if (completed_callback != nullptr)
+            {
+                completed_with_type = [=](std::unique_ptr<googleQt::VoidType>)
+                {
+                    completed_callback();
+                };
+            }
+
+            std::shared_ptr<requester> rb(new DOWNLOAD_requester(*this, writeTo));
+            runRequest<VoidType, VoidType>
+                (url,
+                    std::move(rb),
+                    completed_with_type,
+                    failed_callback);
+        }
+        //...
 
 
         template <class RES, class RESULT_FACTORY, class BODY>
@@ -449,6 +488,47 @@ namespace googleQt{
             return url;
         }
 
+        template <class ARG>
+        QUrl buildContactGroupUrl(const ARG& a)const
+        {
+            QUrl url;
+            a.build(QString("https://www.google.com/m8/feeds/groups/%1/full")
+                .arg(client()->userId()), url);
+            return url;
+        }
+
+        template <class ARG>
+        QUrl buildContactPhotoUrl(const ARG& a)const
+        {
+            QUrl url;
+            /*
+            a.build(QString("https://www.googleapis.com/m8/feeds/photos/media/%1")
+                .arg(client()->userId()), url);
+            */
+            a.build(QString("https://www.googleapis.com/m8/feeds/photos/media/default"), url);
+            return url;
+        }
+
+        /*
+        ... people contacts/tmp code ...
+        QUrl buildPeopleContactGroupsUrl()const
+        {
+            QUrl url("https://people.googleapis.com/v1/contactGroups");
+            return url;
+        }
+        void listPeopleContactGroup()
+        {
+            QUrl url = buildPeopleContactGroupsUrl();
+            std::shared_ptr<requester> rb(new GET_requester(*this));
+            runRequest<VoidType,VoidType>
+                (url,
+                 std::move(rb),
+                 nullptr,
+                 nullptr);
+        }        
+        ..
+        */
+        
         virtual void onErrorUnauthorized(const errors::ErrorInfo* er);
 
         GoogleClient* client();
@@ -469,6 +549,7 @@ namespace googleQt{
 
     protected:
         QString prepareErrorInfo(int status_code, const QUrl& url, const QByteArray& data);
+        QString prepareErrorSummary(int status_code);
         void addAppKeyParameter(QUrl& url)const;
 
 
@@ -580,10 +661,7 @@ namespace googleQt{
                                      default:
                                          {
                                              if (failed_callback != nullptr) {
-                                                 std::string summary;
-                                                 if(status_code == 403){
-                                                     summary = "Invalid access token. You have to get new access token.";
-                                                 }
+                                                 std::string summary = prepareErrorSummary(status_code).toStdString();
                                                  m_last_response = reply->readAll();
                                                  std::string errorInfo = prepareErrorInfo(status_code,
                                                                                           url,

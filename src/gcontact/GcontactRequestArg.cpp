@@ -151,6 +151,96 @@ QString UpdateContactArg::etag()const
     return m_contact_info.etag();
 };
 
+/**
+ContactsListArg
+*/
+ContactGroupListArg::ContactGroupListArg()
+{
+
+};
+
+void ContactGroupListArg::build(const QString& link_path, QUrl& url)const {
+    QString s_link_path = link_path;    
+    if (!m_groupId.isEmpty()) {
+        s_link_path = link_path + QString("/%1").arg(m_groupId);
+    }
+    
+    UrlBuilder b(s_link_path, url);
+    if (!m_alt.isEmpty()) {
+        b.add("alt", m_alt);
+    }
+    if (!m_q.isEmpty()) {
+        b.add("q", m_q);
+    }
+    if (m_max_results > 0) {
+        b.add("max-results", m_max_results);
+    }
+
+    if (m_updated_min.isValid()) {
+        b.add("updated-min", m_updated_min.toString(Qt::ISODate));
+    }
+
+    if (!m_orderby.isEmpty()) {
+        b.add("orderby", m_orderby);
+    }
+
+    if (m_showdeleted) {
+        b.add("showdeleted", "true");
+    }
+
+    if (m_requirealldeleted) {
+        b.add("requirealldeleted", "true");
+    }
+
+    if (!m_sortorder.isEmpty()) {
+        b.add("sortorder", m_sortorder);
+    }
+}
+
+/**
+    ContactGroupListResult
+*/
+
+ContactGroupListResult::ContactGroupListResult(const QByteArray& )
+{
+    /*
+    m_data.reset(new ContactList);
+    m_is_null = !m_data->parseXml(data);
+    */
+};
+
+std::unique_ptr<ContactGroupListResult> ContactGroupListResult::factory::create(const QByteArray& data)
+{
+    std::unique_ptr<ContactGroupListResult> rv = std::unique_ptr<ContactGroupListResult>(new ContactGroupListResult(data));
+    return rv;
+};
+
+QString ContactGroupListResult::toString(bool /*multiline = true*/)const
+{
+    //return m_data->toString();
+    return "";
+};
+
+/**
+    DownloadPhotoArg
+*/
+
+DownloadPhotoArg::DownloadPhotoArg(QString contactId) :m_contactId(contactId)
+{
+
+};
+
+void DownloadPhotoArg::build(const QString& link_path, QUrl& url)const 
+{
+    QString s_link_path = link_path;
+    if (!m_contactId.isEmpty()) {
+        s_link_path = link_path + QString("/%1").arg(m_contactId);
+    }
+    UrlBuilder b(s_link_path, url);
+};
+
+
+
 #ifdef API_QT_AUTOTEST
 std::unique_ptr<ContactsListArg> ContactsListArg::EXAMPLE(int, int)
 {
@@ -215,5 +305,23 @@ std::unique_ptr<UpdateContactArg> UpdateContactArg::EXAMPLE(int context_index, i
     return rv;
 };
 
+std::unique_ptr<ContactGroupListArg> ContactGroupListArg::EXAMPLE(int, int)
+{
+    std::unique_ptr<ContactGroupListArg> rv(new ContactGroupListArg);
+    return rv;
+};
+
+std::unique_ptr<ContactGroupListResult> ContactGroupListResult::EXAMPLE(int, int)
+{
+    QByteArray d(xml_sample);
+    std::unique_ptr<ContactGroupListResult> rv(new ContactGroupListResult(d));
+    return rv;
+};
+
+std::unique_ptr<DownloadPhotoArg> DownloadPhotoArg::EXAMPLE(int, int)
+{
+    std::unique_ptr<DownloadPhotoArg> rv(new DownloadPhotoArg);
+    return rv;
+};
 
 #endif

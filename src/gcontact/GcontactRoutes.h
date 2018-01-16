@@ -3,7 +3,7 @@
 #include "google/endpoint/ApiClient.h"
 
 #include "gcontact/contacts/ContactsRoutes.h"
-
+#include "gcontact/contact_group/ContactGroupRoutes.h"
 
 namespace googleQt
 {
@@ -20,6 +20,7 @@ namespace googleQt
         Endpoint* endpoint() { return m_endpoint; }
 
         contacts::ContactsRoutes* getContacts();
+        contact_group::ContactGroupRoutes* getContactGroup();
         googleQt::gcontact::GcontactCacheRoutes* cacheRoutes();
 
 #ifdef API_QT_AUTOTEST
@@ -27,7 +28,8 @@ namespace googleQt
 #endif
 
     protected:
-        std::unique_ptr<contacts::ContactsRoutes> m_Contacts;
+        std::unique_ptr<contacts::ContactsRoutes> m_contacts;
+        std::unique_ptr<contact_group::ContactGroupRoutes> m_contact_group;
         Endpoint*  m_endpoint;
         std::unique_ptr<googleQt::gcontact::GcontactCacheRoutes>    m_CacheRoutes;
     };  

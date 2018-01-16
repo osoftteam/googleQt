@@ -128,3 +128,8 @@ void GoogleClient::setNetworkProxy(const QNetworkProxy& proxy)
 {
     m_endpoint->setProxy(proxy);
 };
+
+Endpoint* GoogleClient::endpoint()
+{
+    return m_endpoint.get();
+};
