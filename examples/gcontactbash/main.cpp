@@ -76,14 +76,22 @@ int main(int argc, char *argv[])
     GcontactCommands cmd(*(c.get()));
     demo::Terminal t("gcontact");
     t.addAction("ls_contacts",      "List Contacts", [&](QString ) {cmd.ls_contacts(); });
-    t.addAction("get_contact",      "get single contact entry", [&](QString arg) {cmd.get_contact(arg); });
-    t.addAction("create_contact",   "create new contact entry", [&](QString arg) {cmd.create_contact(arg); });
+    t.addAction("get_contact",      "Get single contact entry", [&](QString arg) {cmd.get_contact(arg); });
+    t.addAction("get_photo",   "Get contact photo", [&](QString arg) {cmd.get_photo(arg); });
+    t.addAction("create_contact",   "Create new contact", [&](QString arg) {cmd.create_contact(arg); });
     t.addAction("update_contact_title", "change title of a contact entry", [&](QString arg) {cmd.update_contact_title(arg); });
+    t.addAction("ls_groups", "List Contact Groups", [&](QString) {cmd.ls_groups(); });
+    t.addAction("get_group", "get single group entry", [&](QString arg) {cmd.get_group(arg); });
+    t.addSeparator();
     t.addAction("ls_as_json",       "List Contacts as json", [&](QString ) {cmd.ls_as_json(); });
     t.addAction("export_last_result",     "Export last response to a file", [&](QString ) {cmd.export_last_result(); });
     t.addAction("parse_file", "Read and parse xml contacts file", [&](QString arg) {cmd.parse_file(arg); });
     t.addAction("test_contact_xml", "Test xml-serialization of a contact entry", [&](QString) {cmd.test_contact_xml(); });
     t.addAction("test_merge", "Read xml contacts file, merge with custom data, print result", [&](QString arg) {cmd.test_merge(arg); });
+    /*
+    t.addSeparator();
+    t.addAction("test_people_contact",       "test people contact", [&](QString ) {cmd.testPeopleContacts(); });
+    */
     t.start();
     return 0;
 };

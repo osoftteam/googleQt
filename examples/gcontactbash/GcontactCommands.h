@@ -36,6 +36,23 @@ public:
     void update_contact_title(QString contactId_title);
 
     /**
+    * get_photo - get contact photo
+    */
+    void get_photo(QString contactid);
+
+
+    /**
+    * ls_groups - list contact group
+    */
+    void ls_groups();
+
+    /**
+    * get_group - get single group entry
+    */
+    void get_group(QString groupid);
+
+
+    /**
     * ls_as_json - list contacts using json
     */
     void ls_as_json();
@@ -52,9 +69,12 @@ public:
 
     ///parse xml contacts file
     void parse_file(QString xmlFileName);
-
     
     void export_last_result();
+
+    /*
+    void testPeopleContacts();
+    */
 protected:
     GoogleClient& m_c;
     GcontactRoutes*  m_gt;

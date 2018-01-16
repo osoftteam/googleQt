@@ -9,6 +9,7 @@
 #include "google/demo/ApiTerminal.h"
 #include "gcontact/GcontactRoutes.h"
 #include "gcontact/GcontactCache.h"
+#include "Endpoint.h"
 
 using namespace googleQt;
 using namespace gcontact;
@@ -367,3 +368,89 @@ void GcontactCommands::update_contact_title(QString contactId_title)
         std::cout << "Exception: " << e.what() << std::endl;
     }
 };
+
+void GcontactCommands::get_photo(QString contactid) 
+{
+    if (contactid.isEmpty())
+    {
+        std::cout << "contactid required" << std::endl;
+        return;
+    }
+
+    QFile out;
+    try
+    {
+        QDir d;
+        if (!d.mkpath("downloads")) {
+            std::cout << "Failed to create 'downloads' directory." << std::endl;
+            return;
+        }
+
+        out.setFileName("downloads/" + contactid);
+        if (!out.open(QFile::WriteOnly | QIODevice::Truncate)) {
+            std::cout << "Error opening file: " << out.fileName() << std::endl;
+            return;
+        }
+
+        DownloadPhotoArg arg(contactid);
+        m_gt->getContacts()->getContactPhoto(arg, &out);
+        out.flush();
+        std::cout << "=== photo downloaded ===" << std::endl;
+        std::cout << size_human(out.size()) << std::endl;
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << " " << e.errSummary() << std::endl;
+    }
+
+    out.close();
+};
+
+void GcontactCommands::ls_groups()
+{
+    try
+    {
+        ContactGroupListArg arg;
+        auto group_list = m_gt->getContactGroup()->list(arg);
+        m_c.printLastResponse();
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+}
+
+void GcontactCommands::get_group(QString groupid)
+{
+    if (groupid.isEmpty()) {
+        std::cout << "groupid required" << std::endl;
+        return;
+    }
+
+    try
+    {
+        ContactGroupListArg arg;
+        arg.setGroupId(groupid);
+        auto contacts_list = m_gt->getContactGroup()->list(arg);
+        m_c.printLastResponse();
+        /*
+        std::cout << contacts_list->toString() << std::endl;
+        auto& arr = contacts_list->data()->contacts();
+        if (arr.size() > 0) {
+            std::cout << arr[0]->toXml(m_c.userId()) << std::endl;
+        }
+        */
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+}
+
+/*
+void GcontactCommands::testPeopleContacts()
+{
+    m_c.endpoint()->listPeopleContactGroup();
+    m_c.printLastResponse();
+    };
+*/
