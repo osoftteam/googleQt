@@ -36,9 +36,9 @@ public:
     void update_contact_title(QString contactId_title);
 
     /**
-    * get_photo - get contact photo
+    * download_photo - get contact photo
     */
-    void get_photo(QString contactid);
+    void download_photo(QString contactid);
 
 
     /**
@@ -69,12 +69,9 @@ public:
 
     ///parse xml contacts file
     void parse_file(QString xmlFileName);
+
     
     void export_last_result();
-
-    /*
-    void testPeopleContacts();
-    */
 protected:
     GoogleClient& m_c;
     GcontactRoutes*  m_gt;

@@ -7,7 +7,7 @@ using namespace gcontact;
 /**
    ContactsListArg
 */
-ContactsListArg::ContactsListArg()
+ContactsListArg::ContactsListArg(QString contactId /*= ""*/):m_contactId(contactId)
 {
 
 };
@@ -72,6 +72,16 @@ void DeleteContactArg::build(const QString& link_path, QUrl& url)const
     }
     UrlBuilder b(s_link_path, url);
 };
+
+QString DeleteContactArg::etag()const
+{
+    QString rv = m_etag;
+    if (m_ignore_etag) {
+        rv = "*";
+    }
+    return rv;
+};
+
 
 /**
     ContactsListResult
@@ -148,7 +158,11 @@ QString UpdateContactArg::toXml(QString userId)const
 
 QString UpdateContactArg::etag()const 
 {
-    return m_contact_info.etag();
+    QString rv = m_contact_info.etag();
+    if (m_ignore_etag) {
+        rv = "*";
+    }
+    return rv;
 };
 
 /**
@@ -220,6 +234,87 @@ QString ContactGroupListResult::toString(bool /*multiline = true*/)const
     //return m_data->toString();
     return "";
 };
+
+/**
+    CreateContactGroupArg
+*/
+CreateContactGroupArg::CreateContactGroupArg()
+{
+
+};
+
+void CreateContactGroupArg::build(const QString& link_path, QUrl& url)const
+{
+    UrlBuilder b(link_path, url);
+};
+
+QString CreateContactGroupArg::toXml(QString userId)const
+{
+    //return m_contact_info.toXml(userId);
+    return "";
+};
+
+
+//...
+/**
+UpdateContactGroupArg
+*/
+UpdateContactGroupArg::UpdateContactGroupArg()
+{
+
+};
+
+void UpdateContactGroupArg::build(const QString& link_path, QUrl& url)const
+{
+    QString s_link_path = link_path;
+   // s_link_path = link_path + QString("/%1").arg(m_contact_info.id());
+    UrlBuilder b(s_link_path, url);
+};
+
+QString UpdateContactGroupArg::toXml(QString userId)const
+{
+    return "";//m_contact_info.mergedXml(userId, m_contact_info.originalXml());
+};
+
+QString UpdateContactGroupArg::etag()const
+{
+    QString rv = "";// m_contact_info.etag();
+    if (m_ignore_etag) {
+        rv = "*";
+    }
+    return rv;
+};
+
+DeleteContactGroupArg::DeleteContactGroupArg()
+{
+
+};
+
+DeleteContactGroupArg::DeleteContactGroupArg(QString contact_id, QString etag) :
+    m_contact_id(contact_id), m_etag(etag)
+{
+
+};
+
+void DeleteContactGroupArg::build(const QString& link_path, QUrl& url)const
+{
+    QString s_link_path = link_path;
+    if (!m_contact_id.isEmpty()) {
+        s_link_path = link_path + QString("/%1").arg(m_contact_id);
+    }
+    UrlBuilder b(s_link_path, url);
+};
+
+QString DeleteContactGroupArg::etag()const
+{
+    QString rv = m_etag;
+    if (m_ignore_etag) {
+        rv = "*";
+    }
+    return rv;
+};
+
+//...
 
 /**
     DownloadPhotoArg
@@ -321,6 +416,24 @@ std::unique_ptr<ContactGroupListResult> ContactGroupListResult::EXAMPLE(int, int
 std::unique_ptr<DownloadPhotoArg> DownloadPhotoArg::EXAMPLE(int, int)
 {
     std::unique_ptr<DownloadPhotoArg> rv(new DownloadPhotoArg);
+    return rv;
+};
+
+std::unique_ptr<CreateContactGroupArg> CreateContactGroupArg::EXAMPLE(int , int )
+{
+    std::unique_ptr<CreateContactGroupArg> rv(new CreateContactGroupArg());
+    return rv;
+};
+
+std::unique_ptr<UpdateContactGroupArg> UpdateContactGroupArg::EXAMPLE(int , int )
+{
+    std::unique_ptr<UpdateContactGroupArg> rv(new UpdateContactGroupArg());
+    return rv;
+};
+
+std::unique_ptr<DeleteContactGroupArg> DeleteContactGroupArg::EXAMPLE(int, int)
+{
+    std::unique_ptr<DeleteContactGroupArg> rv(new DeleteContactGroupArg("my-contact-id", "my-etag4contact"));
     return rv;
 };
 

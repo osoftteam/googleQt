@@ -29,9 +29,7 @@ namespace googleQt{
         ApiClient*     apiClient() { return m_client; }
         const ApiClient*  apiClient()const { return m_client; }
 
-    protected:
-        virtual void addAuthHeader(QNetworkRequest& request);
-        
+    protected:                
         virtual QNetworkReply*  getData(const QNetworkRequest &request);
         virtual QNetworkReply*  postData(const QNetworkRequest &request, const QByteArray& data);
         virtual QNetworkReply*  postData(const QNetworkRequest &request, QHttpMultiPart* mpart);
@@ -43,8 +41,14 @@ namespace googleQt{
         class requester
         {
         public:
-            requester(ApiEndpoint& e):m_ep(e){}
+            requester(ApiEndpoint& e);
+
+            QNetworkReply * makeRequest(QNetworkRequest& r);
+
+        protected:
             virtual QNetworkReply * request(QNetworkRequest& r) = 0;
+            virtual void addAuthHeader(QNetworkRequest& request);
+            virtual const char* getHostHeader()const;
         protected:
             ApiEndpoint& m_ep;            
         };
@@ -69,30 +73,6 @@ namespace googleQt{
             }
         };
 
-        class GET_requester4Contact : public requester
-        {
-        public:
-            GET_requester4Contact(ApiEndpoint& e) :requester(e) {}
-            QNetworkReply * request(QNetworkRequest& r)override
-            {
-                r.setRawHeader("GData-Version", "3.0");
-                return m_ep.getData(r);
-            }
-        };
-
-        class DELETE_requester4Contact: public requester
-        {
-        public:
-            DELETE_requester4Contact(ApiEndpoint& e, QString&& etag)
-                :requester(e), m_etag(std::move(etag)){}
-            QNetworkReply * request(QNetworkRequest& r)override
-            {
-                r.setRawHeader("If-Match", m_etag.toStdString().c_str());
-                return m_ep.deleteData(r);
-            }
-        protected:
-            QString m_etag;
-        };
         
         
         class DELETE_requester: public requester
@@ -128,42 +108,6 @@ namespace googleQt{
             QJsonObject m_js_out;
         };
 
-        class POST_requester4Contact : public requester
-        {
-        public:
-            POST_requester4Contact(ApiEndpoint& e, QString&& xml)
-                :requester(e), m_xml(std::move(xml)) {}
-            QNetworkReply * request(QNetworkRequest& r)override
-            {
-                QByteArray bytes2post(m_xml.toStdString().c_str());
-                r.setRawHeader("Content-Type", "application/atom+xml");
-                r.setRawHeader("GData-Version", "3.0");
-                return m_ep.postData(r, bytes2post);
-            }
-        protected:
-            QString m_xml;
-        };
-
-        //..
-        class PUT_requester4Contact : public requester
-        {
-        public:
-            PUT_requester4Contact(ApiEndpoint& e, QString&& etag, QString&& xml)
-                :requester(e), m_etag(std::move(etag)), m_xml(std::move(xml)){}
-            QNetworkReply * request(QNetworkRequest& r)override
-            {
-                QByteArray bytes2post(m_xml.toStdString().c_str());
-                r.setRawHeader("If-Match", m_etag.toStdString().c_str());
-                r.setRawHeader("GData-Version", "3.0");
-                r.setRawHeader("Content-Type", "application/atom+xml");                
-                return m_ep.putData(r, bytes2post);
-            }
-        protected:
-            QString m_etag;
-            QString m_xml;
-        };
-
-        //..
 
         class PUT_requester: public requester
         {
@@ -285,6 +229,76 @@ namespace googleQt{
         protected:
             QIODevice* m_writeTo;
         };
+
+        ///BEGIN contacts requesters
+        class contact_requester : public requester 
+        {
+        public:
+            contact_requester(ApiEndpoint& e);
+        protected:
+            const char* getHostHeader()const override;
+        };
+
+        class GET_requester4Contact : public contact_requester
+        {
+        public:
+            GET_requester4Contact(ApiEndpoint& e) :contact_requester(e) {}
+            QNetworkReply * request(QNetworkRequest& r)override
+            {
+                r.setRawHeader("GData-Version", "3.0");
+                return m_ep.getData(r);
+            }
+        };
+
+        class POST_requester4Contact : public contact_requester
+        {
+        public:
+            POST_requester4Contact(ApiEndpoint& e, QString&& xml)
+                :contact_requester(e), m_xml(std::move(xml)) {}
+            QNetworkReply * request(QNetworkRequest& r)override
+            {
+                QByteArray bytes2post(m_xml.toStdString().c_str());
+                r.setRawHeader("Content-Type", "application/atom+xml");
+                r.setRawHeader("GData-Version", "3.0");
+                return m_ep.postData(r, bytes2post);
+            }
+        protected:
+            QString m_xml;
+        };
+
+        class PUT_requester4Contact : public contact_requester
+        {
+        public:
+            PUT_requester4Contact(ApiEndpoint& e, QString&& etag, QString&& xml)
+                :contact_requester(e), m_etag(std::move(etag)), m_xml(std::move(xml)) {}
+            QNetworkReply * request(QNetworkRequest& r)override
+            {
+                QByteArray bytes2post(m_xml.toStdString().c_str());
+                r.setRawHeader("If-Match", m_etag.toStdString().c_str());
+                r.setRawHeader("GData-Version", "3.0");
+                r.setRawHeader("Content-Type", "application/atom+xml");
+                return m_ep.putData(r, bytes2post);
+            }
+        protected:
+            QString m_etag;
+            QString m_xml;
+        };
+
+
+        class DELETE_requester4Contact : public contact_requester
+        {
+        public:
+            DELETE_requester4Contact(ApiEndpoint& e, QString&& etag)
+                :contact_requester(e), m_etag(std::move(etag)) {}
+            QNetworkReply * request(QNetworkRequest& r)override
+            {
+                r.setRawHeader("If-Match", m_etag.toStdString().c_str());
+                return m_ep.deleteData(r);
+            }
+        protected:
+            QString m_etag;
+        };
+    ///END contacts
 
     protected:
         void                  updateLastRequestInfo(QString s);

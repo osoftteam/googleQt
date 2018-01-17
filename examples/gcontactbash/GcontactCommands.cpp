@@ -9,7 +9,6 @@
 #include "google/demo/ApiTerminal.h"
 #include "gcontact/GcontactRoutes.h"
 #include "gcontact/GcontactCache.h"
-#include "Endpoint.h"
 
 using namespace googleQt;
 using namespace gcontact;
@@ -359,6 +358,7 @@ void GcontactCommands::update_contact_title(QString contactId_title)
             auto c = arr[0];
             c->setTitle(new_title);
             UpdateContactArg upd(*(c.get()));
+            upd.setIgnoreEtag(true);
             auto contacts_list = m_gt->getContacts()->update(upd);
             std::cout << contacts_list->toString() << std::endl;
         }
@@ -369,7 +369,7 @@ void GcontactCommands::update_contact_title(QString contactId_title)
     }
 };
 
-void GcontactCommands::get_photo(QString contactid) 
+void GcontactCommands::download_photo(QString contactid) 
 {
     if (contactid.isEmpty())
     {
@@ -400,7 +400,7 @@ void GcontactCommands::get_photo(QString contactid)
     }
     catch (GoogleException& e)
     {
-        std::cout << "Exception: " << e.what() << " " << e.errSummary() << std::endl;
+        std::cout << "Exception: " << e.what() << std::endl;
     }
 
     out.close();
@@ -446,11 +446,3 @@ void GcontactCommands::get_group(QString groupid)
         std::cout << "Exception: " << e.what() << std::endl;
     }
 }
-
-/*
-void GcontactCommands::testPeopleContacts()
-{
-    m_c.endpoint()->listPeopleContactGroup();
-    m_c.printLastResponse();
-    };
-*/

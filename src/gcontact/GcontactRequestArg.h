@@ -13,7 +13,7 @@ namespace googleQt {
         class ContactsListArg : public QParamArg
         {
         public:
-            ContactsListArg();
+            ContactsListArg(QString contactId = "");
             void build(const QString& link_path, QUrl& url)const override;
 
             ///The type of feed to return, such as atom (the default), rss, or json.
@@ -131,12 +131,16 @@ namespace googleQt {
             QString toXml(QString userId)const;
             QString etag()const;
 
+            bool ignoreEtag()const { return m_ignore_etag; }
+            void setIgnoreEtag(bool val) { m_ignore_etag = val; }
+
 #ifdef API_QT_AUTOTEST
             static std::unique_ptr<UpdateContactArg> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
 
         protected:
             ContactInfo m_contact_info;
+            bool        m_ignore_etag{false};//will ignore etag and use '*' instead
         };
 
         /**
@@ -150,8 +154,11 @@ namespace googleQt {
             void build(const QString& link_path, QUrl& url)const override;
 
             QString contactId()const{return m_contact_id;}
-            QString etag()const{return m_etag;}
+            QString etag()const;
             
+            bool ignoreEtag()const { return m_ignore_etag; }
+            void setIgnoreEtag(bool val) { m_ignore_etag = val; }
+
 #ifdef API_QT_AUTOTEST
             static std::unique_ptr<DeleteContactArg> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
@@ -159,6 +166,7 @@ namespace googleQt {
         protected:
             QString m_contact_id;
             QString m_etag;
+            bool        m_ignore_etag{ false };//will ignore etag and use '*' instead
         };        
 
         /**
@@ -291,12 +299,81 @@ namespace googleQt {
 
 
         protected:
-            /*
-            std::unique_ptr<ContactList> m_data;
-            bool m_is_null{ true };
-            */
         };//ContactGroupListResult
 
+
+          /**
+            argument class for creating contacts group
+          */
+        class CreateContactGroupArg : public QParamArg
+        {
+        public:
+            CreateContactGroupArg();
+
+            void build(const QString& link_path, QUrl& url)const override;
+
+            QString toXml(QString userId)const;
+
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<CreateContactGroupArg> EXAMPLE(int context_index, int parent_content_index);
+#endif //API_QT_AUTOTEST
+
+        protected:
+        //    ContactInfo m_contact_info;
+        };
+
+        //...
+        /**
+        argument class for updating contact
+        */
+        class UpdateContactGroupArg : public QParamArg
+        {
+        public:
+            UpdateContactGroupArg();
+            void build(const QString& link_path, QUrl& url)const override;
+
+            QString toXml(QString userId)const;
+            QString etag()const;
+
+            bool ignoreEtag()const { return m_ignore_etag; }
+            void setIgnoreEtag(bool val) { m_ignore_etag = val; }
+
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<UpdateContactGroupArg> EXAMPLE(int context_index, int parent_content_index);
+#endif //API_QT_AUTOTEST
+
+        protected:
+            bool        m_ignore_etag{ false };//will ignore etag and use '*' instead
+        };
+
+
+        /**
+            argument class for deleting contact group
+        */
+        class DeleteContactGroupArg : public QParamArg
+        {
+        public:
+            DeleteContactGroupArg();
+            DeleteContactGroupArg(QString contact_id, QString etag);
+            void build(const QString& link_path, QUrl& url)const override;
+
+            QString contactId()const { return m_contact_id; }
+            QString etag()const;
+
+            bool ignoreEtag()const { return m_ignore_etag; }
+            void setIgnoreEtag(bool val) { m_ignore_etag = val; }
+
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<DeleteContactGroupArg> EXAMPLE(int context_index, int parent_content_index);
+#endif //API_QT_AUTOTEST
+
+        protected:
+            QString m_contact_id;
+            QString m_etag;
+            bool        m_ignore_etag{ false };//will ignore etag and use '*' instead
+        };
+
+        //..
 
         class DownloadPhotoArg : public QParamArg
         {
