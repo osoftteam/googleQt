@@ -63,6 +63,13 @@ static void call_deleteContact_from_Contacts(){
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
+static void call_deleteContactPhoto_from_Contacts(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Contacts").arg("deleteContactPhoto");
+    std::unique_ptr<gcontact::DeletePhotoArg> arg = gcontact::DeletePhotoArg::EXAMPLE(0, 0);
+    cl->getContacts()->deleteContactPhoto(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
 static void call_getContactPhoto_from_Contacts(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Contacts").arg("getContactPhoto");
     std::unique_ptr<gcontact::DownloadPhotoArg> arg = gcontact::DownloadPhotoArg::EXAMPLE(0, 0);
@@ -91,6 +98,16 @@ static void call_update_from_Contacts(){
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
+static void call_uploadContactPhoto_from_Contacts(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Contacts").arg("uploadContactPhoto");
+    std::unique_ptr<gcontact::UploadPhotoArg> arg = gcontact::UploadPhotoArg::EXAMPLE(0, 0);
+    QByteArray data("Hello World! 123454321 (.) :: (b -> c) -> (a -> b) -> (a -> c)");
+    QBuffer io(&data);
+    io.open(QIODevice::ReadOnly);
+    cl->getContacts()->uploadContactPhoto(*(arg.get()) , &io);
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
 
 static void test_call_ContactGroupRoutes(){
     call_create_from_ContactGroup();
@@ -102,9 +119,11 @@ static void test_call_ContactGroupRoutes(){
 static void test_call_ContactsRoutes(){
     call_create_from_Contacts();
     call_deleteContact_from_Contacts();
+    call_deleteContactPhoto_from_Contacts();
     call_getContactPhoto_from_Contacts();
     call_list_from_Contacts();
     call_update_from_Contacts();
+    call_uploadContactPhoto_from_Contacts();
 }
 
 

@@ -18,7 +18,7 @@ namespace googleQt {
         class GMailSQLiteStorage;
     };
 
-    namespace gcontact {        
+    namespace gcontact {
         class GContactCache;
 
         using contact_cache_ptr = std::shared_ptr<GContactCache>;
@@ -46,6 +46,31 @@ namespace googleQt {
             void    setDbID(int v) { m_db_id = v; }
         protected:
             int     m_db_id{ -1 };
+        };
+
+        class ContactXmlPersistant : public DbPersistant 
+        {
+        public:
+            QString etag()const { return m_etag; }
+            QString id()const { return m_id; }
+            QString title()const { return m_title; }
+            QString content()const { return m_content; }
+            const QDateTime& updated()const { return m_updated; }
+
+            QString           originalXml()const { return m_original_xml_string; }
+
+            void updateDateTime();
+
+            bool parseXml(const QByteArray & data);
+            bool parseXml(const QString & xml);
+            QString mergedXml(QString mergeOrigin)const;
+            virtual bool parse(QDomNode n) = 0;
+            virtual void mergeEntryNode(QDomDocument& doc, QDomNode& entry_node) const = 0;
+
+        protected:
+            QString             m_etag, m_id, m_title, m_content;
+            QDateTime           m_updated;
+            QString             m_original_xml_string;
         };
 
 #ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
@@ -129,9 +154,11 @@ namespace googleQt {
 
             QString name()const { return m_name; }
             QString title()const { return m_title; }
+            QString typeLabel()const { return m_type_label; };
 
             OrganizationInfo& setName(QString s) { m_name = s; return *this; }
             OrganizationInfo& setTitle(QString s) { m_title = s; return *this; }
+            OrganizationInfo& setTypeLabel(QString s) { m_type_label = s; return *this; }
 
             static OrganizationInfo parse(QDomNode n);
             QString toString()const;
@@ -143,6 +170,7 @@ namespace googleQt {
         protected:
             QString m_name;
             QString m_title;
+            QString m_type_label;
         };
 
         /**
@@ -379,28 +407,22 @@ namespace googleQt {
             friend class ContactInfo;
         };
 
+
+
         /**
             single contact entry
         */
-        class ContactInfo : public DbPersistant
+        class ContactInfo : public ContactXmlPersistant
         {
         public:
 
             using ptr = std::shared_ptr<ContactInfo>;
 
-            QString etag()const { return m_etag; }
-            QString id()const { return m_id; }
-            QString title()const { return m_title; }
-            QString content()const { return m_content; }
-            const QDateTime& updated()const { return m_updated; }
-
             const EmailInfoList&       emails()const { return m_emails; }
             const PhoneInfoList&       phones()const { return m_phones; }
             const NameInfo&            name()const { return m_name; }
             const OrganizationInfo&    organization()const { return m_organization; }
-            const PostalAddressList&   addresses()const { return m_address_list; }
-
-            QString                     originalXml()const { return m_original_xml_string; }
+            const PostalAddressList&   addresses()const { return m_address_list; }            
 
             /**
                 set title
@@ -452,16 +474,14 @@ namespace googleQt {
             */
             ContactInfo& replaceAddressList(const std::list<PostalAddress>& lst);
 
-            bool parse(QDomNode n);
+            bool parse(QDomNode n)override;
             QString toString()const;
             QString toXml(QString userEmail)const;
-            QString mergedXml(QString userEmail, QString mergeOrigin)const;
-            void updateDateTime();
-            bool parseXml(const QByteArray & data);
-            bool parseXml(const QString & xml);
+            void mergeEntryNode(QDomDocument& doc, QDomNode& entry_node)const override;
+            //QString mergedXml(QString userEmail, QString mergeOrigin)const;
+            
             bool operator==(const ContactInfo&) const;
             bool operator!=(const ContactInfo&) const;
-
 
 #ifdef API_QT_AUTOTEST
             static std::unique_ptr<ContactInfo> EXAMPLE(int context_index, int parent_content_index);
@@ -472,36 +492,112 @@ namespace googleQt {
 #endif
 
         protected:
-            QString             m_etag, m_id, m_title, m_content;
-            QDateTime           m_updated;
             NameInfo            m_name;
             OrganizationInfo    m_organization;
             EmailInfoList       m_emails;
             PhoneInfoList       m_phones;            
-            PostalAddressList   m_address_list;
-            QString             m_original_xml_string;
+            PostalAddressList   m_address_list;            
+        };
+
+        /**
+            single contact group
+        */
+        class GroupInfo : public ContactXmlPersistant
+        {
+        public:
+
+            using ptr = std::shared_ptr<GroupInfo>;
+
+            /**
+            set title
+            */
+            GroupInfo& setTitle(QString val);
+
+            /**
+            set notes
+            */
+            GroupInfo& setContent(QString notes);
+
+            QString toString()const;
+            QString toXml(QString userEmail)const;
+            bool parse(QDomNode n)override;
+            void mergeEntryNode(QDomDocument& doc, QDomNode& entry_node)const override;
+
+            bool operator==(const GroupInfo&) const;
+            bool operator!=(const GroupInfo&) const;
+
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<GroupInfo> EXAMPLE(int context_index, int parent_content_index);
+#endif //API_QT_AUTOTEST
+        };
+
+        template <class T>
+        class InfoList 
+        {
+        public:
+            void add(std::shared_ptr<T> c) {
+                m_items.push_back(c);
+            };
+
+            void add(std::unique_ptr<T> c) {
+                std::shared_ptr<T> c2(c.release());
+                add(c2);
+            };
+
+            QString toString()const
+            {
+                QString rv;
+                for (auto& c : items()) {
+                    rv += c->toString();
+                    rv += "\n";
+                }
+                return rv;
+            };
+
+            bool parseXml(const QByteArray & data)
+            {
+                QDomDocument doc;
+                QString errorMsg = 0;
+                int errorLine;
+                int errorColumn;
+                if (!doc.setContent(data, &errorMsg, &errorLine, &errorColumn)) {
+                    qWarning() << "Failed to parse contacts XML document: " << errorMsg << "line=" << errorLine << "column=" << errorColumn;
+                    qWarning() << "-- begin data";
+                    qWarning() << data;
+                    qWarning() << "-- end data";
+                    return false;
+                }
+
+                QDomNodeList entries = doc.elementsByTagName("entry");
+                for (int i = 0; i < entries.size(); i++) {
+                    QDomNode n = entries.item(i);
+                    std::shared_ptr<T> ci(new T);
+                    if (ci->parse(n)) {
+                        m_items.push_back(ci);
+                    }
+                }
+
+                return true;
+            };
+
+            const std::vector<std::shared_ptr<T>>& items()const { return m_items; }
+
+        protected:
+            std::vector<std::shared_ptr<T>> m_items;
         };
 
         /**
             list of all contacts
         */
-        class ContactList
-        {
-        public:
-            using CONTACTS_ARR = std::vector<ContactInfo::ptr>;
+        class ContactList : public InfoList<ContactInfo>{};
+        /**
+        list of all contact groups
+        */
+        class GroupList : public InfoList<GroupInfo> {};
 
-            ContactList& add(ContactInfo::ptr c);
-            ContactList& add(std::unique_ptr<ContactInfo> c);
-            const CONTACTS_ARR& contacts()const { return m_contacts; }
-
-            bool parseXml(const QByteArray & data);
-            QString toString(bool multiline = true)const;
-
-        protected:
-            CONTACTS_ARR m_contacts;
-        };        
-
-
+        /**
+            contacts DB storage
+        */
         class GContactCache
         {
         public:
@@ -510,15 +606,21 @@ namespace googleQt {
             ContactList& contacts() { return m_contacts; }
             const ContactList& contacts()const { return m_contacts; }
 
+            GroupList& groups() { return m_groups; }
+            const GroupList& groups()const { return m_groups; }
+
             void attachSQLStorage(std::shared_ptr<mail_cache::GMailSQLiteStorage> ss);
 
             bool storeContacts();
         protected:
             bool ensureContactTables();
+            bool storeContactGroups();
+            bool storeContactEntries();
 
         protected:
             std::shared_ptr<mail_cache::GMailSQLiteStorage> m_sql_storage;
             ContactList m_contacts;
+            GroupList m_groups;
             ApiEndpoint& m_endpoint;
 
             friend class mail_cache::GMailSQLiteStorage;
@@ -541,5 +643,3 @@ namespace googleQt {
     };//gcontact
 };
 
-QDebug operator << (QDebug d, const googleQt::gcontact::ContactList &lst);
-std::ostream &operator<<(std::ostream &os, const googleQt::gcontact::ContactList& lst);

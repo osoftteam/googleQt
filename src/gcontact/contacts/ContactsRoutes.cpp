@@ -73,6 +73,35 @@ void ContactsRoutes::deleteContact_AsyncCB(
         failed_callback);
 }
 
+void ContactsRoutes::deleteContactPhoto(const gcontact::DeletePhotoArg& arg ){
+    deleteContactPhoto_Async(arg)->waitForResultAndRelease();
+}
+
+GoogleVoidTask* ContactsRoutes::deleteContactPhoto_Async(const gcontact::DeletePhotoArg& arg)
+{
+    GoogleVoidTask* t = m_end_point->produceVoidTask();
+    m_end_point->deleteContactPhotoStyleB
+        (m_end_point->buildContactPhotoUrl(arg),
+        arg,
+        t);
+    return t;
+}
+
+void ContactsRoutes::deleteContactPhoto_AsyncCB(
+    const gcontact::DeletePhotoArg& arg,
+    std::function<void()> completed_callback ,
+    std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+{
+    m_end_point->deleteContactPhotoStyleB
+        <
+        gcontact::DeletePhotoArg
+        >
+        (m_end_point->buildContactPhotoUrl(arg),
+        arg,
+        completed_callback,
+        failed_callback);
+}
+
 void ContactsRoutes::getContactPhoto(const gcontact::DownloadPhotoArg& arg , QIODevice* data){
     getContactPhoto_Async(arg, data)->waitForResultAndRelease();
 }
@@ -161,6 +190,33 @@ void ContactsRoutes::update_AsyncCB(
         >
         (m_end_point->buildContactUrl(arg),
         arg,
+        completed_callback,
+        failed_callback);
+}
+
+void ContactsRoutes::uploadContactPhoto(const gcontact::UploadPhotoArg& arg , QIODevice* data){
+    uploadContactPhoto_Async(arg, data)->waitForResultAndRelease();
+}
+
+GoogleVoidTask* ContactsRoutes::uploadContactPhoto_Async(const gcontact::UploadPhotoArg& arg, QIODevice* data)
+{
+    GoogleVoidTask* t = m_end_point->produceVoidTask();
+    m_end_point->uploadContactPhotoStyle
+        (m_end_point->buildContactPhotoUrl(arg),
+        data,
+        t);
+    return t;
+}
+
+void ContactsRoutes::uploadContactPhoto_AsyncCB(
+    const gcontact::UploadPhotoArg& arg,
+    QIODevice* data,
+    std::function<void()> completed_callback ,
+    std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+{
+    m_end_point->uploadContactPhotoStyle
+        (m_end_point->buildContactPhotoUrl(arg),
+        data,
         completed_callback,
         failed_callback);
 }

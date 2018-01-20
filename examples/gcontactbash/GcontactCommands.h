@@ -6,6 +6,11 @@ using namespace googleQt;
 
 namespace googleQt {
     class GcontactRoutes;
+    
+    namespace gcontact {
+        class ContactList;
+        class GroupList;
+    }
 };
 
 
@@ -31,14 +36,30 @@ public:
     void create_contact(QString email_first_last);
 
     /**
-        modify contact title
+    * delete_contact - delete contact entry
+    * requires contactid
     */
-    void update_contact_title(QString contactId_title);
+    void delete_contact(QString contactid);
+
+    /**
+        modify contact name
+    */
+    void update_contact_name(QString contactId_name);
 
     /**
     * download_photo - get contact photo
     */
     void download_photo(QString contactid);
+
+    /**
+    * upload_photo - add/update contact photo
+    */
+    void upload_photo(QString contactid_space_file_name);
+
+    /**
+    * delete_photo - delete contact photo
+    */
+    void delete_photo(QString contactid);
 
 
     /**
@@ -50,6 +71,23 @@ public:
     * get_group - get single group entry
     */
     void get_group(QString groupid);
+
+    /**
+    * create_group - create contact group
+    * requires title, content
+    */
+    void create_group(QString title_content);
+
+    /**
+    * delete_group - delete contact group
+    * requires groupId
+    */
+    void delete_group(QString groupId);
+
+    /**
+    modify group title
+    */
+    void update_group_title(QString groupId_title);
 
 
     /**
@@ -70,8 +108,15 @@ public:
     ///parse xml contacts file
     void parse_file(QString xmlFileName);
 
-    
+    ///parse xml group contacts file
+    void parse_group_file(QString xmlFileName);
+
+
     void export_last_result();
+
+    void print_contact_list(gcontact::ContactList* lst);
+    void print_group_list(gcontact::GroupList* lst);
+
 protected:
     GoogleClient& m_c;
     GcontactRoutes*  m_gt;

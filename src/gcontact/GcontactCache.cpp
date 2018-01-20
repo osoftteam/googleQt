@@ -70,7 +70,7 @@ bool NameInfo::operator!=(const NameInfo& o) const
 /**
     OrganizationInfo
 */
-OrganizationInfo::OrganizationInfo()
+OrganizationInfo::OrganizationInfo():m_type_label("other")
 {
 };
 
@@ -83,6 +83,22 @@ OrganizationInfo OrganizationInfo::parse(QDomNode n)
         rv.m_is_null = false;
         rv.m_name = elem_organization.firstChildElement("gd:orgName").text().trimmed();
         rv.m_title = elem_organization.firstChildElement("gd:orgTitle").text().trimmed();
+
+
+        QDomNamedNodeMap attr_names = elem_organization.attributes();
+        if (attr_names.size() > 0) {
+            for (int j = 0; j < attr_names.size(); j++) {
+                QDomNode n2 = attr_names.item(j);
+                if (n2.nodeType() == QDomNode::AttributeNode) {
+                    if (n2.nodeName().compare("rel") == 0) {
+                        QStringList slist = n2.nodeValue().trimmed().split("#");
+                        if (slist.size() == 2) {
+                            rv.m_type_label = slist[1];
+                        }
+                    }
+                }
+            }
+        }
     }
     return rv;
 }
@@ -100,7 +116,7 @@ QString OrganizationInfo::toXmlString()const
 {
     QString s = "";
     if (!isNull()) {
-        s += QString("<gd:organization rel = \"http://schemas.google.com/g/2005#%1\">\n").arg("other");
+        s += QString("<gd:organization rel = \"http://schemas.google.com/g/2005#%1\">\n").arg(m_type_label);
         s += QString("    <gd:orgName>%1</gd:orgName>\n").arg(m_name);
         s += QString("    <gd:orgTitle>%1</gd:orgTitle>\n").arg(m_title);
         s += "</gd:organization>\n";
@@ -114,6 +130,8 @@ void OrganizationInfo::toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const
     QDomElement orga_node = xml_util::ensureNode(doc, entry_node, "gd:organization");
     xml_util::updateNode(doc, orga_node, "gd:orgName", m_name);
     xml_util::updateNode(doc, orga_node, "gd:orgTitle", m_title);
+
+    orga_node.setAttribute("rel", QString("http://schemas.google.com/g/2005#%1").arg(m_type_label));
 };
 
 bool OrganizationInfo::operator==(const OrganizationInfo& o) const
@@ -521,6 +539,91 @@ static QString getAttribute(const QDomNode& n, QString name)
     return rv;
 }
 
+/**
+    ContactXmlPersistant
+*/
+bool ContactXmlPersistant::parseXml(const QByteArray & data)
+{
+    m_is_null = true;
+
+    QDomDocument doc;
+    QString errorMsg = 0;
+    int errorLine;
+    int errorColumn;
+    if (!doc.setContent(data, &errorMsg, &errorLine, &errorColumn)) {
+        qWarning() << "Failed to parse contacts XML document: " << errorMsg << "line=" << errorLine << "column=" << errorColumn;
+        qWarning() << "-- begin data " << data.size();
+        qWarning() << data;
+        qWarning() << "-- end data";
+        return false;
+    }
+
+    QDomNodeList entries = doc.elementsByTagName("entry");
+    if (entries.size() > 0) {
+        QDomNode n = entries.item(0);
+        if (!parse(n)) {
+            return false;
+        }
+    }
+
+    m_is_null = false;
+
+    return true;
+};
+
+bool ContactXmlPersistant::parseXml(const QString & xml)
+{
+    QByteArray d(xml.toStdString().c_str());
+    return parseXml(d);
+};
+
+void ContactXmlPersistant::updateDateTime()
+{
+    m_updated = QDateTime::currentDateTime();
+};
+
+
+QString ContactXmlPersistant::mergedXml(QString mergeOrigin)const
+{    
+    if (mergeOrigin.isEmpty()) {
+        qWarning() << "incomming XML string is empty";
+        return "";
+    }
+
+    /// try to merge data into original xml
+    QByteArray data(mergeOrigin.toStdString().c_str());
+    QDomDocument doc;
+    QString errorMsg = 0;
+    int errorLine;
+    int errorColumn;
+    if (!doc.setContent(data, &errorMsg, &errorLine, &errorColumn)) {
+        qWarning() << "Failed to parse original contacts XML document: " << errorMsg << "line=" << errorLine << "column=" << errorColumn;
+        qWarning() << "-- begin data " << data.size();
+        qWarning() << data;
+        qWarning() << "-- end data";
+        return "";
+    }
+
+    QDomNodeList entries = doc.elementsByTagName("entry");
+    if (entries.size() == 0) {
+        qWarning() << "Invalid original xml contact data (1)";
+        return "";
+    }
+
+    QDomNode entry_node = entries.item(0);
+    if (entry_node.isNull()) {
+        qWarning() << "Invalid original xml contact data (2)";
+        return "";
+    }
+
+    mergeEntryNode(doc, entry_node);
+
+    QString rv = "";
+    QTextStream ss(&rv);
+    entry_node.save(ss, 4);
+    ss.flush();
+    return rv;
+}
 
 /**
     ContactInfo
@@ -605,10 +708,6 @@ QString ContactInfo::toString()const
     return s;
 };
 
-void ContactInfo::updateDateTime()
-{
-    m_updated = QDateTime::currentDateTime();
-};
 
 bool ContactInfo::operator == (const ContactInfo& o) const
 {
@@ -656,7 +755,7 @@ QString ContactInfo::toXml(QString userEmail)const
     QString rv;
     rv = QString("<entry xmlns:atom=\"http://www.w3.org/2005/Atom\" xmlns:gd = \"http://schemas.google.com/g/2005\" gd:etag=\"%1\"> <atom:category scheme = \"http://schemas.google.com/g/2005#kind\" term = \"http://schemas.google.com/contact/2008#contact\"/>\n")
         .arg(m_etag);
-    rv += QString("<id>http://www.google.com/m8/feeds/contacts/%1/base/%2</id>").arg(userEmail).arg(m_id);
+    rv += QString("<id>http://www.google.com/m8/feeds/contacts/%1/base/%2</id>\n").arg(userEmail).arg(m_id);
     rv += QString("<title>%1</title>\n").arg(m_title);
     rv += QString("<content type = \"text\">%1</content>\n").arg(m_content);
     rv += "<gd:name>\n";
@@ -674,46 +773,15 @@ QString ContactInfo::toXml(QString userEmail)const
 };
 
 
-QString ContactInfo::mergedXml(QString userEmail, QString mergeOrigin)const
+void ContactInfo::mergeEntryNode(QDomDocument& doc, QDomNode& entry_node)const
 {
-    if (mergeOrigin.isEmpty()) {
-        qWarning() << "incomming XML string is empty";
-        return "";
-    }
-
-    /// try to merge data into original xml
-    QByteArray data(mergeOrigin.toStdString().c_str());
-    QDomDocument doc;
-    QString errorMsg = 0;
-    int errorLine;
-    int errorColumn;
-    if (!doc.setContent(data, &errorMsg, &errorLine, &errorColumn)) {
-        qWarning() << "Failed to parse original contacts XML document: " << errorMsg << "line=" << errorLine << "column=" << errorColumn;
-        qWarning() << "-- begin data " << data.size();
-        qWarning() << data;
-        qWarning() << "-- end data";
-        return "";
-    }
-
-    QDomNodeList entries = doc.elementsByTagName("entry");
-    if (entries.size() == 0) {
-        qWarning() << "Invalid original xml contact data (1)";
-        return "";
-    }
-
-    QDomNode entry_node = entries.item(0);
-    if (entry_node.isNull()) {
-        qWarning() << "Invalid original xml contact data (2)";
-        return "";
-    }
-
     QDomElement entry_elem = entry_node.toElement();
     if (entry_elem.isNull()) {
         qWarning() << "Invalid entry element";
     }
     else {
         entry_elem.setAttribute("gd:etag", m_etag);
-    }    
+    }
 
     xml_util::updateNode(doc, entry_node, "title", m_title);
     xml_util::updateNode(doc, entry_node, "content", m_content);
@@ -722,14 +790,8 @@ QString ContactInfo::mergedXml(QString userEmail, QString mergeOrigin)const
     m_emails.toXmlDoc(doc, entry_node);
     m_phones.toXmlDoc(doc, entry_node);
     m_address_list.toXmlDoc(doc, entry_node);
-
-
-    QString rv = "";
-    QTextStream ss(&rv);
-    entry_node.save(ss, 4);
-    ss.flush();
-    return rv;
 };
+
 
 bool ContactInfo::parse(QDomNode n)
 {
@@ -766,112 +828,107 @@ bool ContactInfo::parse(QDomNode n)
 }
 
 
-bool ContactInfo::parseXml(const QByteArray & data) 
-{
-    m_is_null = true;
 
-    QDomDocument doc;
-    QString errorMsg = 0;
-    int errorLine;
-    int errorColumn;
-    if (!doc.setContent(data, &errorMsg, &errorLine, &errorColumn)) {
-        qWarning() << "Failed to parse contacts XML document: " << errorMsg << "line=" << errorLine << "column=" << errorColumn;
-        qWarning() << "-- begin data " << data.size();
-        qWarning() << data;
-        qWarning() << "-- end data";
+bool GroupInfo::parse(QDomNode n)
+{
+    m_original_xml_string = "";
+    QTextStream ss(&m_original_xml_string);
+    n.save(ss, 4);
+    ss.flush();
+
+    if (m_original_xml_string.isEmpty()) {
+        qWarning() << "Failed to parse contact xml node";
         return false;
     }
-
-    QDomNodeList entries = doc.elementsByTagName("entry");
-    if (entries.size() > 0) {
-        QDomNode n = entries.item(0);
-        if (!parse(n)) {
-            return false;
-        }
-    }
-
     m_is_null = false;
-
-    return true;
-};
-
-bool ContactInfo::parseXml(const QString & xml) 
-{
-    QByteArray d(xml.toStdString().c_str());
-    return parseXml(d);
-};
-
-/**
-    ContactList
-*/
-bool ContactList::parseXml(const QByteArray & data)
-{
-    QDomDocument doc;
-    QString errorMsg = 0; 
-    int errorLine; 
-    int errorColumn;
-    if (!doc.setContent(data, &errorMsg, &errorLine, &errorColumn)) {
-        qWarning() << "Failed to parse contacts XML document: " << errorMsg << "line=" << errorLine << "column=" << errorColumn;
-        qWarning() << "-- begin data";
-        qWarning() << data;
-        qWarning() << "-- end data";
-        return false;
+    m_etag = getAttribute(n, "gd:etag");
+    m_id = "";
+    QString sid = n.firstChildElement("id").text();
+    int base_idx = sid.indexOf("/base/");
+    if (base_idx != -1) {
+        m_id = sid.right(sid.length() - base_idx - 6);
     }
 
-    QDomNodeList entries = doc.elementsByTagName("entry");
-    for (int i = 0; i < entries.size(); i++) {
-        QDomNode n = entries.item(i);
-        ContactInfo::ptr ci(new ContactInfo);
-        if (ci->parse(n)) {
-            m_contacts.push_back(ci);
-        }
+    QString s = n.firstChildElement("updated").text().trimmed();
+    m_updated = QDateTime::fromString(s, Qt::ISODate);
+    m_title = n.firstChildElement("title").text().trimmed();
+    m_content = n.firstChildElement("content").text().trimmed();
+
+    m_is_null = !m_etag.isEmpty() && m_id.isEmpty();
+    return !m_is_null;
+}
+
+void GroupInfo::mergeEntryNode(QDomDocument& doc, QDomNode& entry_node)const
+{
+    QDomElement entry_elem = entry_node.toElement();
+    if (entry_elem.isNull()) {
+        qWarning() << "Invalid entry element";
+    }
+    else {
+        entry_elem.setAttribute("gd:etag", m_etag);
     }
 
-    return true;
+    xml_util::updateNode(doc, entry_node, "title", m_title);
+    xml_util::updateNode(doc, entry_node, "content", m_content);
 };
 
-QString ContactList::toString(bool /*multiline = true*/)const 
+QString GroupInfo::toXml(QString userEmail)const 
 {
     QString rv;
-    for (auto& c : contacts()) {
-        rv += c->toString();
-        rv += "\n";
-    }
+    rv = QString("<entry gd:etag=\"%1\">\n")
+        .arg(m_etag);
+
+    rv += QString("<id>http://www.google.com/m8/feeds/groups/%1/base/%2</id>\n").arg(userEmail).arg(m_id);
+    rv += QString("<title>%1</title>\n").arg(m_title);
+    rv += QString("<content type = \"text\">%1</content>\n").arg(m_content);
+
+    rv += "</entry>\n";
     return rv;
 };
 
-ContactList& ContactList::add(ContactInfo::ptr c) 
+
+QString GroupInfo::toString()const
 {
-    m_contacts.push_back(c);
+    QString s = "";
+    s += "id=" + m_id + ";etag=" + m_etag + ";updated=" + m_updated.toString(Qt::ISODate)
+        + ";title=" + m_title + "content=" + m_content + ";";
+    return s;
+};
+
+
+GroupInfo& GroupInfo::setTitle(QString val)
+{
+    m_title = val;
     return *this;
 };
 
-ContactList& ContactList::add(std::unique_ptr<ContactInfo> c) 
+GroupInfo& GroupInfo::setContent(QString notes)
 {
-    ContactInfo::ptr c2(c.release());
-    return add(c2);
+    m_content = notes;
+    return *this;
 };
 
-QDebug operator << (QDebug d, const googleQt::gcontact::ContactList &lst) {
-    for (auto& c : lst.contacts()) {
-        d << c->toString();
-    }
-    return d;
+bool GroupInfo::operator == (const GroupInfo& o) const
+{
+    ///do not check on m_original_xml_string - it's for cache storage
+
+    COMPARE_NO_CASE(m_etag);
+    COMPARE_NO_CASE(m_id);
+    COMPARE_NO_CASE(m_title);
+    COMPARE_NO_CASE(m_content);
+
+    return true;
 }
 
-std::ostream &operator<<(std::ostream &os, const googleQt::gcontact::ContactList& lst) 
+bool GroupInfo::operator!=(const GroupInfo& o) const
 {
-    int idx = 1;
-    for (auto& c : lst.contacts()) {
-        os << idx << ". "
-           << c->id().toStdString() << " "
-           << c->title().toStdString() << std::endl;
-        os << c->toString().toStdString() << std::endl << std::endl;
-        idx++;
-    }
-    return os;
+    return !(*this == o);
 };
 
+
+/**
+    GContactCache
+*/
 GContactCache::GContactCache(ApiEndpoint& a):m_endpoint(a)
 {
 
@@ -884,14 +941,20 @@ void GContactCache::attachSQLStorage(std::shared_ptr<mail_cache::GMailSQLiteStor
 
 bool GContactCache::ensureContactTables()
 {
-    /// entries ///
-    QString sql_entries = QString("CREATE TABLE IF NOT EXISTS %1gcontact_entry(contact_id INTEGER PRIMARY KEY, acc_id INTEGER NOT NULL, entry_id TEXT, etag TEXT, title TEXT, content TEXT,"
-                                  "full_name TEXT, given_name TEXT, family_name TEXT, orga_name TEXT, orga_title TEXT, xml_original TEXT, xml_current TEXT, updated INTEGER)").arg(m_sql_storage->m_metaPrefix);
+    /// contacts ///
+    QString sql_entries = QString("CREATE TABLE IF NOT EXISTS %1gcontact_entry(contact_db_id INTEGER PRIMARY KEY, acc_id INTEGER NOT NULL, entry_id TEXT, etag TEXT, title TEXT, content TEXT,"
+                                  "full_name TEXT, given_name TEXT, family_name TEXT, orga_name TEXT, orga_title TEXT, orga_label TEXT, xml_original TEXT, xml_current TEXT, updated INTEGER)").arg(m_sql_storage->m_metaPrefix);
     if (!m_sql_storage->execQuery(sql_entries))
         return false;
 
+    QString sql_groups = QString("CREATE TABLE IF NOT EXISTS %1gcontact_group(group_db_id INTEGER PRIMARY KEY, acc_id INTEGER NOT NULL, entry_id TEXT, etag TEXT, title TEXT, content TEXT,"
+        "xml_original TEXT, updated INTEGER)").arg(m_sql_storage->m_metaPrefix);
+    if (!m_sql_storage->execQuery(sql_groups))
+        return false;
+
+
 #ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
-    QString sql_fields = QString("CREATE TABLE IF NOT EXISTS %1gcontact_records(record_id INTEGER PRIMARY KEY, contact_id INTEGER NOT NULL, obj_kind INTEGER NOT NULL, group_idx INTEGER NOT NULL, record_name TEXT NOT NULL, record_value TEXT)").arg(m_sql_storage->m_metaPrefix);
+    QString sql_fields = QString("CREATE TABLE IF NOT EXISTS %1gcontact_records(record_id INTEGER PRIMARY KEY, contact_db_id INTEGER NOT NULL, obj_kind INTEGER NOT NULL, group_idx INTEGER NOT NULL, record_name TEXT NOT NULL, record_value TEXT)").arg(m_sql_storage->m_metaPrefix);
     if (!m_sql_storage->execQuery(sql_fields))
         return false;
 #endif //GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
@@ -905,11 +968,11 @@ bool GContactCache::ensureContactTables()
     return true;
 };
 
-bool GContactCache::storeContacts() 
+bool GContactCache::storeContactEntries() 
 {
-    using CLIST = std::list<ContactInfo::ptr>;        
+    using CLIST = std::list<ContactInfo::ptr>;
     CLIST new_contacts;
-    for (auto& c : m_contacts.contacts()) {
+    for (auto& c : m_contacts.items()) {
         if (c->isDbIdNull()) {
             c->updateDateTime();
             new_contacts.push_back(c);
@@ -918,12 +981,12 @@ bool GContactCache::storeContacts()
 
     if (new_contacts.size() > 0) {
         QString sql_insert;
-        sql_insert = QString("INSERT INTO  %1gcontact_entry(acc_id, title, content, full_name, given_name, family_name, orga_name, orga_title, xml_original, xml_current, updated)"
-            " VALUES(%2, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        sql_insert = QString("INSERT INTO  %1gcontact_entry(acc_id, title, content, full_name, given_name, family_name, orga_name, orga_title, orga_label, xml_original, xml_current, updated)"
+            " VALUES(%2, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
             .arg(m_sql_storage->m_metaPrefix)
             .arg(m_sql_storage->m_accId);
         QSqlQuery* q = m_sql_storage->prepareQuery(sql_insert);
-        if (!q){
+        if (!q) {
             qWarning() << "Failed to prepare contact insert-SQL" << sql_insert;
             return false;
         }
@@ -936,6 +999,7 @@ bool GContactCache::storeContacts()
             q->addBindValue(c->name().familyName());
             q->addBindValue(c->organization().name());
             q->addBindValue(c->organization().title());
+            q->addBindValue(c->organization().typeLabel());
             q->addBindValue(c->originalXml());
             q->addBindValue(c->toXml(m_endpoint.apiClient()->userId()));
             qlonglong upd_time = c->updated().toMSecsSinceEpoch();
@@ -954,7 +1018,7 @@ bool GContactCache::storeContacts()
 #ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
         /// store records ///
         QString sql_insert_record;
-        sql_insert_record = QString("INSERT INTO  %1gcontact_records(contact_id, obj_kind, group_idx, record_name, record_value)"
+        sql_insert_record = QString("INSERT INTO  %1gcontact_records(contact_db_id, obj_kind, group_idx, record_name, record_value)"
             " VALUES(?, ?, ?, ?, ?)")
             .arg(m_sql_storage->m_metaPrefix);
         q = m_sql_storage->prepareQuery(sql_insert_record);
@@ -975,7 +1039,65 @@ bool GContactCache::storeContacts()
                 return false;
             }
         }
- #endif// GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
+#endif// GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
+    }
+
+    return true;
+};
+
+bool GContactCache::storeContactGroups()
+{
+    using CLIST = std::list<GroupInfo::ptr>;
+    CLIST new_groups;
+    for (auto& g : m_groups.items()) {
+        if (g->isDbIdNull()) {
+            g->updateDateTime();
+            new_groups.push_back(g);
+        }
+    }
+
+    if (new_groups.size() > 0) {
+        QString sql_insert;
+        sql_insert = QString("INSERT INTO  %1gcontact_group(acc_id, title, content, xml_original, updated)"
+            " VALUES(%2, ?, ?, ?, ?)")
+            .arg(m_sql_storage->m_metaPrefix)
+            .arg(m_sql_storage->m_accId);
+
+        QSqlQuery* q = m_sql_storage->prepareQuery(sql_insert);
+        if (!q) {
+            qWarning() << "Failed to prepare contact group insert-SQL" << sql_insert;
+            return false;
+        }
+
+        for (auto c : new_groups) {
+            q->addBindValue(c->title());
+            q->addBindValue(c->content());
+            q->addBindValue(c->originalXml());
+            qlonglong upd_time = c->updated().toMSecsSinceEpoch();
+            q->addBindValue(upd_time);
+            if (q->exec()) {
+                int eid = q->lastInsertId().toInt();
+                c->setDbID(eid);
+            }
+            else {
+                QString error = q->lastError().text();
+                qWarning() << "ERROR. Failed to insert contact to DB" << error;
+                continue;
+            }
+        }//for
+    }
+
+    return true;
+};
+
+bool GContactCache::storeContacts() 
+{
+    if (!storeContactEntries()) {
+        return false;
+    }
+
+    if (!storeContactGroups()) {
+        return false;
     }
 
     return true;
@@ -1085,7 +1207,6 @@ std::unique_ptr<ContactInfo> ContactInfo::EXAMPLE(int param, int )
     QString first = QString("First-Name%1").arg(param);
     QString last = QString("Last-Name%1").arg(param);
 
-    //std::unique_ptr<ContactInfo> ci(new ContactInfo);
     ContactInfo ci;
     NameInfo n;
     EmailInfo e1, e2;
@@ -1128,14 +1249,26 @@ std::unique_ptr<ContactInfo> ContactInfo::EXAMPLE(int param, int )
     return rv;
 }
 
-static bool autoTestCheckImportExport(ContactInfo* ci) 
+std::unique_ptr<GroupInfo> GroupInfo::EXAMPLE(int context_index, int parent_content_index) 
+{
+    GroupInfo g;
+    g.setContent(QString("cgroup-content %1-%2").arg(context_index).arg(parent_content_index));
+    g.setTitle(QString("cgroup-title  %1-%2").arg(context_index).arg(parent_content_index));
+    g.m_etag = "my-group-etag";
+    g.m_id = "my-group-id";
+
+
+
+    std::unique_ptr<GroupInfo> rv(new GroupInfo);
+    QString xml = g.toXml("me@gmail.com");
+    rv->parseXml(xml);
+    return rv;
+};
+
+template <class T>
+bool autoTestCheckImportExport(T* ci) 
 {
     QString xml = ci->toXml("me@gmail.com");
-    /*
-    ApiAutotest::INSTANCE() << "=== contact/XML/begin ==== ";
-    ApiAutotest::INSTANCE() << xml;
-    ApiAutotest::INSTANCE() << "=== XML/end ==== ";
-    */
     QByteArray data(xml.toStdString().c_str());
 
     QDomDocument doc;
@@ -1143,11 +1276,12 @@ static bool autoTestCheckImportExport(ContactInfo* ci)
     int errorLine;
     int errorColumn;
     if (!doc.setContent(data, &errorMsg, &errorLine, &errorColumn)) {
-        ApiAutotest::INSTANCE() << "Failed to export contacts XML document: " << errorMsg << " line=" << errorLine << " column=" << errorColumn;
+        ApiAutotest::INSTANCE() << QString("Failed to export contacts XML document: %1 line=%2 column=%2").arg(errorMsg).arg(errorLine).arg(errorColumn);
+        ApiAutotest::INSTANCE() << xml;
         return false;
     }
 
-    ContactInfo ci2;
+    T ci2;
     if (!ci2.parseXml(data)) {
         ApiAutotest::INSTANCE() << "Contacts Xml parse error";
         return false;
@@ -1155,12 +1289,15 @@ static bool autoTestCheckImportExport(ContactInfo* ci)
 
     bool rv = (*ci == ci2);
     if (!rv) {
+        //this line is here to put breakpoint cause something is wrong
+        //it's code can be compiled for debug anyway..
         rv = (*ci == ci2);
     }
     return rv;
 }
 
-std::unique_ptr<ContactInfo> createMergeParty(QString xmlOrigin) 
+
+std::unique_ptr<ContactInfo> createMergeContactParty(QString xmlOrigin) 
 {
     std::unique_ptr<ContactInfo> c = std::unique_ptr<ContactInfo>(new ContactInfo);
 
@@ -1202,12 +1339,27 @@ std::unique_ptr<ContactInfo> createMergeParty(QString xmlOrigin)
     return c;
 }
 
+std::unique_ptr<GroupInfo> createMergeGroupParty(QString xmlOrigin)
+{
+    std::unique_ptr<GroupInfo> g = std::unique_ptr<GroupInfo>(new GroupInfo);
+    g->parseXml(xmlOrigin);
+    g->setTitle(g->title() + "=NEW-G-TITLE=");
+    g->setContent("=NEW-G-CONTENT=");
+    return g;
+}
 
-static bool autoTestCheckMerge(ContactInfo* ci)
+static bool autoTestCheckContactMerge(ContactInfo* ci)
 {
     QString xml = ci->toXml("me@gmail.com");
-    auto c = createMergeParty(xml);
-    return autoTestCheckImportExport(c.get());
+    auto c = createMergeContactParty(xml);
+    return autoTestCheckImportExport<ContactInfo>(c.get());
+}
+
+static bool autoTestCheckGroupMerge(GroupInfo* ci)
+{
+    QString xml = ci->toXml("me@gmail.com");
+    auto c = createMergeGroupParty(xml);
+    return autoTestCheckImportExport<GroupInfo>(c.get());
 }
 
 
@@ -1219,16 +1371,17 @@ void GcontactCacheRoutes::runAutotest()
     ApiAutotest::INSTANCE() << "3";
     ApiAutotest::INSTANCE() << "4";
 
+    /// contact entries
     ContactList& lst = m_GContactsCache->contacts();
     for (int i = 0; i < 10; i++) {
         auto c = ContactInfo::EXAMPLE(i, 0);
-        if (!autoTestCheckImportExport(c.get())) {
+        if (!autoTestCheckImportExport<ContactInfo>(c.get())) {
             ApiAutotest::INSTANCE() << "contact Xml export/identity error";;
         }
         else {
             ApiAutotest::INSTANCE() << QString("contact-identity - OK / %1").arg(i+1);
 
-            if (!autoTestCheckMerge(c.get())) {
+            if (!autoTestCheckContactMerge(c.get())) {
                 ApiAutotest::INSTANCE() << "contact Xml merge error";;
             }
             else {
@@ -1238,6 +1391,27 @@ void GcontactCacheRoutes::runAutotest()
         }
     }
 
+    /// contact groups
+    GroupList& g_lst = m_GContactsCache->groups();
+    for (int i = 0; i < 10; i++) {
+        auto g = GroupInfo::EXAMPLE(i, 0);
+        if (!autoTestCheckImportExport<GroupInfo>(g.get())) {
+            ApiAutotest::INSTANCE() << "group Xml export/identity error";;
+        }
+        else {
+            ApiAutotest::INSTANCE() << QString("group-identity - OK / %1").arg(i + 1);
+            if (!autoTestCheckGroupMerge(g.get())) {
+                ApiAutotest::INSTANCE() << "group Xml merge error";;
+            }
+            else {
+                ApiAutotest::INSTANCE() << QString("group-merge - OK / %1").arg(i + 1);
+                g_lst.add(std::move(g));
+            }
+        }
+    }
+
     m_GContactsCache->storeContacts();
+    ApiAutotest::INSTANCE() << QString("Stored %1 contacts and %2 groups").arg(lst.items().size()).arg(g_lst.items().size());
+    ApiAutotest::INSTANCE() << "";
 };
 #endif

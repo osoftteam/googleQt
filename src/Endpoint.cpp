@@ -34,8 +34,10 @@ QString Endpoint::prepareErrorSummary(int status_code)
     QString s;
     switch(status_code)
         {
+        case 400:s = "Bad Request"; break;
         case 403:s = "Invalid access token. You have to get new access token.";break;
         case 404:s = "Resource not found on server.";break;
+        case 500:s = "Internal Server Error. Generic server error."; break;
         }
     QString rv = QString("%1 - %2").arg(status_code).arg(s);
     return rv;

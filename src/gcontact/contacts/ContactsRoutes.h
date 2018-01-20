@@ -46,6 +46,20 @@ namespace contacts{
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
+            ApiRoute('deleteContactPhoto')
+
+
+            Delete contact photo
+
+            */
+        void deleteContactPhoto(const gcontact::DeletePhotoArg& );
+        GoogleVoidTask* deleteContactPhoto_Async(const gcontact::DeletePhotoArg& arg);
+        void deleteContactPhoto_AsyncCB(
+            const gcontact::DeletePhotoArg&,
+            std::function<void()> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
+
+            /**
             ApiRoute('getContactPhoto')
 
 
@@ -87,6 +101,21 @@ namespace contacts{
         void update_AsyncCB(
             const gcontact::UpdateContactArg&,
             std::function<void(std::unique_ptr<gcontact::ContactsListResult>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
+
+            /**
+            ApiRoute('uploadContactPhoto')
+
+
+            Add/Update contact photo content.
+
+            */
+        void uploadContactPhoto(const gcontact::UploadPhotoArg& , QIODevice* readFrom);
+        GoogleVoidTask* uploadContactPhoto_Async(const gcontact::UploadPhotoArg& arg, QIODevice* data);
+        void uploadContactPhoto_AsyncCB(
+            const gcontact::UploadPhotoArg&,
+            QIODevice* data,
+            std::function<void()> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
     protected:
