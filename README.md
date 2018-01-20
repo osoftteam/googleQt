@@ -213,7 +213,7 @@ C++11 compiler and Qt 5.xx. We used VS2015, GCC 5.xx, XCode 8.xx. Anything newer
 Run qmake in 'prj' folder to generate Makefile, compile, see generated static library googleQt. To create sample project, cd in 'examples' and run qmake for each subfolder. There is shell script to open IDE on windows and generate project files - see folder 'bin' and win-configure-open-ide.bat or Cygwin based cygwin-build.csh. You have to add googleQt to your LIB list (as shown in sample) and add path to prj/src to the INCLUDE list.
 
 ### Current status.
-gcontacts namespace no stable, currently under development, others should be OK.
+gcontacts namespace is getting into shape but still under development, expect surprises, others should be OK.
 
 
 ### Design and development.
