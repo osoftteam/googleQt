@@ -180,20 +180,6 @@ namespace googleQt{
             QJsonObject m_js_out;
         };
 
-        class SimpleUpload_requester : public requester
-        {
-        public:
-            SimpleUpload_requester(ApiEndpoint& e, QIODevice* readFrom)
-                :requester(e), m_readFrom(readFrom) {}
-            QNetworkReply * request(QNetworkRequest& r)override
-            {
-                r.setRawHeader("Content-Type", "application/octet-stream");
-                r.setRawHeader("Content-Length", QString("%1").arg(m_readFrom ? m_readFrom->size() : 0).toStdString().c_str());
-                return m_ep.postData(r, m_readFrom ? m_readFrom->readAll() : QByteArray());
-            }
-        protected:
-            QIODevice* m_readFrom;
-        };
 
         class MPartUpload_requester : public requester
         {
@@ -206,14 +192,16 @@ namespace googleQt{
             QIODevice* m_readFrom;
         };
 
-        class DOWNLOAD_requester : public requester
+        
+        template <class R>
+        class DOWNLOAD_base_requester : public R
         {
         public:
-            DOWNLOAD_requester(ApiEndpoint& e, QIODevice* writeTo) 
-                :requester(e), m_writeTo(writeTo){}
+            DOWNLOAD_base_requester(ApiEndpoint& e, QIODevice* writeTo) 
+                :R(e), m_writeTo(writeTo){}
             QNetworkReply * request(QNetworkRequest& r)override
             {
-                QNetworkReply* reply = m_ep.getData(r);
+                QNetworkReply* reply = R::m_ep.getData(r);
                 if (reply != nullptr) {
                     QObject::connect(reply, &QNetworkReply::readyRead, [=]()
                     {
@@ -230,6 +218,37 @@ namespace googleQt{
             QIODevice* m_writeTo;
         };
 
+        template <class R>
+        class UPLOAD_base_requester : public R
+        {
+        public:
+            UPLOAD_base_requester(ApiEndpoint& e, QIODevice* readFrom)
+                :R(e), m_readFrom(readFrom) {}
+            QNetworkReply * request(QNetworkRequest& r)override
+            {
+                r.setRawHeader("Content-Type", "application/octet-stream");
+                r.setRawHeader("Content-Length", QString("%1").arg(m_readFrom ? m_readFrom->size() : 0).toStdString().c_str());
+                return R::m_ep.postData(r, m_readFrom ? m_readFrom->readAll() : QByteArray());
+            }
+        protected:
+            QIODevice* m_readFrom;
+        };
+        
+        class DOWNLOAD_requester : public DOWNLOAD_base_requester<requester>
+        {
+        public:
+            DOWNLOAD_requester(ApiEndpoint& e, QIODevice* writeTo):
+                DOWNLOAD_base_requester<requester>(e, writeTo){};
+        };
+
+        class UPLOAD_requester : public UPLOAD_base_requester<requester>
+        {
+        public:
+            UPLOAD_requester(ApiEndpoint& e, QIODevice* readFrom):
+                UPLOAD_base_requester<requester>(e, readFrom){};
+        };
+
+        
         ///BEGIN contacts requesters
         class contact_requester : public requester 
         {
@@ -298,6 +317,30 @@ namespace googleQt{
         protected:
             QString m_etag;
         };
+
+        class DOWNLOAD_requester4Contact : public DOWNLOAD_base_requester<contact_requester>
+        {
+        public:
+            DOWNLOAD_requester4Contact(ApiEndpoint& e, QIODevice* writeTo):
+                DOWNLOAD_base_requester<contact_requester>(e, writeTo){};
+        };
+
+        class UPLOAD_photo_requester4Contact : public UPLOAD_base_requester<contact_requester>
+        {
+        public:
+            UPLOAD_photo_requester4Contact(ApiEndpoint& e, QIODevice* readFrom, QString&& etag):
+                UPLOAD_base_requester<contact_requester>(e, readFrom), m_etag(std::move(etag)){};
+
+            QNetworkReply * request(QNetworkRequest& r)override
+            {
+                r.setRawHeader("If-Match", m_etag.toStdString().c_str());
+                r.setRawHeader("Content-Type", "image/*");
+                r.setRawHeader("Content-Length", QString("%1").arg(m_readFrom ? m_readFrom->size() : 0).toStdString().c_str());
+                return m_ep.putData(r, m_readFrom ? m_readFrom->readAll() : QByteArray());
+            }
+        protected:
+            QString m_etag;            
+        };        
     ///END contacts
 
     protected:
