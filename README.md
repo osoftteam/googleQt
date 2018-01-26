@@ -230,6 +230,3 @@ The library covers GDrive, GMail, GTask but not completely, particularly resumab
 - concurrent batch requests for gmail (up to 4 requests simultaneously)
 - caching cloud data for selected services
 
-### License
-
-LGPL v3
