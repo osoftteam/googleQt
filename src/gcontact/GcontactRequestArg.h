@@ -386,8 +386,6 @@ namespace googleQt {
             bool    m_ignore_etag{ false };//will ignore etag and use '*' instead
         };
 
-        //..
-
         class DownloadPhotoArg : public QParamArg
         {
         public:
@@ -406,7 +404,6 @@ namespace googleQt {
             QString m_contactId{};
         };
 
-        //...
         class UploadPhotoArg : public QParamArg
         {
         public:
@@ -425,7 +422,6 @@ namespace googleQt {
             QString m_contactId{};
         };
 
-        //...
         /**
         argument class for deleting contact
         */
@@ -452,7 +448,5 @@ namespace googleQt {
             QString m_etag;
             bool    m_ignore_etag{ false };//will ignore etag and use '*' instead
         };
-
-        //...
     }
 };
