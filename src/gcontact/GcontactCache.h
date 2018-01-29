@@ -51,26 +51,44 @@ namespace googleQt {
         class ContactXmlPersistant : public DbPersistant 
         {
         public:
+            enum EStatus
+                {
+                    localCopy = 1,
+                    localModified,
+                    localRemoved,
+                    localRetired
+                };
+
+            ContactXmlPersistant();
+
             QString etag()const { return m_etag; }
             QString id()const { return m_id; }
             QString title()const { return m_title; }
             QString content()const { return m_content; }
             const QDateTime& updated()const { return m_updated; }
 
-            QString           originalXml()const { return m_original_xml_string; }
+            EStatus status()const{return m_status;}
+            void markAsClean() { m_status = localCopy; };
+            void markAsModified() { m_status = localModified; };
+            void markAsDeleted() { m_status = localRemoved; };
+
+            QString  originalXml()const { return m_original_xml_string; }
 
             void updateDateTime();
 
             bool parseXml(const QByteArray & data);
             bool parseXml(const QString & xml);
             QString mergedXml(QString mergeOrigin)const;
-            virtual bool parse(QDomNode n) = 0;
+            virtual bool parseEntryNode(QDomNode n) = 0;
             virtual void mergeEntryNode(QDomDocument& doc, QDomNode& entry_node) const = 0;
 
+            /// int -> status enum, does some validation
+            static EStatus validatedStatus(int val, bool* ok = nullptr);
         protected:
             QString             m_etag, m_id, m_title, m_content;
             QDateTime           m_updated;
             QString             m_original_xml_string;
+            EStatus             m_status;
         };
 
 #ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
@@ -136,7 +154,7 @@ namespace googleQt {
             QString toString()const;
             void toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const;
             bool operator==(const NameInfo&) const;
-            bool operator!=(const NameInfo&) const;            
+            bool operator!=(const NameInfo&) const;
 
         protected:
             QString m_fullName;
@@ -474,11 +492,12 @@ namespace googleQt {
             */
             ContactInfo& replaceAddressList(const std::list<PostalAddress>& lst);
 
-            bool parse(QDomNode n)override;
+            bool parseEntryNode(QDomNode n)override;
+            void mergeEntryNode(QDomDocument& doc, QDomNode& entry_node)const override;
+            bool setFromDbRecord(QSqlQuery* q);
+
             QString toString()const;
             QString toXml(QString userEmail)const;
-            void mergeEntryNode(QDomDocument& doc, QDomNode& entry_node)const override;
-            //QString mergedXml(QString userEmail, QString mergeOrigin)const;
             
             bool operator==(const ContactInfo&) const;
             bool operator!=(const ContactInfo&) const;
@@ -520,8 +539,9 @@ namespace googleQt {
 
             QString toString()const;
             QString toXml(QString userEmail)const;
-            bool parse(QDomNode n)override;
+            bool parseEntryNode(QDomNode n)override;
             void mergeEntryNode(QDomDocument& doc, QDomNode& entry_node)const override;
+            bool setFromDbRecord(QSqlQuery* q);
 
             bool operator==(const GroupInfo&) const;
             bool operator!=(const GroupInfo&) const;
@@ -543,6 +563,8 @@ namespace googleQt {
                 std::shared_ptr<T> c2(c.release());
                 add(c2);
             };
+
+            void clear() { m_items.clear(); };
 
             QString toString()const
             {
@@ -572,12 +594,31 @@ namespace googleQt {
                 for (int i = 0; i < entries.size(); i++) {
                     QDomNode n = entries.item(i);
                     std::shared_ptr<T> ci(new T);
-                    if (ci->parse(n)) {
+                    if (ci->parseEntryNode(n)) {
                         m_items.push_back(ci);
                     }
                 }
 
                 return true;
+            };
+
+            bool operator==(const InfoList<T>& o) const
+            {
+                if (m_items.size() != o.m_items.size())
+                    return false;
+
+                size_t Max = m_items.size();
+                for (size_t i = 0; i < Max; i++) {
+                    if (*(m_items[i]) != *(o.m_items[i]))
+                        return false;
+                }
+
+                return true;
+            };
+
+            bool operator!=(const InfoList<T>& o) const
+            {
+                return !(*this == o);
             };
 
             const std::vector<std::shared_ptr<T>>& items()const { return m_items; }
@@ -609,21 +650,36 @@ namespace googleQt {
             GroupList& groups() { return m_groups; }
             const GroupList& groups()const { return m_groups; }
 
+            const QDateTime& lastSyncTime()const { return m_sync_time; }
+
             void attachSQLStorage(std::shared_ptr<mail_cache::GMailSQLiteStorage> ss);
 
-            bool storeContacts();
+            bool storeContactsToDb();
+            bool loadContactsFromDb();
+            bool clearDbCache();
+            bool mergeContactsAndStoreToDb(GroupList& server_glist, ContactList& server_clist);
         protected:
             bool ensureContactTables();
             bool storeContactGroups();
             bool storeContactEntries();
 
+            bool loadContactGroupsFromDb();
+            bool loadContactEntriesFromDb();
+            bool loadContactConfigFromDb();
+
+            void mergeEntries(ContactList& entry_list);
+            void mergeGroups(GroupList& group_list);
+
         protected:
             std::shared_ptr<mail_cache::GMailSQLiteStorage> m_sql_storage;
             ContactList m_contacts;
             GroupList m_groups;
+            std::map<QString, QString> m_configs;
+            QDateTime m_sync_time;
             ApiEndpoint& m_endpoint;
 
             friend class mail_cache::GMailSQLiteStorage;
+            friend class GcontactCacheRoutes;
         };
 
         class GcontactCacheRoutes : public QObject
@@ -634,11 +690,17 @@ namespace googleQt {
 
             contact_cache_ptr       cache() { return m_GContactsCache; }
 
+            GoogleVoidTask* synchronizeContacts_Async();
+
 #ifdef API_QT_AUTOTEST
             void runAutotest();
 #endif
         protected:
-            contact_cache_ptr m_GContactsCache;
+            GoogleVoidTask* reloadCache_Async(GoogleVoidTask* rv);
+
+        protected:
+            Endpoint&           m_endpoint;
+            contact_cache_ptr   m_GContactsCache;            
         };
     };//gcontact
 };

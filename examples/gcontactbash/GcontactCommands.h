@@ -47,6 +47,12 @@ public:
     void update_contact_name(QString contactId_name);
 
     /**
+    * ls_contacts_date - list contacts modified after date
+    */
+    void ls_contacts_date(QString updatedMin);
+
+
+    /**
     * download_photo - get contact photo
     */
     void download_photo(QString contactid);
@@ -89,7 +95,17 @@ public:
     */
     void update_group_title(QString groupId_title);
 
+    /**
+    * ls_group_date - list group modified after date
+    */
+    void ls_groups_date(QString updatedMin);
 
+
+    /**
+     * sync_contacts - synchronize contacts cache
+     */
+    void sync_contacts();
+    
     /**
     * ls_as_json - list contacts using json
     */
@@ -113,6 +129,7 @@ public:
 
 
     void export_last_result();
+    void print_last_result();
 
     void print_contact_list(gcontact::ContactList* lst);
     void print_group_list(gcontact::GroupList* lst);

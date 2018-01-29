@@ -14,6 +14,8 @@ using namespace googleQt;
 using namespace gcontact;
 using namespace demo;
 
+static const QString date_format = "dd/MM/yyyy hh:mm";
+
 GcontactCommands::GcontactCommands(GoogleClient& c):m_c(c)
 {
     m_gt = m_c.gcontact();
@@ -35,6 +37,43 @@ void GcontactCommands::ls_contacts()
     {
         std::cout << "Exception: " << e.what() << std::endl;
     }    
+}
+
+void GcontactCommands::ls_contacts_date(QString updatedMin)
+{
+    std::function<void(void)> print_usage = []()
+    {
+        std::cout << "date time parameter required" << std::endl;
+        std::cout << "example: ls_contacts_date " << QDateTime::currentDateTime().toString(date_format) << std::endl;
+    };
+
+    if (updatedMin.isEmpty()) {
+        print_usage();
+        return;
+    }
+
+    QDateTime dt = QDateTime::fromString(updatedMin, date_format);
+    if (!dt.isValid()) {
+        print_usage();
+        return;
+    }
+
+    std::cout << "using date time parameter " << dt.toString(date_format) << std::endl;
+
+    try
+    {
+        ContactsListArg arg;
+        arg.setMaxResults(100);
+        arg.setOrderby("lastmodified");
+        arg.setSortorder("descending");
+        arg.setUpdatedMin(dt);
+        auto contacts_list = m_gt->getContacts()->list(arg);
+        print_contact_list(contacts_list->data());
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 }
 
 void GcontactCommands::get_contact(QString contactid)
@@ -257,6 +296,11 @@ void GcontactCommands::export_last_result()
     QString fileName = dest_dir + "/result_export.txt";    
     m_c.exportLastResponse(fileName);
     std::cout << "saved:" << fileName << std::endl;
+};
+
+void GcontactCommands::print_last_result()
+{
+    m_c.printLastResponse();
 };
 
 void GcontactCommands::parse_file(QString xmlFileName) 
@@ -495,13 +539,47 @@ void GcontactCommands::ls_groups()
         ContactGroupListArg arg;
         auto g_list = m_gt->getContactGroup()->list(arg);
         print_group_list(g_list->data());
-        //        m_c.printLastResponse();
     }
     catch (GoogleException& e)
     {
         std::cout << "Exception: " << e.what() << std::endl;
     }
 }
+
+void GcontactCommands::ls_groups_date(QString updatedMin) 
+{
+    std::function<void(void)> print_usage = []()
+    {
+        std::cout << "date time parameter required" << std::endl;
+        std::cout << "example: ls_groups_date " << QDateTime::currentDateTime().toString(date_format) << std::endl;
+    };
+
+    if (updatedMin.isEmpty()) {
+        print_usage();
+        return;
+    }
+
+    QDateTime dt = QDateTime::fromString(updatedMin, date_format);
+    if (!dt.isValid()) {
+        print_usage();
+        return;
+    }
+
+    std::cout << "using date time parameter " << dt.toString(date_format) << std::endl;
+
+    try
+    {
+        ContactGroupListArg arg;
+        arg.setUpdatedMin(dt);
+        auto g_list = m_gt->getContactGroup()->list(arg);
+        print_group_list(g_list->data());
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+
+};
 
 void GcontactCommands::get_group(QString groupid)
 {
@@ -660,7 +738,7 @@ void GcontactCommands::print_contact_list(gcontact::ContactList* lst)
         std::cout << std::setw(3) << idx++ << ". "
             << c->id() << " "
             << c->etag() << " "
-            << c->updated().toString("dd.MM.yyyy") << " "
+            << c->updated().toString(date_format) << " "
             << info << std::endl;
     }
 };
@@ -680,7 +758,28 @@ void GcontactCommands::print_group_list(gcontact::GroupList* lst)
         std::cout << std::setw(3) << idx++ << ". "
             << std::setw(16) << c->id() << " "
             << std::setw(32) << c->etag() << " "
-            << c->updated().toString("dd.MM.yyyy") << " "
+            << c->updated().toString(date_format) << " "
             << info << std::endl;
     }
+};
+
+void GcontactCommands::sync_contacts()
+{
+    try
+        {
+            auto r = m_gt->cacheRoutes();
+            auto t = r->synchronizeContacts_Async();
+            t->waitForResultAndRelease();
+            auto c = r->cache();
+            
+            ContactList& cl = c->contacts();
+            GroupList& gl = c->groups();
+
+            std::cout << "entries: " << cl.items().size() << std::endl;
+            std::cout << "groups: " << gl.items().size() << std::endl;            
+        }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }            
 };
