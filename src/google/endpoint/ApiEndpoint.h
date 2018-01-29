@@ -8,6 +8,7 @@
 #include <QJsonObject>
 #include <QEventLoop>
 #include <QHttpMultiPart>
+#include <QDebug>
 #include "ApiException.h"
 #include "ApiClient.h"
 
@@ -18,6 +19,7 @@ namespace googleQt{
     {
     public:
         ApiEndpoint(ApiClient* c);
+        virtual ~ApiEndpoint();
         void          cancelAll();
         void          runEventsLoop()const;
         void          exitEventsLoop()const;

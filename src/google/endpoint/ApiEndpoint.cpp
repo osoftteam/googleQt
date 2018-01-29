@@ -29,6 +29,11 @@ ApiEndpoint::ApiEndpoint(ApiClient* c):m_client(c)
 #endif
 }
 
+ApiEndpoint::~ApiEndpoint() 
+{
+
+};
+
 void ApiEndpoint::runEventsLoop()const
 {
     m_loop.exec();
