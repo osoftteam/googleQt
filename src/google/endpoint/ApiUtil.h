@@ -16,6 +16,7 @@
 #include <QUrlQuery>
 #include <QDomDocument>
 #include <QDomNodeList>
+#include <QDebug>
 
 #include "ApiException.h"
 #include "GoogleTask.h"
