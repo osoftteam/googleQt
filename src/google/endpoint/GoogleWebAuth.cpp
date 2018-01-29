@@ -90,12 +90,12 @@ bool GoogleWebAuth::updateToken(const QUrl& url, ApiAuthInfo* auth, const QStrin
                              }
                          reply->deleteLater();
                          loop.exit();
-                         if(!ok)
-                             {
-                                 throw GoogleException(errorInfo, status_code, "");
-                             }        
                      });
     loop.exec();
+    if(!ok)
+      {
+	throw GoogleException(errorInfo, status_code, "");
+      }        
     return rv;
 #endif
 }
