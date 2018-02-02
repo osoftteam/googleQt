@@ -856,7 +856,7 @@ void GcontactCommands::batch_create_contact(QString name_space_name)
         BatchContactArg arg(batch_list);
         auto c_list = m_gt->getContacts()->batch(arg);
         print_contact_list(c_list->data());
-        print_last_result();
+        //        print_last_result();
     }
     catch (GoogleException& e)
     {
@@ -891,7 +891,7 @@ void GcontactCommands::batch_update_contact(QString id_space_id)
         ContactList* result_list = rlst->data();
         for (auto& c : result_list->items()) {
             auto n = c->name();
-            n.setGivenName(n.givenName() + "-b");
+            n.setFullName(n.fullName() + "-b");
             c->setName(n);
             c->setBatchid(googleQt::EBatchId::update);
         }
@@ -899,7 +899,6 @@ void GcontactCommands::batch_update_contact(QString id_space_id)
         BatchContactArg arg2(*result_list);
         auto c_list = m_gt->getContacts()->batch(arg2);
         print_contact_list(c_list->data());
-        print_last_result();
     }
     catch (GoogleException& e)
     {
@@ -929,9 +928,7 @@ void GcontactCommands::batch_delete_contact(QString id_space_id)
         }
         BatchContactArg arg(batch_list);
         auto c_list = m_gt->getContacts()->batch(arg);
-        print_contact_list(c_list->data());
-
-        print_last_result();
+        std::cout << "contact deleted" << std::endl;
     }
     catch (GoogleException& e)
     {
@@ -1037,8 +1034,9 @@ void GcontactCommands::batch_update_group(QString id_space_id)
         
         BatchContactGroupArg arg2(*result_list);
         auto c_list = m_gt->getContactGroup()->batch(arg2);
+        //print_last_result();
         std::cout << "data after update.." << std::endl;
-        print_group_list(c_list->data());        
+        print_group_list(c_list->data());
     }
     catch (GoogleException& e)
     {
@@ -1070,7 +1068,6 @@ void GcontactCommands::batch_delete_group(QString id_space_id)
         BatchContactGroupArg arg(batch_list);
         m_gt->getContactGroup()->batch(arg);
         std::cout << "groups deleted" << std::endl;
-        //print_last_result();
     }
     catch (GoogleException& e)
     {
