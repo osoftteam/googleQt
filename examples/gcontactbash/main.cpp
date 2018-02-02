@@ -92,6 +92,19 @@ int main(int argc, char *argv[])
     t.addAction("download_photo", "download contact photo", [&](QString arg) {cmd.download_photo(arg); });
     t.addAction("upload_photo", "upload contact photo", [&](QString arg) {cmd.upload_photo(arg); });
     t.addAction("delete_photo", "delete contact photo", [&](QString arg) {cmd.delete_photo(arg); });
+
+    t.addSeparator();
+
+    t.addAction("batch_list_contacts", "get contact entries in batch", [&](QString arg) {cmd.batch_list_contacts(arg); });
+    t.addAction("batch_create_contact", "create contact entries in batch", [&](QString arg) {cmd.batch_create_contact(arg); });
+    t.addAction("batch_update_contact", "update contact entries in batch", [&](QString arg) {cmd.batch_update_contact(arg); });
+    t.addAction("batch_delete_contact", "delete contact entries in batch", [&](QString arg) {cmd.batch_delete_contact(arg); });
+    t.addSeparator();
+    t.addAction("batch_list_groups", "get contact groups in batch", [&](QString arg) {cmd.batch_list_groups(arg); });
+    t.addAction("batch_create_group", "create contact groups in batch", [&](QString arg) {cmd.batch_create_group(arg); });
+    t.addAction("batch_update_group", "update contact groups in batch", [&](QString arg) {cmd.batch_update_group(arg); });
+    t.addAction("batch_delete_group", "delete groups in batch", [&](QString arg) {cmd.batch_delete_group(arg); });
+
     t.addSeparator();
     t.addAction("sync_contacts", "sync contacts cache", [&](QString) {cmd.sync_contacts(); });
     t.addSeparator();

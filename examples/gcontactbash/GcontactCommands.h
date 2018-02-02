@@ -10,6 +10,8 @@ namespace googleQt {
     namespace gcontact {
         class ContactList;
         class GroupList;
+        class ContactInfo;
+        class GroupInfo;
     }
 };
 
@@ -100,6 +102,48 @@ public:
     */
     void ls_groups_date(QString updatedMin);
 
+    /**
+        list contacts in batch mode
+    */
+    void batch_list_contacts(QString id_space_id);
+
+    /**
+    * batch_create_contact - create contact entries in singe batch
+    * space separated list of names will be used as first names with last name appended suffix '4batch'
+    */
+    void batch_create_contact(QString name_space_name);
+
+    /**
+        modify contact names in batch - append '-b'
+    */
+    void batch_update_contact(QString id_space_id);
+
+    /**
+    delete contact in batch by id
+    */
+    void batch_delete_contact(QString id_space_id);
+
+    /**
+    list groups in batch mode
+    */
+    void batch_list_groups(QString id_space_id);
+
+    /**
+    * create contact groups in singe batch
+    * space separated list of names will be used as titles
+    */
+    void batch_create_group(QString name_space_name);
+
+
+    /**
+    modify group title in batch - append '-b'
+    */
+    void batch_update_group(QString id_space_id);
+
+    /**
+    delete groups in batch by id
+    */
+    void batch_delete_group(QString id_space_id);
 
     /**
      * sync_contacts - synchronize contacts cache
@@ -133,6 +177,9 @@ public:
 
     void print_contact_list(gcontact::ContactList* lst);
     void print_group_list(gcontact::GroupList* lst);
+
+    std::unique_ptr<gcontact::ContactInfo> generateContactInfo(QString first, QString last, QString email);    
+    std::unique_ptr<gcontact::GroupInfo> generateGroupInfo(QString title, QString content);
 
 protected:
     GoogleClient& m_c;

@@ -124,6 +124,7 @@ void GcontactCommands::create_contact(QString email_first_last)
 
     try
     {
+        /*
         ContactInfo ci;
         NameInfo n;
         EmailInfo e;
@@ -143,9 +144,12 @@ void GcontactCommands::create_contact(QString email_first_last)
             .setContent(QString("My notest on new contact for '%1'").arg(first))
             .setOrganizationInfo(o)
             .addAddress(a);
+            */
+
+        std::unique_ptr<ContactInfo> ci = generateContactInfo(first, last, email);
 
         CreateContactArg arg;
-        arg.setData(ci);
+        arg.setData(*(ci.get()));
         auto contacts_list = m_gt->getContacts()->create(arg);
         std::cout << contacts_list->toString() << std::endl;
         auto& arr = contacts_list->data()->items();
@@ -762,6 +766,321 @@ void GcontactCommands::print_group_list(gcontact::GroupList* lst)
             << info << std::endl;
     }
 };
+
+std::unique_ptr<gcontact::ContactInfo> GcontactCommands::generateContactInfo(QString first, QString last, QString email)
+{
+    std::unique_ptr<ContactInfo> ci(new ContactInfo());
+    NameInfo n;
+    EmailInfo e;
+    PhoneInfo p;
+    OrganizationInfo o;
+    PostalAddress a;
+
+    n.setFamilyName(last).setGivenName(first).setFullName(first + " " + last);
+    e.setAddress(email).setDisplayName(first + " " + last).setPrimary(true).setTypeLabel("home");
+    p.setNumber("1-111-1111").setPrimary(true);
+    o.setName("organization-name").setTitle("title-in-the-organization");
+    a.setCity("Mountain View").setStreet("1600 Amphitheatre Pkwy").setRegion("CA").setPostcode("94043").setCountry("United States").setPrimary(true);
+
+    ci->setName(n).setTitle("Title for " + first + " " + last)
+        .addEmail(e)
+        .addPhone(p)
+        .setContent(QString("My notest on new contact for '%1'").arg(first))
+        .setOrganizationInfo(o)
+        .addAddress(a);
+
+    return ci;
+};
+
+std::unique_ptr<gcontact::GroupInfo> GcontactCommands::generateGroupInfo(QString title, QString content)
+{
+    std::unique_ptr<GroupInfo> g(new GroupInfo());
+    g->setTitle(title).setContent(content);
+    return g;
+};
+
+
+void GcontactCommands::batch_list_contacts(QString id_space_id)
+{
+    if (id_space_id.isEmpty()) {
+        std::cout << "Invalid parameters, expected <id> <id>" << std::endl;
+        return;
+    }
+
+    QStringList arg_list = id_space_id.split(" ",
+        QString::SkipEmptyParts);
+
+    try
+    {
+        ContactList batch_list;
+        for (auto s : arg_list)
+        {
+            std::unique_ptr<ContactInfo> ci(ContactInfo::createWithId(s));
+            ci->setBatchid(googleQt::EBatchId::retrieve);
+            batch_list.add(std::move(ci));
+        }
+        BatchContactArg arg(batch_list);
+        auto c_list = m_gt->getContacts()->batch(arg);
+        print_contact_list(c_list->data());
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
+void GcontactCommands::batch_create_contact(QString name_space_name)
+{
+    if (name_space_name.isEmpty()) {
+        std::cout << "Invalid parameters, expected <First-Name> <First-Name>" << std::endl;
+        std::cout << "Example: batch_create_contact john tom mike" << std::endl;
+        return;
+    }
+
+    QStringList arg_list = name_space_name.split(" ",
+        QString::SkipEmptyParts);
+
+    try
+    {
+        ContactList batch_list;
+        for (auto s : arg_list)
+        {
+            QString first = s;
+            QString last = "4batch";
+            QString email = "me@gmail.com";
+
+            std::unique_ptr<ContactInfo> ci = generateContactInfo(first, last, email);            
+            ci->setBatchid(googleQt::EBatchId::create);            
+            batch_list.add(std::move(ci));            
+        }
+        BatchContactArg arg(batch_list);
+        auto c_list = m_gt->getContacts()->batch(arg);
+        print_contact_list(c_list->data());
+        print_last_result();
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
+
+void GcontactCommands::batch_update_contact(QString id_space_id)
+{
+    if (id_space_id.isEmpty()) {
+        std::cout << "Invalid parameters, expected <id> <id>" << std::endl;
+        return;
+    }
+
+    QStringList arg_list = id_space_id.split(" ",
+        QString::SkipEmptyParts);
+
+
+    try
+    {
+        ContactList batch_list;
+        for (auto s : arg_list)
+        {
+            std::unique_ptr<ContactInfo> ci(ContactInfo::createWithId(s));
+            ci->setBatchid(googleQt::EBatchId::retrieve);
+            batch_list.add(std::move(ci));
+        }
+
+        BatchContactArg arg(batch_list);
+        auto rlst = m_gt->getContacts()->batch(arg);
+        ContactList* result_list = rlst->data();
+        for (auto& c : result_list->items()) {
+            auto n = c->name();
+            n.setGivenName(n.givenName() + "-b");
+            c->setName(n);
+            c->setBatchid(googleQt::EBatchId::update);
+        }
+
+        BatchContactArg arg2(*result_list);
+        auto c_list = m_gt->getContacts()->batch(arg2);
+        print_contact_list(c_list->data());
+        print_last_result();
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
+
+void GcontactCommands::batch_delete_contact(QString id_space_id)
+{
+    if (id_space_id.isEmpty()) {
+        std::cout << "Invalid parameters, expected <id> <id>" << std::endl;
+        return;
+    }
+
+    QStringList arg_list = id_space_id.split(" ",
+        QString::SkipEmptyParts);
+
+    try
+    {
+        ContactList batch_list;
+        for (auto s : arg_list)
+        {
+            std::unique_ptr<ContactInfo> ci(ContactInfo::createWithId(s));
+            ci->setBatchid(googleQt::EBatchId::delete_operation);
+            batch_list.add(std::move(ci));
+        }
+        BatchContactArg arg(batch_list);
+        auto c_list = m_gt->getContacts()->batch(arg);
+        print_contact_list(c_list->data());
+
+        print_last_result();
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
+
+void GcontactCommands::batch_list_groups(QString id_space_id)
+{
+    if (id_space_id.isEmpty()) {
+        std::cout << "Invalid parameters, expected <id> <id>" << std::endl;
+        return;
+    }
+
+    QStringList arg_list = id_space_id.split(" ",
+        QString::SkipEmptyParts);
+
+    try
+    {
+        GroupList batch_list;
+        for (auto s : arg_list)
+        {
+            std::unique_ptr<GroupInfo> ci(GroupInfo::createWithId(s));
+            ci->setBatchid(googleQt::EBatchId::retrieve);
+            batch_list.add(std::move(ci));            
+        }
+        BatchContactGroupArg arg(batch_list);
+        auto g_list = m_gt->getContactGroup()->batch(arg);
+        print_group_list(g_list->data());
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
+
+void GcontactCommands::batch_create_group(QString name_space_name) 
+{
+    if (name_space_name.isEmpty()) {
+        std::cout << "Invalid parameters, expected <Name> <Name>" << std::endl;
+        std::cout << "Example: batch_create_group group1 group2 group3" << std::endl;
+        return;
+    }
+
+    QStringList arg_list = name_space_name.split(" ",
+        QString::SkipEmptyParts);
+
+    try
+    {
+        GroupList batch_list;
+        for (auto s : arg_list)
+        {
+            QString title = s;
+            QString content = "4batch";
+
+            std::unique_ptr<GroupInfo> ci = generateGroupInfo(title, content);
+            ci->setBatchid(googleQt::EBatchId::create);
+            batch_list.add(std::move(ci));
+        }
+        BatchContactGroupArg arg(batch_list);
+        auto g_list = m_gt->getContactGroup()->batch(arg);
+        print_group_list(g_list->data());
+        print_last_result();
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
+void GcontactCommands::batch_update_group(QString id_space_id)
+{
+    if (id_space_id.isEmpty()) {
+        std::cout << "Invalid parameters, expected <id> <id>" << std::endl;
+        return;
+    }
+
+    QStringList arg_list = id_space_id.split(" ",
+        QString::SkipEmptyParts);
+
+
+    try
+    {
+        GroupList batch_list;
+        for (auto s : arg_list)
+        {
+            std::unique_ptr<GroupInfo> ci(GroupInfo::createWithId(s));
+            ci->setBatchid(googleQt::EBatchId::retrieve);
+            batch_list.add(std::move(ci));
+        }
+
+        BatchContactGroupArg arg(batch_list);
+        auto rlst = m_gt->getContactGroup()->batch(arg);
+        std::cout << "data before update.." << std::endl;
+        print_group_list(rlst->data());
+        //print_last_result();
+        
+        GroupList* result_list = rlst->data();
+        for (auto& c : result_list->items()) {
+            c->setContent(c->content() + "-b");
+            c->setBatchid(googleQt::EBatchId::update);
+        }
+        
+        BatchContactGroupArg arg2(*result_list);
+        auto c_list = m_gt->getContactGroup()->batch(arg2);
+        print_last_result();
+        print_group_list(c_list->data());        
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
+
+
+void GcontactCommands::batch_delete_group(QString id_space_id)
+{
+    if (id_space_id.isEmpty()) {
+        std::cout << "Invalid parameters, expected <id> <id>" << std::endl;
+        return;
+    }
+
+    QStringList arg_list = id_space_id.split(" ",
+        QString::SkipEmptyParts);
+
+    try
+    {
+        GroupList batch_list;
+        for (auto s : arg_list)
+        {
+            std::unique_ptr<GroupInfo> ci(GroupInfo::createWithId(s));
+            ci->setBatchid(googleQt::EBatchId::delete_operation);
+            batch_list.add(std::move(ci));
+        }
+        BatchContactGroupArg arg(batch_list);
+        auto g_list = m_gt->getContactGroup()->batch(arg);
+        print_group_list(g_list->data());
+
+        print_last_result();
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
 
 void GcontactCommands::sync_contacts()
 {
