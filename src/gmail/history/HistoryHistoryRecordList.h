@@ -25,6 +25,7 @@ namespace history{
         HistoryRecordList(){};
 
         HistoryRecordList(const std::list <HistoryRecord>& arg){ m_history = arg; };
+        virtual ~HistoryRecordList(){};
 
     public:
             /**

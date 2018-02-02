@@ -32,6 +32,7 @@ namespace labels{
         LabelResource(){};
 
         LabelResource(const QString& arg){ m_id = arg; };
+        virtual ~LabelResource(){};
 
     public:
             /**

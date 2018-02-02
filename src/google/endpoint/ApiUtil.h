@@ -350,6 +350,16 @@ namespace googleQt {
         }
     };
 
+
+    enum class EBatchId 
+    {
+        none,
+        retrieve,
+        create,
+        update,
+        delete_operation
+    };
+
     namespace xml_util 
     {
         ///create or edit node

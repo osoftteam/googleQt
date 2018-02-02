@@ -21,6 +21,7 @@ namespace files{
         LocationData(){};
 
         LocationData(const float& arg){ m_latitude = arg; };
+        virtual ~LocationData(){};
 
     public:
             /**

@@ -27,6 +27,7 @@ namespace messages{
         MessagePartBody(){};
 
         MessagePartBody(const quint64& arg){ m_size = arg; };
+        virtual ~MessagePartBody(){};
 
     public:
             /**

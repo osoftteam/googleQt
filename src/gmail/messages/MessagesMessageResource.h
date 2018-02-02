@@ -36,6 +36,7 @@ namespace messages{
         MessageResource(){};
 
         MessageResource(const QString& arg){ m_id = arg; };
+        virtual ~MessageResource(){};
 
     public:
             /**

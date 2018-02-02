@@ -18,6 +18,20 @@ namespace contacts{
     public:
         ContactsRoutes(Endpoint* ep):GoogleRouteBase(ep){};
             /**
+            ApiRoute('batch')
+
+
+            Send a batch request for operations on contacts
+
+            */
+        std::unique_ptr<gcontact::ContactsListResult> batch(const gcontact::BatchContactArg& arg);
+        GoogleTask<gcontact::ContactsListResult>* batch_Async(const gcontact::BatchContactArg& arg);
+        void batch_AsyncCB(
+            const gcontact::BatchContactArg&,
+            std::function<void(std::unique_ptr<gcontact::ContactsListResult>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
+
+            /**
             ApiRoute('create')
 
 

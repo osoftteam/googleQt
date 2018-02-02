@@ -25,6 +25,7 @@ namespace permissions{
         PermissionResourcesCollection(const QString& arg):
         m_kind("drive#permissionList")
         { m_kind = arg; };
+        virtual ~PermissionResourcesCollection(){};
 
     public:
             /**

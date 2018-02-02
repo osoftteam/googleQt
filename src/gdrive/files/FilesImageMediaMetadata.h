@@ -46,6 +46,7 @@ namespace files{
         ImageMediaMetadata(){};
 
         ImageMediaMetadata(const quint64& arg){ m_width = arg; };
+        virtual ~ImageMediaMetadata(){};
 
     public:
             /**

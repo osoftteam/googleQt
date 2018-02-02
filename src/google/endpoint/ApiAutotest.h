@@ -35,7 +35,9 @@ namespace googleQt{
         void logRequest(QString req);
         void enableRequestLog(bool val) { m_request_log_enabled = val; };
         void addId(const char* class_name, QString id);
+        void addIdSet(const char* class_name, const IDSET& id_list);
         QString getId(const char* class_name, int default_id_num);
+        IDSET getReservedIdSet(const char* class_name);
         quint64 getInt(const char* class_name, const char* field_name, int default_id_num);
         QString getString(const char* class_name, const char* field_name, QString default_value);
 

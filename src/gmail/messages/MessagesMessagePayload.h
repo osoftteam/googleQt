@@ -32,6 +32,7 @@ namespace messages{
         MessagePayload(){};
 
         MessagePayload(const QString& arg){ m_partId = arg; };
+        virtual ~MessagePayload(){};
 
     public:
             /**

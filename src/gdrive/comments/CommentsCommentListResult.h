@@ -27,6 +27,7 @@ namespace comments{
         CommentListResult(const QString& arg):
         m_kind("drive#commentList")
         { m_nextPageToken = arg; };
+        virtual ~CommentListResult(){};
 
     public:
             /**

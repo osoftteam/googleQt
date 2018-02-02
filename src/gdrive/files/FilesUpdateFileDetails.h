@@ -32,6 +32,7 @@ namespace files{
         UpdateFileDetails(){};
 
         UpdateFileDetails(const QString& arg){ m_name = arg; };
+        virtual ~UpdateFileDetails(){};
 
     public:
             /**

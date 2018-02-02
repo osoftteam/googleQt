@@ -21,6 +21,7 @@ namespace files{
         VideoMediaMetadata(){};
 
         VideoMediaMetadata(const quint64& arg){ m_width = arg; };
+        virtual ~VideoMediaMetadata(){};
 
     public:
             /**

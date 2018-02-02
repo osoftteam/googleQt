@@ -27,6 +27,7 @@ namespace about{
         StorageQuota(){};
 
         StorageQuota(const float& arg){ m_limit = arg; };
+        virtual ~StorageQuota(){};
 
     public:
             /**

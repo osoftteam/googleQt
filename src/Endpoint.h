@@ -626,6 +626,24 @@ namespace googleQt{
         }
 
         template <class ARG>
+        QUrl buildContactBatchUrl(const ARG& a)const
+        {
+            QUrl url;
+            a.build(QString("https://www.google.com/m8/feeds/contacts/%1/full/batch")
+                .arg(client()->userId()), url);
+            return url;
+        }
+
+        template <class ARG>
+        QUrl buildContactGroupBatchUrl(const ARG& a)const
+        {
+            QUrl url;
+            a.build(QString("https://www.google.com/m8/feeds/groups/%1/full/batch")
+                .arg(client()->userId()), url);
+            return url;
+        }    
+
+        template <class ARG>
         QUrl buildContactPhotoUrl(const ARG& a)const
         {
             QUrl url;

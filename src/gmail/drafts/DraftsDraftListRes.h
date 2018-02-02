@@ -23,6 +23,7 @@ namespace drafts{
         DraftListRes(){};
 
         DraftListRes(const std::list <DraftResource>& arg){ m_drafts = arg; };
+        virtual ~DraftListRes(){};
 
     public:
             /**

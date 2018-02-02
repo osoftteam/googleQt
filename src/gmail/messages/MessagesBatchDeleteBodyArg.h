@@ -16,6 +16,7 @@ namespace messages{
         BatchDeleteBodyArg(){};
 
         BatchDeleteBodyArg(const std::list <QString>& arg){ m_ids = arg; };
+        virtual ~BatchDeleteBodyArg(){};
 
     public:
         const std::list <QString>& ids()const{return m_ids;};

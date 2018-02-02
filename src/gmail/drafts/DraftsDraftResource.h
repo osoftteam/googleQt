@@ -21,6 +21,7 @@ namespace drafts{
         DraftResource(){};
 
         DraftResource(const QString& arg){ m_id = arg; };
+        virtual ~DraftResource(){};
 
     public:
             /**

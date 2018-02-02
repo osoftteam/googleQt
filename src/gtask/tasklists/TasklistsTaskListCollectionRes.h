@@ -28,6 +28,7 @@ namespace tasklists{
         TaskListCollectionRes(const QString& arg):
         m_kind("tasks#taskLists")
         { m_kind = arg; };
+        virtual ~TaskListCollectionRes(){};
 
     public:
             /**

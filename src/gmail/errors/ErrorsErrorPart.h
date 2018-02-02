@@ -21,6 +21,7 @@ namespace errors{
         ErrorPart(){};
 
         ErrorPart(const QString& arg){ m_domain = arg; };
+        virtual ~ErrorPart(){};
 
     public:
             /**

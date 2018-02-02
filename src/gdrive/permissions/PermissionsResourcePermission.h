@@ -41,6 +41,7 @@ namespace permissions{
         ResourcePermission(const QString& arg):
         m_kind("drive#permission")
         { m_id = arg; };
+        virtual ~ResourcePermission(){};
 
     public:
             /**

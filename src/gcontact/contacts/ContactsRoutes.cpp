@@ -10,6 +10,40 @@
 using namespace googleQt;
 using namespace contacts;
 
+std::unique_ptr<gcontact::ContactsListResult> ContactsRoutes::batch(const gcontact::BatchContactArg& arg){
+    return batch_Async(arg)->waitForResultAndRelease();
+}
+
+GoogleTask<gcontact::ContactsListResult>* ContactsRoutes::batch_Async(const gcontact::BatchContactArg& arg)
+{
+    GoogleTask<gcontact::ContactsListResult>* t = m_end_point->produceTask<gcontact::ContactsListResult>();
+    m_end_point->postContactStyleB<
+        gcontact::ContactsListResult,
+        gcontact::ContactsListResult::factory
+        ,gcontact::BatchContactArg>
+        (m_end_point->buildContactBatchUrl(arg),
+        arg,
+        t);
+    return t;
+}
+
+void ContactsRoutes::batch_AsyncCB(
+    const gcontact::BatchContactArg& arg,
+    std::function<void(std::unique_ptr<gcontact::ContactsListResult>)> completed_callback ,
+    std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+{
+    m_end_point->postContactStyleB
+        <
+        gcontact::ContactsListResult,
+        gcontact::ContactsListResult::factory
+        , gcontact::BatchContactArg
+        >
+        (m_end_point->buildContactBatchUrl(arg),
+        arg,
+        completed_callback,
+        failed_callback);
+}
+
 std::unique_ptr<gcontact::ContactsListResult> ContactsRoutes::create(const gcontact::CreateContactArg& arg){
     return create_Async(arg)->waitForResultAndRelease();
 }

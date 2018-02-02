@@ -29,6 +29,7 @@ namespace attachments{
         MessageAttachment(){};
 
         MessageAttachment(const QString& arg){ m_attachmentId = arg; };
+        virtual ~MessageAttachment(){};
 
     public:
             /**

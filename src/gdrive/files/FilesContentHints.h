@@ -23,6 +23,7 @@ namespace files{
         ContentHints(){};
 
         ContentHints(const ThumbnailInfo& arg){ m_thumbnail = arg; };
+        virtual ~ContentHints(){};
 
     public:
             /**

@@ -23,6 +23,7 @@ namespace threads{
         ThreadListRes(){};
 
         ThreadListRes(const std::list <ThreadResource>& arg){ m_threads = arg; };
+        virtual ~ThreadListRes(){};
 
     public:
             /**

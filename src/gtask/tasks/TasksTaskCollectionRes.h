@@ -28,6 +28,7 @@ namespace tasks{
         TaskCollectionRes(const QString& arg):
         m_kind("tasks#tasks")
         { m_kind = arg; };
+        virtual ~TaskCollectionRes(){};
 
     public:
             /**

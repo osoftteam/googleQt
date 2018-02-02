@@ -31,6 +31,7 @@ namespace about{
         UserInfo(const QString& arg):
         m_kind("drive#user")
         { m_displayName = arg; };
+        virtual ~UserInfo(){};
 
     public:
             /**

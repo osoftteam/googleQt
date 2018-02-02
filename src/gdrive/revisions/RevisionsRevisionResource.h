@@ -49,6 +49,7 @@ namespace revisions{
         RevisionResource(const QString& arg):
         m_kind("drive#revision")
         { m_id = arg; };
+        virtual ~RevisionResource(){};
 
     public:
             /**

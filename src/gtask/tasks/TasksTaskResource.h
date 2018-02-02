@@ -60,6 +60,7 @@ namespace tasks{
         ,m_deleted(false)
         ,m_hidden(false)
         { m_id = arg; };
+        virtual ~TaskResource(){};
 
     public:
             /**

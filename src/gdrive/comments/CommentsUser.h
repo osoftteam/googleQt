@@ -31,6 +31,7 @@ namespace comments{
         User(const QString& arg):
         m_kind("drive#user")
         { m_displayName = arg; };
+        virtual ~User(){};
 
     public:
             /**

@@ -30,6 +30,7 @@ namespace revisions{
         UpdateRevisionDetails(){};
 
         UpdateRevisionDetails(const bool& arg){ m_keepForever = arg; };
+        virtual ~UpdateRevisionDetails(){};
 
     public:
             /**

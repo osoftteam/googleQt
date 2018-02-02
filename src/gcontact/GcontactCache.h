@@ -1,15 +1,7 @@
 #pragma once
-#include <QSqlQuery>
+#include "GcontactCacheUtil.h"
 
-#include "google/endpoint/ApiUtil.h"
 
-/**
-    GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD - lib will store structures as records in detail table, one row per structure
-    One table will be used to store all kind of record parts, mutliple groups supported as well.
-    Not used by default compilation, instead contact info is stored as two xml strings - original and modified
-    On server update modified xml is merged with original xml.
-*/
-// #define GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
 
 namespace googleQt {
     class GcontactRoutes;
@@ -22,105 +14,6 @@ namespace googleQt {
         class GContactCache;
 
         using contact_cache_ptr = std::shared_ptr<GContactCache>;
-
-        /**
-           basic xml parsing product, can be invalid
-         */
-        class NullablePart 
-        {
-        public:
-            bool isNull()const {return m_is_null;}
-
-        protected:
-            bool    m_is_null{ false };            
-        };
-
-        /**
-            object can be stored as one record and dbID is primary key
-        */
-        class DbPersistant: public NullablePart
-        {
-        public:
-            bool    isDbIdNull()const { return (m_db_id == -1); }
-            int     dbID()const { return m_db_id; }
-            void    setDbID(int v) { m_db_id = v; }
-        protected:
-            int     m_db_id{ -1 };
-        };
-
-        class ContactXmlPersistant : public DbPersistant 
-        {
-        public:
-            enum EStatus
-                {
-                    localCopy = 1,
-                    localModified,
-                    localRemoved,
-                    localRetired
-                };
-
-            ContactXmlPersistant();
-
-            QString etag()const { return m_etag; }
-            QString id()const { return m_id; }
-            QString title()const { return m_title; }
-            QString content()const { return m_content; }
-            const QDateTime& updated()const { return m_updated; }
-
-            EStatus status()const{return m_status;}
-            void markAsClean() { m_status = localCopy; };
-            void markAsModified() { m_status = localModified; };
-            void markAsDeleted() { m_status = localRemoved; };
-
-            QString  originalXml()const { return m_original_xml_string; }
-
-            void updateDateTime();
-
-            bool parseXml(const QByteArray & data);
-            bool parseXml(const QString & xml);
-            QString mergedXml(QString mergeOrigin)const;
-            virtual bool parseEntryNode(QDomNode n) = 0;
-            virtual void mergeEntryNode(QDomDocument& doc, QDomNode& entry_node) const = 0;
-
-            /// int -> status enum, does some validation
-            static EStatus validatedStatus(int val, bool* ok = nullptr);
-        protected:
-            QString             m_etag, m_id, m_title, m_content;
-            QDateTime           m_updated;
-            QString             m_original_xml_string;
-            EStatus             m_status;
-        };
-
-#ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
-        /**
-            object can be stored as series os records, each with it's own ID and label
-        */
-        class MRecordDbPersistant : public NullablePart 
-        {
-        public:
-            using   ID2NAME = std::map<int, QString>;
-            using   NAME2ID = std::map<QString, int>;
-            /// one obj can have multiple records, they all will have same kind id
-            virtual int  objKind()const = 0;
-            virtual bool insertDb(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx) = 0;
-        protected:
-            void clearDbMaps();
-            bool insertDbRecord(QSqlQuery* q, std::function<void (QSqlQuery*)> header_binder, int group_idx, QString recordName, QString recordValue);
-            bool insertDbRecord(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx, QString recordName, bool recordValue);
-        protected:
-            ID2NAME m_id2name;
-            NAME2ID m_name2id;
-        };
-
-        enum ContactPartKind 
-        {
-            pkindEmail = 1,
-            pkindPhone = 2,
-            pkindAddress = 3
-        };
-#else
-        using MRecordDbPersistant = NullablePart;
-#endif //GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
 
         /**
            name - full, given, family
@@ -150,6 +43,8 @@ namespace googleQt {
             */
             NameInfo& setFamilyName(QString s) { m_familyName = s; return *this; }
 
+            bool isEmpty()const override;
+
             static NameInfo parse(QDomNode n);
             QString toString()const;
             void toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const;
@@ -177,6 +72,8 @@ namespace googleQt {
             OrganizationInfo& setName(QString s) { m_name = s; return *this; }
             OrganizationInfo& setTitle(QString s) { m_title = s; return *this; }
             OrganizationInfo& setTypeLabel(QString s) { m_type_label = s; return *this; }
+
+            bool isEmpty()const override;
 
             static OrganizationInfo parse(QDomNode n);
             QString toString()const;
@@ -330,59 +227,6 @@ namespace googleQt {
             friend class EmailInfoList;
         };
 
-        template <class P>
-        class PartList
-        {
-        public:
-            QString toString()const 
-            {
-                QString s = "";
-                for (auto& p : m_parts) {
-                    s += QString(";") + p.toString();
-                }
-                return s;
-            };
-
-            bool operator==(const PartList<P>& o) const
-            {
-                if (m_parts.size() != o.m_parts.size())
-                    return false;
-
-                size_t Max = m_parts.size();
-                for (size_t i = 0; i < Max; i++) {
-                    if (m_parts[i] != o.m_parts[i])
-                        return false;
-                }
-
-                return true;
-            };
-
-            bool operator!=(const PartList<P>& o) const
-            {
-                return !(*this == o);
-            };
-
-#ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
-            bool insertDb(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder) 
-            {
-                int idx = 1;
-                for (auto& p : m_parts) {
-                    if (!p.insertDb(q, header_binder, idx)) {
-                        return false;
-                    }
-                    idx++;
-                }
-                return true;
-            }
-#endif
-
-            size_t size()const{return m_parts.size();}
-            const P& operator[](size_t idx)const{return m_parts[idx];}
-            
-        protected:
-            std::vector<P> m_parts;
-        };
-
         /**
         list of emails
         */
@@ -492,6 +336,8 @@ namespace googleQt {
             */
             ContactInfo& replaceAddressList(const std::list<PostalAddress>& lst);
 
+            static ContactInfo* createWithId(QString contact_id);
+
             bool parseEntryNode(QDomNode n)override;
             void mergeEntryNode(QDomDocument& doc, QDomNode& entry_node)const override;
             bool setFromDbRecord(QSqlQuery* q);
@@ -499,6 +345,8 @@ namespace googleQt {
             QString toString()const;
             QString toXml(QString userEmail)const;
             
+            void assignContent(const ContactInfo& src);
+
             bool operator==(const ContactInfo&) const;
             bool operator!=(const ContactInfo&) const;
 
@@ -537,6 +385,8 @@ namespace googleQt {
             */
             GroupInfo& setContent(QString notes);
 
+            static GroupInfo* createWithId(QString group_id);
+
             QString toString()const;
             QString toXml(QString userEmail)const;
             bool parseEntryNode(QDomNode n)override;
@@ -546,85 +396,11 @@ namespace googleQt {
             bool operator==(const GroupInfo&) const;
             bool operator!=(const GroupInfo&) const;
 
+            void assignContent(const GroupInfo& src);
+
 #ifdef API_QT_AUTOTEST
             static std::unique_ptr<GroupInfo> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
-        };
-
-        template <class T>
-        class InfoList 
-        {
-        public:
-            void add(std::shared_ptr<T> c) {
-                m_items.push_back(c);
-            };
-
-            void add(std::unique_ptr<T> c) {
-                std::shared_ptr<T> c2(c.release());
-                add(c2);
-            };
-
-            void clear() { m_items.clear(); };
-
-            QString toString()const
-            {
-                QString rv;
-                for (auto& c : items()) {
-                    rv += c->toString();
-                    rv += "\n";
-                }
-                return rv;
-            };
-
-            bool parseXml(const QByteArray & data)
-            {
-                QDomDocument doc;
-                QString errorMsg = 0;
-                int errorLine;
-                int errorColumn;
-                if (!doc.setContent(data, &errorMsg, &errorLine, &errorColumn)) {
-                    qWarning() << "Failed to parse contacts XML document: " << errorMsg << "line=" << errorLine << "column=" << errorColumn;
-                    qWarning() << "-- begin data";
-                    qWarning() << data;
-                    qWarning() << "-- end data";
-                    return false;
-                }
-
-                QDomNodeList entries = doc.elementsByTagName("entry");
-                for (int i = 0; i < entries.size(); i++) {
-                    QDomNode n = entries.item(i);
-                    std::shared_ptr<T> ci(new T);
-                    if (ci->parseEntryNode(n)) {
-                        m_items.push_back(ci);
-                    }
-                }
-
-                return true;
-            };
-
-            bool operator==(const InfoList<T>& o) const
-            {
-                if (m_items.size() != o.m_items.size())
-                    return false;
-
-                size_t Max = m_items.size();
-                for (size_t i = 0; i < Max; i++) {
-                    if (*(m_items[i]) != *(o.m_items[i]))
-                        return false;
-                }
-
-                return true;
-            };
-
-            bool operator!=(const InfoList<T>& o) const
-            {
-                return !(*this == o);
-            };
-
-            const std::vector<std::shared_ptr<T>>& items()const { return m_items; }
-
-        protected:
-            std::vector<std::shared_ptr<T>> m_items;
         };
 
         /**
@@ -662,6 +438,7 @@ namespace googleQt {
             bool ensureContactTables();
             bool storeContactGroups();
             bool storeContactEntries();
+            bool storeConfig();
 
             bool loadContactGroupsFromDb();
             bool loadContactEntriesFromDb();
@@ -682,6 +459,18 @@ namespace googleQt {
             friend class GcontactCacheRoutes;
         };
 
+        class GcontactCacheQueryTask : public GoogleVoidTask 
+        {
+        public:
+            contact_cache_ptr       cache() { return m_cache; }
+        protected:
+            GcontactCacheQueryTask(ApiEndpoint& ept, contact_cache_ptr c) :GoogleVoidTask(ept), m_cache(c) {}        
+            contact_cache_ptr m_cache;
+            std::unique_ptr<ContactList> m_result_contacts;
+            std::unique_ptr<GroupList> m_result_groups;
+            friend class GcontactCacheRoutes;
+        };
+
         class GcontactCacheRoutes : public QObject
         {
             Q_OBJECT
@@ -690,13 +479,13 @@ namespace googleQt {
 
             contact_cache_ptr       cache() { return m_GContactsCache; }
 
-            GoogleVoidTask* synchronizeContacts_Async();
+            GcontactCacheQueryTask* synchronizeContacts_Async();
 
 #ifdef API_QT_AUTOTEST
             void runAutotest();
 #endif
         protected:
-            GoogleVoidTask* reloadCache_Async(GoogleVoidTask* rv);
+            GcontactCacheQueryTask* reloadCache_Async(GcontactCacheQueryTask* rv, QDateTime dtUpdatedMin);
 
         protected:
             Endpoint&           m_endpoint;

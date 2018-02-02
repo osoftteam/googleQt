@@ -13,6 +13,15 @@ using namespace googleQt;
 static GcontactRoutes* cl;
 
 
+static void call_batch_from_ContactGroup(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("ContactGroup").arg("batch");
+    std::unique_ptr<gcontact::BatchContactGroupArg> arg = gcontact::BatchContactGroupArg::EXAMPLE(0, 0);
+    auto res = cl->getContactGroup()->batch(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "------ RESULT ------------------";
+    ApiAutotest::INSTANCE() << res->toString();
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
 static void call_create_from_ContactGroup(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("ContactGroup").arg("create");
     std::unique_ptr<gcontact::CreateContactGroupArg> arg = gcontact::CreateContactGroupArg::EXAMPLE(0, 0);
@@ -42,6 +51,15 @@ static void call_update_from_ContactGroup(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("ContactGroup").arg("update");
     std::unique_ptr<gcontact::UpdateContactGroupArg> arg = gcontact::UpdateContactGroupArg::EXAMPLE(0, 0);
     auto res = cl->getContactGroup()->update(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "------ RESULT ------------------";
+    ApiAutotest::INSTANCE() << res->toString();
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
+static void call_batch_from_Contacts(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Contacts").arg("batch");
+    std::unique_ptr<gcontact::BatchContactArg> arg = gcontact::BatchContactArg::EXAMPLE(0, 0);
+    auto res = cl->getContacts()->batch(*(arg.get()) );
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();
     ApiAutotest::INSTANCE() << "--------------------------";
@@ -110,6 +128,7 @@ static void call_uploadContactPhoto_from_Contacts(){
 
 
 static void test_call_ContactGroupRoutes(){
+    call_batch_from_ContactGroup();
     call_create_from_ContactGroup();
     call_deleteContactGroup_from_ContactGroup();
     call_list_from_ContactGroup();
@@ -117,6 +136,7 @@ static void test_call_ContactGroupRoutes(){
 }
 
 static void test_call_ContactsRoutes(){
+    call_batch_from_Contacts();
     call_create_from_Contacts();
     call_deleteContact_from_Contacts();
     call_deleteContactPhoto_from_Contacts();

@@ -33,6 +33,7 @@ namespace history{
         HistoryRecord(){};
 
         HistoryRecord(const QString& arg){ m_id = arg; };
+        virtual ~HistoryRecord(){};
 
     public:
             /**

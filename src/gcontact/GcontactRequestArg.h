@@ -116,6 +116,30 @@ namespace googleQt {
         };
 
         /**
+            argument class for contact batch operation, limit - 100 operation per batch
+        */
+        class BatchContactArg : public QParamArg
+        {
+        public:
+            BatchContactArg();
+            BatchContactArg(const ContactList& c);
+
+            void build(const QString& link_path, QUrl& url)const override;
+
+            const ContactList& data()const { return m_batch_list; }
+            void setData(const ContactList& c) { m_batch_list = c; };
+
+            QString toXml(QString userId)const;
+
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<BatchContactArg> EXAMPLE(int context_index, int parent_content_index);
+#endif //API_QT_AUTOTEST
+
+        protected:
+            ContactList m_batch_list;
+        };
+
+        /**
             argument class for updating contact
         */
         class UpdateContactArg : public QParamArg
@@ -181,6 +205,8 @@ namespace googleQt {
             ContactList* data();
             bool    isNull()const {return m_is_null;}
             QString toString(bool multiline = true)const;
+
+            std::unique_ptr<ContactList>&& detachData() { return std::move(m_data); }
 
             class factory {
             public:
@@ -286,6 +312,8 @@ namespace googleQt {
             
             GroupList* data();
 
+            std::unique_ptr<GroupList>&& detachData() { return std::move(m_data); }
+
             QString toString(bool multiline = true)const;
             
             class factory {
@@ -385,6 +413,31 @@ namespace googleQt {
             QString m_etag;
             bool    m_ignore_etag{ false };//will ignore etag and use '*' instead
         };
+
+        /**
+        argument class for contact batch operation, limit - 100 operation per batch
+        */
+        class BatchContactGroupArg : public QParamArg
+        {
+        public:
+            BatchContactGroupArg();
+            BatchContactGroupArg(const GroupList& c);
+
+            void build(const QString& link_path, QUrl& url)const override;
+
+            const GroupList& data()const { return m_batch_list; }
+            void setData(const GroupList& c) { m_batch_list = c; };
+
+            QString toXml(QString userId)const;
+
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<BatchContactGroupArg> EXAMPLE(int context_index, int parent_content_index);
+#endif //API_QT_AUTOTEST
+
+        protected:
+            GroupList m_batch_list;
+        };
+
 
         class DownloadPhotoArg : public QParamArg
         {

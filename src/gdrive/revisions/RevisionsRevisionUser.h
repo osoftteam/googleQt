@@ -32,6 +32,7 @@ namespace revisions{
         RevisionUser(const QString& arg):
         m_kind("drive#user")
         { m_displayName = arg; };
+        virtual ~RevisionUser(){};
 
     public:
             /**

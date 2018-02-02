@@ -21,6 +21,7 @@ namespace history{
         LabelHistoryRecord(){};
 
         LabelHistoryRecord(const messages::MessageResource& arg){ m_message = arg; };
+        virtual ~LabelHistoryRecord(){};
 
     public:
             /**

@@ -22,6 +22,7 @@ namespace errors{
         ErrorInfo(){};
 
         ErrorInfo(const std::list <ErrorPart>& arg){ m_errors = arg; };
+        virtual ~ErrorInfo(){};
 
     public:
             /**

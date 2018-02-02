@@ -53,6 +53,7 @@ namespace comments{
         ,m_deleted(false)
         ,m_resolved(false)
         { m_id = arg; };
+        virtual ~Comment(){};
 
     public:
             /**

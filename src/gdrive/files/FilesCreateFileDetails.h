@@ -43,6 +43,7 @@ namespace files{
         CreateFileDetails(const QString& arg):
         m_starred(false)
         { m_id = arg; };
+        virtual ~CreateFileDetails(){};
 
     public:
             /**

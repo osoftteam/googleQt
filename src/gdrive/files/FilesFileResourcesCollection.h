@@ -28,6 +28,7 @@ namespace files{
         FileResourcesCollection(const QString& arg):
         m_kind("drive#fileList")
         { m_nextPageToken = arg; };
+        virtual ~FileResourcesCollection(){};
 
     public:
             /**

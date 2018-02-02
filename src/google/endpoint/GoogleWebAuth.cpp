@@ -94,7 +94,7 @@ bool GoogleWebAuth::updateToken(const QUrl& url, ApiAuthInfo* auth, const QStrin
     loop.exec();
     if(!ok)
       {
-	throw GoogleException(errorInfo, status_code, "");
+    throw GoogleException(errorInfo, status_code, "");
       }        
     return rv;
 #endif

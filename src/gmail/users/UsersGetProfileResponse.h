@@ -22,6 +22,7 @@ namespace users{
         GetProfileResponse(){};
 
         GetProfileResponse(const QString& arg){ m_emailAddress = arg; };
+        virtual ~GetProfileResponse(){};
 
     public:
             /**

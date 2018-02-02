@@ -23,6 +23,7 @@ namespace threads{
         ThreadResource(){};
 
         ThreadResource(const QString& arg){ m_id = arg; };
+        virtual ~ThreadResource(){};
 
     public:
             /**

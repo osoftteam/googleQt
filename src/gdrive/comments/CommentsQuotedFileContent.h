@@ -21,6 +21,7 @@ namespace comments{
         QuotedFileContent(){};
 
         QuotedFileContent(const QString& arg){ m_mimeType = arg; };
+        virtual ~QuotedFileContent(){};
 
     public:
             /**

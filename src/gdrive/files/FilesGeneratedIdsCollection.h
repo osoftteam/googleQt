@@ -27,6 +27,7 @@ namespace files{
         GeneratedIdsCollection(const QString& arg):
         m_kind("drive#generatedIds")
         { m_kind = arg; };
+        virtual ~GeneratedIdsCollection(){};
 
     public:
             /**

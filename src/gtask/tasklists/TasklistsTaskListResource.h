@@ -30,6 +30,7 @@ namespace tasklists{
         TaskListResource(const QString& arg):
         m_kind("tasks#taskList")
         { m_id = arg; };
+        virtual ~TaskListResource(){};
 
     public:
             /**

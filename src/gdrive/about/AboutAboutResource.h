@@ -27,6 +27,7 @@ namespace about{
         AboutResource(const QString& arg):
         m_kind("drive#about")
         { m_kind = arg; };
+        virtual ~AboutResource(){};
 
     public:
             /**

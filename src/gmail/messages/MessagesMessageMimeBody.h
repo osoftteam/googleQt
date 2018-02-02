@@ -27,6 +27,7 @@ namespace messages{
         MessageMimeBody(){};
 
         MessageMimeBody(const QString& arg){ m_attachmentId = arg; };
+        virtual ~MessageMimeBody(){};
 
     public:
             /**

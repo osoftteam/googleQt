@@ -25,6 +25,7 @@ namespace messages{
         MessagePart(){};
 
         MessagePart(const QString& arg){ m_partId = arg; };
+        virtual ~MessagePart(){};
 
     public:
             /**

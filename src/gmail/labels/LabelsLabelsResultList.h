@@ -17,6 +17,7 @@ namespace labels{
         LabelsResultList(){};
 
         LabelsResultList(const std::list <LabelResource>& arg){ m_labels = arg; };
+        virtual ~LabelsResultList(){};
 
     public:
         const std::list <LabelResource>& labels()const{return m_labels;};

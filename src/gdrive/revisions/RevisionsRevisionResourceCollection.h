@@ -32,6 +32,7 @@ namespace revisions{
         RevisionResourceCollection(const QString& arg):
         m_kind("drive#revisionList")
         { m_nextPageToken = arg; };
+        virtual ~RevisionResourceCollection(){};
 
     public:
             /**

@@ -21,6 +21,7 @@ namespace files{
         ThumbnailInfo(){};
 
         ThumbnailInfo(const QByteArray& arg){ m_image = arg; };
+        virtual ~ThumbnailInfo(){};
 
     public:
             /**

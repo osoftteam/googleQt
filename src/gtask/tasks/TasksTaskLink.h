@@ -22,6 +22,7 @@ namespace tasks{
         TaskLink(){};
 
         TaskLink(const QString& arg){ m_type = arg; };
+        virtual ~TaskLink(){};
 
     public:
             /**

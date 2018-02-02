@@ -39,6 +39,7 @@ namespace comments{
         Reply(const QString& arg):
         m_kind("drive#reply")
         { m_id = arg; };
+        virtual ~Reply(){};
 
     public:
             /**

@@ -119,6 +119,7 @@ namespace files{
         FileResource(const QString& arg):
         m_kind("drive#file")
         { m_id = arg; };
+        virtual ~FileResource(){};
 
     public:
             /**

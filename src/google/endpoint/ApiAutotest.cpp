@@ -194,6 +194,25 @@ void ApiAutotest::addId(const char* class_name, QString id)
         }
 };
 
+void ApiAutotest::addIdSet(const char* class_name, const IDSET& id_set)
+{
+    for (auto c : id_set) {       
+        addId(class_name, c);
+    }
+};
+
+IDSET ApiAutotest::getReservedIdSet(const char* class_name)
+{
+    IDSET rv;
+    CLASS_ID_MAP::iterator i = m_availID.find(class_name);
+    if (i != m_availID.end() && !i->second.empty())
+    {
+        rv = i->second;
+        i->second.clear();
+    }
+    return rv;
+};
+
 QString ApiAutotest::getId(const char* class_name, int default_id_num)
 {
     QString rv;

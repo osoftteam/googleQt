@@ -22,6 +22,7 @@ namespace messages{
         MessagePayloadHeader(){};
 
         MessagePayloadHeader(const QString& arg){ m_name = arg; };
+        virtual ~MessagePayloadHeader(){};
 
     public:
             /**

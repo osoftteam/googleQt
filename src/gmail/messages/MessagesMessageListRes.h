@@ -23,6 +23,7 @@ namespace messages{
         MessageListRes(){};
 
         MessageListRes(const std::list <MessageResource>& arg){ m_messages = arg; };
+        virtual ~MessageListRes(){};
 
     public:
             /**
