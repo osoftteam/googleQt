@@ -693,6 +693,7 @@ bool ContactInfo::operator!=(const ContactInfo& o) const
 QString ContactInfo::toXml(QString userEmail)const 
 {
     QString rv;
+    /*
     if (m_title.isEmpty() && m_name.isEmpty() && m_etag.isEmpty()) {
         rv = QString("<entry>\n");
     }
@@ -705,6 +706,34 @@ QString ContactInfo::toXml(QString userEmail)const
         rv += batch2xml(m_batch_id);
         rv += "\n";
     }
+    */
+
+    if (m_batch_id != googleQt::EBatchId::none) {
+        switch(m_batch_id){
+        case googleQt::EBatchId::update:
+        case googleQt::EBatchId::delete_operation:{
+            rv = QString("<entry gd:etag=\'*\'>\n");
+        }break;
+        default:{
+            if (m_etag.isEmpty()) {
+                rv = QString("<entry>\n");
+            }
+        }
+        }
+        
+        rv += batch2xml(m_batch_id);
+        rv += "\n";
+    }
+    else{
+        if (m_etag.isEmpty()) {
+            rv = QString("<entry>\n");
+        }
+        else{
+            rv = QString("<entry gd:etag=\"%1\">\n")
+                .arg(m_etag);
+        }
+    }
+    
 
     if(!m_id.isEmpty())rv += QString("<id>http://www.google.com/m8/feeds/contacts/%1/base/%2</id>\n").arg(userEmail).arg(m_id);
     if(!m_title.isEmpty())rv += QString("<title>%1</title>\n").arg(m_title);
@@ -883,20 +912,33 @@ void GroupInfo::mergeEntryNode(QDomDocument& doc, QDomNode& entry_node)const
 QString GroupInfo::toXml(QString userEmail)const 
 {
     QString rv;
-    if (m_etag.isEmpty()) 
-    {
-        rv = QString("<entry>\n");
-    }
-    else
-    {
-        rv = QString("<entry gd:etag=\"%1\">\n")
-            .arg(m_etag);
-    }
-
+        
     if (m_batch_id != googleQt::EBatchId::none) {
+        switch(m_batch_id){
+        case googleQt::EBatchId::update:
+        case googleQt::EBatchId::delete_operation:{
+            rv = QString("<entry gd:etag=\'*\'>\n");
+        }break;
+        default:{
+            if (m_etag.isEmpty()) {
+                rv = QString("<entry>\n");
+            }
+        }
+        }
+        
         rv += batch2xml(m_batch_id);
         rv += "\n";
     }
+    else{
+        if (m_etag.isEmpty()) {
+            rv = QString("<entry>\n");
+        }
+        else{
+            rv = QString("<entry gd:etag=\"%1\">\n")
+                .arg(m_etag);
+        }
+    }
+
 
     if (!m_id.isEmpty())rv += QString("<id>http://www.google.com/m8/feeds/groups/%1/base/%2</id>\n").arg(userEmail).arg(m_id);
     if(!m_title.isEmpty())rv += QString("<title>%1</title>\n").arg(m_title);

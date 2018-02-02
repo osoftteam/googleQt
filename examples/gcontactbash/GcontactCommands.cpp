@@ -996,7 +996,6 @@ void GcontactCommands::batch_create_group(QString name_space_name)
         BatchContactGroupArg arg(batch_list);
         auto g_list = m_gt->getContactGroup()->batch(arg);
         print_group_list(g_list->data());
-        print_last_result();
     }
     catch (GoogleException& e)
     {
@@ -1029,17 +1028,16 @@ void GcontactCommands::batch_update_group(QString id_space_id)
         auto rlst = m_gt->getContactGroup()->batch(arg);
         std::cout << "data before update.." << std::endl;
         print_group_list(rlst->data());
-        //print_last_result();
         
         GroupList* result_list = rlst->data();
         for (auto& c : result_list->items()) {
-            c->setContent(c->content() + "-b");
+            c->setTitle(c->title() + "-b");
             c->setBatchid(googleQt::EBatchId::update);
         }
         
         BatchContactGroupArg arg2(*result_list);
         auto c_list = m_gt->getContactGroup()->batch(arg2);
-        print_last_result();
+        std::cout << "data after update.." << std::endl;
         print_group_list(c_list->data());        
     }
     catch (GoogleException& e)
@@ -1070,10 +1068,9 @@ void GcontactCommands::batch_delete_group(QString id_space_id)
             batch_list.add(std::move(ci));
         }
         BatchContactGroupArg arg(batch_list);
-        auto g_list = m_gt->getContactGroup()->batch(arg);
-        print_group_list(g_list->data());
-
-        print_last_result();
+        m_gt->getContactGroup()->batch(arg);
+        std::cout << "groups deleted" << std::endl;
+        //print_last_result();
     }
     catch (GoogleException& e)
     {
