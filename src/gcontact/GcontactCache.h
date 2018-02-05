@@ -119,10 +119,6 @@ namespace googleQt {
             bool operator==(const PostalAddress&) const;
             bool operator!=(const PostalAddress&) const;
 
-#ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
-            int  objKind()const override { return pkindAddress; }
-            bool insertDb(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx)override;
-#endif
         protected:
             QString m_city, m_street, m_region, m_postcode, m_country;
             QString m_type_label;
@@ -166,10 +162,6 @@ namespace googleQt {
             bool operator==(const PhoneInfo&) const;
             bool operator!=(const PhoneInfo&) const;            
 
-#ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
-            int  objKind()const override { return pkindPhone; }
-            bool insertDb(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx)override;
-#endif
         protected:
             QString m_number;
             QString m_uri;
@@ -213,11 +205,6 @@ namespace googleQt {
             QString toString()const;
             bool operator==(const EmailInfo&) const;
             bool operator!=(const EmailInfo&) const;
-
-#ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
-            int  objKind()const override { return pkindEmail; }
-            bool insertDb(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx)override;
-#endif
 
         protected:
             QString m_address;
@@ -353,10 +340,6 @@ namespace googleQt {
 #ifdef API_QT_AUTOTEST
             static std::unique_ptr<ContactInfo> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
-
-#ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
-            bool insertDbRecords(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder);
-#endif
 
         protected:
             NameInfo            m_name;

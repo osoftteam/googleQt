@@ -1041,13 +1041,6 @@ bool GContactCache::ensureContactTables()
     if (!m_sql_storage->execQuery(sql_config))
         return false;
 
-
-#ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
-    QString sql_fields = QString("CREATE TABLE IF NOT EXISTS %1gcontact_records(record_id INTEGER PRIMARY KEY, contact_db_id INTEGER NOT NULL, obj_kind INTEGER NOT NULL, group_idx INTEGER NOT NULL, record_name TEXT NOT NULL, record_value TEXT)").arg(m_sql_storage->m_metaPrefix);
-    if (!m_sql_storage->execQuery(sql_fields))
-        return false;
-#endif //GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
-
     return true;
 };
 
@@ -1103,32 +1096,6 @@ bool GContactCache::storeContactEntries()
                 continue;
             }
         }
-
-#ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
-        /// store records ///
-        QString sql_insert_record;
-        sql_insert_record = QString("INSERT INTO  %1gcontact_records(contact_db_id, obj_kind, group_idx, record_name, record_value)"
-            " VALUES(?, ?, ?, ?, ?)")
-            .arg(m_sql_storage->m_metaPrefix);
-        q = m_sql_storage->prepareQuery(sql_insert_record);
-        if (!q) {
-            qWarning() << "Failed to prepare contact insert-SQL" << sql_insert_record;
-            return false;
-        }
-
-        int contactId = 0;
-        std::function<void(QSqlQuery*)> header_binder = [&contactId](QSqlQuery* q)
-        {
-            q->addBindValue(contactId);
-        };
-
-        for (auto c : new_contacts) {
-            contactId = c->dbID();
-            if (!c->insertDbRecords(q, header_binder)) {
-                return false;
-            }
-        }
-#endif// GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
     }
     else if (updated_contacts.size() > 0) {
         QString sql_update;
@@ -1542,98 +1509,6 @@ GcontactCacheQueryTask* GcontactCacheRoutes::reloadCache_Async(GcontactCacheQuer
 
     return rv;
 };
-
-
-#ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
-/**
-MRecordDbPersistant
-*/
-void MRecordDbPersistant::clearDbMaps()
-{
-    m_id2name.clear();
-    m_name2id.clear();
-};
-
-bool MRecordDbPersistant::insertDbRecord(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx, QString recordName, QString recordValue)
-{
-    header_binder(q);
-    q->addBindValue(objKind());
-    q->addBindValue(group_idx);
-    q->addBindValue(recordName);
-    q->addBindValue(recordValue);
-    if (q->exec()) {
-        int rid = q->lastInsertId().toInt();
-        m_id2name[rid] = recordName;
-        m_name2id[recordName] = rid;
-    }
-    else {
-        QString error = q->lastError().text();
-        qWarning() << "ERROR. Failed to insert contact to DB" << error;
-        return false;
-    }
-
-    return true;
-};
-
-bool MRecordDbPersistant::insertDbRecord(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx, QString recordName, bool recordValue)
-{
-    return insertDbRecord(q, header_binder, group_idx, recordName, recordValue ? QString("1") : QString("0"));
-};
-
-bool PostalAddress::insertDb(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx)
-{
-    clearDbMaps();
-    insertDbRecord(q, header_binder, group_idx, "city", m_city);
-    insertDbRecord(q, header_binder, group_idx, "street", m_street);
-    insertDbRecord(q, header_binder, group_idx, "region", m_region);
-    insertDbRecord(q, header_binder, group_idx, "postcode", m_postcode);
-    insertDbRecord(q, header_binder, group_idx, "country", m_country);
-    insertDbRecord(q, header_binder, group_idx, "type_label", m_type_label);
-    insertDbRecord(q, header_binder, group_idx, "formattedAddress", m_formattedAddress);
-    insertDbRecord(q, header_binder, group_idx, "is_primary", m_is_primary);
-    return true;
-};
-
-bool PhoneInfo::insertDb(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx)
-{
-    clearDbMaps();
-    insertDbRecord(q, header_binder, group_idx, "number", m_number);
-    insertDbRecord(q, header_binder, group_idx, "uri", m_uri);
-    insertDbRecord(q, header_binder, group_idx, "type_label", m_type_label);
-    insertDbRecord(q, header_binder, group_idx, "is_primary", m_is_primary);
-
-    return true;
-};
-
-bool EmailInfo::insertDb(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx)
-{
-    clearDbMaps();
-    insertDbRecord(q, header_binder, group_idx, "address", m_address);
-    insertDbRecord(q, header_binder, group_idx, "display_name", m_display_name);
-    insertDbRecord(q, header_binder, group_idx, "type_label", m_type_label);
-    insertDbRecord(q, header_binder, group_idx, "is_primary", m_is_primary);
-
-    return true;
-};
-
-bool ContactInfo::insertDbRecords(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder)
-{
-    if (!m_emails.insertDb(q, header_binder)) {
-        return false;
-    };
-
-    if (!m_phones.insertDb(q, header_binder)) {
-        return false;
-    };
-
-    if (!m_address_list.insertDb(q, header_binder)) {
-        return false;
-    };
-
-    return true;
-};
-
-#endif //GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
 
 #ifdef API_QT_AUTOTEST
 

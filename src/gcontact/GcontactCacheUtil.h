@@ -2,17 +2,6 @@
 #include <QSqlQuery>
 #include "google/endpoint/ApiUtil.h"
 
-/**
-
-DEPRECATED !
-
-GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD - lib will store structures as records in detail table, one row per structure
-One table will be used to store all kind of record parts, mutliple groups supported as well.
-Not used by default compilation, instead contact info is stored as two xml strings - original and modified
-On server update modified xml is merged with original xml.
-*/
-// #define GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
-
 namespace googleQt {
     namespace gcontact {
         /**
@@ -86,47 +75,22 @@ namespace googleQt {
             static EStatus validatedStatus(int val, bool* ok = nullptr);
             static QString batch2xml(googleQt::EBatchId bid);
 
+            /// userPtr - custom user data pointer
+            void* userPtr()const { return m_user_ptr; }
+            void  setUserPtr(void* p)const { m_user_ptr = p; }
+
         protected:
             QString             m_etag, m_id, m_title, m_content;
             QDateTime           m_updated;
             QString             m_original_xml_string;
             EStatus             m_status;
+            mutable void*       m_user_ptr{ nullptr };
 
             googleQt::EBatchId  m_batch_id{ googleQt::EBatchId::none };
         };//ContactXmlPersistant
 
 
-#ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
-          /**
-          object can be stored as series os records, each with it's own ID and label
-          */
-        class MRecordDbPersistant : public NullablePart
-        {
-        public:
-            using   ID2NAME = std::map<int, QString>;
-            using   NAME2ID = std::map<QString, int>;
-            /// one obj can have multiple records, they all will have same kind id
-            virtual int  objKind()const = 0;
-            virtual bool insertDb(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx) = 0;
-        protected:
-            void clearDbMaps();
-            bool insertDbRecord(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx, QString recordName, QString recordValue);
-            bool insertDbRecord(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder, int group_idx, QString recordName, bool recordValue);
-        protected:
-            ID2NAME m_id2name;
-            NAME2ID m_name2id;
-        };
-
-        enum ContactPartKind
-        {
-            pkindEmail = 1,
-            pkindPhone = 2,
-            pkindAddress = 3
-        };
-#else
         using MRecordDbPersistant = NullablePart;
-#endif //GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
-
 
         template <class P>
         class PartList
@@ -159,20 +123,6 @@ namespace googleQt {
             {
                 return !(*this == o);
             };
-
-#ifdef GOOGLE_QT_CONTACT_DB_STRUCT_AS_RECORD
-            bool insertDb(QSqlQuery* q, std::function<void(QSqlQuery*)> header_binder)
-            {
-                int idx = 1;
-                for (auto& p : m_parts) {
-                    if (!p.insertDb(q, header_binder, idx)) {
-                        return false;
-                    }
-                    idx++;
-                }
-                return true;
-            }
-#endif
 
             size_t size()const { return m_parts.size(); }
             const P& operator[](size_t idx)const { return m_parts[idx]; }
@@ -318,6 +268,7 @@ namespace googleQt {
             }
 
             const std::vector<std::shared_ptr<T>>& items()const { return m_items; }
+            std::vector<std::shared_ptr<T>>& items() { return m_items; }
             const std::shared_ptr<T> findById(QString sid) {
                 std::shared_ptr<T> rv;
                 auto it = m_id2item.find(sid);
