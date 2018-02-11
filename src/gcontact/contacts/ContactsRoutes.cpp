@@ -10,16 +10,16 @@
 using namespace googleQt;
 using namespace contacts;
 
-std::unique_ptr<gcontact::ContactsListResult> ContactsRoutes::batch(const gcontact::BatchContactArg& arg){
+std::unique_ptr<gcontact::BatchContactList> ContactsRoutes::batch(const gcontact::BatchContactArg& arg){
     return batch_Async(arg)->waitForResultAndRelease();
 }
 
-GoogleTask<gcontact::ContactsListResult>* ContactsRoutes::batch_Async(const gcontact::BatchContactArg& arg)
+GoogleTask<gcontact::BatchContactList>* ContactsRoutes::batch_Async(const gcontact::BatchContactArg& arg)
 {
-    GoogleTask<gcontact::ContactsListResult>* t = m_end_point->produceTask<gcontact::ContactsListResult>();
+    GoogleTask<gcontact::BatchContactList>* t = m_end_point->produceTask<gcontact::BatchContactList>();
     m_end_point->postContactStyleB<
-        gcontact::ContactsListResult,
-        gcontact::ContactsListResult::factory
+        gcontact::BatchContactList,
+        gcontact::BatchContactList::factory
         ,gcontact::BatchContactArg>
         (m_end_point->buildContactBatchUrl(arg),
         arg,
@@ -29,13 +29,13 @@ GoogleTask<gcontact::ContactsListResult>* ContactsRoutes::batch_Async(const gcon
 
 void ContactsRoutes::batch_AsyncCB(
     const gcontact::BatchContactArg& arg,
-    std::function<void(std::unique_ptr<gcontact::ContactsListResult>)> completed_callback ,
+    std::function<void(std::unique_ptr<gcontact::BatchContactList>)> completed_callback ,
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
 {
     m_end_point->postContactStyleB
         <
-        gcontact::ContactsListResult,
-        gcontact::ContactsListResult::factory
+        gcontact::BatchContactList,
+        gcontact::BatchContactList::factory
         , gcontact::BatchContactArg
         >
         (m_end_point->buildContactBatchUrl(arg),
@@ -44,16 +44,16 @@ void ContactsRoutes::batch_AsyncCB(
         failed_callback);
 }
 
-std::unique_ptr<gcontact::ContactsListResult> ContactsRoutes::create(const gcontact::CreateContactArg& arg){
+std::unique_ptr<gcontact::ContactList> ContactsRoutes::create(const gcontact::CreateContactArg& arg){
     return create_Async(arg)->waitForResultAndRelease();
 }
 
-GoogleTask<gcontact::ContactsListResult>* ContactsRoutes::create_Async(const gcontact::CreateContactArg& arg)
+GoogleTask<gcontact::ContactList>* ContactsRoutes::create_Async(const gcontact::CreateContactArg& arg)
 {
-    GoogleTask<gcontact::ContactsListResult>* t = m_end_point->produceTask<gcontact::ContactsListResult>();
+    GoogleTask<gcontact::ContactList>* t = m_end_point->produceTask<gcontact::ContactList>();
     m_end_point->postContactStyleB<
-        gcontact::ContactsListResult,
-        gcontact::ContactsListResult::factory
+        gcontact::ContactList,
+        gcontact::ContactList::factory
         ,gcontact::CreateContactArg>
         (m_end_point->buildContactUrl(arg),
         arg,
@@ -63,13 +63,13 @@ GoogleTask<gcontact::ContactsListResult>* ContactsRoutes::create_Async(const gco
 
 void ContactsRoutes::create_AsyncCB(
     const gcontact::CreateContactArg& arg,
-    std::function<void(std::unique_ptr<gcontact::ContactsListResult>)> completed_callback ,
+    std::function<void(std::unique_ptr<gcontact::ContactList>)> completed_callback ,
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
 {
     m_end_point->postContactStyleB
         <
-        gcontact::ContactsListResult,
-        gcontact::ContactsListResult::factory
+        gcontact::ContactList,
+        gcontact::ContactList::factory
         , gcontact::CreateContactArg
         >
         (m_end_point->buildContactUrl(arg),
@@ -163,16 +163,16 @@ void ContactsRoutes::getContactPhoto_AsyncCB(
         failed_callback);
 }
 
-std::unique_ptr<gcontact::ContactsListResult> ContactsRoutes::list(const gcontact::ContactsListArg& arg){
+std::unique_ptr<gcontact::ContactList> ContactsRoutes::list(const gcontact::ContactListArg& arg){
     return list_Async(arg)->waitForResultAndRelease();
 }
 
-GoogleTask<gcontact::ContactsListResult>* ContactsRoutes::list_Async(const gcontact::ContactsListArg& arg)
+GoogleTask<gcontact::ContactList>* ContactsRoutes::list_Async(const gcontact::ContactListArg& arg)
 {
-    GoogleTask<gcontact::ContactsListResult>* t = m_end_point->produceTask<gcontact::ContactsListResult>();
+    GoogleTask<gcontact::ContactList>* t = m_end_point->produceTask<gcontact::ContactList>();
     m_end_point->getContactStyle<
-        gcontact::ContactsListResult,
-        gcontact::ContactsListResult::factory
+        gcontact::ContactList,
+        gcontact::ContactList::factory
         >
         (m_end_point->buildContactUrl(arg),
         t);
@@ -180,30 +180,30 @@ GoogleTask<gcontact::ContactsListResult>* ContactsRoutes::list_Async(const gcont
 }
 
 void ContactsRoutes::list_AsyncCB(
-    const gcontact::ContactsListArg& arg,
-    std::function<void(std::unique_ptr<gcontact::ContactsListResult>)> completed_callback ,
+    const gcontact::ContactListArg& arg,
+    std::function<void(std::unique_ptr<gcontact::ContactList>)> completed_callback ,
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
 {
     m_end_point->getContactStyle
         <
-        gcontact::ContactsListResult,
-        gcontact::ContactsListResult::factory
+        gcontact::ContactList,
+        gcontact::ContactList::factory
         >
         (m_end_point->buildContactUrl(arg),
         completed_callback,
         failed_callback);
 }
 
-std::unique_ptr<gcontact::ContactsListResult> ContactsRoutes::update(const gcontact::UpdateContactArg& arg){
+std::unique_ptr<gcontact::ContactList> ContactsRoutes::update(const gcontact::UpdateContactArg& arg){
     return update_Async(arg)->waitForResultAndRelease();
 }
 
-GoogleTask<gcontact::ContactsListResult>* ContactsRoutes::update_Async(const gcontact::UpdateContactArg& arg)
+GoogleTask<gcontact::ContactList>* ContactsRoutes::update_Async(const gcontact::UpdateContactArg& arg)
 {
-    GoogleTask<gcontact::ContactsListResult>* t = m_end_point->produceTask<gcontact::ContactsListResult>();
+    GoogleTask<gcontact::ContactList>* t = m_end_point->produceTask<gcontact::ContactList>();
     m_end_point->putContactStyleB<
-        gcontact::ContactsListResult,
-        gcontact::ContactsListResult::factory
+        gcontact::ContactList,
+        gcontact::ContactList::factory
         ,gcontact::UpdateContactArg>
         (m_end_point->buildContactUrl(arg),
         arg,
@@ -213,13 +213,13 @@ GoogleTask<gcontact::ContactsListResult>* ContactsRoutes::update_Async(const gco
 
 void ContactsRoutes::update_AsyncCB(
     const gcontact::UpdateContactArg& arg,
-    std::function<void(std::unique_ptr<gcontact::ContactsListResult>)> completed_callback ,
+    std::function<void(std::unique_ptr<gcontact::ContactList>)> completed_callback ,
     std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
 {
     m_end_point->putContactStyleB
         <
-        gcontact::ContactsListResult,
-        gcontact::ContactsListResult::factory
+        gcontact::ContactList,
+        gcontact::ContactList::factory
         , gcontact::UpdateContactArg
         >
         (m_end_point->buildContactUrl(arg),

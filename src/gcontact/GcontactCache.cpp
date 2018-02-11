@@ -12,531 +12,8 @@
 using namespace googleQt;
 using namespace gcontact;
 
-#define COMPARE_NO_CASE(N) if (N.compare(o.N, Qt::CaseInsensitive)){return false;}
 #define CONFIG_SYNC_TIME "sync-time"
 
-/**
-   NameInfo
-*/
-NameInfo::NameInfo() 
-{
-};
-
-bool NameInfo::isEmpty()const 
-{
-    if (isNull())
-        return false;
-    bool rv = m_fullName.isEmpty() && m_givenName.isEmpty() && m_familyName.isEmpty();
-    return rv;
-}
-
-NameInfo NameInfo::parse(QDomNode n)
-{
-    NameInfo rv;        
-    rv.m_is_null = true;
-    QDomElement elem_name = n.firstChildElement("gd:name");
-    if (!elem_name.isNull()) {
-        rv.m_is_null = false;
-        rv.m_fullName = elem_name.firstChildElement("gd:fullName").text().trimmed();
-        rv.m_givenName = elem_name.firstChildElement("gd:givenName").text().trimmed();
-        rv.m_familyName = elem_name.firstChildElement("gd:familyName").text().trimmed();
-    }
-    return rv;
-}
-
-void NameInfo::toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const
-{
-    xml_util::removeNodes(entry_node, "gd:name");
-    QDomElement orga_node = xml_util::ensureNode(doc, entry_node, "gd:name");
-    xml_util::updateNode(doc, orga_node, "gd:fullName", m_fullName);
-    xml_util::updateNode(doc, orga_node, "gd:givenName", m_givenName);
-    xml_util::updateNode(doc, orga_node, "gd:familyName", m_familyName);
-};
-
-
-QString NameInfo::toString()const
-{
-    QString s = "";
-    if (!isNull()) {
-        s = QString("name=%1,%2,%3").arg(fullName()).arg(givenName()).arg(familyName());
-    }
-    return s;
-};
-
-bool NameInfo::operator==(const NameInfo& o) const 
-{
-    COMPARE_NO_CASE(m_fullName);
-    COMPARE_NO_CASE(m_givenName);
-    COMPARE_NO_CASE(m_familyName);
-    return true;
-};
-
-bool NameInfo::operator!=(const NameInfo& o) const 
-{
-    return !(*this == o);
-};
-
-/**
-    OrganizationInfo
-*/
-OrganizationInfo::OrganizationInfo():m_type_label("other")
-{
-};
-
-bool OrganizationInfo::isEmpty()const
-{
-    if (isNull())
-        return false;
-    bool rv = m_name.isEmpty() && m_title.isEmpty();
-    return rv;
-}
-
-
-OrganizationInfo OrganizationInfo::parse(QDomNode n)
-{
-    OrganizationInfo rv;
-    rv.m_is_null = true;
-    QDomElement elem_organization = n.firstChildElement("gd:organization");
-    if (!elem_organization.isNull()) {
-        rv.m_is_null = false;
-        rv.m_name = elem_organization.firstChildElement("gd:orgName").text().trimmed();
-        rv.m_title = elem_organization.firstChildElement("gd:orgTitle").text().trimmed();
-
-
-        QDomNamedNodeMap attr_names = elem_organization.attributes();
-        if (attr_names.size() > 0) {
-            for (int j = 0; j < attr_names.size(); j++) {
-                QDomNode n2 = attr_names.item(j);
-                if (n2.nodeType() == QDomNode::AttributeNode) {
-                    if (n2.nodeName().compare("rel") == 0) {
-                        QStringList slist = n2.nodeValue().trimmed().split("#");
-                        if (slist.size() == 2) {
-                            rv.m_type_label = slist[1];
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return rv;
-}
-
-QString OrganizationInfo::toString()const 
-{
-    QString s = "";
-    if (!isNull()) {
-        s = QString("organization=%1,%2").arg(name()).arg(title());
-    }
-    return s;
-};
-
-QString OrganizationInfo::toXmlString()const 
-{
-    QString s = "";
-    if (!isNull()) {
-        s += QString("<gd:organization rel = \"http://schemas.google.com/g/2005#%1\">\n").arg(m_type_label);
-        s += QString("    <gd:orgName>%1</gd:orgName>\n").arg(m_name);
-        s += QString("    <gd:orgTitle>%1</gd:orgTitle>\n").arg(m_title);
-        s += "</gd:organization>\n";
-    }
-    return s;
-};
-
-void OrganizationInfo::toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const 
-{
-    xml_util::removeNodes(entry_node, "gd:organization");
-    QDomElement orga_node = xml_util::ensureNode(doc, entry_node, "gd:organization");
-    xml_util::updateNode(doc, orga_node, "gd:orgName", m_name);
-    xml_util::updateNode(doc, orga_node, "gd:orgTitle", m_title);
-
-    orga_node.setAttribute("rel", QString("http://schemas.google.com/g/2005#%1").arg(m_type_label));
-};
-
-bool OrganizationInfo::operator==(const OrganizationInfo& o) const
-{
-    COMPARE_NO_CASE(m_name);
-    COMPARE_NO_CASE(m_title);
-    return true;
-};
-
-bool OrganizationInfo::operator!=(const OrganizationInfo& o) const
-{
-    return !(*this == o);
-};
-
-
-/**
-PostalAddress
-*/
-PostalAddress::PostalAddress() :m_type_label("home")
-{
-};
-
-QString PostalAddress::toString()const
-{
-    QString s = "";
-    if (!isNull()) {
-        s = QString("postalAddress=%1 %2 %3 %4 %5")
-            .arg(m_city)
-            .arg(m_street)
-            .arg(m_region)
-            .arg(m_postcode)
-            .arg(m_country);
-    }
-    return s;
-};
-
-bool PostalAddress::operator==(const PostalAddress& o) const
-{
-    COMPARE_NO_CASE(m_city);
-    COMPARE_NO_CASE(m_street);
-    COMPARE_NO_CASE(m_region);
-    COMPARE_NO_CASE(m_postcode);
-    COMPARE_NO_CASE(m_country);
-    COMPARE_NO_CASE(m_type_label);
-    COMPARE_NO_CASE(m_formattedAddress);
-    if (m_is_primary != o.m_is_primary)
-        return false;
-    return true;
-};
-
-bool PostalAddress::operator!=(const PostalAddress& o) const
-{
-    return !(*this == o);
-};
-
-
-/**
-    PhoneInfo
-*/
-PhoneInfo::PhoneInfo() :m_type_label("other")
-{
-};
-
-QString PhoneInfo::toString()const 
-{
-    QString s = "";
-    if (!isNull()) {
-        s = QString("phone=%1,%2,%3").arg(number()).arg(uri()).arg(typeLabel());
-        if (m_is_primary) {
-            s += ", primary=\"true\"";
-        }
-    }
-    return s;
-};
-
-
-bool PhoneInfo::operator==(const PhoneInfo& o) const 
-{
-    COMPARE_NO_CASE(m_number);
-    COMPARE_NO_CASE(m_uri);
-    COMPARE_NO_CASE(m_type_label);
-    if (m_is_primary != o.m_is_primary)
-        return false;
-    return true;
-
-};
-
-bool PhoneInfo::operator!=(const PhoneInfo& o) const 
-{
-    return !(*this == o);
-};
-
-
-/**
-    EmailInfo
-*/
-EmailInfo::EmailInfo() :m_type_label("other")
-{
-
-};
-
-QString EmailInfo::toString()const
-{
-    QString s = "";
-    if (!isNull()) {
-        s = QString("email=%1,%2,%3").arg(address()).arg(displayName()).arg(typeLabel());
-        if (m_is_primary) {
-            s += ", primary=\"true\"";
-        }
-    }
-    return s;
-};
-
-bool EmailInfo::operator==(const EmailInfo& o) const
-{
-    COMPARE_NO_CASE(m_address);
-    COMPARE_NO_CASE(m_display_name);
-    COMPARE_NO_CASE(m_type_label);
-    if (m_is_primary != o.m_is_primary)
-        return false;
-    return true;
-};
-
-bool EmailInfo::operator!=(const EmailInfo& o) const
-{
-    return !(*this == o);
-};
-
-/**
-    EmailInfoList
-*/
-EmailInfoList EmailInfoList::parse(QDomNode n)
-{
-    EmailInfoList rv;    
-    QDomElement first_email_elem = n.firstChildElement("gd:email");
-    QDomElement email_elem = first_email_elem;
-    while (!email_elem.isNull()) {
-        EmailInfo email_info;
-        email_info.m_is_null = false;
-        QDomNamedNodeMap attr_names = email_elem.attributes();
-        if (attr_names.size() > 0) {
-            for (int j = 0; j < attr_names.size(); j++) {
-                QDomNode n2 = attr_names.item(j);
-                if (n2.nodeType() == QDomNode::AttributeNode) {
-                    if (n2.nodeName().compare("address") == 0) {
-                        email_info.m_address = n2.nodeValue().trimmed();
-                    }
-                    else  if (n2.nodeName().compare("displayName") == 0) {
-                        email_info.m_display_name = n2.nodeValue().trimmed();
-                    }
-                    else if (n2.nodeName().compare("primary") == 0) {
-                        QString s = n2.nodeValue().trimmed();
-                        email_info.m_is_primary = (s.indexOf("true") != -1);
-                    }
-                    else if (n2.nodeName().compare("rel") == 0) {
-                        QStringList slist = n2.nodeValue().split("#");
-                        if (slist.size() == 2) {
-                            email_info.m_type_label = slist[1];
-                        }
-                    }
-                }
-            }
-        }
-
-        rv.m_parts.push_back(email_info);
-        email_elem = email_elem.nextSiblingElement("gd:email");
-    }
-
-    return rv;
-}
-
-QString EmailInfoList::toXmlString()const
-{
-    QString s = "";
-    for (auto& p : m_parts) {
-        if (!p.isNull()) {
-            QString s_is_primary = "";
-            QString displayName = "";
-            QString address = "";
-            if (!p.displayName().isEmpty()) {
-                displayName = QString(" displayName=\"%1\"").arg(p.displayName());
-            }
-            if (p.isPrimary()) {
-                s_is_primary = " primary=\"true\"";
-            }
-            address = QString(" address=\"%1\"").arg(p.address());
-            s += QString("<gd:email rel = \"http://schemas.google.com/g/2005#%1\"%2 %3%4/>\n")
-                .arg(p.m_type_label)
-                .arg(s_is_primary)
-                .arg(address)
-                .arg(displayName);
-        }
-    }
-    return s;
-};
-
-void EmailInfoList::toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const
-{
-    xml_util::removeNodes(entry_node, "gd:email");
-    for (auto& p : m_parts) {
-        if (!p.isNull()) {
-            QDomElement phone_node = xml_util::addNode(doc, entry_node, "gd:email");
-            if (p.m_is_primary) {
-                phone_node.setAttribute("primary", "true");
-            }
-            if (!p.displayName().isEmpty()) {
-                phone_node.setAttribute("displayName", p.displayName());
-            }
-            phone_node.setAttribute("address", p.address());
-            phone_node.setAttribute("rel", QString("http://schemas.google.com/g/2005#%1").arg(p.m_type_label));
-        }
-    }
-};
-
-
-/**
-    PhoneInfoList
-*/
-PhoneInfoList PhoneInfoList::parse(QDomNode n)
-{
-    PhoneInfoList rv;    
-    QDomElement first_phone_elem = n.firstChildElement("gd:phoneNumber");
-    QDomElement phone_elem = first_phone_elem;
-    while (!phone_elem.isNull()) {
-        PhoneInfo phone_info;
-        phone_info.m_number = phone_elem.text().trimmed();
-        phone_info.m_is_null = false;
-        QDomNamedNodeMap attr_names = phone_elem.attributes();
-        if (attr_names.size() > 0) {
-            for (int j = 0; j < attr_names.size(); j++) {
-                QDomNode n2 = attr_names.item(j);
-                if (n2.nodeType() == QDomNode::AttributeNode) {
-                    if (n2.nodeName().compare("uri") == 0) {
-                        phone_info.m_uri = n2.nodeValue().trimmed();
-                    }
-                    else if (n2.nodeName().compare("primary") == 0) {
-                        QString s = n2.nodeValue().trimmed();
-                        phone_info.m_is_primary = (s.indexOf("true") != -1);
-                    }
-                    else if (n2.nodeName().compare("rel") == 0) {
-                        QStringList slist = n2.nodeValue().trimmed().split("#");
-                        if (slist.size() == 2) {
-                            phone_info.m_type_label = slist[1];
-                        }
-                    }
-                }
-            }
-        }
-
-        rv.m_parts.push_back(phone_info);
-        phone_elem = phone_elem.nextSiblingElement("gd:phoneNumber");
-    }
-
-    return rv;
-}
-
-QString PhoneInfoList::toXmlString()const 
-{
-    QString s = "";
-    for (auto& p : m_parts) {
-        if (!p.isNull()) {
-            QString s_is_primary = "";
-            if (p.m_is_primary) {
-                s_is_primary = " primary=\"true\"";
-            }
-            s += QString("<gd:phoneNumber rel = \"http://schemas.google.com/g/2005#%1\"%2>\n").arg(p.m_type_label).arg(s_is_primary);
-            s += QString("    %1\n").arg(p.m_number);
-            s += "</gd:phoneNumber>\n";
-        }
-    }
-    return s;
-};
-
-void PhoneInfoList::toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const
-{
-    xml_util::removeNodes(entry_node, "gd:phoneNumber");
-    for (auto& p : m_parts) {
-        if (!p.isNull()) {
-            QDomElement phone_node = xml_util::addNode(doc, entry_node, "gd:phoneNumber");
-            if (p.m_is_primary) {
-                phone_node.setAttribute("primary", "true");
-            }
-            if (!p.uri().isEmpty()) {
-                phone_node.setAttribute("uri", p.uri());
-            }
-            phone_node.setAttribute("rel", QString("http://schemas.google.com/g/2005#%1").arg(p.m_type_label));
-            xml_util::addText(doc, phone_node, p.number());
-            //QDomText tn = doc.createTextNode(QString(p.number()));
-            //phone_node.appendChild(tn);
-        }
-    }
-};
-
-
-/**
-PostalAddressList
-*/
-PostalAddressList PostalAddressList::parse(QDomNode n)
-{
-    PostalAddressList rv;
-    
-    QDomElement first_address_elem = n.firstChildElement("gd:structuredPostalAddress");
-    QDomElement address_elem = first_address_elem;
-    while (!address_elem.isNull()) {
-        PostalAddress address;
-        address.m_is_null = true;
-
-        QDomNamedNodeMap attr_names = address_elem.attributes();
-        if (attr_names.size() > 0) {
-            for (int j = 0; j < attr_names.size(); j++) {
-                QDomNode n2 = attr_names.item(j);
-                if (n2.nodeType() == QDomNode::AttributeNode) {
-                    if (n2.nodeName().compare("rel") == 0) {
-                        QStringList slist = n2.nodeValue().trimmed().split("#");
-                        if (slist.size() == 2) {
-                            address.m_type_label = slist[1];
-                        }
-                    }
-                    else if (n2.nodeName().compare("primary") == 0) {
-                        QString s = n2.nodeValue().trimmed();
-                        address.m_is_primary = (s.indexOf("true") != -1);
-                    }
-                }
-            }
-        }
-
-        address.m_is_null = false;
-        address.m_city = address_elem.firstChildElement("gd:city").text().trimmed();
-        address.m_street = address_elem.firstChildElement("gd:street").text().trimmed();
-        address.m_region = address_elem.firstChildElement("gd:region").text().trimmed();
-        address.m_postcode = address_elem.firstChildElement("gd:postcode").text().trimmed();
-        address.m_country = address_elem.firstChildElement("gd:country").text().trimmed();
-        address.m_formattedAddress = address_elem.firstChildElement("gd:formattedAddress").text().trimmed();
-
-
-        rv.m_parts.push_back(address);
-        address_elem = address_elem.nextSiblingElement("gd:structuredPostalAddress");
-    }
-
-    return rv;
-}
-
-QString PostalAddressList::toXmlString()const 
-{
-    QString s = "";
-    for (auto& p : m_parts) {
-        if (!p.isNull()) {
-            QString s_is_primary = "";
-            if (p.isPrimary()) {
-                s_is_primary = " primary=\"true\"";
-            }
-            s += QString("<gd:structuredPostalAddress rel = \"http://schemas.google.com/g/2005#%1\"%2>\n")
-                .arg(p.m_type_label)
-                .arg(s_is_primary);
-
-            s += QString("    <gd:city>%1</gd:city>\n").arg(p.m_city);
-            s += QString("    <gd:street>%1</gd:street>\n").arg(p.m_street);
-            s += QString("    <gd:region>%1</gd:region>\n").arg(p.m_region);
-            s += QString("    <gd:postcode>%1</gd:postcode>\n").arg(p.m_postcode);
-            s += QString("    <gd:country>%1</gd:country>\n").arg(p.m_country);
-            s += QString("    <gd:formattedAddress>%1</gd:formattedAddress>\n").arg(p.m_formattedAddress);
-
-            s += "</gd:structuredPostalAddress>\n";
-        }
-    }
-    return s;
-};
-
-void PostalAddressList::toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const
-{
-    xml_util::removeNodes(entry_node, "gd:structuredPostalAddress");
-    for (auto& p : m_parts) {
-        if (!p.isNull()) {
-            QDomElement addr_node = xml_util::addNode(doc, entry_node, "gd:structuredPostalAddress");
-            if (p.m_is_primary) {
-                addr_node.setAttribute("primary", "true");
-            }
-            addr_node.setAttribute("rel", QString("http://schemas.google.com/g/2005#%1").arg(p.m_type_label));
-            xml_util::updateNode(doc, addr_node, "gd:city", p.m_city);
-            xml_util::updateNode(doc, addr_node, "gd:street", p.m_street);
-            xml_util::updateNode(doc, addr_node, "gd:region", p.m_region);
-            xml_util::updateNode(doc, addr_node, "gd:postcode", p.m_postcode);
-            xml_util::updateNode(doc, addr_node, "gd:country", p.m_country);
-            xml_util::updateNode(doc, addr_node, "gd:formattedAddress", p.m_formattedAddress);
-        }
-    }
-};
 
 static QString getAttribute(const QDomNode& n, QString name)
 {
@@ -690,50 +167,22 @@ bool ContactInfo::operator!=(const ContactInfo& o) const
     return !(*this == o);
 };
 
-QString ContactInfo::toXml(QString userEmail)const 
+QString ContactInfo::toXmlBegin()const 
 {
     QString rv;
-    /*
-    if (m_title.isEmpty() && m_name.isEmpty() && m_etag.isEmpty()) {
+    if (m_etag.isEmpty()) {
         rv = QString("<entry>\n");
     }
     else {
-        rv = QString("<entry xmlns:atom=\"http://www.w3.org/2005/Atom\" xmlns:gd = \"http://schemas.google.com/g/2005\" gd:etag=\"%1\"> <atom:category scheme = \"http://schemas.google.com/g/2005#kind\" term = \"http://schemas.google.com/contact/2008#contact\"/>\n")
+        rv = QString("<entry gd:etag=\"%1\">\n")
             .arg(m_etag);
     }
+    return rv;
+};
 
-    if (m_batch_id != googleQt::EBatchId::none) {
-        rv += batch2xml(m_batch_id);
-        rv += "\n";
-    }
-    */
-
-    if (m_batch_id != googleQt::EBatchId::none) {
-        switch(m_batch_id){
-        case googleQt::EBatchId::update:
-        case googleQt::EBatchId::delete_operation:{
-            rv = QString("<entry gd:etag=\'*\'>\n");
-        }break;
-        default:{
-            if (m_etag.isEmpty()) {
-                rv = QString("<entry>\n");
-            }
-        }
-        }
-        
-        rv += batch2xml(m_batch_id);
-        rv += "\n";
-    }
-    else{
-        if (m_etag.isEmpty()) {
-            rv = QString("<entry>\n");
-        }
-        else{
-            rv = QString("<entry gd:etag=\"%1\">\n")
-                .arg(m_etag);
-        }
-    }
-    
+QString ContactInfo::toXml(QString userEmail)const 
+{
+    QString rv = toXmlBegin();
 
     if(!m_id.isEmpty())rv += QString("<id>http://www.google.com/m8/feeds/contacts/%1/base/%2</id>\n").arg(userEmail).arg(m_id);
     if(!m_title.isEmpty())rv += QString("<title>%1</title>\n").arg(m_title);
@@ -797,7 +246,6 @@ bool ContactInfo::parseEntryNode(QDomNode n)
 
     QString s = n.firstChildElement("updated").text().trimmed();
     m_updated = QDateTime::fromString(s, Qt::ISODate);
-    //qDebug() << "ykh-parsing-date" << s << "res=" << m_updated;
     m_title = n.firstChildElement("title").text().trimmed();
     m_content = n.firstChildElement("content").text().trimmed();
     m_emails = EmailInfoList::parse(n);
@@ -856,6 +304,14 @@ void ContactInfo::assignContent(const ContactInfo& src)
     m_address_list = src.m_address_list;    
 };
 
+std::unique_ptr<BatchRequestContactInfo> ContactInfo::buildBatchRequest(googleQt::EBatchId batch_id)
+{
+    std::unique_ptr<BatchRequestContactInfo> rv(new BatchRequestContactInfo);
+    rv->assignContent(*this);
+    rv->setBatchid(batch_id);
+    return rv;
+};
+
 /**
     GroupInfo
 */
@@ -909,36 +365,22 @@ void GroupInfo::mergeEntryNode(QDomDocument& doc, QDomNode& entry_node)const
     xml_util::updateNode(doc, entry_node, "content", m_content);
 };
 
-QString GroupInfo::toXml(QString userEmail)const 
+QString GroupInfo::toXmlBegin()const
 {
     QString rv;
-        
-    if (m_batch_id != googleQt::EBatchId::none) {
-        switch(m_batch_id){
-        case googleQt::EBatchId::update:
-        case googleQt::EBatchId::delete_operation:{
-            rv = QString("<entry gd:etag=\'*\'>\n");
-        }break;
-        default:{
-            if (m_etag.isEmpty()) {
-                rv = QString("<entry>\n");
-            }
-        }
-        }
-        
-        rv += batch2xml(m_batch_id);
-        rv += "\n";
+    if (m_etag.isEmpty()) {
+        rv = QString("<entry>\n");
     }
-    else{
-        if (m_etag.isEmpty()) {
-            rv = QString("<entry>\n");
-        }
-        else{
-            rv = QString("<entry gd:etag=\"%1\">\n")
-                .arg(m_etag);
-        }
+    else {
+        rv = QString("<entry gd:etag=\"%1\">\n")
+            .arg(m_etag);
     }
+    return rv;
+};
 
+QString GroupInfo::toXml(QString userEmail)const 
+{
+    QString rv = toXmlBegin();        
 
     if (!m_id.isEmpty())rv += QString("<id>http://www.google.com/m8/feeds/groups/%1/base/%2</id>\n").arg(userEmail).arg(m_id);
     if(!m_title.isEmpty())rv += QString("<title>%1</title>\n").arg(m_title);
@@ -1008,6 +450,62 @@ bool GroupInfo::setFromDbRecord(QSqlQuery* q)
     m_title = q->value(4).toString();
     m_content = q->value(5).toString();
     return true;
+};
+
+std::unique_ptr<BatchRequestGroupInfo> GroupInfo::buildBatchRequest(googleQt::EBatchId batch_id)
+{
+    std::unique_ptr<BatchRequestGroupInfo> rv(new BatchRequestGroupInfo);
+    rv->assignContent(*this);
+    rv->setBatchid(batch_id);
+    return rv;
+};
+
+
+/**
+BatchRequestContactInfo
+*/
+std::unique_ptr<BatchRequestContactInfo> BatchRequestContactInfo::buildRequest(QString contact_id, googleQt::EBatchId batch_id)
+{
+    std::unique_ptr<BatchRequestContactInfo> rv(new BatchRequestContactInfo);
+    rv->m_id = contact_id;
+    rv->m_batch_id = batch_id;
+    return rv;
+};
+
+QString BatchRequestContactInfo::toXmlBegin()const
+{
+    QString rv;
+    if (m_batch_id != googleQt::EBatchId::none) {
+        rv = BatchRequest::toBatchXmlEntryBegin();
+    }
+    else {
+        rv = ContactInfo::toXmlBegin();
+    }
+    return rv;
+};
+
+/**
+    BatchRequestGroupInfo
+*/
+std::unique_ptr<BatchRequestGroupInfo> BatchRequestGroupInfo::buildRequest(QString contact_id, googleQt::EBatchId batch_id)
+{
+    std::unique_ptr<BatchRequestGroupInfo> rv(new BatchRequestGroupInfo);
+    rv->m_id = contact_id;
+    rv->m_batch_id = batch_id;
+    return rv;
+};
+
+QString BatchRequestGroupInfo::toXmlBegin()const
+{
+    QString rv;
+    if (m_batch_id != googleQt::EBatchId::none) {
+        rv = BatchRequest::toBatchXmlEntryBegin();
+    }
+    else {
+        rv = GroupInfo::toXmlBegin();
+    }
+
+    return rv;
 };
 
 /**
@@ -1328,10 +826,10 @@ bool GContactCache::clearDbCache()
     return true;
 };
 
-bool GContactCache::mergeContactsAndStoreToDb(GroupList& server_glist, ContactList& server_clist) 
+bool GContactCache::mergeServerModifications(GroupList& server_glist, ContactList& server_clist)
 {
-    mergeEntries(server_clist);
-    mergeGroups(server_glist);
+    m_contacts.mergeList(server_clist);
+    m_groups.mergeList(server_glist);
 
     m_sync_time = m_contacts.recalcUpdatedTime(QDateTime());
     m_sync_time = m_groups.recalcUpdatedTime(m_sync_time);
@@ -1409,37 +907,6 @@ bool GContactCache::loadContactConfigFromDb()
     return true;
 };
 
-void GContactCache::mergeEntries(ContactList& entry_list) 
-{
-    m_contacts.mergeList(entry_list);
-    /*
-    Q_UNUSED(entry_list);
-    for (auto sc : entry_list.items()) {
-        auto c = m_contacts.findById(sc->id());
-        if (!c) {
-            m_contacts.add(c);
-        }
-        else {
-            if (c->isModified()) {
-                c->markAsRetired();
-                sc->markAsClean();
-                m_contacts.add(sc);
-            }
-            else {
-                *c = *sc;
-                c->markAsClean();
-            }
-        }
-    }
-    */
-};
-
-void GContactCache::mergeGroups(GroupList& group_list) 
-{
-    //Q_UNUSED(group_list);
-    m_groups.mergeList(group_list);
-};
-
 
 GcontactCacheRoutes::GcontactCacheRoutes(googleQt::Endpoint& endpoint, GcontactRoutes& ):m_endpoint(endpoint)
 {
@@ -1465,12 +932,51 @@ GcontactCacheQueryTask* GcontactCacheRoutes::synchronizeContacts_Async()
         }
     }
 
-    return reloadCache_Async(rv, m_GContactsCache->lastSyncTime());
+    reloadCache_Async(rv, m_GContactsCache->lastSyncTime());
+    return rv;
 };
 
-GcontactCacheQueryTask* GcontactCacheRoutes::reloadCache_Async(GcontactCacheQueryTask* rv, QDateTime dtUpdatedMin)
+void GcontactCacheRoutes::reloadCache_Async(GcontactCacheQueryTask* rv, QDateTime dtUpdatedMin)
 {
-    ContactsListArg entries_arg;
+    ContactListArg entries_arg;
+    entries_arg.setMaxResults(200);
+
+    if (dtUpdatedMin.isValid()) {
+        entries_arg.setUpdatedMin(dtUpdatedMin);
+    }
+
+    ContactGroupListArg groups_arg;
+    groups_arg.setMaxResults(200);
+
+    auto entries_task = m_endpoint.client()->gcontact()->getContacts()->list_Async(entries_arg);
+    auto groups_task = m_endpoint.client()->gcontact()->getContactGroup()->list_Async(groups_arg);
+
+    TaskAggregator* agg = new TaskAggregator(m_endpoint);
+    agg->add(entries_task);
+    agg->add(groups_task);
+    agg->then([=]() 
+    {
+        rv->m_result_contacts = entries_task->detachResult();
+        rv->m_result_groups = std::move(groups_task->detachResult());
+
+        if (m_GContactsCache->mergeServerModifications(*(rv->m_result_groups.get()), *(rv->m_result_contacts.get()))) {
+            //at this point we should have loaded server changes
+            //now we will try to apply our changes - modifications and deleted records
+
+            applyLocalCacheModifications_Async(rv);
+        }
+        else {
+            std::unique_ptr<GoogleException> ex(new GoogleException("Failed to merge/store DB cache."));
+            rv->failed_callback(std::move(ex));
+        }
+    },
+        [=](std::unique_ptr<GoogleException> ex) 
+    {
+        rv->failed_callback(std::move(ex));
+    });
+
+    /*
+    ContactListArg entries_arg;
     entries_arg.setMaxResults(200);
 
     if (dtUpdatedMin.isValid()) {
@@ -1478,18 +984,19 @@ GcontactCacheQueryTask* GcontactCacheRoutes::reloadCache_Async(GcontactCacheQuer
     }
 
     auto entries_task = m_endpoint.client()->gcontact()->getContacts()->list_Async(entries_arg);
-    entries_task->then([=](std::unique_ptr<gcontact::ContactsListResult> lst)
+    entries_task->then([=](std::unique_ptr<gcontact::ContactList> lst)
     {
-        rv->m_result_contacts = lst->detachData();
+        rv->m_result_contacts = std::move(lst);
 
         ContactGroupListArg groups_arg;
         groups_arg.setMaxResults(200);
 
         auto groups_task = m_endpoint.client()->gcontact()->getContactGroup()->list_Async(groups_arg);
-        groups_task->then([=](std::unique_ptr<gcontact::ContactGroupListResult> lst)
+        groups_task->then([=](std::unique_ptr<gcontact::GroupList> lst)
         {
-            rv->m_result_groups = lst->detachData();
+            rv->m_result_groups = std::move(lst);
             if (m_GContactsCache->mergeContactsAndStoreToDb(*(rv->m_result_groups.get()), *(rv->m_result_contacts.get()))) {
+
                 rv->completed_callback();
             }
             else {
@@ -1508,7 +1015,91 @@ GcontactCacheQueryTask* GcontactCacheRoutes::reloadCache_Async(GcontactCacheQuer
     });
 
     return rv;
+    */
 };
+
+void GcontactCacheRoutes::applyLocalCacheModifications_Async(GcontactCacheQueryTask* rv) 
+{
+    rv->completed_callback();
+    return;
+
+    BatchRequesContactList bc = m_GContactsCache->contacts().buildBatchRequestList();
+    BatchRequesGroupList bg = m_GContactsCache->groups().buildBatchRequestList();
+
+    BatchContactArg arg1(bc);
+    BatchGroupArg arg2(bg);
+
+    auto entries_btask = m_endpoint.client()->gcontact()->getContacts()->batch_Async(arg1);
+    auto groups_btask = m_endpoint.client()->gcontact()->getContactGroup()->batch_Async(arg2);
+    TaskAggregator* agg = new TaskAggregator(m_endpoint);
+    agg->add(entries_btask);
+    agg->add(groups_btask);
+    agg->then(
+        [=]() 
+        {
+            rv->completed_callback();
+        },
+            [=](std::unique_ptr<GoogleException> ex)
+        {
+            rv->failed_callback(std::move(ex));
+        }
+    );
+
+    //rv->completed_callback();
+};
+
+/**
+    BatchResultContactInfo
+*/
+bool BatchResultContactInfo::parseEntryNode(QDomNode n)
+{
+    bool rv = ContactInfo::parseEntryNode(n);
+    if (rv) {
+        rv = parseBatchResult(n);
+    }
+    return rv;
+};
+
+/**
+BatchResultGroupInfo
+*/
+bool BatchResultGroupInfo::parseEntryNode(QDomNode n)
+{
+    bool rv = GroupInfo::parseEntryNode(n);
+    if (rv) {
+        rv = parseBatchResult(n);
+    }
+    return rv;
+};
+
+std::unique_ptr<ContactList> ContactList::factory::create(const QByteArray& data)
+{
+    std::unique_ptr<ContactList> rv(new ContactList());
+    rv->parseXml(data);
+    return rv;
+};
+
+std::unique_ptr<GroupList> GroupList::factory::create(const QByteArray& data)
+{
+    std::unique_ptr<GroupList> rv(new GroupList());
+    rv->parseXml(data);
+    return rv;
+};
+
+std::unique_ptr<BatchContactList> BatchContactList::factory::create(const QByteArray& data)
+{
+    std::unique_ptr<BatchContactList> rv(new BatchContactList());
+    rv->parseXml(data);
+    return rv;
+};
+
+std::unique_ptr<BatchGroupList> BatchGroupList::factory::create(const QByteArray& data)
+{
+    std::unique_ptr<BatchGroupList> rv(new BatchGroupList());
+    rv->parseXml(data);
+    return rv;
+};
+
 
 #ifdef API_QT_AUTOTEST
 
@@ -1831,4 +1422,117 @@ void GcontactCacheRoutes::runAutotest()
     ApiAutotest::INSTANCE().enableRequestLog(true);
     ApiAutotest::INSTANCE() << "";
 };
+
+static QString XmlContactsResponseSample(std::set<QString>& id_set)
+{
+    static const char* xml_entry_template =
+        "<entry gd:etag = \"&quot;%1&quot;\">\n"
+        "<id>http://www.google.com/m8/feeds/contacts/me%40gmail.com/base/%2</id>\n"
+        "<updated>2017-12-27T11:33:51.728Z</updated>\n"
+        "<app:edited xmlns:app = \"http://www.w3.org/2007/app\">2017-12-27T11:33:51.728Z</app:edited>\n"
+        "<category scheme = \"http://schemas.google.com/g/2005#kind\" term=\"http://schemas.google.com/contact/2008#contact\"/>\n"
+        "<title>test</title>\n"
+        "<content>testNotes</content>\n"
+        "<link rel = \"http://schemas.google.com/contacts/2008/rel#photo\" type=\"image/*\" href=\"https://www.googleapis.com/m8/feeds/photos/media/me%40gmail.com/asdfgh123\"/>\n"
+        "<link rel = \"self\" type=\"application/atom+xml\" href=\"https://www.googleapis.com/m8/feeds/contacts/me%40gmail.com/full/asdfgh123\"/>\n"
+        "<link rel = \"edit\" type=\"application/atom+xml\" href=\"https://www.googleapis.com/m8/feeds/contacts/me%40gmail.com/full/asdfgh123\"/>\n"
+        "<gd:name>\n"
+        "<gd:fullName>test</gd:fullName>\n"
+        "<gd:givenName>%3</gd:givenName>\n"
+        "</gd:name>\n"
+        "<gd:organization rel = \"http://schemas.google.com/g/2005#other\">\n"
+        "<gd:orgName>%4</gd:orgName>\n"
+        "<gd:orgTitle>testJobTitle</gd:orgTitle>\n"
+        "</gd:organization>\n"
+        "<gd:email rel = \"http://schemas.google.com/g/2005#other\" address=\"%5\"/>\n"
+        "<gd:phoneNumber rel = \"http://schemas.google.com/g/2005#home\">917 111-1111</gd:phoneNumber>\n"
+        "<gd:phoneNumber rel = \"http://schemas.google.com/g/2005#work\" uri=\"tel:+1-917-222-2222\">917 222-2222</gd:phoneNumber>\n"
+        "<gContact:groupMembershipInfo deleted = \"false\" href=\"http://www.google.com/m8/feeds/groups/me%40gmail.com/base/6\"/>\n"
+        "</entry>\n";
+
+
+    QString rv = "<?xml version = \"1.0\" encoding = \"UTF-8\"?>\n"
+        "<feed gd:etag = \"&quot;qwertyfeeedvalue.&quot;\" xmlns = \"http://www.w3.org/2005/Atom\" xmlns:batch = \"http://schemas.google.com/gdata/batch\" xmlns:gContact = \"http://schemas.google.com/contact/2008\" xmlns:gd = \"http://schemas.google.com/g/2005\" xmlns:openSearch = \"http://a9.com/-/spec/opensearch/1.1/\">\n"
+        "<id>me@gmail.com</id>\n";
+
+    size_t entries_count = id_set.size();
+    for (size_t i = 0; i < entries_count; i++) {
+        QString etag = QString("etag%1").arg(i);
+        auto it = id_set.begin();
+        if (it == id_set.end()) {
+            qWarning() << "internal autotest error/xml-generation";
+            return "";
+        }
+        QString e_id = *it;
+        id_set.erase(it);
+        //QString e_id = .;//QString("id%1").arg(i);
+        QString name = QString("name%1").arg(i);
+        QString orga_name = QString("orga%1").arg(i);
+        QString email = QString("email%1@me-site.org").arg(i);
+        QString e = QString(xml_entry_template)
+            .arg(etag)
+            .arg(e_id)
+            .arg(name)
+            .arg(orga_name)
+            .arg(email);
+
+        rv += e;
+    }
+
+    rv += "</feed>\n";
+    return rv;
+}
+
+std::unique_ptr<ContactList> ContactList::EXAMPLE(int context_index, int parent_context_index)
+{
+    Q_UNUSED(context_index);
+    Q_UNUSED(parent_context_index);
+
+    IDSET idset = ApiAutotest::INSTANCE().getReservedIdSet("gcontact::ContactsListResult");
+    if (idset.empty()) {
+        idset.insert("c1id");
+    }
+    QByteArray d(XmlContactsResponseSample(idset).toStdString().c_str());
+    std::unique_ptr<ContactList> rv(new ContactList());
+    rv->parseXml(d);
+    return rv;
+};
+
+std::unique_ptr<GroupList> GroupList::EXAMPLE(int, int)
+{
+    IDSET idset = ApiAutotest::INSTANCE().getReservedIdSet("gcontact::ContactGroupListResult");
+    if (idset.empty()) {
+        idset.insert("g1id");
+    }
+    QByteArray d(XmlContactsResponseSample(idset).toStdString().c_str());
+    std::unique_ptr<GroupList> rv(new GroupList());
+    rv->parseXml(d);
+    return rv;
+};
+
+std::unique_ptr<BatchContactList> BatchContactList::EXAMPLE(int, int)
+{
+    IDSET idset = ApiAutotest::INSTANCE().getReservedIdSet("gcontact::BatchContactList");
+    if (idset.empty()) {
+        idset.insert("g1id");
+    }
+    QByteArray d(XmlContactsResponseSample(idset).toStdString().c_str());
+    std::unique_ptr<BatchContactList> rv(new BatchContactList());
+    rv->parseXml(d);
+    return rv;
+};
+
+std::unique_ptr<BatchGroupList> BatchGroupList::EXAMPLE(int, int)
+{
+    IDSET idset = ApiAutotest::INSTANCE().getReservedIdSet("gcontact::BatchGroupList");
+    if (idset.empty()) {
+        idset.insert("g1id");
+    }
+    QByteArray d(XmlContactsResponseSample(idset).toStdString().c_str());
+    std::unique_ptr<BatchGroupList> rv(new BatchGroupList());
+    rv->parseXml(d);
+    return rv;
+};
+
+
 #endif

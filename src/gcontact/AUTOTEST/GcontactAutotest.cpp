@@ -15,7 +15,7 @@ static GcontactRoutes* cl;
 
 static void call_batch_from_ContactGroup(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("ContactGroup").arg("batch");
-    std::unique_ptr<gcontact::BatchContactGroupArg> arg = gcontact::BatchContactGroupArg::EXAMPLE(0, 0);
+    std::unique_ptr<gcontact::BatchGroupArg> arg = gcontact::BatchGroupArg::EXAMPLE(0, 0);
     auto res = cl->getContactGroup()->batch(*(arg.get()) );
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();
@@ -100,7 +100,7 @@ static void call_getContactPhoto_from_Contacts(){
 
 static void call_list_from_Contacts(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Contacts").arg("list");
-    std::unique_ptr<gcontact::ContactsListArg> arg = gcontact::ContactsListArg::EXAMPLE(0, 0);
+    std::unique_ptr<gcontact::ContactListArg> arg = gcontact::ContactListArg::EXAMPLE(0, 0);
     auto res = cl->getContacts()->list(*(arg.get()) );
     ApiAutotest::INSTANCE() << "------ RESULT ------------------";
     ApiAutotest::INSTANCE() << res->toString();

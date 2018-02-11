@@ -24,11 +24,11 @@ namespace contact_group{
             Send a batch request for operations on contact groups
 
             */
-        std::unique_ptr<gcontact::ContactGroupListResult> batch(const gcontact::BatchContactGroupArg& arg);
-        GoogleTask<gcontact::ContactGroupListResult>* batch_Async(const gcontact::BatchContactGroupArg& arg);
+        std::unique_ptr<gcontact::BatchGroupList> batch(const gcontact::BatchGroupArg& arg);
+        GoogleTask<gcontact::BatchGroupList>* batch_Async(const gcontact::BatchGroupArg& arg);
         void batch_AsyncCB(
-            const gcontact::BatchContactGroupArg&,
-            std::function<void(std::unique_ptr<gcontact::ContactGroupListResult>)> completed_callback = nullptr,
+            const gcontact::BatchGroupArg&,
+            std::function<void(std::unique_ptr<gcontact::BatchGroupList>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
@@ -38,11 +38,11 @@ namespace contact_group{
             Create a new contacts group
 
             */
-        std::unique_ptr<gcontact::ContactGroupListResult> create(const gcontact::CreateContactGroupArg& arg);
-        GoogleTask<gcontact::ContactGroupListResult>* create_Async(const gcontact::CreateContactGroupArg& arg);
+        std::unique_ptr<gcontact::GroupList> create(const gcontact::CreateContactGroupArg& arg);
+        GoogleTask<gcontact::GroupList>* create_Async(const gcontact::CreateContactGroupArg& arg);
         void create_AsyncCB(
             const gcontact::CreateContactGroupArg&,
-            std::function<void(std::unique_ptr<gcontact::ContactGroupListResult>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<gcontact::GroupList>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
@@ -67,11 +67,11 @@ namespace contact_group{
             if groupid is specified
 
             */
-        std::unique_ptr<gcontact::ContactGroupListResult> list(const gcontact::ContactGroupListArg& arg);
-        GoogleTask<gcontact::ContactGroupListResult>* list_Async(const gcontact::ContactGroupListArg& arg);
+        std::unique_ptr<gcontact::GroupList> list(const gcontact::ContactGroupListArg& arg);
+        GoogleTask<gcontact::GroupList>* list_Async(const gcontact::ContactGroupListArg& arg);
         void list_AsyncCB(
             const gcontact::ContactGroupListArg&,
-            std::function<void(std::unique_ptr<gcontact::ContactGroupListResult>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<gcontact::GroupList>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
             /**
@@ -81,11 +81,11 @@ namespace contact_group{
             Update contacts group
 
             */
-        std::unique_ptr<gcontact::ContactGroupListResult> update(const gcontact::UpdateContactGroupArg& arg);
-        GoogleTask<gcontact::ContactGroupListResult>* update_Async(const gcontact::UpdateContactGroupArg& arg);
+        std::unique_ptr<gcontact::GroupList> update(const gcontact::UpdateContactGroupArg& arg);
+        GoogleTask<gcontact::GroupList>* update_Async(const gcontact::UpdateContactGroupArg& arg);
         void update_AsyncCB(
             const gcontact::UpdateContactGroupArg&,
-            std::function<void(std::unique_ptr<gcontact::ContactGroupListResult>)> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<gcontact::GroupList>)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
 
     protected:

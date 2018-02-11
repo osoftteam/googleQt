@@ -49,8 +49,7 @@ namespace googleQt {
             QString id()const { return m_id; }
             QString title()const { return m_title; }
             QString content()const { return m_content; }
-            const QDateTime& updated()const { return m_updated; }
-            googleQt::EBatchId batchId()const { return m_batch_id; }
+            const QDateTime& updated()const { return m_updated; }            
 
             EStatus status()const { return m_status; }
             void markAsClean() { m_status = localCopy; };
@@ -58,7 +57,9 @@ namespace googleQt {
             void markAsDeleted() { m_status = localRemoved; };
             void markAsRetired() { m_status = localRetired; };
             bool isModified()const { return (m_status == localModified); }
-            void setBatchid(googleQt::EBatchId bid) { m_batch_id = bid; }
+            bool isRemoved()const { return (m_status == localRemoved); }
+            bool isRetired()const { return (m_status == localRetired); }
+            bool isCreatedLocally()const { return m_id.isEmpty(); }
 
             QString  originalXml()const { return m_original_xml_string; }
 
@@ -72,8 +73,7 @@ namespace googleQt {
             void assignContent(const ContactXmlPersistant& src);
 
             /// int -> status enum, does some validation
-            static EStatus validatedStatus(int val, bool* ok = nullptr);
-            static QString batch2xml(googleQt::EBatchId bid);
+            static EStatus validatedStatus(int val, bool* ok = nullptr);            
 
             /// userPtr - custom user data pointer
             void* userPtr()const { return m_user_ptr; }
@@ -84,9 +84,7 @@ namespace googleQt {
             QDateTime           m_updated;
             QString             m_original_xml_string;
             EStatus             m_status;
-            mutable void*       m_user_ptr{ nullptr };
-
-            googleQt::EBatchId  m_batch_id{ googleQt::EBatchId::none };
+            mutable void*       m_user_ptr{ nullptr };            
         };//ContactXmlPersistant
 
 
@@ -173,7 +171,7 @@ namespace googleQt {
                     qWarning() << "-- end data";
                     return false;
                 }
-
+                
                 QDomNodeList entries = doc.elementsByTagName("entry");
                 for (int i = 0; i < entries.size(); i++) {
                     QDomNode n = entries.item(i);
@@ -278,14 +276,71 @@ namespace googleQt {
                 return rv;
             }
 
-
         protected:
             std::vector<std::shared_ptr<T>> m_items;
             std::map<QString, std::shared_ptr<T>> m_id2item;
         };//InfoList
 
+        template <class T, class B>
+        class BatchBuilderInfoList: public InfoList<T>
+        {
+        public:
+            B buildBatchRequestList() const
+            {
+                B lst;
+                for (auto& o : InfoList<T>::m_items) {
+                    if (!o->isRetired())
+                    {
+                        if (o->isCreatedLocally())
+                        {
+                            lst.add(o->buildBatchRequest(googleQt::EBatchId::update));
+                        }
+                        else {
+                            if (o->isModified()) {
+                                lst.add(o->buildBatchRequest(googleQt::EBatchId::update));
+                            }
+                            else if (o->isRemoved()) {
+                                lst.add(o->buildBatchRequest(googleQt::EBatchId::delete_operation));
+                            }
+                        }
+                    }
+                }
+                return lst;
+            }
+        };
 
+        class BatchRequest
+        {
+        public:
+            googleQt::EBatchId batchId()const { return m_batch_id; }
+            void setBatchid(googleQt::EBatchId bid) { m_batch_id = bid; }
+
+            static QString batch2xml(googleQt::EBatchId bid);
+        protected:
+            QString toBatchXmlEntryBegin()const;
+        protected:
+            googleQt::EBatchId  m_batch_id{ googleQt::EBatchId::none };
+        };
+
+        class BatchResult 
+        {
+        public:
+            EBatchId batchResultId()const { return m_id; }
+            QString  batchResultOperationType()const { return m_operation_type; }
+            int      batchResultStatusCode()const { return m_status_code; }
+            QString  batchResultStatusReason()const { return m_status_reason; }
+            bool     parseBatchResult(QDomNode n);
+            bool     succeded()const;
+        protected:
+            EBatchId m_id;
+            QString  m_operation_type;
+            int      m_status_code;
+            QString  m_status_reason;
+            bool     m_is_null{ false };
+        };
 
     };//gcontact
 
 };
+
+#define COMPARE_NO_CASE(N) if (N.compare(o.N, Qt::CaseInsensitive)){return false;}
