@@ -27,4 +27,8 @@ void GoogleException::build(std::string err)
     }
 }
 
-
+GoogleException* GoogleException::clone()const 
+{
+    GoogleException* rv = new GoogleException(m_msg, m_status_code, m_error_summary);
+    return rv;
+};
