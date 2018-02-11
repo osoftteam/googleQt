@@ -12,6 +12,8 @@ namespace googleQt {
         class GroupList;
         class ContactInfo;
         class GroupInfo;
+        class BatchContactList;
+        class BatchGroupList;
     }
 };
 
@@ -177,6 +179,8 @@ public:
 
     void print_contact_list(gcontact::ContactList* lst);
     void print_group_list(gcontact::GroupList* lst);
+    void print_batch_contact_result(gcontact::BatchContactList* lst);
+    void print_batch_group_result(gcontact::BatchGroupList* lst);
 
     std::unique_ptr<gcontact::ContactInfo> generateContactInfo(QString first, QString last, QString email);    
     std::unique_ptr<gcontact::GroupInfo> generateGroupInfo(QString title, QString content);

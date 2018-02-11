@@ -26,12 +26,12 @@ void GcontactCommands::ls_contacts()
 {
     try
     {
-        ContactsListArg arg;
+        ContactListArg arg;
         arg.setMaxResults(100);
         arg.setOrderby("lastmodified");
         arg.setSortorder("descending");
         auto contacts_list = m_gt->getContacts()->list(arg);
-        print_contact_list(contacts_list->data());
+        print_contact_list(contacts_list.get());
     }
     catch (GoogleException& e)
     {
@@ -62,13 +62,13 @@ void GcontactCommands::ls_contacts_date(QString updatedMin)
 
     try
     {
-        ContactsListArg arg;
+        ContactListArg arg;
         arg.setMaxResults(100);
         arg.setOrderby("lastmodified");
         arg.setSortorder("descending");
         arg.setUpdatedMin(dt);
         auto contacts_list = m_gt->getContacts()->list(arg);
-        print_contact_list(contacts_list->data());
+        print_contact_list(contacts_list.get());
     }
     catch (GoogleException& e)
     {
@@ -85,11 +85,11 @@ void GcontactCommands::get_contact(QString contactid)
 
     try
     {
-        ContactsListArg arg;
+        ContactListArg arg;
         arg.setContactId(contactid);
         auto contacts_list = m_gt->getContacts()->list(arg);
         std::cout << contacts_list->toString() << std::endl;
-        auto& arr = contacts_list->data()->items();
+        auto& arr = contacts_list->items();
         if(arr.size() > 0){
             std::cout << arr[0]->toXml(m_c.userId()) << std::endl;
             std::cout << "------------------" << std::endl;
@@ -124,35 +124,13 @@ void GcontactCommands::create_contact(QString email_first_last)
 
     try
     {
-        /*
-        ContactInfo ci;
-        NameInfo n;
-        EmailInfo e;
-        PhoneInfo p;
-        OrganizationInfo o;
-        PostalAddress a;
-
-        n.setFamilyName(last).setGivenName(first).setFullName(first + " " + last);
-        e.setAddress(email).setDisplayName(first + " " + last).setPrimary(true).setTypeLabel("home");
-        p.setNumber("1-111-1111").setPrimary(true);
-        o.setName("organization-name").setTitle("title-in-the-organization");
-        a.setCity("Mountain View").setStreet("1600 Amphitheatre Pkwy").setRegion("CA").setPostcode("94043").setCountry("United States").setPrimary(true);
-
-        ci.setName(n).setTitle("Title for " + first + " " + last)
-            .addEmail(e)
-            .addPhone(p)
-            .setContent(QString("My notest on new contact for '%1'").arg(first))
-            .setOrganizationInfo(o)
-            .addAddress(a);
-            */
-
         std::unique_ptr<ContactInfo> ci = generateContactInfo(first, last, email);
 
         CreateContactArg arg;
         arg.setData(*(ci.get()));
         auto contacts_list = m_gt->getContacts()->create(arg);
         std::cout << contacts_list->toString() << std::endl;
-        auto& arr = contacts_list->data()->items();
+        auto& arr = contacts_list->items();
         if (arr.size() > 0) {
             std::cout << "Created.." << std::endl;
             std::cout << arr[0]->toXml(m_c.userId()) << std::endl;
@@ -276,7 +254,7 @@ void GcontactCommands::ls_as_json()
 {
     try
     {
-        ContactsListArg arg;
+        ContactListArg arg;
         arg.setAlt("json");
         auto contacts_list = m_gt->getContacts()->list(arg);
         m_c.printLastResponse();
@@ -323,15 +301,6 @@ void GcontactCommands::parse_file(QString xmlFileName)
     ContactList cl;
     if (cl.parseXml(file.readAll())) {
         print_contact_list(&cl);
-        /*
-        std::cout << "=== total # of contacts " << cl.items().size() << " ===" << std::endl;
-        std::cout << cl.toString().toStdString() << std::endl;
-        std::cout << "===============" << std::endl;
-
-        for (auto& c : cl.items()) {
-            std::cout << c->toXml(m_c.userId()) << std::endl << std::endl;
-        }
-        */
     }
 };
 
@@ -411,17 +380,17 @@ void GcontactCommands::update_contact_name(QString contactId_name)
     
     try
     {
-        ContactsListArg arg;
+        ContactListArg arg;
         arg.setContactId(contactid);
         auto contacts_list = m_gt->getContacts()->list(arg);        
-        auto& arr = contacts_list->data()->items();
+        auto& arr = contacts_list->items();
         if (arr.size() > 0) {
             auto c = arr[0];
             c->setName(n);
             UpdateContactArg upd(*(c.get()));
             upd.setIgnoreEtag(true);
             auto c_list = m_gt->getContacts()->update(upd);
-            auto& arr2 = c_list->data()->items();
+            auto& arr2 = c_list->items();
             if (arr2.size() > 0) {
                 std::cout << "Updated.." << std::endl;
                 std::cout << arr2[0]->toXml(m_c.userId()) << std::endl;
@@ -542,7 +511,7 @@ void GcontactCommands::ls_groups()
     {
         ContactGroupListArg arg;
         auto g_list = m_gt->getContactGroup()->list(arg);
-        print_group_list(g_list->data());
+        print_group_list(g_list.get());
     }
     catch (GoogleException& e)
     {
@@ -576,7 +545,7 @@ void GcontactCommands::ls_groups_date(QString updatedMin)
         ContactGroupListArg arg;
         arg.setUpdatedMin(dt);
         auto g_list = m_gt->getContactGroup()->list(arg);
-        print_group_list(g_list->data());
+        print_group_list(g_list.get());
     }
     catch (GoogleException& e)
     {
@@ -599,7 +568,7 @@ void GcontactCommands::get_group(QString groupid)
         auto g_list = m_gt->getContactGroup()->list(arg);
         
         std::cout << g_list->toString() << std::endl;
-        auto& arr = g_list->data()->items();
+        auto& arr = g_list->items();
         if (arr.size() > 0) {
             std::cout << arr[0]->toXml(m_c.userId()) << std::endl;
         }        
@@ -634,7 +603,7 @@ void GcontactCommands::create_group(QString title_content)
         arg.setData(g);
         auto contacts_list = m_gt->getContactGroup()->create(arg);        
         std::cout << contacts_list->toString() << std::endl;
-        auto& arr = contacts_list->data()->items();
+        auto& arr = contacts_list->items();
         if (arr.size() > 0) {
             std::cout << arr[0]->toXml(m_c.userId()) << std::endl;
         }
@@ -687,7 +656,7 @@ void GcontactCommands::update_group_title(QString groupId_title)
         ContactGroupListArg arg;
         arg.setGroupId(groupid);
         auto contacts_list = m_gt->getContactGroup()->list(arg);
-        auto& arr = contacts_list->data()->items();
+        auto& arr = contacts_list->items();
         if (arr.size() > 0) {
             auto g = arr[0];
             g->setTitle(new_title);
@@ -767,6 +736,52 @@ void GcontactCommands::print_group_list(gcontact::GroupList* lst)
     }
 };
 
+void GcontactCommands::print_batch_contact_result(gcontact::BatchContactList* lst)
+{
+    auto& arr = lst->items();
+    int idx = 1;
+    std::cout << "------------------------------------------------------------" << std::endl;
+    std::cout << "  #      ID              status                     updated " << std::endl;
+    std::cout << "------------------------------------------------------------" << std::endl;
+    for (auto& c : arr) {
+        QString info = c->title();
+        if (info.isEmpty()) {
+            if (c->emails().size() > 0) {
+                info = c->emails()[0].address();
+            }
+        }
+        std::cout << std::setw(3) << idx++ << ". "
+            << std::setw(16) << c->id() << " "
+            << (c->succeded() ? "OK" : "ERR") << " "
+            << c->batchResultOperationType() << "/" << c->batchResultStatusReason() << " "
+            << c->updated().toString(date_format) << " "
+            << info << std::endl;
+    }
+};
+
+
+void GcontactCommands::print_batch_group_result(gcontact::BatchGroupList* lst)
+{
+    auto& arr = lst->items();
+    int idx = 1;
+    std::cout << "------------------------------------------------------------" << std::endl;
+    std::cout << "  #      ID              status                     updated " << std::endl;
+    std::cout << "------------------------------------------------------------" << std::endl;
+    for (auto& c : arr) {
+        QString info = c->title();
+        info += "/";
+        info += c->content();
+
+        std::cout << std::setw(3) << idx++ << ". "
+            << std::setw(16) << c->id() << " "
+            << (c->succeded() ? "OK" : "ERR") << " "
+            << c->batchResultOperationType() << "/" << c->batchResultStatusReason() << " "
+            << c->updated().toString(date_format) << " "
+            << info << std::endl;
+    }
+};
+
+
 std::unique_ptr<gcontact::ContactInfo> GcontactCommands::generateContactInfo(QString first, QString last, QString email)
 {
     std::unique_ptr<ContactInfo> ci(new ContactInfo());
@@ -812,16 +827,16 @@ void GcontactCommands::batch_list_contacts(QString id_space_id)
 
     try
     {
-        ContactList batch_list;
+        BatchRequesContactList batch_list;
         for (auto s : arg_list)
         {
-            std::unique_ptr<ContactInfo> ci(ContactInfo::createWithId(s));
-            ci->setBatchid(googleQt::EBatchId::retrieve);
+            std::unique_ptr<BatchRequestContactInfo> ci(BatchRequestContactInfo::buildRequest(s, googleQt::EBatchId::retrieve));
             batch_list.add(std::move(ci));
         }
         BatchContactArg arg(batch_list);
         auto c_list = m_gt->getContacts()->batch(arg);
-        print_contact_list(c_list->data());
+        print_last_result();
+        print_batch_contact_result(c_list.get());
     }
     catch (GoogleException& e)
     {
@@ -842,21 +857,20 @@ void GcontactCommands::batch_create_contact(QString name_space_name)
 
     try
     {
-        ContactList batch_list;
+        BatchRequesContactList batch_list;
         for (auto s : arg_list)
         {
             QString first = s;
             QString last = "4batch";
             QString email = "me@gmail.com";
 
-            std::unique_ptr<ContactInfo> ci = generateContactInfo(first, last, email);            
-            ci->setBatchid(googleQt::EBatchId::create);            
-            batch_list.add(std::move(ci));            
+            std::unique_ptr<ContactInfo> ci = generateContactInfo(first, last, email);
+            std::unique_ptr<BatchRequestContactInfo> b = ci->buildBatchRequest(googleQt::EBatchId::create);
+            batch_list.add(std::move(b));
         }
         BatchContactArg arg(batch_list);
         auto c_list = m_gt->getContacts()->batch(arg);
-        print_contact_list(c_list->data());
-        //        print_last_result();
+        print_batch_contact_result(c_list.get());
     }
     catch (GoogleException& e)
     {
@@ -878,27 +892,30 @@ void GcontactCommands::batch_update_contact(QString id_space_id)
 
     try
     {
-        ContactList batch_list;
+        BatchRequesContactList batch_list;
         for (auto s : arg_list)
         {
-            std::unique_ptr<ContactInfo> ci(ContactInfo::createWithId(s));
-            ci->setBatchid(googleQt::EBatchId::retrieve);
+            std::unique_ptr<BatchRequestContactInfo> ci(BatchRequestContactInfo::buildRequest(s, googleQt::EBatchId::retrieve));
             batch_list.add(std::move(ci));
         }
 
+        BatchRequesContactList batch_upd;
+
         BatchContactArg arg(batch_list);
         auto rlst = m_gt->getContacts()->batch(arg);
-        ContactList* result_list = rlst->data();
+        auto result_list = rlst.get();
         for (auto& c : result_list->items()) {
-            auto n = c->name();
+            std::unique_ptr<BatchRequestContactInfo> b = c->buildBatchRequest(googleQt::EBatchId::update);
+
+            auto n = b->name();
             n.setFullName(n.fullName() + "-b");
-            c->setName(n);
-            c->setBatchid(googleQt::EBatchId::update);
+            b->setName(n);
+            batch_upd.add(std::move(b));
         }
 
-        BatchContactArg arg2(*result_list);
+        BatchContactArg arg2(batch_upd);
         auto c_list = m_gt->getContacts()->batch(arg2);
-        print_contact_list(c_list->data());
+        print_batch_contact_result(c_list.get());
     }
     catch (GoogleException& e)
     {
@@ -919,11 +936,10 @@ void GcontactCommands::batch_delete_contact(QString id_space_id)
 
     try
     {
-        ContactList batch_list;
+        BatchRequesContactList batch_list;
         for (auto s : arg_list)
         {
-            std::unique_ptr<ContactInfo> ci(ContactInfo::createWithId(s));
-            ci->setBatchid(googleQt::EBatchId::delete_operation);
+            std::unique_ptr<BatchRequestContactInfo> ci(BatchRequestContactInfo::buildRequest(s, googleQt::EBatchId::delete_operation));
             batch_list.add(std::move(ci));
         }
         BatchContactArg arg(batch_list);
@@ -949,16 +965,15 @@ void GcontactCommands::batch_list_groups(QString id_space_id)
 
     try
     {
-        GroupList batch_list;
+        BatchRequesGroupList batch_list;
         for (auto s : arg_list)
         {
-            std::unique_ptr<GroupInfo> ci(GroupInfo::createWithId(s));
-            ci->setBatchid(googleQt::EBatchId::retrieve);
+            std::unique_ptr<BatchRequestGroupInfo> ci(BatchRequestGroupInfo::buildRequest(s, googleQt::EBatchId::retrieve));
             batch_list.add(std::move(ci));            
         }
-        BatchContactGroupArg arg(batch_list);
+        BatchGroupArg arg(batch_list);
         auto g_list = m_gt->getContactGroup()->batch(arg);
-        print_group_list(g_list->data());
+        print_batch_group_result(g_list.get());
     }
     catch (GoogleException& e)
     {
@@ -980,19 +995,19 @@ void GcontactCommands::batch_create_group(QString name_space_name)
 
     try
     {
-        GroupList batch_list;
+        BatchRequesGroupList batch_list;
         for (auto s : arg_list)
         {
             QString title = s;
             QString content = "4batch";
 
             std::unique_ptr<GroupInfo> ci = generateGroupInfo(title, content);
-            ci->setBatchid(googleQt::EBatchId::create);
-            batch_list.add(std::move(ci));
+            std::unique_ptr<BatchRequestGroupInfo> b = ci->buildBatchRequest(googleQt::EBatchId::create);
+            batch_list.add(std::move(b));
         }
-        BatchContactGroupArg arg(batch_list);
+        BatchGroupArg arg(batch_list);
         auto g_list = m_gt->getContactGroup()->batch(arg);
-        print_group_list(g_list->data());
+        print_batch_group_result(g_list.get());
     }
     catch (GoogleException& e)
     {
@@ -1013,30 +1028,33 @@ void GcontactCommands::batch_update_group(QString id_space_id)
 
     try
     {
-        GroupList batch_list;
+        BatchRequesGroupList batch_list;
         for (auto s : arg_list)
         {
-            std::unique_ptr<GroupInfo> ci(GroupInfo::createWithId(s));
-            ci->setBatchid(googleQt::EBatchId::retrieve);
-            batch_list.add(std::move(ci));
+            std::unique_ptr<BatchRequestGroupInfo> b(BatchRequestGroupInfo::buildRequest(s, googleQt::EBatchId::retrieve));
+            //std::unique_ptr<GroupInfo> ci(GroupInfo::createWithId(s));
+            //ci->setBatchid(googleQt::EBatchId::retrieve);
+            batch_list.add(std::move(b));
         }
 
-        BatchContactGroupArg arg(batch_list);
+        BatchRequesGroupList batch_upd;
+
+        BatchGroupArg arg(batch_list);
         auto rlst = m_gt->getContactGroup()->batch(arg);
-        std::cout << "data before update.." << std::endl;
-        print_group_list(rlst->data());
+        std::cout << "groups before update.." << std::endl;
+        print_batch_group_result(rlst.get());
         
-        GroupList* result_list = rlst->data();
-        for (auto& c : result_list->items()) {
-            c->setTitle(c->title() + "-b");
-            c->setBatchid(googleQt::EBatchId::update);
+        //GroupList* result_list = rlst.get();
+        for (auto& c : rlst->items()) {
+            std::unique_ptr<BatchRequestGroupInfo> b = c->buildBatchRequest(googleQt::EBatchId::update);
+            b->setTitle(b->title() + "-b");
+            batch_upd.add(std::move(b));
         }
         
-        BatchContactGroupArg arg2(*result_list);
+        BatchGroupArg arg2(batch_upd);
         auto c_list = m_gt->getContactGroup()->batch(arg2);
-        //print_last_result();
         std::cout << "data after update.." << std::endl;
-        print_group_list(c_list->data());
+        print_batch_group_result(c_list.get());
     }
     catch (GoogleException& e)
     {
@@ -1058,14 +1076,13 @@ void GcontactCommands::batch_delete_group(QString id_space_id)
 
     try
     {
-        GroupList batch_list;
+        BatchRequesGroupList batch_list;
         for (auto s : arg_list)
         {
-            std::unique_ptr<GroupInfo> ci(GroupInfo::createWithId(s));
-            ci->setBatchid(googleQt::EBatchId::delete_operation);
+            std::unique_ptr<BatchRequestGroupInfo> ci(BatchRequestGroupInfo::buildRequest(s, googleQt::EBatchId::delete_operation));
             batch_list.add(std::move(ci));
         }
-        BatchContactGroupArg arg(batch_list);
+        BatchGroupArg arg(batch_list);
         m_gt->getContactGroup()->batch(arg);
         std::cout << "groups deleted" << std::endl;
     }
