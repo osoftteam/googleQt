@@ -42,6 +42,9 @@ namespace googleQt{
     {
         friend class Endpoint;
     public:
+
+        std::unique_ptr<RESULT>&& detachResult() {return std::move(m_completed); }
+
         RESULT* get()
         {
             RESULT* rv = nullptr;
@@ -155,4 +158,26 @@ namespace googleQt{
     protected:
         bool m_completed = { false };
     };
+
+    class TaskAggregator : public EndpointRunnable 
+    {
+    public:
+        using RUNNABLES = std::list<EndpointRunnable*>;
+
+        TaskAggregator(ApiEndpoint& ept):EndpointRunnable(ept){};
+
+        void add(EndpointRunnable* r) { m_runnables.push_back(r); }
+
+        bool isCompleted()const override;
+        bool isFailed()const override;
+        bool areAllFinished()const;
+
+        void then(std::function<void()> after_completed_processing = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> on_error = nullptr);
+
+
+    protected:
+        RUNNABLES m_runnables;
+    };
+
 };
