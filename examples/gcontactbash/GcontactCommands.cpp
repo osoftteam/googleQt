@@ -9,6 +9,7 @@
 #include "google/demo/ApiTerminal.h"
 #include "gcontact/GcontactRoutes.h"
 #include "gcontact/GcontactCache.h"
+#include "Endpoint.h"
 
 using namespace googleQt;
 using namespace gcontact;
@@ -248,6 +249,37 @@ void GcontactCommands::test_contact_xml()
         }
         std::cout << "identity2  - OK" << std::endl;
     }
+};
+
+void GcontactCommands::test_parallel_req()
+{
+    /*
+    TaskAggregator* agg = m_c.endpoint()->produceAggregatorTask();
+
+    ContactListArg c;
+    c.setMaxResults(100);
+    c.setOrderby("lastmodified");
+    c.setSortorder("descending");
+
+    ContactGroupListArg g;
+
+    auto tc = m_gt->getContacts()->list_Async(c);
+    auto tg = m_gt->getContactGroup()->list_Async(g);
+    agg->add(tc);
+    agg->add(tg);
+    agg->waitForResultAndRelease();
+        agg->then([=]()
+              {
+                  auto clst = tc->detachResult();
+                  auto glst = tg->detachResult();
+                  print_group_list(glst.get());
+                  print_contact_list(clst.get());
+              },
+              [=](std::unique_ptr<GoogleException> ex) 
+              {
+                  std::cout << "Exception: " << ex->what() << std::endl;
+              });
+    */
 };
 
 void GcontactCommands::ls_as_json()

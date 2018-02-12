@@ -115,6 +115,7 @@ int main(int argc, char *argv[])
     t.addAction("parse_group_file", "Read and parse xml contacts group file", [&](QString arg) {cmd.parse_group_file(arg); });
     t.addAction("test_contact_xml", "Test xml-serialization of a contact entry", [&](QString) {cmd.test_contact_xml(); });
     t.addAction("test_merge", "Read xml contacts file, merge with custom data, print result", [&](QString arg) {cmd.test_merge(arg); });
+    t.addAction("test_parallel_req", "test_parallel_req", [&](QString) {cmd.test_parallel_req(); });
     t.start();
     return 0;
 };

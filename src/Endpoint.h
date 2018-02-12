@@ -670,6 +670,10 @@ namespace googleQt{
             return new GoogleVoidTask(*this);
         }
 
+        TaskAggregator* produceAggregatorTask()
+        {
+            return new TaskAggregator(*this);
+        }
 
     protected:
         QString prepareErrorInfo(int status_code, const QUrl& url, const QByteArray& data);
