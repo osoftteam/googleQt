@@ -172,9 +172,16 @@ namespace googleQt{
         bool isFailed()const override;
         bool areAllFinished()const;
 
+        void waitForResultAndRelease();
         void then(std::function<void()> after_completed_processing = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> on_error = nullptr);
 
+        void deleteLaterTask();
+
+        void completed_callback(void)
+        {
+            notifyOnFinished();
+        };
 
     protected:
         RUNNABLES m_runnables;

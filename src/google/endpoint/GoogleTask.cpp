@@ -114,7 +114,7 @@ bool TaskAggregator::isCompleted()const
 bool TaskAggregator::isFailed()const
 {
     for (auto t : m_runnables) {
-        if (!t->isFailed())
+        if (t->isFailed())
             return true;
     }
     return false;
@@ -128,6 +128,52 @@ bool TaskAggregator::areAllFinished()const
     }
     return true;
 };
+
+void TaskAggregator::deleteLaterTask() 
+{
+    for (auto t : m_runnables) {
+        t->deleteLater();
+    }
+
+    deleteLater();
+};
+
+void TaskAggregator::waitForResultAndRelease()
+{
+    if (!isCompleted() && !isFailed())
+    {
+        for (auto t : m_runnables) {
+            connect(t, &EndpointRunnable::finished,
+                [=]()
+            {
+                if (areAllFinished()) {
+                    completed_callback();
+                }
+            });
+        }
+        m_in_wait_loop = true;
+        m_endpoint.runEventsLoop();
+    }
+
+    if (isFailed())
+    {
+        std::unique_ptr<GoogleException> ex;
+        for (auto t : m_runnables) {
+            if (t->isFailed()) {
+                GoogleException* e = t->error();
+                if (e) {
+                    ex.reset(e->clone());
+                    deleteLaterTask();
+                    if (ex)
+                        ex->raise();
+                    break;
+                }
+            }
+        }
+    }
+
+    deleteLaterTask();
+}
 
 void TaskAggregator::then(std::function<void()> after_completed_processing /*= nullptr*/,
     std::function<void(std::unique_ptr<GoogleException>)> on_error /*= nullptr*/) 
@@ -153,7 +199,7 @@ void TaskAggregator::then(std::function<void()> after_completed_processing /*= n
                 on_error(std::move(m_failed));
             }
         }
-        deleteLater();
+        deleteLaterTask();
     };
 
 
