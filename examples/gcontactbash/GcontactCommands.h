@@ -162,7 +162,7 @@ public:
     */
     void test_contact_xml();
 
-    void test_parallel_req();
+    void test_concurrent_req();
 
     /**
     * test_merge_xml - import XML file, create contact with custom data and merge into the file

@@ -251,35 +251,34 @@ void GcontactCommands::test_contact_xml()
     }
 };
 
-void GcontactCommands::test_parallel_req()
-{
-    /*
+void GcontactCommands::test_concurrent_req()
+{    
     TaskAggregator* agg = m_c.endpoint()->produceAggregatorTask();
 
     ContactListArg c;
     c.setMaxResults(100);
     c.setOrderby("lastmodified");
     c.setSortorder("descending");
-
+    
     ContactGroupListArg g;
 
     auto tc = m_gt->getContacts()->list_Async(c);
     auto tg = m_gt->getContactGroup()->list_Async(g);
     agg->add(tc);
     agg->add(tg);
-    agg->waitForResultAndRelease();
-        agg->then([=]()
-              {
-                  auto clst = tc->detachResult();
-                  auto glst = tg->detachResult();
-                  print_group_list(glst.get());
-                  print_contact_list(clst.get());
-              },
-              [=](std::unique_ptr<GoogleException> ex) 
-              {
-                  std::cout << "Exception: " << ex->what() << std::endl;
-              });
-    */
+    
+    try
+    {
+        agg->waitForResultAndRelease();
+        auto clst = tc->detachResult();
+        auto glst = tg->detachResult();
+        print_group_list(glst.get());
+        print_contact_list(clst.get());
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
 };
 
 void GcontactCommands::ls_as_json()
@@ -728,9 +727,12 @@ void GcontactCommands::parse_group_file(QString xmlFileName)
 
 void GcontactCommands::print_contact_list(gcontact::ContactList* lst) 
 {
+    if (!lst)
+        return;
+
     auto& arr = lst->items();
     int idx = 1;
-    std::cout << "------------------------------------------------------------" << std::endl;
+    std::cout << "--contacts--------------------------------------------------" << std::endl;
     std::cout << "  #      ID              etag                       updated " << std::endl;
     std::cout << "------------------------------------------------------------" << std::endl;
     for (auto& c : arr) {
@@ -750,9 +752,12 @@ void GcontactCommands::print_contact_list(gcontact::ContactList* lst)
 
 void GcontactCommands::print_group_list(gcontact::GroupList* lst)
 {
+    if (!lst)
+        return;
+
     auto& arr = lst->items();
     int idx = 1;
-    std::cout << "------------------------------------------------------------" << std::endl;
+    std::cout << "--groups----------------------------------------------------" << std::endl;
     std::cout << "  #      ID              etag                       updated " << std::endl;
     std::cout << "------------------------------------------------------------" << std::endl;
     for (auto& c : arr) {
@@ -770,9 +775,12 @@ void GcontactCommands::print_group_list(gcontact::GroupList* lst)
 
 void GcontactCommands::print_batch_contact_result(gcontact::BatchContactList* lst)
 {
+    if (!lst)
+        return;
+
     auto& arr = lst->items();
     int idx = 1;
-    std::cout << "------------------------------------------------------------" << std::endl;
+    std::cout << "--contacts--------------------------------------------------" << std::endl;
     std::cout << "  #      ID              status                     updated " << std::endl;
     std::cout << "------------------------------------------------------------" << std::endl;
     for (auto& c : arr) {
@@ -794,9 +802,12 @@ void GcontactCommands::print_batch_contact_result(gcontact::BatchContactList* ls
 
 void GcontactCommands::print_batch_group_result(gcontact::BatchGroupList* lst)
 {
+    if (!lst)
+        return;
+
     auto& arr = lst->items();
     int idx = 1;
-    std::cout << "------------------------------------------------------------" << std::endl;
+    std::cout << "--groups----------------------------------------------------" << std::endl;
     std::cout << "  #      ID              status                     updated " << std::endl;
     std::cout << "------------------------------------------------------------" << std::endl;
     for (auto& c : arr) {
