@@ -194,10 +194,32 @@ void ApiAutotest::addId(const char* class_name, QString id)
         }
 };
 
+void ApiAutotest::addBatchId(const char* class_name, std::pair<QString, googleQt::EBatchId> bid) 
+{
+    auto i = m_availBatchID.find(class_name);
+    if (i != m_availBatchID.end())
+    {
+        i->second.push_back(bid);
+    }
+    else
+    {
+        BATCH_LIST lst;
+        lst.push_back(bid);
+        m_availBatchID[class_name] = lst;
+    }
+};
+
 void ApiAutotest::addIdSet(const char* class_name, const IDSET& id_set)
 {
     for (auto c : id_set) {       
         addId(class_name, c);
+    }
+};
+
+void ApiAutotest::addBatchIdList(const char* class_name, const BATCH_LIST& bid_list)
+{
+    for (auto c : bid_list) {
+        addBatchId(class_name, c);
     }
 };
 
@@ -211,6 +233,19 @@ IDSET ApiAutotest::getReservedIdSet(const char* class_name)
         i->second.clear();
     }
     return rv;
+};
+
+BATCH_LIST ApiAutotest::getReservedBatchList(const char* class_name) 
+{
+    BATCH_LIST rv;
+    auto i = m_availBatchID.find(class_name);
+    if (i != m_availBatchID.end() && !i->second.empty())
+    {
+        rv = i->second;
+        i->second.clear();
+    }
+    return rv;
+
 };
 
 QString ApiAutotest::getId(const char* class_name, int default_id_num)

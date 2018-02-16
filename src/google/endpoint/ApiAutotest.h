@@ -7,8 +7,12 @@
 
 namespace googleQt{
 
+#ifdef API_QT_AUTOTEST
     using IDSET = std::set<QString>;
     using CLASS_ID_MAP = std::map<QString, IDSET>;
+    using BATCH_LIST = std::list<std::pair<QString, googleQt::EBatchId>>;
+    using CLASS2BATCH_LIST = std::map<QString, BATCH_LIST>;
+#endif
 
     class ApiClient;
 
@@ -35,9 +39,12 @@ namespace googleQt{
         void logRequest(QString req);
         void enableRequestLog(bool val) { m_request_log_enabled = val; };
         void addId(const char* class_name, QString id);
+        void addBatchId(const char* class_name, std::pair<QString, googleQt::EBatchId> bid);
         void addIdSet(const char* class_name, const IDSET& id_list);
-        QString getId(const char* class_name, int default_id_num);
+        void addBatchIdList(const char* class_name, const BATCH_LIST& bid_list);
+        QString getId(const char* class_name, int default_id_num);        
         IDSET getReservedIdSet(const char* class_name);
+        BATCH_LIST getReservedBatchList(const char* class_name);
         quint64 getInt(const char* class_name, const char* field_name, int default_id_num);
         QString getString(const char* class_name, const char* field_name, QString default_value);
 
@@ -52,6 +59,7 @@ namespace googleQt{
 
     protected:
         CLASS_ID_MAP m_availID;
+        CLASS2BATCH_LIST m_availBatchID;
         bool m_attachmentDataGenerationOn{true};
         #endif //API_QT_AUTOTEST
 
