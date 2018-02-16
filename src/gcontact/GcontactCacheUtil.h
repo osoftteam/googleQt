@@ -52,7 +52,7 @@ namespace googleQt {
             const QDateTime& updated()const { return m_updated; }            
 
             EStatus status()const { return m_status; }
-            void markAsClean() { m_status = localCopy; };
+            void markAsNormalCopy() { m_status = localCopy; };
             void markAsModified() { m_status = localModified; };
             void markAsDeleted() { m_status = localRemoved; };
             void markAsRetired() { m_status = localRetired; };
@@ -254,12 +254,12 @@ namespace googleQt {
                         if (c->isModified()) 
                         {
                             c->markAsRetired();
-                            sc->markAsClean();
+                            sc->markAsNormalCopy();
                             add(sc);
                         }
                         else {
                             c->assignContent(*(sc.get()));
-                            c->markAsClean();
+                            c->markAsNormalCopy();
                         }
                     }
                 }
@@ -331,6 +331,9 @@ namespace googleQt {
             QString  batchResultStatusReason()const { return m_status_reason; }
             bool     parseBatchResult(QDomNode n);
             bool     succeded()const;
+#ifdef API_QT_AUTOTEST
+            static QString EXAMPLE(googleQt::EBatchId bid);
+#endif
         protected:
             EBatchId m_id;
             QString  m_operation_type;

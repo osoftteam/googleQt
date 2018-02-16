@@ -247,3 +247,27 @@ bool BatchResult::succeded()const
     }
     return rv;
 };
+
+
+#ifdef API_QT_AUTOTEST
+QString BatchResult::EXAMPLE(googleQt::EBatchId bid) 
+{
+    QString rv = BatchRequest::batch2xml(bid) + "\n";
+    switch (bid)
+    {
+    case googleQt::EBatchId::none:break;
+    case googleQt::EBatchId::retrieve:
+    case googleQt::EBatchId::update:
+    case googleQt::EBatchId::delete_operation:
+    {
+        rv += "<batch:status code='200' reason='Success'/>";
+    }break;
+    case googleQt::EBatchId::create:
+    {
+        rv += "<batch:status code='201' reason='Created'/>";
+    }break;    
+    }
+
+    return rv;
+};
+#endif
