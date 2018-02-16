@@ -9,6 +9,11 @@ namespace googleQt{
     class ApiEndpoint;
     class Endpoint;
 
+    /**
+        EndpointRunnable - abstruct class for object-based async task classes.
+        Has 'finished' signal and after it's finished it can be either 
+        'complated' or 'failed'
+    */
     class EndpointRunnable : public QObject
     {
         Q_OBJECT;
@@ -36,7 +41,12 @@ namespace googleQt{
         std::unique_ptr<GoogleException> m_failed;
     };
 
-
+    /**
+        main template async task for results of queries.
+        The actual data is type parameter and can be accessed via
+        1.waitForResultAndRelease - for blocking calls
+        2.'then'-parameters - for async calls, also via 'get'
+    */
     template <class RESULT>
     class GoogleTask : public EndpointRunnable
     {
@@ -131,6 +141,11 @@ namespace googleQt{
         std::unique_ptr<RESULT> m_completed;
     };
 
+    /**
+        GoogleVoidTask - google async task that brings back no data but it
+        can be 'failed' or 'completed'
+    */
+
     class GoogleVoidTask : public EndpointRunnable
     {
         friend class Endpoint;
@@ -159,6 +174,15 @@ namespace googleQt{
         bool m_completed = { false };
     };
 
+    /**
+        TaskAggregator - a utility class to control execution of async
+        tasks. It is async task itself, becomes completed when all added 
+        tasks are completed and failed when any one has failed.
+        The waitForResultAndRelease and 'then' functions used for
+        blocking and async calls, they dispose also controlled tasks.
+        If data is needed from depending tasks they should be moved inside 'then'
+        processing or right after 'waitForResultAndRelease'
+    */
     class TaskAggregator : public EndpointRunnable 
     {
     public:
