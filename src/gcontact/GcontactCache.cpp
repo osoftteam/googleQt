@@ -957,7 +957,7 @@ void GcontactCacheRoutes::reloadCache_Async(GcontactCacheQueryTask* rv, QDateTim
     agg->then([=]() 
     {
         rv->m_result_contacts = entries_task->detachResult();
-        rv->m_result_groups = std::move(groups_task->detachResult());
+        rv->m_result_groups = groups_task->detachResult();
 
         if (m_GContactsCache->mergeServerModifications(*(rv->m_result_groups.get()), *(rv->m_result_contacts.get()))) {
             //at this point we should have loaded server changes
@@ -974,48 +974,6 @@ void GcontactCacheRoutes::reloadCache_Async(GcontactCacheQueryTask* rv, QDateTim
     {
         rv->failed_callback(std::move(ex));
     });
-
-    /*
-    ContactListArg entries_arg;
-    entries_arg.setMaxResults(200);
-
-    if (dtUpdatedMin.isValid()) {
-        entries_arg.setUpdatedMin(dtUpdatedMin);
-    }
-
-    auto entries_task = m_endpoint.client()->gcontact()->getContacts()->list_Async(entries_arg);
-    entries_task->then([=](std::unique_ptr<gcontact::ContactList> lst)
-    {
-        rv->m_result_contacts = std::move(lst);
-
-        ContactGroupListArg groups_arg;
-        groups_arg.setMaxResults(200);
-
-        auto groups_task = m_endpoint.client()->gcontact()->getContactGroup()->list_Async(groups_arg);
-        groups_task->then([=](std::unique_ptr<gcontact::GroupList> lst)
-        {
-            rv->m_result_groups = std::move(lst);
-            if (m_GContactsCache->mergeContactsAndStoreToDb(*(rv->m_result_groups.get()), *(rv->m_result_contacts.get()))) {
-
-                rv->completed_callback();
-            }
-            else {
-                std::unique_ptr<GoogleException> ex(new GoogleException("Failed to merge/store DB cache."));
-                rv->failed_callback(std::move(ex));
-            }
-        },
-            [=](std::unique_ptr<GoogleException> ex) 
-        {
-            rv->failed_callback(std::move(ex));
-        });
-    },
-        [=](std::unique_ptr<GoogleException> ex)
-    {
-        rv->failed_callback(std::move(ex));
-    });
-
-    return rv;
-    */
 };
 
 void GcontactCacheRoutes::applyLocalCacheModifications_Async(GcontactCacheQueryTask* rv) 
@@ -1044,8 +1002,6 @@ void GcontactCacheRoutes::applyLocalCacheModifications_Async(GcontactCacheQueryT
             rv->failed_callback(std::move(ex));
         }
     );
-
-    //rv->completed_callback();
 };
 
 /**
@@ -1465,7 +1421,6 @@ static QString XmlContactsResponseSample(std::set<QString>& id_set)
         }
         QString e_id = *it;
         id_set.erase(it);
-        //QString e_id = .;//QString("id%1").arg(i);
         QString name = QString("name%1").arg(i);
         QString orga_name = QString("orga%1").arg(i);
         QString email = QString("email%1@me-site.org").arg(i);
@@ -1482,6 +1437,70 @@ static QString XmlContactsResponseSample(std::set<QString>& id_set)
     rv += "</feed>\n";
     return rv;
 }
+
+
+static QString XmlContactsBatchResponseSample(BATCH_LIST& bid_lst)
+{
+    static const char* xml_batch_entry_template =
+        "<entry gd:etag = \"&quot;%1&quot;\">\n"
+        "%2\n"
+        "<id>http://www.google.com/m8/feeds/contacts/me%40gmail.com/base/%3</id>\n"
+        "<updated>2017-12-27T11:33:51.728Z</updated>\n"
+        "<app:edited xmlns:app = \"http://www.w3.org/2007/app\">2017-12-27T11:33:51.728Z</app:edited>\n"
+        "<category scheme = \"http://schemas.google.com/g/2005#kind\" term=\"http://schemas.google.com/contact/2008#contact\"/>\n"
+        "<title>test</title>\n"
+        "<content>testNotes</content>\n"
+        "<link rel = \"http://schemas.google.com/contacts/2008/rel#photo\" type=\"image/*\" href=\"https://www.googleapis.com/m8/feeds/photos/media/me%40gmail.com/asdfgh123\"/>\n"
+        "<link rel = \"self\" type=\"application/atom+xml\" href=\"https://www.googleapis.com/m8/feeds/contacts/me%40gmail.com/full/asdfgh123\"/>\n"
+        "<link rel = \"edit\" type=\"application/atom+xml\" href=\"https://www.googleapis.com/m8/feeds/contacts/me%40gmail.com/full/asdfgh123\"/>\n"
+        "<gd:name>\n"
+        "<gd:fullName>test</gd:fullName>\n"
+        "<gd:givenName>%4</gd:givenName>\n"
+        "</gd:name>\n"
+        "<gd:organization rel = \"http://schemas.google.com/g/2005#other\">\n"
+        "<gd:orgName>%5</gd:orgName>\n"
+        "<gd:orgTitle>testJobTitle</gd:orgTitle>\n"
+        "</gd:organization>\n"
+        "<gd:email rel = \"http://schemas.google.com/g/2005#other\" address=\"%6\"/>\n"
+        "<gd:phoneNumber rel = \"http://schemas.google.com/g/2005#home\">917 111-1111</gd:phoneNumber>\n"
+        "<gd:phoneNumber rel = \"http://schemas.google.com/g/2005#work\" uri=\"tel:+1-917-222-2222\">917 222-2222</gd:phoneNumber>\n"
+        "<gContact:groupMembershipInfo deleted = \"false\" href=\"http://www.google.com/m8/feeds/groups/me%40gmail.com/base/6\"/>\n"
+        "</entry>\n";
+
+
+    QString rv = "<?xml version = \"1.0\" encoding = \"UTF-8\"?>\n"
+        "<feed xmlns = \"http://www.w3.org/2005/Atom\" xmlns:batch = \"http://schemas.google.com/gdata/batch\" xmlns:gContact = \"http://schemas.google.com/contact/2008\" xmlns:gd = \"http://schemas.google.com/g/2005\">\n";
+
+    
+    size_t entries_count = bid_lst.size();
+    for (size_t i = 0; i < entries_count; i++) {
+        QString etag = QString("etag%1").arg(i);
+        if (bid_lst.empty()) {
+            qWarning() << "internal autotest error/xml-generation";
+            return "";
+        }
+        auto p = bid_lst.front();
+        bid_lst.pop_front();
+        QString e_id = p.first;
+        QString batch_xml = BatchResult::EXAMPLE(p.second);
+        QString name = QString("name%1").arg(i);
+        QString orga_name = QString("orga%1").arg(i);
+        QString email = QString("email%1@me-site.org").arg(i);
+
+        QString e = QString(xml_batch_entry_template)            
+            .arg(etag)
+            .arg(batch_xml)
+            .arg(e_id)
+            .arg(name)
+            .arg(orga_name)
+            .arg(email);
+
+        rv += e;
+    }    
+    rv += "</feed>\n";
+    return rv;
+}
+
 
 std::unique_ptr<ContactList> ContactList::EXAMPLE(int context_index, int parent_context_index)
 {
@@ -1512,11 +1531,11 @@ std::unique_ptr<GroupList> GroupList::EXAMPLE(int, int)
 
 std::unique_ptr<BatchContactList> BatchContactList::EXAMPLE(int, int)
 {
-    IDSET idset = ApiAutotest::INSTANCE().getReservedIdSet("gcontact::BatchContactList");
-    if (idset.empty()) {
-        idset.insert("g1id");
+    auto bid_lst = ApiAutotest::INSTANCE().getReservedBatchList("gcontact::BatchContactList");
+    if (bid_lst.empty()) {
+        bid_lst.push_back(std::pair<QString, googleQt::EBatchId>("c1id", googleQt::EBatchId::retrieve));
     }
-    QByteArray d(XmlContactsResponseSample(idset).toStdString().c_str());
+    QByteArray d(XmlContactsBatchResponseSample(bid_lst).toStdString().c_str());
     std::unique_ptr<BatchContactList> rv(new BatchContactList());
     rv->parseXml(d);
     return rv;
@@ -1524,11 +1543,11 @@ std::unique_ptr<BatchContactList> BatchContactList::EXAMPLE(int, int)
 
 std::unique_ptr<BatchGroupList> BatchGroupList::EXAMPLE(int, int)
 {
-    IDSET idset = ApiAutotest::INSTANCE().getReservedIdSet("gcontact::BatchGroupList");
-    if (idset.empty()) {
-        idset.insert("g1id");
+    auto bid_lst = ApiAutotest::INSTANCE().getReservedBatchList("gcontact::BatchGroupList");
+    if (bid_lst.empty()) {
+        bid_lst.push_back(std::pair<QString, googleQt::EBatchId>("g1id", googleQt::EBatchId::retrieve));
     }
-    QByteArray d(XmlContactsResponseSample(idset).toStdString().c_str());
+    QByteArray d(XmlContactsBatchResponseSample(bid_lst).toStdString().c_str());
     std::unique_ptr<BatchGroupList> rv(new BatchGroupList());
     rv->parseXml(d);
     return rv;
