@@ -47,37 +47,50 @@ ContactInfo* ContactInfo::createWithId(QString contact_id)
 
 ContactInfo& ContactInfo::setTitle(QString val)
 {
-    m_title = val;
+    if(m_title != val){
+        m_title = val;
+        setDirty();
+    }
     return *this;
 };
 
 ContactInfo& ContactInfo::setContent(QString notes) 
 {
-    m_content = notes;
+    if (m_content != notes) {
+        m_content = notes;
+        setDirty();
+    }
+
     return *this;
 };
 
 ContactInfo& ContactInfo::setName(const NameInfo& n)
 {
-    m_name = n;
+    if (m_name != n) {
+        m_name = n;
+        setDirty();
+    }    
     return *this;
 };
 
 ContactInfo& ContactInfo::addEmail(const EmailInfo& e)
 {
     m_emails.m_parts.push_back(e);
+    setDirty();
     return *this;
 };
 
 ContactInfo& ContactInfo::addPhone(const PhoneInfo& p) 
 {
     m_phones.m_parts.push_back(p);
+    setDirty();
     return *this;
 };
 
 ContactInfo& ContactInfo::replaceEmails(const std::list<EmailInfo>& lst)
 {
     m_emails.m_parts.clear();
+    setDirty();
     for (auto& p : lst) {
         m_emails.m_parts.push_back(p);
     }
@@ -87,6 +100,7 @@ ContactInfo& ContactInfo::replaceEmails(const std::list<EmailInfo>& lst)
 ContactInfo& ContactInfo::replacePhones(const std::list<PhoneInfo>& lst)
 {
     m_phones.m_parts.clear();
+    setDirty();
     for (auto& p : lst) {
         m_phones.m_parts.push_back(p);
     }
@@ -97,12 +111,14 @@ ContactInfo& ContactInfo::replacePhones(const std::list<PhoneInfo>& lst)
 ContactInfo& ContactInfo::addAddress(const PostalAddress& p)
 {
     m_address_list.m_parts.push_back(p);
+    setDirty();
     return *this;
 };
 
 ContactInfo& ContactInfo::replaceAddressList(const std::list<PostalAddress>& lst)
 {
     m_address_list.m_parts.clear();
+    setDirty();
     for (auto& p : lst) {
         m_address_list.m_parts.push_back(p);
     }
@@ -113,6 +129,7 @@ ContactInfo& ContactInfo::replaceAddressList(const std::list<PostalAddress>& lst
 ContactInfo& ContactInfo::setOrganizationInfo(const OrganizationInfo& o) 
 {
     m_organization = o;
+    setDirty();
     return *this;
 };
 

@@ -27,8 +27,12 @@ namespace googleQt {
             bool    isDbIdNull()const { return (m_db_id == -1); }
             int     dbID()const { return m_db_id; }
             void    setDbID(int v) { m_db_id = v; }
+	  /// modified in memory and need persistance
+	  bool isDirty()const{return m_is_dirty;}
+	  void setDirty(bool val = true){m_is_dirty = val;}
         protected:
             int     m_db_id{ -1 };
+	  bool m_is_dirty;
         };
 
         class ContactXmlPersistant : public DbPersistant
