@@ -197,10 +197,6 @@ bool mail_cache::GmailCacheRoutes::setupSQLiteCache(QString dbPath,
 
     m_GMailCache->setupLocalStorage(st);
 
-    if (googleQt::isConnectedToNetwork()) {
-        refreshLabels();
-    }
-
     return true;
 };
 

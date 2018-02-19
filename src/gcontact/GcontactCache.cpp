@@ -799,7 +799,7 @@ bool GContactCache::loadContactsFromDb()
     if (!loadContactConfigFromDb()) {
         return false;
     }
-
+    
     return true;
 };
 
