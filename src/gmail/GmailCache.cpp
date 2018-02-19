@@ -771,19 +771,27 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
                 reloadDbAccounts();
             }
         }
-   // qDebug() << "using acc-id" << m_accId << "for user" << userId;
     
     m_acc_labels.clear();
     m_acc_maskbase2labels.clear();
     for (int i = 0; i < 64; i++)
         m_avail_label_base.insert(i);
 
-    if (!loadLabelsFromDb())
+    if (!loadLabelsFromDb()){
+        qWarning() << "ERROR. Failed to load labels from DB";
         return false;
+    }
 
-    if (!loadMessagesFromDb())
-        return false;   
+    if (!loadMessagesFromDb()){
+        qWarning() << "ERROR. Failed to load messages from DB";
+        return false;
+    }
 
+    if(!cc->loadContactsFromDb()){
+        qWarning() << "ERROR. Failed to load contacts from DB";
+        return false;
+    };
+    
     m_initialized = true;
     return m_initialized;
 };
