@@ -286,6 +286,9 @@ bool ContactInfo::setFromDbRecord(QSqlQuery* q)
     if (!ok) {
         qWarning() << "Invalid contact db record status" << q->value(0).toInt();
     }
+
+    setRegisterModifications(false); 
+    
     m_updated = QDateTime::fromMSecsSinceEpoch(q->value(2).toLongLong());
     m_db_id = q->value(3).toInt();
     m_title = q->value(4).toString();
@@ -307,6 +310,7 @@ bool ContactInfo::setFromDbRecord(QSqlQuery* q)
     setName(n);
     setOrganizationInfo(o);
 
+    setRegisterModifications(true); 
     return true;
 
 };
@@ -462,10 +466,13 @@ bool GroupInfo::setFromDbRecord(QSqlQuery* q)
         qWarning() << "Invalid contact db group record status" << q->value(0).toInt();
     }
 
+    setRegisterModifications(false); 
+    
     m_updated = QDateTime::fromMSecsSinceEpoch(q->value(2).toLongLong());
     m_db_id = q->value(3).toInt();
     m_title = q->value(4).toString();
     m_content = q->value(5).toString();
+    setRegisterModifications(true);
     return true;
 };
 
@@ -569,7 +576,11 @@ bool GContactCache::storeContactEntries()
             new_contacts.push_back(c);
         }
         else {
-            updated_contacts.push_back(c);
+            if(c->isDirty()){
+                c->markAsModified();
+                updated_contacts.push_back(c);
+                c->setDirty(false);
+            }
         }
     }
 
@@ -859,7 +870,7 @@ bool GContactCache::loadContactGroupsFromDb()
 {
     m_groups.clear();
 
-    QString sql = QString("SELECT status, xml_original, updated, group_db_id, title, content FROM %1gcontact_group WHERE acc_id=%2 AND status IN(1,2) ORDER BY title")
+    QString sql = QString("SELECT status, xml_original, updated, group_db_id, title, content FROM %1gcontact_group WHERE acc_id=%2 AND status IN(1,2) ORDER BY updated DESC")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
     QSqlQuery* q = m_sql_storage->selectQuery(sql);
@@ -881,7 +892,7 @@ bool GContactCache::loadContactEntriesFromDb()
 {
     m_contacts.clear();
 
-    QString sql = QString("SELECT status, xml_current, updated, contact_db_id, title, content, xml_original, full_name, given_name, family_name, orga_name, orga_title, orga_label FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2) ORDER BY title")
+    QString sql = QString("SELECT status, xml_current, updated, contact_db_id, title, content, xml_original, full_name, given_name, family_name, orga_name, orga_title, orga_label FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2) ORDER BY updated DESC")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
     QSqlQuery* q = m_sql_storage->selectQuery(sql);
@@ -956,6 +967,8 @@ GcontactCacheQueryTask* GcontactCacheRoutes::synchronizeContacts_Async()
 void GcontactCacheRoutes::reloadCache_Async(GcontactCacheQueryTask* rv, QDateTime dtUpdatedMin)
 {
     ContactListArg entries_arg;
+    entries_arg.setOrderby("lastmodified");
+    entries_arg.setSortorder("descending");
     entries_arg.setMaxResults(200);
 
     if (dtUpdatedMin.isValid()) {

@@ -4,12 +4,54 @@ using namespace googleQt;
 using namespace gcontact;
 
 /**
-ContactXmlPersistant
+   DbPersistant
+*/
+DbPersistant::DbPersistant()
+{
+    m_flags.flags = 0;
+    m_flags.register_mods = 1;
+};
+
+void DbPersistant::setDirty(bool val)
+{
+    if(m_flags.register_mods){
+        m_flags.is_dirty = val ? 1 : 0;
+    }
+}
+
+void DbPersistant::setRegisterModifications(bool val)
+{
+    m_flags.register_mods = val ? 1 : 0;
+};
+
+/**
+   ContactXmlPersistant
 */
 ContactXmlPersistant::ContactXmlPersistant() :m_status(localCopy)
 {
 
 };
+
+static void printXmlParseError(QString contextMsg,
+                               const QByteArray & data,
+                               QString errorMsg,
+                               int errorLine,
+                               int errorColumn)
+{
+    qWarning() << contextMsg << errorMsg << "line=" << errorLine << "column=" << errorColumn;
+    qWarning() << "-- begin data " << data.size() << "bytes";
+    qWarning() << data;
+    qWarning() << "-- end data";
+    QString html_text = data;
+    int line_idx = 1;
+    QStringList lines = html_text.split("\n");
+    for(auto & s : lines){
+        qWarning() << line_idx << ". " << s;
+        line_idx++;
+    }
+        
+    qWarning() << "-----------";
+}
 
 bool ContactXmlPersistant::parseXml(const QByteArray & data)
 {
@@ -20,10 +62,27 @@ bool ContactXmlPersistant::parseXml(const QByteArray & data)
     int errorLine;
     int errorColumn;
     if (!doc.setContent(data, &errorMsg, &errorLine, &errorColumn)) {
+        printXmlParseError("Failed to parse contacts XML document",
+                           data,
+                           errorMsg,
+                           errorLine,
+                           errorColumn);
+        
+        /*
         qWarning() << "Failed to parse contacts XML document: " << errorMsg << "line=" << errorLine << "column=" << errorColumn;
-        qWarning() << "-- begin data " << data.size();
+        qWarning() << "-- begin data " << data.size() << "bytes";
         qWarning() << data;
         qWarning() << "-- end data";
+        QString html_text = data;
+        int line_idx = 1;
+        QStringList lines = html_text.split("\n");
+        for(auto & s : lines){
+            qWarning() << line_idx << ". " << s;
+            line_idx++;
+        }
+        
+        qWarning() << "-----------";
+        */
         return false;
     }
 
@@ -60,10 +119,19 @@ QString ContactXmlPersistant::mergedXml(QString mergeOrigin)const
     int errorLine;
     int errorColumn;
     if (!doc.setContent(data, &errorMsg, &errorLine, &errorColumn)) {
+        printXmlParseError("Failed to parse original contacts XML document during Xml-merge",
+                           data,
+                           errorMsg,
+                           errorLine,
+                           errorColumn);
+        
+
+        /*        
         qWarning() << "Failed to parse original contacts XML document: " << errorMsg << "line=" << errorLine << "column=" << errorColumn;
         qWarning() << "-- begin data " << data.size();
         qWarning() << data;
         qWarning() << "-- end data";
+        */
         return "";
     }
 
@@ -115,6 +183,7 @@ void ContactXmlPersistant::assignContent(const ContactXmlPersistant& src)
     m_updated = src.m_updated;
     m_original_xml_string = src.m_original_xml_string;
     m_status = src.m_status;
+    setDirty(true);
 };
 
 /**

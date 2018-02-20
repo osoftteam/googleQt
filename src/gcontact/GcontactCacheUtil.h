@@ -19,20 +19,29 @@ namespace googleQt {
         };
 
         /**
-        object can be stored as one record and dbID is primary key
+           object can be stored as one record and dbID is primary key
         */
         class DbPersistant : public NullablePart
-        {
+        {                        
         public:
+            DbPersistant();
             bool    isDbIdNull()const { return (m_db_id == -1); }
             int     dbID()const { return m_db_id; }
             void    setDbID(int v) { m_db_id = v; }
-	  /// modified in memory and need persistance
-	  bool isDirty()const{return m_is_dirty;}
-	  void setDirty(bool val = true){m_is_dirty = val;}
+            /// modified in memory and need persistance
+            bool    isDirty()const{return (m_flags.is_dirty == 1);}
+            void    setDirty(bool val = true);
+            void    setRegisterModifications(bool val = true);
         protected:
             int     m_db_id{ -1 };
-	  bool m_is_dirty;
+
+            union Flags{
+                unsigned char flags;
+                struct{
+                    unsigned is_dirty    : 1;
+                    unsigned register_mods : 1;
+                };
+            } m_flags;
         };
 
         class ContactXmlPersistant : public DbPersistant
@@ -56,10 +65,10 @@ namespace googleQt {
             const QDateTime& updated()const { return m_updated; }            
 
             EStatus status()const { return m_status; }
-            void markAsNormalCopy() { m_status = localCopy; };
-            void markAsModified() { m_status = localModified; };
-            void markAsDeleted() { m_status = localRemoved; };
-            void markAsRetired() { m_status = localRetired; };
+            void markAsNormalCopy() { m_status = localCopy;setDirty(true); };
+            void markAsModified() { m_status = localModified;setDirty(true); };
+            void markAsDeleted() { m_status = localRemoved;setDirty(true); };
+            void markAsRetired() { m_status = localRetired;setDirty(true); };
             bool isModified()const { return (m_status == localModified); }
             bool isRemoved()const { return (m_status == localRemoved); }
             bool isRetired()const { return (m_status == localRetired); }

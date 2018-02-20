@@ -106,6 +106,8 @@ int main(int argc, char *argv[])
     t.addAction("batch_delete_group", "delete groups in batch", [&](QString arg) {cmd.batch_delete_group(arg); });
 
     t.addSeparator();
+    t.addAction("cache_ls", "print contacts cache", [&](QString) {cmd.cache_ls(); });
+    t.addAction("cache_update", "modify contact names locally", [&](QString arg) {cmd.cache_update(arg); });
     t.addAction("sync_contacts", "sync contacts cache", [&](QString) {cmd.sync_contacts(); });
     t.addSeparator();
     t.addAction("ls_as_json",       "List Contacts as json", [&](QString ) {cmd.ls_as_json(); });
