@@ -6,6 +6,8 @@
 #include "GmailCacheRoutes.h"
 #include "gcontact/GcontactCache.h"
 
+#define CONFIG_VERSION "version"
+
 using namespace googleQt;
 
 mail_cache::MessagesReceiver::MessagesReceiver(GmailRoutes& r, QString userId, EDataState f) 
@@ -651,6 +653,15 @@ QString mail_cache::GMailSQLiteStorage::findUser(int accId)
 
 bool mail_cache::GMailSQLiteStorage::ensureMailTables() 
 {
+    /// generic config ///
+    QString sql_config = QString("CREATE TABLE IF NOT EXISTS %1config(config_name TEXT, config_value TEXT)").arg(m_metaPrefix);
+    if (!execQuery(sql_config))
+        return false;
+
+    if(!reloadDbConfig()){
+        return false;
+    }
+
     /// accounts ///
     QString sql_accounts = QString("CREATE TABLE IF NOT EXISTS %1gmail_account(acc_id INTEGER PRIMARY KEY, userid TEXT NOT NULL COLLATE NOCASE)").arg(m_metaPrefix);
     if (!execQuery(sql_accounts))
@@ -1475,6 +1486,47 @@ void mail_cache::GMailSQLiteStorage::reloadDbAccounts()
         m_id2acc[acc_id] = p;
         m_user2acc[userid] = p;
     }
+};
+
+bool mail_cache::GMailSQLiteStorage::reloadDbConfig()
+{
+    m_configs.clear();
+    QString sql = QString("SELECT config_name, config_value FROM %1config")
+        .arg(m_metaPrefix);
+    QSqlQuery* q = selectQuery(sql);
+    if (!q)
+        return false;
+    
+    int db_version = 0;
+
+    while (q->next())
+    {
+        QString name = q->value(0).toString();
+        QString value = q->value(1).toString();
+        m_configs[name] = value;
+
+       if (name.compare(CONFIG_VERSION, Qt::CaseInsensitive) == 0) {
+           db_version = value.toInt();
+        }
+    }
+
+    if(db_version == 0){
+        QString sql = QString("INSERT OR REPLACE INTO %1config(config_name, config_value) VALUES(%2, %3)")
+            .arg(m_metaPrefix)
+            .arg("'version'")
+            .arg('1');
+        QSqlQuery* q = prepareQuery(sql);
+        if (!q){
+            qWarning() << "ERROR. Failed to prepare query for cache version setup";
+            return false;
+        }
+        if (!q->exec()) {
+            qWarning() << "ERROR. Failed to setup cache DB version";
+            return false;
+        }
+    }
+
+    return true;
 };
 
 std::list<mail_cache::acc_ptr> mail_cache::GMailSQLiteStorage::getAccounts()

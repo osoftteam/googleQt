@@ -392,6 +392,7 @@ namespace googleQt{
             void insertDbAttachmentData(const MessageData& m);
             std::shared_ptr<MessageData> loadMessageFromDB(int accId, QSqlQuery* q); 
             void reloadDbAccounts();
+            bool reloadDbConfig();
             bool ensureMailTables();            
         protected:
             bool m_initialized {false};
@@ -404,6 +405,7 @@ namespace googleQt{
             std::set<int> m_avail_label_base;
             std::map<int, mail_cache::acc_ptr> m_id2acc;
             std::map<QString, mail_cache::acc_ptr, CaseInsensitiveLess> m_user2acc;
+            std::map<QString, QString> m_configs;
             QString m_dbPath;
             QString m_downloadDir;
             QString m_dbName;
