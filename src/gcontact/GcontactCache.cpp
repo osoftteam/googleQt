@@ -202,13 +202,13 @@ QString ContactInfo::toXml(QString userEmail)const
     QString rv = toXmlBegin();
 
     if(!m_id.isEmpty())rv += QString("<id>http://www.google.com/m8/feeds/contacts/%1/base/%2</id>\n").arg(userEmail).arg(m_id);
-    if(!m_title.isEmpty())rv += QString("<title>%1</title>\n").arg(m_title);
-    if (!m_title.isEmpty())rv += QString("<content type = \"text\">%1</content>\n").arg(m_content);
+    if(!m_title.isEmpty())rv += QString("<title>%1</title>\n").arg(m_title.toHtmlEscaped());
+    if (!m_title.isEmpty())rv += QString("<content type = \"text\">%1</content>\n").arg(m_content.toHtmlEscaped());
     if (!m_name.isEmpty()) {
         rv += "<gd:name>\n";
-        rv += QString("    <gd:givenName>%1</gd:givenName>\n").arg(m_name.givenName());
-        rv += QString("    <gd:familyName>%1</gd:familyName>\n").arg(m_name.familyName());
-        rv += QString("    <gd:fullName>%1</gd:fullName>\n").arg(m_name.fullName());
+        rv += QString("    <gd:givenName>%1</gd:givenName>\n").arg(m_name.givenName().toHtmlEscaped());
+        rv += QString("    <gd:familyName>%1</gd:familyName>\n").arg(m_name.familyName().toHtmlEscaped());
+        rv += QString("    <gd:fullName>%1</gd:fullName>\n").arg(m_name.fullName().toHtmlEscaped());
         rv += "</gd:name>\n";
     }
     if(!m_organization.isEmpty())rv += m_organization.toXmlString();
@@ -247,6 +247,14 @@ bool ContactInfo::parseEntryNode(QDomNode n)
     n.save(ss, 4);
     ss.flush();
 
+    //...
+    if (!verifyXml(m_original_xml_string)) {
+        qWarning() << "Failed to validate contact xml node";
+        return false;
+    }
+    //..
+
+
     if (m_original_xml_string.isEmpty()) {
         qWarning() << "Failed to parse contact xml node";
         return false;
@@ -278,7 +286,10 @@ bool ContactInfo::setFromDbRecord(QSqlQuery* q)
 {
     QString xml = q->value(1).toString();
     if (!parseXml(xml)) {
-        qWarning() << "failed to parse contact entry db record" << xml.size();
+        qWarning() << "failed to parse contact entry db record size=" << xml.size() << "dbid=" << q->value(3).toInt();
+        qWarning() << "content=" << q->value(5).toString();
+        qWarning() << "original-xml=" << q->value(6).toString();
+        qWarning() << "-------------";
         return false;
     }
     bool ok = false;
@@ -286,6 +297,9 @@ bool ContactInfo::setFromDbRecord(QSqlQuery* q)
     if (!ok) {
         qWarning() << "Invalid contact db record status" << q->value(0).toInt();
     }
+
+    setRegisterModifications(false); 
+    
     m_updated = QDateTime::fromMSecsSinceEpoch(q->value(2).toLongLong());
     m_db_id = q->value(3).toInt();
     m_title = q->value(4).toString();
@@ -307,6 +321,7 @@ bool ContactInfo::setFromDbRecord(QSqlQuery* q)
     setName(n);
     setOrganizationInfo(o);
 
+    setRegisterModifications(true); 
     return true;
 
 };
@@ -462,10 +477,13 @@ bool GroupInfo::setFromDbRecord(QSqlQuery* q)
         qWarning() << "Invalid contact db group record status" << q->value(0).toInt();
     }
 
+    setRegisterModifications(false); 
+    
     m_updated = QDateTime::fromMSecsSinceEpoch(q->value(2).toLongLong());
     m_db_id = q->value(3).toInt();
     m_title = q->value(4).toString();
     m_content = q->value(5).toString();
+    setRegisterModifications(true);
     return true;
 };
 
@@ -569,7 +587,11 @@ bool GContactCache::storeContactEntries()
             new_contacts.push_back(c);
         }
         else {
-            updated_contacts.push_back(c);
+            if(c->isDirty()){
+                c->markAsModified();
+                updated_contacts.push_back(c);
+                c->setDirty(false);
+            }
         }
     }
 
@@ -859,7 +881,7 @@ bool GContactCache::loadContactGroupsFromDb()
 {
     m_groups.clear();
 
-    QString sql = QString("SELECT status, xml_original, updated, group_db_id, title, content FROM %1gcontact_group WHERE acc_id=%2 AND status IN(1,2) ORDER BY title")
+    QString sql = QString("SELECT status, xml_original, updated, group_db_id, title, content FROM %1gcontact_group WHERE acc_id=%2 AND status IN(1,2) ORDER BY updated DESC")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
     QSqlQuery* q = m_sql_storage->selectQuery(sql);
@@ -881,7 +903,7 @@ bool GContactCache::loadContactEntriesFromDb()
 {
     m_contacts.clear();
 
-    QString sql = QString("SELECT status, xml_current, updated, contact_db_id, title, content, xml_original, full_name, given_name, family_name, orga_name, orga_title, orga_label FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2) ORDER BY title")
+    QString sql = QString("SELECT status, xml_current, updated, contact_db_id, title, content, xml_original, full_name, given_name, family_name, orga_name, orga_title, orga_label FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2) ORDER BY updated DESC")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
     QSqlQuery* q = m_sql_storage->selectQuery(sql);
@@ -956,6 +978,8 @@ GcontactCacheQueryTask* GcontactCacheRoutes::synchronizeContacts_Async()
 void GcontactCacheRoutes::reloadCache_Async(GcontactCacheQueryTask* rv, QDateTime dtUpdatedMin)
 {
     ContactListArg entries_arg;
+    entries_arg.setOrderby("lastmodified");
+    entries_arg.setSortorder("descending");
     entries_arg.setMaxResults(200);
 
     if (dtUpdatedMin.isValid()) {
