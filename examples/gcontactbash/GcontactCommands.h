@@ -148,6 +148,17 @@ public:
     void batch_delete_group(QString id_space_id);
 
     /**
+       print cache tables
+     */
+    void cache_ls();
+
+    /**
+        modify contact names locally - append '-c'
+    */
+    void cache_update(QString id_space_id);
+
+    
+    /**
      * sync_contacts - synchronize contacts cache
      */
     void sync_contacts();
@@ -183,7 +194,9 @@ public:
     void print_group_list(gcontact::GroupList* lst);
     void print_batch_contact_result(gcontact::BatchContactList* lst);
     void print_batch_group_result(gcontact::BatchGroupList* lst);
-
+    void print_cache_contact_list(gcontact::ContactList* lst);
+    void print_cache_group_list(gcontact::GroupList* lst);
+    
     std::unique_ptr<gcontact::ContactInfo> generateContactInfo(QString first, QString last, QString email);    
     std::unique_ptr<gcontact::GroupInfo> generateGroupInfo(QString title, QString content);
 

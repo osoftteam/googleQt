@@ -824,6 +824,95 @@ void GcontactCommands::print_batch_group_result(gcontact::BatchGroupList* lst)
     }
 };
 
+static QString cacheStatus2Str(gcontact::ContactXmlPersistant::EStatus st)
+{
+    QString rv;
+    switch(st)
+        {
+        case gcontact::ContactXmlPersistant::localCopy:
+            {
+                rv = "[-]";
+            }break;
+        case gcontact::ContactXmlPersistant::localModified:
+            {
+                rv = "[M]";
+            }break;
+        case gcontact::ContactXmlPersistant::localRemoved:
+            {
+                rv = "[D]";
+            }break;
+        case gcontact::ContactXmlPersistant::localRetired:
+            {
+                rv = "[R]";
+            }break;
+        };
+    return rv;
+}
+
+
+void GcontactCommands::print_cache_contact_list(gcontact::ContactList* lst) 
+{
+    if (!lst)
+        return;
+
+    auto& arr = lst->items();
+    int idx = 1;
+    std::cout << "--contacts--------------------------------------------------" << std::endl;
+    std::cout << "  #      ID              etag                       updated " << std::endl;
+    std::cout << "------------------------------------------------------------" << std::endl;
+    for (auto& c : arr) {
+        QString info = c->title();
+        if (info.isEmpty()) {
+            if (c->emails().size() > 0) {
+                info = c->emails()[0].address();
+            }
+        }
+
+        QString dirty_mark = "[ ]";
+        if(c->isDirty()){
+            dirty_mark = "[*]";
+        }
+        
+        std::cout << std::setw(3) << idx++ << ". "
+                  << cacheStatus2Str(c->status()) << " "
+                  << dirty_mark << " "
+                  << c->id() << " "
+                  << c->etag() << " "
+                  << c->updated().toString(date_format) << " "
+                  << info << std::endl;
+    }
+};
+
+void GcontactCommands::print_cache_group_list(gcontact::GroupList* lst)
+{
+    if (!lst)
+        return;
+
+    auto& arr = lst->items();
+    int idx = 1;
+    std::cout << "--groups----------------------------------------------------" << std::endl;
+    std::cout << "  #      ID              etag                       updated " << std::endl;
+    std::cout << "------------------------------------------------------------" << std::endl;
+    for (auto& c : arr) {
+        QString info = c->title();
+        info += "/";
+        info += c->content();
+
+        QString dirty_mark = "[ ]";
+        if(c->isDirty()){
+            dirty_mark = "[*]";
+        }
+
+        
+        std::cout << std::setw(3) << idx++ << ". "
+                  << cacheStatus2Str(c->status()) << " "
+                  << dirty_mark << " "
+                  << std::setw(16) << c->id() << " "
+                  << std::setw(32) << c->etag() << " "
+                  << c->updated().toString(date_format) << " "
+                  << info << std::endl;
+    }
+};
 
 std::unique_ptr<gcontact::ContactInfo> GcontactCommands::generateContactInfo(QString first, QString last, QString email)
 {
@@ -1135,6 +1224,55 @@ void GcontactCommands::batch_delete_group(QString id_space_id)
     }
 };
 
+void GcontactCommands::cache_ls()
+{    
+    auto r = m_gt->cacheRoutes();
+    auto c = r->cache();
+    c->loadContactsFromDb();
+    ContactList& cl = c->contacts();
+    GroupList& gl = c->groups();
+
+    print_cache_contact_list(&cl);
+    print_cache_group_list(&gl);
+};
+
+void GcontactCommands::cache_update(QString id_space_id)
+{
+    QStringList arg_list = id_space_id.split(" ",
+        QString::SkipEmptyParts);
+
+    if (arg_list.empty())
+    {
+        std::cout << "Invalid parameters, expected <id1> <id2>" << std::endl;
+        return;
+    }
+    
+    std::set<QString> idset;
+    for(auto s : arg_list){
+        idset.insert(s);
+    }
+
+    int mod_idx = 0;
+    
+    auto r = m_gt->cacheRoutes();
+    auto c = r->cache();
+    ContactList& cl = c->contacts();
+    auto& arr = cl.items();
+    for(auto& c : arr){
+        if(idset.find(c->id()) != idset.end()){
+            auto n = c->name();
+            n.setFullName(n.fullName() + "-c");
+            c->setName(n);
+
+            std::cout << "updating " << c->id() << " " << n.fullName() << std::endl;
+            
+            mod_idx++;
+        }
+    }
+
+    c->storeContactsToDb();
+    std::cout << "modified " << mod_idx << " contact(s)" << std::endl;
+};
 
 void GcontactCommands::sync_contacts()
 {
