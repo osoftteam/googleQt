@@ -124,8 +124,8 @@ QString OrganizationInfo::toXmlString()const
     QString s = "";
     if (!isNull()) {
         s += QString("<gd:organization rel = \"http://schemas.google.com/g/2005#%1\">\n").arg(m_type_label);
-        s += QString("    <gd:orgName>%1</gd:orgName>\n").arg(m_name);
-        s += QString("    <gd:orgTitle>%1</gd:orgTitle>\n").arg(m_title);
+        s += QString("    <gd:orgName>%1</gd:orgName>\n").arg(m_name.toHtmlEscaped());
+        s += QString("    <gd:orgTitle>%1</gd:orgTitle>\n").arg(m_title.toHtmlEscaped());
         s += "</gd:organization>\n";
     }
     return s;
@@ -405,7 +405,7 @@ QString PhoneInfoList::toXmlString()const
                 s_is_primary = " primary=\"true\"";
             }
             s += QString("<gd:phoneNumber rel = \"http://schemas.google.com/g/2005#%1\"%2>\n").arg(p.m_type_label).arg(s_is_primary);
-            s += QString("    %1\n").arg(p.m_number);
+            s += QString("    %1\n").arg(p.m_number.toHtmlEscaped());
             s += "</gd:phoneNumber>\n";
         }
     }
@@ -494,12 +494,12 @@ QString PostalAddressList::toXmlString()const
                 .arg(p.m_type_label)
                 .arg(s_is_primary);
 
-            s += QString("    <gd:city>%1</gd:city>\n").arg(p.m_city);
-            s += QString("    <gd:street>%1</gd:street>\n").arg(p.m_street);
-            s += QString("    <gd:region>%1</gd:region>\n").arg(p.m_region);
-            s += QString("    <gd:postcode>%1</gd:postcode>\n").arg(p.m_postcode);
-            s += QString("    <gd:country>%1</gd:country>\n").arg(p.m_country);
-            s += QString("    <gd:formattedAddress>%1</gd:formattedAddress>\n").arg(p.m_formattedAddress);
+            s += QString("    <gd:city>%1</gd:city>\n").arg(p.m_city.toHtmlEscaped());
+            s += QString("    <gd:street>%1</gd:street>\n").arg(p.m_street.toHtmlEscaped());
+            s += QString("    <gd:region>%1</gd:region>\n").arg(p.m_region.toHtmlEscaped());
+            s += QString("    <gd:postcode>%1</gd:postcode>\n").arg(p.m_postcode.toHtmlEscaped());
+            s += QString("    <gd:country>%1</gd:country>\n").arg(p.m_country.toHtmlEscaped());
+            s += QString("    <gd:formattedAddress>%1</gd:formattedAddress>\n").arg(p.m_formattedAddress.toHtmlEscaped());
 
             s += "</gd:structuredPostalAddress>\n";
         }
