@@ -153,6 +153,12 @@ public:
     void cache_ls();
 
     /**
+       cache find contact by id
+     */
+    void cache_find_contact_by_id(QString cid);
+
+    
+    /**
         modify contact names locally - append '-c'
     */
     void cache_update(QString id_space_id);
@@ -192,10 +198,10 @@ public:
 
     void print_contact_list(gcontact::ContactList* lst);
     void print_group_list(gcontact::GroupList* lst);
-    void print_batch_contact_result(gcontact::BatchContactList* lst);
-    void print_batch_group_result(gcontact::BatchGroupList* lst);
-    void print_cache_contact_list(gcontact::ContactList* lst);
-    void print_cache_group_list(gcontact::GroupList* lst);
+    void print_batch_contact_result(const gcontact::BatchContactList* lst);
+    void print_batch_group_result(const gcontact::BatchGroupList* lst);
+    void print_cache_contact_list(const gcontact::ContactList* lst);
+    void print_cache_group_list(const gcontact::GroupList* lst);
     
     std::unique_ptr<gcontact::ContactInfo> generateContactInfo(QString first, QString last, QString email);    
     std::unique_ptr<gcontact::GroupInfo> generateGroupInfo(QString title, QString content);

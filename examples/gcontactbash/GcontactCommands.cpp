@@ -773,11 +773,11 @@ void GcontactCommands::print_group_list(gcontact::GroupList* lst)
     }
 };
 
-void GcontactCommands::print_batch_contact_result(gcontact::BatchContactList* lst)
+void GcontactCommands::print_batch_contact_result(const gcontact::BatchContactList* lst)
 {
     if (!lst)
         return;
-
+  
     auto& arr = lst->items();
     int idx = 1;
     std::cout << "--contacts--------------------------------------------------" << std::endl;
@@ -800,7 +800,7 @@ void GcontactCommands::print_batch_contact_result(gcontact::BatchContactList* ls
 };
 
 
-void GcontactCommands::print_batch_group_result(gcontact::BatchGroupList* lst)
+void GcontactCommands::print_batch_group_result(const gcontact::BatchGroupList* lst)
 {
     if (!lst)
         return;
@@ -849,8 +849,34 @@ static QString cacheStatus2Str(gcontact::ContactXmlPersistant::EStatus st)
     return rv;
 }
 
+void print_cache_contact_info(ContactInfo* c, int idx)
+{
+    QString info = c->title();
+    if (info.isEmpty()) {
+        if (c->emails().size() > 0) {
+            info = c->emails()[0].address();
+        }
+    }
 
-void GcontactCommands::print_cache_contact_list(gcontact::ContactList* lst) 
+    QString dirty_mark = "[ ]";
+    if(c->isDirty()){
+        dirty_mark = "[*]";
+    }
+
+    if(idx > 0){
+        std::cout << std::setw(3) << idx++ << ". ";
+    }
+    
+    std::cout << cacheStatus2Str(c->status()) << " "
+              << dirty_mark << " "
+              << c->id() << " "
+              << c->etag() << " "
+              << c->updated().toString(date_format) << " "
+              << info << std::endl;
+
+};
+
+void GcontactCommands::print_cache_contact_list(const gcontact::ContactList* lst) 
 {
     if (!lst)
         return;
@@ -861,29 +887,11 @@ void GcontactCommands::print_cache_contact_list(gcontact::ContactList* lst)
     std::cout << "  #      ID              etag                       updated " << std::endl;
     std::cout << "------------------------------------------------------------" << std::endl;
     for (auto& c : arr) {
-        QString info = c->title();
-        if (info.isEmpty()) {
-            if (c->emails().size() > 0) {
-                info = c->emails()[0].address();
-            }
-        }
-
-        QString dirty_mark = "[ ]";
-        if(c->isDirty()){
-            dirty_mark = "[*]";
-        }
-        
-        std::cout << std::setw(3) << idx++ << ". "
-                  << cacheStatus2Str(c->status()) << " "
-                  << dirty_mark << " "
-                  << c->id() << " "
-                  << c->etag() << " "
-                  << c->updated().toString(date_format) << " "
-                  << info << std::endl;
+        print_cache_contact_info(c.get(), idx++);
     }
 };
 
-void GcontactCommands::print_cache_group_list(gcontact::GroupList* lst)
+void GcontactCommands::print_cache_group_list(const gcontact::GroupList* lst)
 {
     if (!lst)
         return;
@@ -1224,6 +1232,8 @@ void GcontactCommands::batch_delete_group(QString id_space_id)
     }
 };
 
+void print_cache_contact_info(ContactInfo* ci, int idx);
+
 void GcontactCommands::cache_ls()
 {    
     auto r = m_gt->cacheRoutes();
@@ -1234,6 +1244,23 @@ void GcontactCommands::cache_ls()
 
     print_cache_contact_list(&cl);
     print_cache_group_list(&gl);
+};
+
+
+void GcontactCommands::cache_find_contact_by_id(QString cid)
+{
+    auto r = m_gt->cacheRoutes();
+    auto c = r->cache();
+    c->loadContactsFromDb();
+    ContactList& cl = c->contacts();
+
+    auto ct = cl.findById(cid);
+    if(!ct){
+        std::cout << "not found" << std::endl;
+    }
+    else{
+        print_cache_contact_info(ct.get(), 0);
+    }
 };
 
 void GcontactCommands::cache_update(QString id_space_id)
@@ -1274,6 +1301,7 @@ void GcontactCommands::cache_update(QString id_space_id)
     std::cout << "modified " << mod_idx << " contact(s)" << std::endl;
 };
 
+
 void GcontactCommands::sync_contacts()
 {
     try
@@ -1286,8 +1314,25 @@ void GcontactCommands::sync_contacts()
             ContactList& cl = c->contacts();
             GroupList& gl = c->groups();
 
-            std::cout << "entries: " << cl.items().size() << std::endl;
-            std::cout << "groups: " << gl.items().size() << std::endl;            
+            std::cout << "=== loaded entries: " << t->loadedContacts()->items().size() << std::endl;
+            if(t->loadedContacts()->items().size() > 0){
+                print_cache_contact_list(t->loadedContacts());
+            }
+            std::cout << "=== loaded groups: " << t->loadedGroups()->items().size() << std::endl;
+            if(t->loadedGroups()->items().size() > 0){
+                print_cache_group_list(t->loadedGroups());
+            }
+            std::cout << "=== updated entries: " << t->updatedContacts()->items().size() << std::endl;
+            if(t->updatedContacts()->items().size() > 0){
+                print_batch_contact_result(t->updatedContacts());
+            }
+            std::cout << "=== updated groups: " << t->updatedGroups()->items().size() << std::endl;
+            if(t->updatedGroups()->items().size() > 0){
+                print_batch_group_result(t->updatedGroups());
+            }
+                        
+            std::cout << "=== entries-in-cache: " << cl.items().size() << std::endl;
+            std::cout << "=== groups-in-cache: " << gl.items().size() << std::endl;
         }
     catch (GoogleException& e)
     {
