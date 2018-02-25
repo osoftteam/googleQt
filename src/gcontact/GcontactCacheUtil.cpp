@@ -33,6 +33,38 @@ ContactXmlPersistant::ContactXmlPersistant() :m_status(localCopy)
 
 };
 
+void ContactXmlPersistant::markAsNormalCopy()
+{
+    if(registerMods()){
+        m_status = localCopy;
+        setDirty(true);
+    }
+};
+
+void ContactXmlPersistant::markAsModified()
+{
+    if(registerMods()){
+        m_status = localModified;
+        setDirty(true);
+    }
+};
+
+void ContactXmlPersistant::markAsDeleted()
+{
+    if(registerMods()){
+        m_status = localRemoved;
+        setDirty(true);
+    }
+};
+
+void ContactXmlPersistant::markAsRetired()
+{
+    if(registerMods()){
+        m_status = localRetired;
+        setDirty(true);
+    }
+};
+
 void ContactXmlPersistant::printXmlParseError(QString contextMsg,
                                                        const QByteArray & data,
                                                        QString errorMsg,
@@ -225,7 +257,7 @@ void ContactXmlPersistant::assignContent(const ContactXmlPersistant& src)
     m_updated = src.m_updated;
     m_original_xml_string = src.m_original_xml_string;
     m_status = src.m_status;
-    setDirty(true);
+    markAsModified();
 };
 
 /**

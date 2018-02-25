@@ -5,7 +5,7 @@
 namespace googleQt {
     namespace gcontact {
         /**
-        basic xml parsing product, can be invalid
+           basic xml parsing product, can be invalid
         */
         class NullablePart
         {
@@ -32,6 +32,7 @@ namespace googleQt {
             bool    isDirty()const{return (m_flags.is_dirty == 1);}
             void    setDirty(bool val = true);
             void    setRegisterModifications(bool val = true);
+            bool    registerMods()const{return (m_flags.register_mods == 1);}
         protected:
             int     m_db_id{ -1 };
 
@@ -65,10 +66,10 @@ namespace googleQt {
             const QDateTime& updated()const { return m_updated; }            
 
             EStatus status()const { return m_status; }
-            void markAsNormalCopy() { m_status = localCopy;setDirty(true); };
-            void markAsModified() { m_status = localModified;setDirty(true); };
-            void markAsDeleted() { m_status = localRemoved;setDirty(true); };
-            void markAsRetired() { m_status = localRetired;setDirty(true); };
+            void markAsNormalCopy();
+            void markAsModified();
+            void markAsDeleted();
+            void markAsRetired();
             bool isModified()const { return (m_status == localModified); }
             bool isRemoved()const { return (m_status == localRemoved); }
             bool isRetired()const { return (m_status == localRetired); }
@@ -154,20 +155,44 @@ namespace googleQt {
         class InfoList
         {
         public:
-            void add(std::shared_ptr<T> c) {
+            bool add(std::shared_ptr<T> c) {
+                if(findById(c->id())){
+                    qWarning() << "ERROR. Duplicate ID not allowed in infolist" << c->id();
+                    return false;
+                }
+                
                 m_items.push_back(c);
                 if (!c->id().isEmpty()) {
                     m_id2item[c->id()] = c;
                 }
-            };
-
-            void add(std::unique_ptr<T> c) {
+                return true;
+            }
+            
+            bool add(std::unique_ptr<T> c) {
                 std::shared_ptr<T> c2(c.release());
-                add(c2);
-            };
+                return add(c2);
+            }
 
-            void clear() { m_items.clear(); m_id2item.clear(); };
+            void clear() { m_items.clear(); m_id2item.clear(); m_retired.clear();};
+            
+            void retire(std::shared_ptr<T> c) {
+                auto it = m_id2item.find(c->id());
+                if (it != m_id2item.end()) {
+                    m_id2item.erase(it);
+                }
 
+                auto it2 = m_items.begin();
+                while(it2 != m_items.end()){
+                    if((*it2)->id() == c->id()){
+                        m_items.erase(it2);
+                        break;
+                    }
+                }
+
+                c->markAsRetired();
+                m_retired.push_back(c);
+            }
+            
             QString toString()const
             {
                 QString rv;
@@ -274,7 +299,8 @@ namespace googleQt {
                     else {
                         if (c->isModified()) 
                         {
-                            c->markAsRetired();
+                            retire(c);
+                            //c->markAsRetired();
                             sc->markAsNormalCopy();
                             add(sc);
                         }
@@ -288,6 +314,7 @@ namespace googleQt {
 
             const std::vector<std::shared_ptr<T>>& items()const { return m_items; }
             std::vector<std::shared_ptr<T>>& items() { return m_items; }
+            std::vector<std::shared_ptr<T>>& retired() { return m_retired; }
             const std::shared_ptr<T> findById(QString sid) {
                 std::shared_ptr<T> rv;
                 auto it = m_id2item.find(sid);
@@ -300,6 +327,7 @@ namespace googleQt {
         protected:
             std::vector<std::shared_ptr<T>> m_items;
             std::map<QString, std::shared_ptr<T>> m_id2item;
+            std::vector<std::shared_ptr<T>> m_retired;
         };//InfoList
 
         template <class T, class B>
@@ -314,14 +342,15 @@ namespace googleQt {
                     {
                         if (o->isCreatedLocally())
                         {
-                            lst.add(o->buildBatchRequest(googleQt::EBatchId::update));
+                            lst.add(o->buildBatchRequest(googleQt::EBatchId::create));
                         }
                         else {
                             if (o->isModified()) {
                                 lst.add(o->buildBatchRequest(googleQt::EBatchId::update));
                             }
                             else if (o->isRemoved()) {
-                                lst.add(o->buildBatchRequest(googleQt::EBatchId::delete_operation));
+                                qDebug() << "ykh-batch-del-skipped";
+                                //lst.add(o->buildBatchRequest(googleQt::EBatchId::delete_operation));
                             }
                         }
                     }

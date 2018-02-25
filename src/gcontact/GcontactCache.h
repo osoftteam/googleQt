@@ -283,7 +283,9 @@ namespace googleQt {
             bool loadContactGroupsFromDb();
             bool loadContactEntriesFromDb();
             bool loadContactConfigFromDb();
-
+            bool storeContactList(std::vector<std::shared_ptr<ContactInfo>>& contact_list);
+            bool storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& group_list);
+            
         protected:
             std::shared_ptr<mail_cache::GMailSQLiteStorage> m_sql_storage;
             ContactList m_contacts;
@@ -300,11 +302,17 @@ namespace googleQt {
         {
         public:
             contact_cache_ptr       cache() { return m_cache; }
+            const ContactList*      loadedContacts()const{return m_loaded_contacts.get();}
+            const GroupList*        loadedGroups()const{return m_loaded_groups.get();}
+            const BatchContactList* updatedContacts()const{return m_updated_contacts.get();}
+            const BatchGroupList*   updatedGroups()const{return m_updated_groups.get();}            
         protected:
             GcontactCacheQueryTask(ApiEndpoint& ept, contact_cache_ptr c) :GoogleVoidTask(ept), m_cache(c) {}        
             contact_cache_ptr m_cache;
-            std::unique_ptr<ContactList> m_result_contacts;
-            std::unique_ptr<GroupList> m_result_groups;
+            std::unique_ptr<ContactList> m_loaded_contacts;
+            std::unique_ptr<GroupList> m_loaded_groups;
+            std::unique_ptr<BatchContactList> m_updated_contacts;
+            std::unique_ptr<BatchGroupList> m_updated_groups;
             friend class GcontactCacheRoutes;
         };
 

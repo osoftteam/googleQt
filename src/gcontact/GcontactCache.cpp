@@ -14,7 +14,6 @@ using namespace gcontact;
 
 #define CONFIG_SYNC_TIME "sync-time"
 
-
 static QString getAttribute(const QDomNode& n, QString name)
 {
     QString rv = "";
@@ -49,7 +48,7 @@ ContactInfo& ContactInfo::setTitle(QString val)
 {
     if(m_title != val){
         m_title = val;
-        setDirty();
+        markAsModified();
     }
     return *this;
 };
@@ -58,7 +57,7 @@ ContactInfo& ContactInfo::setContent(QString notes)
 {
     if (m_content != notes) {
         m_content = notes;
-        setDirty();
+        markAsModified();
     }
 
     return *this;
@@ -68,7 +67,7 @@ ContactInfo& ContactInfo::setName(const NameInfo& n)
 {
     if (m_name != n) {
         m_name = n;
-        setDirty();
+        markAsModified();
     }    
     return *this;
 };
@@ -76,21 +75,21 @@ ContactInfo& ContactInfo::setName(const NameInfo& n)
 ContactInfo& ContactInfo::addEmail(const EmailInfo& e)
 {
     m_emails.m_parts.push_back(e);
-    setDirty();
+    markAsModified();
     return *this;
 };
 
 ContactInfo& ContactInfo::addPhone(const PhoneInfo& p) 
 {
     m_phones.m_parts.push_back(p);
-    setDirty();
+    markAsModified();
     return *this;
 };
 
 ContactInfo& ContactInfo::replaceEmails(const std::list<EmailInfo>& lst)
 {
     m_emails.m_parts.clear();
-    setDirty();
+    markAsModified();
     for (auto& p : lst) {
         m_emails.m_parts.push_back(p);
     }
@@ -100,7 +99,8 @@ ContactInfo& ContactInfo::replaceEmails(const std::list<EmailInfo>& lst)
 ContactInfo& ContactInfo::replacePhones(const std::list<PhoneInfo>& lst)
 {
     m_phones.m_parts.clear();
-    setDirty();
+    markAsModified();
+    
     for (auto& p : lst) {
         m_phones.m_parts.push_back(p);
     }
@@ -111,14 +111,14 @@ ContactInfo& ContactInfo::replacePhones(const std::list<PhoneInfo>& lst)
 ContactInfo& ContactInfo::addAddress(const PostalAddress& p)
 {
     m_address_list.m_parts.push_back(p);
-    setDirty();
+    markAsModified();
     return *this;
 };
 
 ContactInfo& ContactInfo::replaceAddressList(const std::list<PostalAddress>& lst)
 {
     m_address_list.m_parts.clear();
-    setDirty();
+    markAsModified();
     for (auto& p : lst) {
         m_address_list.m_parts.push_back(p);
     }
@@ -129,7 +129,7 @@ ContactInfo& ContactInfo::replaceAddressList(const std::list<PostalAddress>& lst
 ContactInfo& ContactInfo::setOrganizationInfo(const OrganizationInfo& o) 
 {
     m_organization = o;
-    setDirty();
+    markAsModified();
     return *this;
 };
 
@@ -569,26 +569,25 @@ bool GContactCache::ensureContactTables()
     if (!m_sql_storage->execQuery(sql_groups))
         return false;
 
-
     QString sql_config = QString("CREATE TABLE IF NOT EXISTS %1gcontact_config(acc_id INTEGER NOT NULL, config_name TEXT, config_value TEXT)").arg(m_sql_storage->m_metaPrefix);
     if (!m_sql_storage->execQuery(sql_config))
         return false;
+    
 
     return true;
 };
 
-bool GContactCache::storeContactEntries() 
+bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& contact_list)
 {
     using CLIST = std::list<ContactInfo::ptr>;
     CLIST new_contacts;
     CLIST updated_contacts;
-    for (auto& c : m_contacts.items()) {
+    for (auto& c : contact_list) {
         if (c->isDbIdNull()) {
             new_contacts.push_back(c);
         }
         else {
             if(c->isDirty()){
-                c->markAsModified();
                 updated_contacts.push_back(c);
                 c->setDirty(false);
             }
@@ -669,16 +668,15 @@ bool GContactCache::storeContactEntries()
         }
     }
 
-
     return true;
 };
 
-bool GContactCache::storeContactGroups()
+bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& group_list)
 {
     using CLIST = std::list<GroupInfo::ptr>;
     CLIST new_groups;
     CLIST updated_groups;
-    for (auto& g : m_groups.items()) {
+    for (auto& g : group_list) {
         if (g->isDbIdNull()) {
             new_groups.push_back(g);
         }
@@ -751,6 +749,32 @@ bool GContactCache::storeContactGroups()
     return true;
 };
 
+bool GContactCache::storeContactEntries() 
+{
+    if(!storeContactList(m_contacts.items())){
+        return false;
+    }
+    
+    if(!storeContactList(m_contacts.retired())){
+        return false;
+    }
+    
+    return true;
+};
+
+bool GContactCache::storeContactGroups()
+{
+    if(!storeGroupList(m_groups.items())){
+        return false;
+    }
+    
+    if(!storeGroupList(m_groups.retired())){
+        return false;
+    }
+    
+    return true;
+};
+
 bool GContactCache::storeConfig()
 {
     if (m_sync_time.isValid()) {
@@ -791,6 +815,7 @@ bool GContactCache::storeConfig()
     return true;
 };
 
+
 bool GContactCache::storeContactsToDb() 
 {
     if (!storeContactEntries()) {
@@ -804,7 +829,7 @@ bool GContactCache::storeContactsToDb()
     if (!storeConfig()) {
         return false;
     }
-
+    
     return true;
 };
 
@@ -834,7 +859,7 @@ bool GContactCache::clearDbCache()
 
     m_contacts.clear();
     m_groups.clear();
-    m_configs.clear();
+
     QDateTime invalid_time;
     m_sync_time.swap(invalid_time);
 
@@ -854,14 +879,6 @@ bool GContactCache::clearDbCache()
         return false;
     };
 
-    sql = QString("DELETE FROM %1gcontact_config WHERE acc_id=%2")
-        .arg(m_sql_storage->m_metaPrefix)
-        .arg(m_sql_storage->m_accId);
-
-    if (!m_sql_storage->execQuery(sql)) {
-        return false;
-    };
-
     return true;
 };
 
@@ -870,8 +887,7 @@ bool GContactCache::mergeServerModifications(GroupList& server_glist, ContactLis
     m_contacts.mergeList(server_clist);
     m_groups.mergeList(server_glist);
 
-    m_sync_time = m_contacts.recalcUpdatedTime(QDateTime());
-    m_sync_time = m_groups.recalcUpdatedTime(m_sync_time);
+    m_sync_time = QDateTime::currentDateTime();
 
     bool rv = storeContactsToDb();
     return rv;
@@ -924,11 +940,44 @@ bool GContactCache::loadContactEntriesFromDb()
 bool GContactCache::loadContactConfigFromDb() 
 {
     m_configs.clear();
-
-    QString sql = QString("SELECT config_name, config_value FROM %1gcontact_config WHERE acc_id=%2")
+    
+    QDateTime invalid_time;
+    m_sync_time.swap(invalid_time);
+    
+    QString sql = QString("SELECT MAX(updated) FROM %1gcontact_group WHERE acc_id=%2 AND status IN(1,2)")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
     QSqlQuery* q = m_sql_storage->selectQuery(sql);
+    if (!q){
+        qWarning() << "failed to load group MAX(updated)";
+        return false;
+    }
+    
+    if(q->next() && q->value(0).toLongLong() > 0){
+        m_sync_time = QDateTime::fromMSecsSinceEpoch(q->value(0).toLongLong());
+    }
+
+    
+    sql = QString("SELECT MAX(updated) FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2)")
+        .arg(m_sql_storage->m_metaPrefix)
+        .arg(m_sql_storage->m_accId);
+    q = m_sql_storage->selectQuery(sql);
+    if (!q){
+        qWarning() << "failed to load contacts MAX(updated)";
+        return false;
+    }
+    if(q->next() && q->value(0).toLongLong() > 0){
+        QDateTime dt = QDateTime::fromMSecsSinceEpoch(q->value(0).toLongLong());
+        if(dt > m_sync_time || !m_sync_time.isValid()){
+            m_sync_time = dt;
+        }
+    }
+
+
+    sql = QString("SELECT config_name, config_value FROM %1gcontact_config WHERE acc_id=%2")
+        .arg(m_sql_storage->m_metaPrefix)
+        .arg(m_sql_storage->m_accId);
+    q = m_sql_storage->selectQuery(sql);
     if (!q)
         return false;
 
@@ -939,10 +988,13 @@ bool GContactCache::loadContactConfigFromDb()
         m_configs[name] = value;
 
         if (name.compare(CONFIG_SYNC_TIME, Qt::CaseInsensitive) == 0) {
-            m_sync_time = QDateTime::fromString(value);
+            QDateTime dt = QDateTime::fromString(value);
+            if(dt > m_sync_time || !m_sync_time.isValid())
+            m_sync_time = dt;
         }
     }
 
+    
     return true;
 };
 
@@ -962,7 +1014,10 @@ GcontactCacheQueryTask* GcontactCacheRoutes::synchronizeContacts_Async()
         return rv;
     }
 
-    if (!m_GContactsCache->lastSyncTime().isValid()) {
+
+    QDateTime dtUpdatedMin = m_GContactsCache->lastSyncTime();
+    
+    if (!dtUpdatedMin.isValid()) {
         ///first time sync, purge local cache just in case..
         if (!m_GContactsCache->clearDbCache()) {
             std::unique_ptr<GoogleException> ex(new GoogleException("Failed to clear local DB cache."));
@@ -970,8 +1025,13 @@ GcontactCacheQueryTask* GcontactCacheRoutes::synchronizeContacts_Async()
             return rv;
         }
     }
-
-    reloadCache_Async(rv, m_GContactsCache->lastSyncTime());
+    else{
+        /// 1 sec - seems resonable for time diff on updated items
+        /// we take all contacts from server newer than last sync + 1 sec
+        dtUpdatedMin = dtUpdatedMin.addSecs(1).toUTC();
+    }
+    
+    reloadCache_Async(rv, dtUpdatedMin);
     return rv;
 };
 
@@ -982,7 +1042,7 @@ void GcontactCacheRoutes::reloadCache_Async(GcontactCacheQueryTask* rv, QDateTim
     entries_arg.setSortorder("descending");
     entries_arg.setMaxResults(200);
 
-    if (dtUpdatedMin.isValid()) {
+    if (dtUpdatedMin.isValid()) {        
         entries_arg.setUpdatedMin(dtUpdatedMin);
     }
 
@@ -997,10 +1057,10 @@ void GcontactCacheRoutes::reloadCache_Async(GcontactCacheQueryTask* rv, QDateTim
     agg->add(groups_task);
     agg->then([=]() 
     {
-        rv->m_result_contacts = entries_task->detachResult();
-        rv->m_result_groups = groups_task->detachResult();
-
-        if (m_GContactsCache->mergeServerModifications(*(rv->m_result_groups.get()), *(rv->m_result_contacts.get()))) {
+        rv->m_loaded_contacts = entries_task->detachResult();
+        rv->m_loaded_groups = groups_task->detachResult();
+        
+        if (m_GContactsCache->mergeServerModifications(*(rv->m_loaded_groups.get()), *(rv->m_loaded_contacts.get()))) {
             //at this point we should have loaded server changes
             //now we will try to apply our changes - modifications and deleted records
 
@@ -1019,12 +1079,9 @@ void GcontactCacheRoutes::reloadCache_Async(GcontactCacheQueryTask* rv, QDateTim
 
 void GcontactCacheRoutes::applyLocalCacheModifications_Async(GcontactCacheQueryTask* rv) 
 {
-    rv->completed_callback();
-    return;
-
     BatchRequesContactList bc = m_GContactsCache->contacts().buildBatchRequestList();
     BatchRequesGroupList bg = m_GContactsCache->groups().buildBatchRequestList();
-
+        
     BatchContactArg arg1(bc);
     BatchGroupArg arg2(bg);
 
@@ -1036,7 +1093,56 @@ void GcontactCacheRoutes::applyLocalCacheModifications_Async(GcontactCacheQueryT
     agg->then(
         [=]() 
         {
-            rv->completed_callback();
+            rv->m_updated_contacts = entries_btask->detachResult();
+            rv->m_updated_groups = groups_btask->detachResult();
+
+            auto& arr = rv->m_updated_contacts->items();
+            for (auto& b : arr) {
+                if(b->succeded()){
+                    auto c = m_GContactsCache->contacts().findById(b->id());
+                    if(c){
+                        switch(b->batchResultId())
+                            {
+                            case EBatchId::delete_operation:
+                                {
+                                    m_GContactsCache->contacts().retire(c);
+                                }break;
+                            case EBatchId::update:
+                                {
+                                    c->markAsNormalCopy();
+                                }break;
+                            default:
+                                {
+                                    qWarning() << "Unexpected batch operation"
+                                               << b->id()
+                                               << b->batchResultOperationType()
+                                               << b->batchResultStatusReason();                        
+                                }break;
+                            }
+                    }
+                    else{
+                        qWarning() << "Cache obj locate on batch operation failed"
+                                   << b->id()
+                                   << b->batchResultOperationType()
+                                   << b->batchResultStatusReason();                        
+                    }
+                }
+                else{
+                    qWarning() << "Batch operation failed"
+                               << b->id()
+                               << b->batchResultOperationType()
+                               << b->batchResultStatusReason();
+                }
+            }
+            
+            bool ok = m_GContactsCache->storeContactsToDb();
+            if(ok){
+                rv->completed_callback();
+            }
+            else{
+                std::unique_ptr<GoogleException> ex(new GoogleException("Failed to merge/batch/store DB cache."));
+                rv->failed_callback(std::move(ex));
+            }
         },
             [=](std::unique_ptr<GoogleException> ex)
         {
