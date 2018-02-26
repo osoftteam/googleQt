@@ -187,10 +187,15 @@ namespace googleQt {
                         m_items.erase(it2);
                         break;
                     }
+                    it2++;
                 }
 
                 c->markAsRetired();
                 m_retired.push_back(c);
+            }
+
+            void remove(std::shared_ptr<T> c) {
+                c->markAsDeleted();
             }
             
             QString toString()const
@@ -300,7 +305,6 @@ namespace googleQt {
                         if (c->isModified()) 
                         {
                             retire(c);
-                            //c->markAsRetired();
                             sc->markAsNormalCopy();
                             add(sc);
                         }
@@ -349,8 +353,7 @@ namespace googleQt {
                                 lst.add(o->buildBatchRequest(googleQt::EBatchId::update));
                             }
                             else if (o->isRemoved()) {
-                                qDebug() << "ykh-batch-del-skipped";
-                                //lst.add(o->buildBatchRequest(googleQt::EBatchId::delete_operation));
+                                lst.add(o->buildBatchRequest(googleQt::EBatchId::delete_operation));
                             }
                         }
                     }

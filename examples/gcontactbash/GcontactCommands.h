@@ -163,6 +163,12 @@ public:
     */
     void cache_update(QString id_space_id);
 
+    /**
+        mark contact as 'deleted' in cache so in next sync
+        it will be deleted on server as well
+    */
+    void cache_delete(QString id_space_id);
+    
     
     /**
      * sync_contacts - synchronize contacts cache

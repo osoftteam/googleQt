@@ -1291,8 +1291,7 @@ void GcontactCommands::cache_update(QString id_space_id)
             n.setFullName(n.fullName() + "-c");
             c->setName(n);
 
-            std::cout << "updating " << c->id() << " " << n.fullName() << std::endl;
-            
+            std::cout << "updating " << c->id() << " " << n.fullName() << std::endl;            
             mod_idx++;
         }
     }
@@ -1301,6 +1300,43 @@ void GcontactCommands::cache_update(QString id_space_id)
     std::cout << "modified " << mod_idx << " contact(s)" << std::endl;
 };
 
+
+void GcontactCommands::cache_delete(QString id_space_id)
+{
+    QStringList arg_list = id_space_id.split(" ",
+        QString::SkipEmptyParts);
+
+    if (arg_list.empty())
+    {
+        std::cout << "Invalid parameters, expected <id1> <id2>" << std::endl;
+        return;
+    }
+    
+    std::set<QString> idset;
+    for(auto s : arg_list){
+        idset.insert(s);
+    }
+
+    int mod_idx = 0;
+    
+    auto r = m_gt->cacheRoutes();
+    auto c = r->cache();
+    ContactList& cl = c->contacts();
+    for(auto& cid : idset){
+        auto ct = cl.findById(cid);
+        if(ct){
+            std::cout << "removing " << ct->id() << " " << ct->name().fullName() << std::endl;
+            cl.remove(ct);
+            mod_idx++;
+        }
+        else{
+            std::cout << "not found " << ct->id() << " " << ct->name().fullName() << std::endl;
+        }
+    }
+
+    c->storeContactsToDb();
+    std::cout << "deleted " << mod_idx << " contact(s)" << std::endl;
+};
 
 void GcontactCommands::sync_contacts()
 {

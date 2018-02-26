@@ -897,7 +897,7 @@ bool GContactCache::loadContactGroupsFromDb()
 {
     m_groups.clear();
 
-    QString sql = QString("SELECT status, xml_original, updated, group_db_id, title, content FROM %1gcontact_group WHERE acc_id=%2 AND status IN(1,2) ORDER BY updated DESC")
+    QString sql = QString("SELECT status, xml_original, updated, group_db_id, title, content FROM %1gcontact_group WHERE acc_id=%2 AND status IN(1,2,3) ORDER BY updated DESC")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
     QSqlQuery* q = m_sql_storage->selectQuery(sql);
@@ -919,7 +919,7 @@ bool GContactCache::loadContactEntriesFromDb()
 {
     m_contacts.clear();
 
-    QString sql = QString("SELECT status, xml_current, updated, contact_db_id, title, content, xml_original, full_name, given_name, family_name, orga_name, orga_title, orga_label FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2) ORDER BY updated DESC")
+    QString sql = QString("SELECT status, xml_current, updated, contact_db_id, title, content, xml_original, full_name, given_name, family_name, orga_name, orga_title, orga_label FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2,3) ORDER BY updated DESC")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
     QSqlQuery* q = m_sql_storage->selectQuery(sql);
@@ -944,7 +944,7 @@ bool GContactCache::loadContactConfigFromDb()
     QDateTime invalid_time;
     m_sync_time.swap(invalid_time);
     
-    QString sql = QString("SELECT MAX(updated) FROM %1gcontact_group WHERE acc_id=%2 AND status IN(1,2)")
+    QString sql = QString("SELECT MAX(updated) FROM %1gcontact_group WHERE acc_id=%2 AND status IN(1,2,3)")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
     QSqlQuery* q = m_sql_storage->selectQuery(sql);
@@ -958,7 +958,7 @@ bool GContactCache::loadContactConfigFromDb()
     }
 
     
-    sql = QString("SELECT MAX(updated) FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2)")
+    sql = QString("SELECT MAX(updated) FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2,3)")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
     q = m_sql_storage->selectQuery(sql);
@@ -1128,10 +1128,17 @@ void GcontactCacheRoutes::applyLocalCacheModifications_Async(GcontactCacheQueryT
                     }
                 }
                 else{
-                    qWarning() << "Batch operation failed"
-                               << b->id()
-                               << b->batchResultOperationType()
-                               << b->batchResultStatusReason();
+                    auto c = m_GContactsCache->contacts().findById(b->id());
+                    
+                    if(c && b->batchResultStatusCode() == 404 && b->batchResultId() == EBatchId::delete_operation){
+                        m_GContactsCache->contacts().retire(c);
+                    }
+                    else{
+                        qWarning() << "Batch operation failed"
+                                   << b->id()
+                                   << b->batchResultOperationType()
+                                   << b->batchResultStatusReason();
+                    }
                 }
             }
             
