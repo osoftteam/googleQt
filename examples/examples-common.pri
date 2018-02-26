@@ -18,6 +18,14 @@ if(!isEmpty( ARD_AUTOTEST )){
     !build_pass:message("+autotest")
 }
 
+ARD_DEBUG=$$(ARD_DEBUG)
+if(!isEmpty( ARD_DEBUG )){
+    unix {
+        QMAKE_CXXFLAGS += -O0 -g
+        !build_pass:message("+debug")        
+    }
+}
+
 ##############################################################
 #  specify path to the gmailQt lib, on windows it can be     #
 #   ../../prj/debug/ on unix - shadow build path             #
