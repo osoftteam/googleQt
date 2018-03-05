@@ -146,6 +146,20 @@ namespace googleQt {
             size_t size()const { return m_parts.size(); }
             const P& operator[](size_t idx)const { return m_parts[idx]; }
 
+            int findPrimary()const
+            {
+                int idx = 0;
+                if(m_parts.size() == 0){
+                    return -1;
+                }
+                for (auto& p : m_parts) {
+                    if(p.isPrimary()){
+                        return idx;
+                    }
+                    idx++;
+                }
+                return 0;//primary not found, return first one
+            }
         protected:
             std::vector<P> m_parts;
         };//PartList
