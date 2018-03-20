@@ -33,6 +33,15 @@ namespace googleQt {
             const OrganizationInfo&    organization()const { return m_organization; }
             const PostalAddressList&   addresses()const { return m_address_list; }            
 
+            /// Ref-function return non-const references and can be used
+            /// to modify objects. call ContactInfo::markAsModified to stage
+            /// object ready for storing into database and storeContactsToDb to save
+            EmailInfoList&       emailsRef(){ return m_emails; }
+            PhoneInfoList&       phonesRef(){ return m_phones; }
+            NameInfo&            nameRef(){ return m_name; }
+            OrganizationInfo&    organizationRef(){ return m_organization; }
+            PostalAddressList&   addressesRef(){ return m_address_list; }
+
             /**
                 set title
             */

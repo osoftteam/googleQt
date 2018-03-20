@@ -145,6 +145,7 @@ namespace googleQt {
 
             size_t size()const { return m_parts.size(); }
             const P& operator[](size_t idx)const { return m_parts[idx]; }
+            P* partAt(size_t idx) { if (idx < 0 || idx >= m_parts.size()) return nullptr; return &m_parts[idx]; }
 
             int findPrimary()const
             {
