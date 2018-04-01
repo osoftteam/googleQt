@@ -376,7 +376,7 @@ bool BatchResult::parseBatchResult(QDomNode n)
         }
     }
 
-    qDebug() << "parseBatchResult" << m_operation_type << m_status_code << m_status_reason << m_is_null;
+    qDebug() << "parseBatchResult" << m_operation_type << m_status_code << m_status_reason << (m_is_null ? "ERR" : "OK");
     
     return !m_is_null;
 };
