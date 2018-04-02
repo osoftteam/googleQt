@@ -579,6 +579,8 @@ bool GContactCache::ensureContactTables()
 
 bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& contact_list)
 {
+    //todo - have to store entry_id for new contacts as well
+    
     using CLIST = std::list<ContactInfo::ptr>;
     CLIST new_contacts;
     CLIST updated_contacts;
@@ -1121,10 +1123,26 @@ void GcontactCacheRoutes::applyLocalCacheModifications_Async(GcontactCacheQueryT
                             }
                     }
                     else{
-                        qWarning() << "Cache obj locate on batch operation failed"
-                                   << b->id()
-                                   << b->batchResultOperationType()
-                                   << b->batchResultStatusReason();                        
+                        if(b->batchResultId() == EBatchId::create){
+                            auto c = m_GContactsCache->contacts().findNewCreatedContact(b);
+                            if(c){
+                                c->assignContent(*(b.get()));
+                                c->markAsNormalCopy();
+                            }
+                            else{
+                                qWarning() << "Cache/create obj locate on batch operation failed"
+                                           << b->id()
+                                           << b->batchResultOperationType()
+                                           << b->batchResultStatusReason();                                
+                            }
+                            //ykh
+                        }
+                        else{
+                            qWarning() << "Cache obj locate on batch operation failed"
+                                       << b->id()
+                                       << b->batchResultOperationType()
+                                       << b->batchResultStatusReason();
+                        }
                     }
                 }
                 else{
@@ -1207,6 +1225,29 @@ std::unique_ptr<BatchGroupList> BatchGroupList::factory::create(const QByteArray
 {
     std::unique_ptr<BatchGroupList> rv(new BatchGroupList());
     rv->parseXml(data);
+    return rv;
+};
+
+std::shared_ptr<ContactInfo> ContactList::findNewCreatedContact(std::shared_ptr<BatchResultContactInfo> b)
+{
+    const NameInfo& n = b->name();
+    QString name = n.givenName() + " " + n.familyName();
+    
+    for (auto& c : items()) {
+        if(c->id().isEmpty()){
+            const NameInfo& n2 = c->name();
+            QString name2 = n2.givenName() + " " + n2.familyName();
+            name2 = name2.trimmed();
+            if(!name2.isEmpty()){
+                if(name.compare(name2) == 0){
+                    qDebug() << "located contact by name";
+                    return c;
+                }
+            }
+        }
+    }
+
+    std::shared_ptr<ContactInfo> rv;
     return rv;
 };
 

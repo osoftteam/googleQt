@@ -210,6 +210,9 @@ namespace googleQt {
         class ContactList : public BatchBuilderInfoList<ContactInfo, BatchRequesContactList>
         {
         public:
+
+            std::shared_ptr<ContactInfo> findNewCreatedContact(std::shared_ptr<BatchResultContactInfo> b);
+            
             class factory {
             public:
                 static std::unique_ptr<ContactList>  create(const QByteArray& data);
@@ -218,6 +221,7 @@ namespace googleQt {
             static std::unique_ptr<ContactList> EXAMPLE(int context_index, int parent_context_index);
 #endif //API_QT_AUTOTEST
         };
+        
         ///list of all contact groups
         class GroupList : public BatchBuilderInfoList<GroupInfo, BatchRequesGroupList>
         {
