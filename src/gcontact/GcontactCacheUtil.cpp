@@ -65,6 +65,15 @@ void ContactXmlPersistant::markAsRetired()
     }
 };
 
+void ContactXmlPersistant::markAsIdLimbo()
+{
+    if (registerMods()) {
+        m_status = localIdLimbo;
+        setDirty(true);
+    }
+};
+
+
 void ContactXmlPersistant::printXmlParseError(QString contextMsg,
                                                        const QByteArray & data,
                                                        QString errorMsg,

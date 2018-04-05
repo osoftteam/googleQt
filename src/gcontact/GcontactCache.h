@@ -210,7 +210,8 @@ namespace googleQt {
         class ContactList : public BatchBuilderInfoList<ContactInfo, BatchRequesContactList>
         {
         public:
-
+            /// this is special case of 'limbo' contact - we created it locally, it has DBID, we sent requiest
+            /// to server and server assigned cloudID - we have to link cloudID to the contact and update local cache
             std::shared_ptr<ContactInfo> findNewCreatedContact(std::shared_ptr<BatchResultContactInfo> b);
             
             class factory {

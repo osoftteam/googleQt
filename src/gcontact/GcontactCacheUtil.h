@@ -51,10 +51,14 @@ namespace googleQt {
             /// EStatus has magic numbers stored in DB, don't modify them
             enum EStatus
             {
-                localCopy       = 1,
-                localModified   = 2,
-                localRemoved    = 3,
-                localRetired    = 4
+                localCopy       = 1,    ///<-- regular local copy
+                localModified   = 2,    ///<-- modified locally, need to sync
+                localRemoved    = 3,    ///<-- removed locally, need to sync
+                localRetired    = 4,    ///<-- retired/backuped local copy, can happen after delete
+                localIdLimbo    = 5     ///<-- local copy that need cloudId from server, 
+                                        ///--- objects with this state should be short lived during sync
+                                        ///--- basically localIdLimbo means we got clouldId in memory and want to store it in DB
+                                        ///--- the SQL-update in this case will be different from regular data update
             };
 
             ContactXmlPersistant();
@@ -70,9 +74,11 @@ namespace googleQt {
             void markAsModified();
             void markAsDeleted();
             void markAsRetired();
+            void markAsIdLimbo();
             bool isModified()const { return (m_status == localModified); }
             bool isRemoved()const { return (m_status == localRemoved); }
             bool isRetired()const { return (m_status == localRetired); }
+            bool isIdLimbo()const { return (m_status == localIdLimbo); }
             bool isCreatedLocally()const { return m_id.isEmpty(); }
 
             QString  originalXml()const { return m_original_xml_string; }

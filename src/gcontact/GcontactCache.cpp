@@ -578,25 +578,30 @@ bool GContactCache::ensureContactTables()
 };
 
 bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& contact_list)
-{
-    //todo - have to store entry_id for new contacts as well
-    
+{    
     using CLIST = std::list<ContactInfo::ptr>;
-    CLIST new_contacts;
+    CLIST cloud_created_contacts;
     CLIST updated_contacts;
+    CLIST limbo_id_contacts;
     for (auto& c : contact_list) {
         if (c->isDbIdNull()) {
-            new_contacts.push_back(c);
+            cloud_created_contacts.push_back(c);
         }
         else {
             if(c->isDirty()){
-                updated_contacts.push_back(c);
+                if (c->isIdLimbo()) {
+                    c->markAsNormalCopy();
+                    limbo_id_contacts.push_back(c);
+                }
+                else {
+                    updated_contacts.push_back(c);
+                }
                 c->setDirty(false);
             }
         }
     }
 
-    if (new_contacts.size() > 0) {
+    if (cloud_created_contacts.size() > 0) {
         QString sql_insert;
         sql_insert = QString("INSERT INTO  %1gcontact_entry(acc_id, title, content, full_name, given_name, family_name, orga_name, orga_title, orga_label, xml_original, xml_current, updated, status, entry_id, etag)"
             " VALUES(%2, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
@@ -608,7 +613,7 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
             return false;
         }
 
-        for (auto c : new_contacts) {
+        for (auto c : cloud_created_contacts) {
             q->addBindValue(c->title());
             q->addBindValue(c->content());
             q->addBindValue(c->name().fullName());
@@ -635,7 +640,8 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
             }
         }
     }
-    else if (updated_contacts.size() > 0) {
+    
+    if (updated_contacts.size() > 0) {
         QString sql_update;
         sql_update = QString("UPDATE  %1gcontact_entry SET title=?, content=?, full_name=?, given_name=?, family_name=?, orga_name=?, orga_title=?, "
             "orga_label=?, xml_original=?, xml_current=?, updated=?, status=? WHERE contact_db_id=? AND acc_id = %2")
@@ -661,6 +667,43 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
             qlonglong upd_time = c->updated().toMSecsSinceEpoch();
             q->addBindValue(upd_time);
             q->addBindValue(c->status());
+            q->addBindValue(c->dbID());
+            if (!q->exec()) {
+                QString error = q->lastError().text();
+                qWarning() << "ERROR. Failed to update contact entry" << error;
+                continue;
+            }
+        }
+    }
+
+    if (limbo_id_contacts.size() > 0) {
+        QString sql_update;
+        sql_update = QString("UPDATE  %1gcontact_entry SET title=?, content=?, full_name=?, given_name=?, family_name=?, orga_name=?, orga_title=?, "
+            "orga_label=?, xml_original=?, xml_current=?, updated=?, status=?, entry_id=?, etag=? WHERE contact_db_id=? AND acc_id = %2")
+            .arg(m_sql_storage->m_metaPrefix)
+            .arg(m_sql_storage->m_accId);
+        QSqlQuery* q = m_sql_storage->prepareQuery(sql_update);
+        if (!q) {
+            qWarning() << "Failed to prepare contact update-SQL" << sql_update;
+            return false;
+        }
+
+        for (auto c : limbo_id_contacts) {
+            q->addBindValue(c->title());
+            q->addBindValue(c->content());
+            q->addBindValue(c->name().fullName());
+            q->addBindValue(c->name().givenName());
+            q->addBindValue(c->name().familyName());
+            q->addBindValue(c->organization().name());
+            q->addBindValue(c->organization().title());
+            q->addBindValue(c->organization().typeLabel());
+            q->addBindValue(c->originalXml());
+            q->addBindValue(c->toXml(m_endpoint.apiClient()->userId()));
+            qlonglong upd_time = c->updated().toMSecsSinceEpoch();
+            q->addBindValue(upd_time);
+            q->addBindValue(c->status());
+            q->addBindValue(c->id());
+            q->addBindValue(c->etag());
             q->addBindValue(c->dbID());
             if (!q->exec()) {
                 QString error = q->lastError().text();
@@ -1127,7 +1170,7 @@ void GcontactCacheRoutes::applyLocalCacheModifications_Async(GcontactCacheQueryT
                             auto c = m_GContactsCache->contacts().findNewCreatedContact(b);
                             if(c){
                                 c->assignContent(*(b.get()));
-                                c->markAsNormalCopy();
+                                c->markAsIdLimbo();
                             }
                             else{
                                 qWarning() << "Cache/create obj locate on batch operation failed"
@@ -1135,7 +1178,6 @@ void GcontactCacheRoutes::applyLocalCacheModifications_Async(GcontactCacheQueryT
                                            << b->batchResultOperationType()
                                            << b->batchResultStatusReason();                                
                             }
-                            //ykh
                         }
                         else{
                             qWarning() << "Cache obj locate on batch operation failed"
