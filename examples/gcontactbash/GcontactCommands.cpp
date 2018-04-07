@@ -845,6 +845,10 @@ static QString cacheStatus2Str(gcontact::ContactXmlPersistant::EStatus st)
             {
                 rv = "[R]";
             }break;
+        case gcontact::ContactXmlPersistant::localIdLimbo:
+            {
+                rv = "[L]";
+            }break;            
         };
     return rv;
 }

@@ -602,6 +602,7 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
     }
 
     if (cloud_created_contacts.size() > 0) {
+        qDebug() << "sql-contacts-store-cloud-created" << cloud_created_contacts.size();
         QString sql_insert;
         sql_insert = QString("INSERT INTO  %1gcontact_entry(acc_id, title, content, full_name, given_name, family_name, orga_name, orga_title, orga_label, xml_original, xml_current, updated, status, entry_id, etag)"
             " VALUES(%2, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
@@ -642,6 +643,7 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
     }
     
     if (updated_contacts.size() > 0) {
+        qDebug() << "sql-contacts-store-updated" << updated_contacts.size();
         QString sql_update;
         sql_update = QString("UPDATE  %1gcontact_entry SET title=?, content=?, full_name=?, given_name=?, family_name=?, orga_name=?, orga_title=?, "
             "orga_label=?, xml_original=?, xml_current=?, updated=?, status=? WHERE contact_db_id=? AND acc_id = %2")
@@ -677,6 +679,7 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
     }
 
     if (limbo_id_contacts.size() > 0) {
+        qDebug() << "sql-contacts-store-limbo" << limbo_id_contacts.size();
         QString sql_update;
         sql_update = QString("UPDATE  %1gcontact_entry SET title=?, content=?, full_name=?, given_name=?, family_name=?, orga_name=?, orga_title=?, "
             "orga_label=?, xml_original=?, xml_current=?, updated=?, status=?, entry_id=?, etag=? WHERE contact_db_id=? AND acc_id = %2")
