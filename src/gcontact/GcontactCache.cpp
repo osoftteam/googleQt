@@ -176,6 +176,10 @@ bool ContactInfo::operator == (const ContactInfo& o) const
         return false;
     }
 
+    if (m_photo != o.m_photo) {
+        return false;
+    }
+
     return true;
 };
 
@@ -247,13 +251,10 @@ bool ContactInfo::parseEntryNode(QDomNode n)
     n.save(ss, 4);
     ss.flush();
 
-    //...
     if (!verifyXml(m_original_xml_string)) {
         qWarning() << "Failed to validate contact xml node";
         return false;
     }
-    //..
-
 
     if (m_original_xml_string.isEmpty()) {
         qWarning() << "Failed to parse contact xml node";
@@ -278,6 +279,7 @@ bool ContactInfo::parseEntryNode(QDomNode n)
     m_name = NameInfo::parse(n);
     m_organization = OrganizationInfo::parse(n);
     m_address_list = PostalAddressList::parse(n);
+    m_photo = PhotoInfo::parse(n);
     m_is_null = !m_etag.isEmpty() && m_id.isEmpty();
     return !m_is_null;
 }
@@ -321,6 +323,17 @@ bool ContactInfo::setFromDbRecord(QSqlQuery* q)
     setName(n);
     setOrganizationInfo(o);
 
+    QString photo_href = q->value(13).toString();
+    QString photo_etag = q->value(14).toString();
+    int st_tmp = q->value(15).toInt();
+    if(st_tmp < 0 || st_tmp > 1){
+        st_tmp = 0;
+        qWarning() << "Invalid DB value for photo status" << st_tmp;
+    }
+    PhotoInfo::EStatus st = static_cast<PhotoInfo::EStatus>(st_tmp);
+    
+    m_photo.setupFromLocalDb(photo_href, photo_etag, st);
+
     setRegisterModifications(true); 
     return true;
 
@@ -333,7 +346,8 @@ void ContactInfo::assignContent(const ContactInfo& src)
     m_organization = src.m_organization;
     m_emails = src.m_emails;
     m_phones = src.m_phones;
-    m_address_list = src.m_address_list;    
+    m_address_list = src.m_address_list;   
+    m_photo = src.m_photo;
 };
 
 std::unique_ptr<BatchRequestContactInfo> ContactInfo::buildBatchRequest(googleQt::EBatchId batch_id)
@@ -559,8 +573,9 @@ void GContactCache::attachSQLStorage(std::shared_ptr<mail_cache::GMailSQLiteStor
 bool GContactCache::ensureContactTables()
 {
     /// contacts ///
-    QString sql_entries = QString("CREATE TABLE IF NOT EXISTS %1gcontact_entry(contact_db_id INTEGER PRIMARY KEY, acc_id INTEGER NOT NULL, entry_id TEXT, etag TEXT, title TEXT, content TEXT,"
-                                  "full_name TEXT, given_name TEXT, family_name TEXT, orga_name TEXT, orga_title TEXT, orga_label TEXT, xml_original TEXT, xml_current TEXT, updated INTEGER, status INTEGER)").arg(m_sql_storage->m_metaPrefix);
+    QString sql_entries = QString("CREATE TABLE IF NOT EXISTS %1gcontact_entry(contact_db_id INTEGER PRIMARY KEY, acc_id INTEGER NOT NULL, entry_id TEXT, etag TEXT, title TEXT, content TEXT, "
+                                  "full_name TEXT, given_name TEXT, family_name TEXT, orga_name TEXT, orga_title TEXT, orga_label TEXT, xml_original TEXT, xml_current TEXT, updated INTEGER, status INTEGER, "
+                                  "photo_href TEXT, photo_etag TEXT, photo_status INTEGER)").arg(m_sql_storage->m_metaPrefix);
     if (!m_sql_storage->execQuery(sql_entries))
         return false;
 
@@ -604,8 +619,9 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
     if (cloud_created_contacts.size() > 0) {
         qDebug() << "sql-contacts-store-cloud-created" << cloud_created_contacts.size();
         QString sql_insert;
-        sql_insert = QString("INSERT INTO  %1gcontact_entry(acc_id, title, content, full_name, given_name, family_name, orga_name, orga_title, orga_label, xml_original, xml_current, updated, status, entry_id, etag)"
-            " VALUES(%2, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        sql_insert = QString("INSERT INTO  %1gcontact_entry(acc_id, title, content, full_name, given_name, family_name, orga_name, orga_title, orga_label,"
+                            "xml_original, xml_current, updated, status, entry_id, etag, photo_href, photo_etag, photo_status)"
+            " VALUES(%2, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
             .arg(m_sql_storage->m_metaPrefix)
             .arg(m_sql_storage->m_accId);
         QSqlQuery* q = m_sql_storage->prepareQuery(sql_insert);
@@ -630,6 +646,10 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
             q->addBindValue(c->status());
             q->addBindValue(c->id());
             q->addBindValue(c->etag());
+
+            q->addBindValue(c->photo().href());
+            q->addBindValue(c->photo().etag());
+            q->addBindValue(c->photo().status());
             if (q->exec()) {
                 int eid = q->lastInsertId().toInt();
                 c->setDbID(eid);
@@ -646,7 +666,7 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
         qDebug() << "sql-contacts-store-updated" << updated_contacts.size();
         QString sql_update;
         sql_update = QString("UPDATE  %1gcontact_entry SET title=?, content=?, full_name=?, given_name=?, family_name=?, orga_name=?, orga_title=?, "
-            "orga_label=?, xml_original=?, xml_current=?, updated=?, status=? WHERE contact_db_id=? AND acc_id = %2")
+            "orga_label=?, xml_original=?, xml_current=?, updated=?, status=?, photo_href=?, photo_etag=?, photo_status=? WHERE contact_db_id=? AND acc_id = %2")
             .arg(m_sql_storage->m_metaPrefix)
             .arg(m_sql_storage->m_accId);
         QSqlQuery* q = m_sql_storage->prepareQuery(sql_update);
@@ -669,6 +689,9 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
             qlonglong upd_time = c->updated().toMSecsSinceEpoch();
             q->addBindValue(upd_time);
             q->addBindValue(c->status());
+            q->addBindValue(c->photo().href());
+            q->addBindValue(c->photo().etag());
+            q->addBindValue(c->photo().status());
             q->addBindValue(c->dbID());
             if (!q->exec()) {
                 QString error = q->lastError().text();
@@ -682,7 +705,7 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
         qDebug() << "sql-contacts-store-limbo" << limbo_id_contacts.size();
         QString sql_update;
         sql_update = QString("UPDATE  %1gcontact_entry SET title=?, content=?, full_name=?, given_name=?, family_name=?, orga_name=?, orga_title=?, "
-            "orga_label=?, xml_original=?, xml_current=?, updated=?, status=?, entry_id=?, etag=? WHERE contact_db_id=? AND acc_id = %2")
+            "orga_label=?, xml_original=?, xml_current=?, updated=?, status=?, entry_id=?, etag=?, photo_href=?, photo_etag=?, photo_status=? WHERE contact_db_id=? AND acc_id = %2")
             .arg(m_sql_storage->m_metaPrefix)
             .arg(m_sql_storage->m_accId);
         QSqlQuery* q = m_sql_storage->prepareQuery(sql_update);
@@ -707,6 +730,9 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
             q->addBindValue(c->status());
             q->addBindValue(c->id());
             q->addBindValue(c->etag());
+            q->addBindValue(c->photo().href());
+            q->addBindValue(c->photo().etag());
+            q->addBindValue(c->photo().status());
             q->addBindValue(c->dbID());
             if (!q->exec()) {
                 QString error = q->lastError().text();
@@ -967,7 +993,8 @@ bool GContactCache::loadContactEntriesFromDb()
 {
     m_contacts.clear();
 
-    QString sql = QString("SELECT status, xml_current, updated, contact_db_id, title, content, xml_original, full_name, given_name, family_name, orga_name, orga_title, orga_label FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2,3) ORDER BY updated DESC")
+    QString sql = QString("SELECT status, xml_current, updated, contact_db_id, title, content, xml_original, full_name, given_name, family_name,"
+        "orga_name, orga_title, orga_label, photo_href, photo_etag, photo_status FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2,3) ORDER BY updated DESC")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
     QSqlQuery* q = m_sql_storage->selectQuery(sql);
@@ -1047,7 +1074,60 @@ bool GContactCache::loadContactConfigFromDb()
 };
 
 
-GcontactCacheRoutes::GcontactCacheRoutes(googleQt::Endpoint& endpoint, GcontactRoutes& ):m_endpoint(endpoint)
+QString GContactCache::getPhotoMediaPath(ContactInfo::ptr c)const
+{
+    if(!c){
+        return "";
+    }
+    
+    //    QString rv;
+    //    const PhotoInfo& p = c->photo();
+    //    if(p.status() == PhotoInfo::resolved && !p.etag().isEmpty())
+        {
+            QString cache_dir = m_sql_storage->contactCacheDir();
+            cache_dir += "/contact-photos/";
+            cache_dir += m_endpoint.apiClient()->userId();
+            cache_dir += "/";
+            QString img_file = cache_dir + QString("%1.jpg").arg(c->id());
+            //qDebug() << "ykh-img-file" << img_file;
+            return img_file;
+            //        cache_dir += QString("/%1.jpg").arg(c->id());
+        }
+    
+    return "";
+};
+
+GoogleVoidTask* GcontactCacheRoutes::getContactCachePhoto_Async(ContactInfo::ptr c){
+    QString filePath = m_GContactsCache->getPhotoMediaPath(c);
+    QFileInfo fi(filePath);
+    if(fi.exists()){
+        GoogleVoidTask* rv = m_endpoint.produceVoidTask();
+        rv->completed_callback();
+        return rv;
+    }    
+
+    QDir d;
+    
+    QString path = fi.path();
+    if(!d.exists(path)){
+        if(!d.mkpath(path)){
+            GoogleVoidTask* rv = m_endpoint.produceVoidTask();
+            QString errStr = QString("Failed to create directory '%1'").arg(path);
+            qWarning() << "Failed to create directory" << path;
+            std::unique_ptr<GoogleException> ex(new GoogleException(errStr.toStdString()));
+            rv->failed_callback(std::move(ex));
+            return rv;
+        };
+    }
+    
+    QFile out;
+    out.setFileName(filePath);
+    
+    DownloadPhotoArg arg(c->id());
+    return m_c_routes.getContacts()->getContactPhoto_Async(arg, &out);
+};
+
+GcontactCacheRoutes::GcontactCacheRoutes(googleQt::Endpoint& endpoint, GcontactRoutes& r):m_endpoint(endpoint), m_c_routes(r)
 {
     m_GContactsCache.reset(new GContactCache(endpoint));
 };

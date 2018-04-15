@@ -206,15 +206,7 @@ QString ContactXmlPersistant::mergedXml(QString mergeOrigin)const
                            data,
                            errorMsg,
                            errorLine,
-                           errorColumn);
-        
-
-        /*        
-        qWarning() << "Failed to parse original contacts XML document: " << errorMsg << "line=" << errorLine << "column=" << errorColumn;
-        qWarning() << "-- begin data " << data.size();
-        qWarning() << data;
-        qWarning() << "-- end data";
-        */
+                           errorColumn);        
         return "";
     }
 

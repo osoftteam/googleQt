@@ -32,6 +32,7 @@ namespace googleQt {
             const NameInfo&            name()const { return m_name; }
             const OrganizationInfo&    organization()const { return m_organization; }
             const PostalAddressList&   addresses()const { return m_address_list; }            
+            const PhotoInfo&           photo()const { return m_photo; }
 
             /// Ref-function return non-const references and can be used
             /// to modify objects. call ContactInfo::markAsModified to stage
@@ -120,7 +121,8 @@ namespace googleQt {
             OrganizationInfo    m_organization;
             EmailInfoList       m_emails;
             PhoneInfoList       m_phones;            
-            PostalAddressList   m_address_list;            
+            PostalAddressList   m_address_list;
+            PhotoInfo           m_photo;
         };
 
         /**
@@ -288,6 +290,9 @@ namespace googleQt {
             bool clearDbCache();
 
             bool mergeServerModifications(GroupList& server_glist, ContactList& server_clist);
+            QString getPhotoMediaPath(ContactInfo::ptr c)const;
+            
+            
         protected:
             bool ensureContactTables();
             bool storeContactGroups();
@@ -298,8 +303,7 @@ namespace googleQt {
             bool loadContactEntriesFromDb();
             bool loadContactConfigFromDb();
             bool storeContactList(std::vector<std::shared_ptr<ContactInfo>>& contact_list);
-            bool storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& group_list);
-            
+            bool storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& group_list);            
         protected:
             std::shared_ptr<mail_cache::GMailSQLiteStorage> m_sql_storage;
             ContactList m_contacts;
@@ -339,6 +343,7 @@ namespace googleQt {
             contact_cache_ptr       cache() { return m_GContactsCache; }
 
             GcontactCacheQueryTask* synchronizeContacts_Async();
+            GoogleVoidTask* getContactCachePhoto_Async(ContactInfo::ptr c);
 
 #ifdef API_QT_AUTOTEST
             void runAutotest();
@@ -349,7 +354,8 @@ namespace googleQt {
 
         protected:
             Endpoint&           m_endpoint;
-            contact_cache_ptr   m_GContactsCache;            
+            GcontactRoutes&     m_c_routes;
+            contact_cache_ptr   m_GContactsCache;
         };
     };//gcontact
 };

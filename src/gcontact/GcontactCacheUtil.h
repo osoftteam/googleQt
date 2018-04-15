@@ -114,9 +114,6 @@ namespace googleQt {
             mutable void*       m_user_ptr{ nullptr };            
         };//ContactXmlPersistant
 
-
-        using MRecordDbPersistant = NullablePart;
-
         template <class P>
         class PartList
         {
