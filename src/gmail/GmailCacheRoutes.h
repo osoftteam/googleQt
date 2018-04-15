@@ -33,6 +33,7 @@ namespace googleQt
             /// downloadPath - directory for attachment download
             bool setupSQLiteCache(QString dbPath,
                 QString downloadPath,
+                QString contactCachePath,
                 QString dbName = "googleqt",
                 QString dbprefix = "api");
 

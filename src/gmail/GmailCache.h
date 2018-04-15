@@ -328,6 +328,7 @@ namespace googleQt{
             GMailSQLiteStorage(cache_ptr c, std::shared_ptr<gcontact::GContactCache> cc);
             bool init_db(QString dbPath, 
                          QString downloadPath,
+                         QString contactCachePath,
                          QString dbName, 
                          QString db_meta_prefix);
             void close_db();
@@ -338,6 +339,8 @@ namespace googleQt{
             void remove_db(int accId, const std::set<QString>& ids2remove)override;
             ///directory for attachments
             QString downloadDir()const { return m_downloadDir; }
+            ///directory for contacts photos & thumbnails
+            QString contactCacheDir()const{return m_contactCacheDir;}
             QString findAttachmentFile(att_ptr att)const;
             void invalidateAttachmentLocalCacheFile(att_ptr att);
 
@@ -408,6 +411,7 @@ namespace googleQt{
             std::map<QString, QString> m_configs;
             QString m_dbPath;
             QString m_downloadDir;
+            QString m_contactCacheDir;
             QString m_dbName;
             QString m_metaPrefix;
             int     m_accId{-1};

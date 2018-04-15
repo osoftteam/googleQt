@@ -709,6 +709,7 @@ bool mail_cache::GMailSQLiteStorage::ensureMailTables()
 
 bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath, 
                                              QString downloadPath,
+                                             QString contactCachePath,
                                              QString dbName, 
                                              QString db_meta_prefix)
 {
@@ -728,6 +729,7 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
 
     m_dbPath = dbPath;
     m_downloadDir = downloadPath;
+    m_contactCacheDir = contactCachePath;
     m_dbName = dbName;
     m_metaPrefix = db_meta_prefix;
 
@@ -738,6 +740,14 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
             return false;
         };
     }
+
+    if (!dest_dir.exists(m_contactCacheDir)) {
+        if (!dest_dir.mkpath(m_contactCacheDir)) {
+            qWarning() << "ERROR. Failed to create directory" << m_contactCacheDir;
+            return false;
+        };
+    }
+
 
 
     m_initialized = false;  

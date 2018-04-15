@@ -170,6 +170,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::trashCacheMessage_Async(QString us
 
 bool mail_cache::GmailCacheRoutes::setupSQLiteCache(QString dbPath,
     QString downloadPath,
+    QString contactCachePath,
     QString dbName /*= "googleqt"*/,
     QString dbprefix /*= "api"*/)
 {
@@ -181,6 +182,7 @@ bool mail_cache::GmailCacheRoutes::setupSQLiteCache(QString dbPath,
     EXPECT_STRING_VAL(m_endpoint.client()->userId(), "UserId");
     EXPECT_STRING_VAL(dbPath, "DB path");
     EXPECT_STRING_VAL(downloadPath, "Download path");
+    EXPECT_STRING_VAL(contactCachePath, "contactCachePath path");
     EXPECT_STRING_VAL(dbName, "DB name");
     EXPECT_STRING_VAL(dbprefix, "DB prefix");
 
@@ -188,7 +190,7 @@ bool mail_cache::GmailCacheRoutes::setupSQLiteCache(QString dbPath,
     std::shared_ptr<mail_cache::GMailSQLiteStorage> st(new mail_cache::GMailSQLiteStorage(m_GMailCache, cc));
     cc->attachSQLStorage(st);
 
-    if (!st->init_db(dbPath, downloadPath, dbName, dbprefix))
+    if (!st->init_db(dbPath, downloadPath, contactCachePath, dbName, dbprefix))
     {
         m_GMailCache->invalidate();
         qWarning() << "Failed to initialize SQLite storage" << dbPath << dbName << dbprefix;
@@ -220,11 +222,13 @@ bool mail_cache::GmailCacheRoutes::resetSQLiteCache()
     }
     QString dbPath = storage->m_dbPath;
     QString downloadPath = storage->m_downloadDir;
+    QString contactCacheDir = storage->m_contactCacheDir;
     QString dbName = storage->m_dbName;
     QString dbprefix = storage->m_metaPrefix;
 
     EXPECT_STRING_VAL(dbPath, "DB path");
     EXPECT_STRING_VAL(downloadPath, "Download path");
+    EXPECT_STRING_VAL(contactCacheDir, "contactCacheDir path");
     EXPECT_STRING_VAL(dbName, "DB name");
     EXPECT_STRING_VAL(dbprefix, "DB prefix");
 
@@ -233,7 +237,7 @@ bool mail_cache::GmailCacheRoutes::resetSQLiteCache()
     }
     m_GMailCache.reset(new mail_cache::GMailCache(m_endpoint));
 
-    return setupSQLiteCache(dbPath, downloadPath, dbName, dbprefix);
+    return setupSQLiteCache(dbPath, downloadPath, contactCacheDir, dbName, dbprefix);
 };
 
 bool mail_cache::GmailCacheRoutes::hasCache()const
