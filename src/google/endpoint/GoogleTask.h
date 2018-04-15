@@ -25,7 +25,7 @@ namespace googleQt{
         bool waitForResult()const;
 
         GoogleException* error();
-        void failed_callback(std::unique_ptr<GoogleException> ex);        
+        void failed_callback(std::unique_ptr<GoogleException> ex);
 
     signals:
         void finished();

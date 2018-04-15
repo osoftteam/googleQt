@@ -66,6 +66,7 @@ drafts::DraftsRoutes* GmailRoutes::getDrafts()
 
 googleQt::mail_cache::GmailCacheRoutes* GmailRoutes::setupCache(QString dbPath,
     QString downloadPath, 
+    QString contactCachePath,
     QString dbName,
     QString dbprefix) 
 {
@@ -77,6 +78,7 @@ googleQt::mail_cache::GmailCacheRoutes* GmailRoutes::setupCache(QString dbPath,
     m_CacheRoutes.reset(new googleQt::mail_cache::GmailCacheRoutes(*m_endpoint, *this));
     if (!m_CacheRoutes->setupSQLiteCache(dbPath, 
                         downloadPath,
+                        contactCachePath,
         dbName,
         dbprefix)) 
     {
@@ -117,7 +119,7 @@ void GmailRoutes::autotest()
     }
 
     QString userId = m_endpoint->client()->userId();
-    if (!setupCache(autotest_db_file, "downloads"))
+    if (!setupCache(autotest_db_file, "downloads", "contacts-cache"))
     {
         ApiAutotest::INSTANCE() << "Failed to setup SQL database";
         return;
