@@ -446,12 +446,12 @@ void GcontactCommands::download_photo(QString contactid)
     try
     {
         QDir d;
-        if (!d.mkpath("downloads")) {
-            std::cout << "Failed to create 'downloads' directory." << std::endl;
+        if (!d.mkpath("download")) {
+            std::cout << "Failed to create 'download' directory." << std::endl;
             return;
         }
 
-        out.setFileName("downloads/" + contactid);
+        out.setFileName("download/" + contactid);
         if (!out.open(QFile::WriteOnly | QIODevice::Truncate)) {
             std::cout << "Error opening file: " << out.fileName() << std::endl;
             return;
@@ -489,12 +489,12 @@ void GcontactCommands::upload_photo(QString contactid_space_file_name)
     try
     {
         QDir d;
-        if (!d.mkpath("uploads")) {
-            std::cout << "Failed to create 'uploads' directory." << std::endl;
+        if (!d.mkpath("upload")) {
+            std::cout << "Failed to create 'upload' directory." << std::endl;
             return;
         }
 
-        in.setFileName("uploads/" + file_name);
+        in.setFileName("upload/" + file_name);
         if (!in.open(QFile::ReadOnly)) {
             std::cout << "Error opening file: " << in.fileName() << std::endl;
             return;
@@ -535,6 +535,7 @@ void GcontactCommands::delete_photo(QString contactid)
         std::cout << "Exception: " << e.what() << std::endl;
     }
 }
+
 
 void GcontactCommands::ls_groups()
 {
@@ -1341,6 +1342,35 @@ void GcontactCommands::cache_delete(QString id_space_id)
     c->storeContactsToDb();
     std::cout << "deleted " << mod_idx << " contact(s)" << std::endl;
 };
+
+void GcontactCommands::resolve_cache_photo(QString contactid)
+{
+    if (contactid.isEmpty()) {
+        std::cout << "contactid required" << std::endl;
+        return;
+    }
+
+    auto r = m_gt->cacheRoutes();    
+    auto cache = r->cache();
+    auto c = cache->contacts().findById(contactid);
+    if(!c){
+        std::cout << "Contact not found: " << contactid << std::endl;
+        return;
+    }
+
+    auto t = r->getContactCachePhoto_Async(c);
+    try
+    {
+        t->waitForResultAndRelease();
+        QString img_path = cache->getPhotoMediaPath(c);
+        std::cout << "Photo File " << img_path << std::endl;
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    } 
+};
+
 
 void GcontactCommands::sync_contacts()
 {

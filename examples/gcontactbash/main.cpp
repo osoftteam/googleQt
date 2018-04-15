@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     /// setup DB-cache ///
     const QString dbPath = "gm-cache.sqlite";
     auto mr = c->gmail();
-    if (!mr->setupCache(dbPath, "downloads")) {
+    if (!mr->setupCache(dbPath, "downloads", "contacts-cache")) {
         std::cout << "Failed to initialize SQLite cache database: " << dbPath.toStdString() << std::endl;
         return 0;
     };
@@ -92,7 +92,6 @@ int main(int argc, char *argv[])
     t.addAction("download_photo", "download contact photo", [&](QString arg) {cmd.download_photo(arg); });
     t.addAction("upload_photo", "upload contact photo", [&](QString arg) {cmd.upload_photo(arg); });
     t.addAction("delete_photo", "delete contact photo", [&](QString arg) {cmd.delete_photo(arg); });
-
     t.addSeparator();
 
     t.addAction("batch_list_contacts", "get contact entries in batch", [&](QString arg) {cmd.batch_list_contacts(arg); });
@@ -111,7 +110,9 @@ int main(int argc, char *argv[])
     t.addAction("cache_update", "modify contact names locally", [&](QString arg) {cmd.cache_update(arg); });
     t.addAction("cache_delete", "delete contact locally", [&](QString arg) {cmd.cache_delete(arg); });
     t.addAction("sync_contacts", "sync contacts cache", [&](QString) {cmd.sync_contacts(); });
+    t.addAction("resolve_cache_photo", "resolve cache photo", [&](QString arg) {cmd.resolve_cache_photo(arg); });    
     t.addSeparator();
+    
     t.addAction("ls_as_json",       "List Contacts as json", [&](QString ) {cmd.ls_as_json(); });
     t.addAction("export_last_result",     "Export last response to a file", [&](QString ) {cmd.export_last_result(); });
     t.addAction("print_last_result",     "Print last response", [&](QString ) {cmd.print_last_result(); });

@@ -71,6 +71,10 @@ public:
     */
     void delete_photo(QString contactid);
 
+    /**
+     * update local cache photo file
+     */
+    void resolve_cache_photo(QString contactid);
 
     /**
     * ls_groups - list contact group
