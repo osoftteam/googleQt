@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     /// setup DB-cache ///
     const QString dbPath = "gm-cache.sqlite";
     auto mr = c->gmail();
-    if (!mr->setupCache(dbPath, "downloads")) {
+    if (!mr->setupCache(dbPath, "downloads", "contacts-cache")) {
         std::cout << "Failed to initialize SQLite cache database: " << dbPath.toStdString() << std::endl;
         return 0;
     };
