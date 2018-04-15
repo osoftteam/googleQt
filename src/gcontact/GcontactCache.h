@@ -333,7 +333,7 @@ namespace googleQt {
             std::unique_ptr<BatchGroupList> m_updated_groups;
             friend class GcontactCacheRoutes;
         };
-
+        
         class GcontactCacheRoutes : public QObject
         {
             Q_OBJECT
@@ -343,7 +343,7 @@ namespace googleQt {
             contact_cache_ptr       cache() { return m_GContactsCache; }
 
             GcontactCacheQueryTask* synchronizeContacts_Async();
-            GoogleVoidTask* getContactCachePhoto_Async(ContactInfo::ptr c);
+            GoogleTask<QString>* getContactCachePhoto_Async(ContactInfo::ptr c);
 
 #ifdef API_QT_AUTOTEST
             void runAutotest();

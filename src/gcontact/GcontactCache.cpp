@@ -1097,12 +1097,14 @@ QString GContactCache::getPhotoMediaPath(ContactInfo::ptr c)const
     return "";
 };
 
-GoogleVoidTask* GcontactCacheRoutes::getContactCachePhoto_Async(ContactInfo::ptr c){
+GoogleTask<QString>* GcontactCacheRoutes::getContactCachePhoto_Async(ContactInfo::ptr c){
     QString filePath = m_GContactsCache->getPhotoMediaPath(c);
+    std::unique_ptr<QString> s(new QString(filePath));
+    GoogleTask<QString>* rv = m_endpoint.produceTask<QString>();
+    
     QFileInfo fi(filePath);
     if(fi.exists()){
-        GoogleVoidTask* rv = m_endpoint.produceVoidTask();
-        rv->completed_callback();
+        rv->completed_callback(std::move(s));
         return rv;
     }    
 
@@ -1111,20 +1113,39 @@ GoogleVoidTask* GcontactCacheRoutes::getContactCachePhoto_Async(ContactInfo::ptr
     QString path = fi.path();
     if(!d.exists(path)){
         if(!d.mkpath(path)){
-            GoogleVoidTask* rv = m_endpoint.produceVoidTask();
             QString errStr = QString("Failed to create directory '%1'").arg(path);
-            qWarning() << "Failed to create directory" << path;
+            qWarning() <<  errStr;
             std::unique_ptr<GoogleException> ex(new GoogleException(errStr.toStdString()));
             rv->failed_callback(std::move(ex));
             return rv;
         };
     }
     
-    QFile out;
-    out.setFileName(filePath);
-    
+    QFile* out = new QFile();
+    out->setFileName(filePath);
+    if (!out->open(QFile::WriteOnly | QIODevice::Truncate)) {
+        QString errStr = QString("Failed to open file '%1'").arg(path);
+        qWarning() << errStr;
+        std::unique_ptr<GoogleException> ex(new GoogleException(errStr.toStdString()));
+        rv->failed_callback(std::move(ex));
+        return rv;
+    }
+   
     DownloadPhotoArg arg(c->id());
-    return m_c_routes.getContacts()->getContactPhoto_Async(arg, &out);
+    auto t = m_c_routes.getContacts()->getContactPhoto_Async(arg, out);
+    t->then([=]() 
+            {
+                out->flush();
+                delete(out);
+                std::unique_ptr<QString> s2(new QString(filePath));
+                rv->completed_callback(std::move(s2));
+            },
+            [=](std::unique_ptr<GoogleException> ex) 
+            {
+                rv->failed_callback(std::move(ex));
+            });            
+    
+    return rv;
 };
 
 GcontactCacheRoutes::GcontactCacheRoutes(googleQt::Endpoint& endpoint, GcontactRoutes& r):m_endpoint(endpoint), m_c_routes(r)
