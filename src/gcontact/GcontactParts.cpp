@@ -526,3 +526,65 @@ void PostalAddressList::toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const
         }
     }
 };
+
+PhotoInfo PhotoInfo::parse(QDomNode n)
+{
+    QDomElement first_email_elem = n.firstChildElement("link");
+    QDomElement link_elem = first_email_elem;
+    while (!link_elem.isNull()) {
+        PhotoInfo photo_info;
+        photo_info.m_is_null = false;
+        bool is_photo_link = false;
+        QDomNamedNodeMap attr_names = link_elem.attributes();
+        if (attr_names.size() > 0) {
+            for (int j = 0; j < attr_names.size(); j++) {
+                QDomNode n2 = attr_names.item(j);
+                if (n2.nodeType() == QDomNode::AttributeNode) {
+                    if (n2.nodeName().compare("href") == 0) {
+                        photo_info.m_href = n2.nodeValue().trimmed();
+                    }
+                    else  if (n2.nodeName().compare("gd:etag") == 0) {
+                        photo_info.m_etag = n2.nodeValue().trimmed();
+                    }
+                    else if (n2.nodeName().compare("rel") == 0) {
+                        QStringList slist = n2.nodeValue().split("#");
+                        if (slist.size() == 2) {
+                            QString rel_param = slist[1];
+                            if (rel_param.compare("photo") == 0) {
+                                is_photo_link = true;
+                            }
+                        }
+                    }
+                }//AttributeNode
+            }
+        }
+
+        if (is_photo_link) {
+            return photo_info;
+        }
+
+        link_elem = link_elem.nextSiblingElement("link");
+    }
+    return PhotoInfo();
+};
+
+void PhotoInfo::setupFromLocalDb(QString photo_href, QString photo_etag, EStatus st) 
+{
+    m_href = photo_href;
+    m_etag = photo_etag;
+    m_status = st;
+};
+
+bool PhotoInfo::operator==(const PhotoInfo& o) const
+{
+    COMPARE_NO_CASE(m_href);
+    COMPARE_NO_CASE(m_etag);
+    if(m_status != o.m_status)
+        return false;
+    return true;
+};
+
+bool PhotoInfo::operator!=(const PhotoInfo& o) const
+{
+    return !(*this == o);
+};

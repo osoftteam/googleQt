@@ -79,7 +79,7 @@ namespace googleQt {
         /**
             PostalAddress - city, street etc.
         */
-        class PostalAddress : public MRecordDbPersistant
+        class PostalAddress : public NullablePart
         {
         public:
 
@@ -118,7 +118,7 @@ namespace googleQt {
         /**
             single phone details
         */
-        class PhoneInfo : public MRecordDbPersistant
+        class PhoneInfo : public NullablePart
         {
         public:
 
@@ -161,7 +161,7 @@ namespace googleQt {
         /**
         single email details
         */
-        class EmailInfo : public MRecordDbPersistant
+        class EmailInfo : public NullablePart
         {
         public:
             EmailInfo();
@@ -203,6 +203,36 @@ namespace googleQt {
         };
 
         /**
+        photo info
+        */
+        class PhotoInfo : public NullablePart
+        {
+        public:
+            enum EStatus
+                {
+                    not_resolved = 0,
+                    resolved = 1
+                };
+            static PhotoInfo parse(QDomNode n);
+
+            QString href()const { return m_href; }
+            QString etag()const { return m_etag; }
+            EStatus status()const{return m_status;}
+
+            bool operator==(const PhotoInfo&) const;
+            bool operator!=(const PhotoInfo&) const;
+            
+        protected:
+            void setupFromLocalDb(QString photo_href, QString photo_etag, EStatus st);
+
+        protected:
+            QString m_href;
+            QString m_etag;
+            EStatus m_status{not_resolved};
+            friend class ContactInfo;
+        };
+        
+        /**
         list of emails
         */
         class EmailInfoList : public PartList<EmailInfo>
@@ -242,6 +272,7 @@ namespace googleQt {
             void toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const;
         protected:
             friend class ContactInfo;
-        };        
+        };
+
     };
 };
