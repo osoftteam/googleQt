@@ -1361,9 +1361,8 @@ void GcontactCommands::resolve_cache_photo(QString contactid)
     auto t = r->getContactCachePhoto_Async(c);
     try
     {
-        t->waitForResultAndRelease();
-        QString img_path = cache->getPhotoMediaPath(c);
-        std::cout << "Photo File " << img_path << std::endl;
+        auto s = t->waitForResultAndRelease();
+        std::cout << "Photo File " << s.get() << std::endl;
     }
     catch (GoogleException& e)
     {

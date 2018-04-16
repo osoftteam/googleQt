@@ -1079,18 +1079,18 @@ QString GContactCache::getPhotoMediaPath(ContactInfo::ptr c)const
     if(!c){
         return "";
     }
-    
+
+    QString cache_dir = m_sql_storage->contactCacheDir();
+    cache_dir += "/contact-photos/";
+    cache_dir += m_endpoint.apiClient()->userId();
+    cache_dir += "/";
+    QString img_file = cache_dir + QString("%1.jpg").arg(c->id());
+    return img_file;
+            
     //    QString rv;
     //    const PhotoInfo& p = c->photo();
     //    if(p.status() == PhotoInfo::resolved && !p.etag().isEmpty())
         {
-            QString cache_dir = m_sql_storage->contactCacheDir();
-            cache_dir += "/contact-photos/";
-            cache_dir += m_endpoint.apiClient()->userId();
-            cache_dir += "/";
-            QString img_file = cache_dir + QString("%1.jpg").arg(c->id());
-            //qDebug() << "ykh-img-file" << img_file;
-            return img_file;
             //        cache_dir += QString("/%1.jpg").arg(c->id());
         }
     
