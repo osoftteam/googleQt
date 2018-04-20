@@ -8,120 +8,59 @@
 
 namespace googleQt{
 
-    template <class ARG_PARAM, class RESULT>
-    using TASK_MAP = std::map<ARG_PARAM, std::unique_ptr<GoogleTask<RESULT>>>;
     template <class RESULT>
-    using RESULT_LIST = std::list<RESULT>;
+    using RESULT_LIST = std::list<std::unique_ptr<RESULT>>;
 
-    template <class ARG_PARAM>
-    using REQUEST_LIST = std::list<ARG_PARAM>;
-
-    template <class ARG_PARAM, class RESULT>
-    class UserBatchResult
+    /**
+        base class for concurrent runners, see ConcurrentValueRunner, ConcurrentArgRunner
+    */
+    template <class ARG_PARAM, class ROUTER>
+    class ConcurrentBaseRunner : public EndpointRunnable
     {
     public:
-        void registerRequest(const ARG_PARAM& ap)
-        {
-            m_requests.push_back(ap);
-        };
-        void registerResult(const ARG_PARAM& ap, GoogleTask<RESULT>* t) 
-        {
-            ///result map becomes owner of Tasks via unique_ptr
-            m_results[ap] = std::unique_ptr<GoogleTask<RESULT>>(t);
-        };
-
-        RESULT_LIST<RESULT*> results()
-        {
-            RESULT_LIST<RESULT*> rv;
-            for (auto& i : m_results) 
-            {
-                GoogleTask<RESULT>* t = i.second.get();
-                if (t->isCompleted()) 
-                {
-                    rv.push_back(t->get());
-                }
-            }
-            return rv;
-        }
-
-    protected:
-        TASK_MAP<ARG_PARAM, RESULT> m_results;
-        REQUEST_LIST<ARG_PARAM> m_requests;
-    };
-
-
-    template <class ARG_PARAM, class ROUTER, class RESULT>
-    class UserBatchRunner: public EndpointRunnable
-    {
-    public:
-        UserBatchRunner(const std::list<ARG_PARAM>& arg_params, ROUTER* r, ApiEndpoint& ept)
-            :EndpointRunnable(ept)
+        ConcurrentBaseRunner(const std::list<ARG_PARAM>& arg_params, std::unique_ptr<ROUTER>&& r, ApiEndpoint& ept)
+            :EndpointRunnable(ept), m_router(std::move(r))
         {
             m_available_concurrent_routes_count = m_max_concurrent_routes_count;
             m_arg_parameters = arg_params;
-            m_router.reset(r);
-        }
-
-        void run()
-        {
-            if (!m_result)
-            {
-                m_result.reset(new UserBatchResult<ARG_PARAM, RESULT>);
-            }
-
-            m_steps2complete = static_cast<int>(m_arg_parameters.size());
-            while(m_arg_parameters.size() > 0 && 
-                m_available_concurrent_routes_count > 0)
-                {
-                    runSingleRequest();
-                }
-        }
-
-        RESULT_LIST<RESULT*> get() { return m_result->results(); }
-        std::unique_ptr<UserBatchResult<ARG_PARAM, RESULT> > waitForResultAndRelease()
-        {
-            std::unique_ptr<UserBatchResult<ARG_PARAM, RESULT> > res;
-
-            if (!isFinished()) 
-            {
-                m_in_wait_loop = true;
-                waitUntillFinishedOrCancelled();
-            }
-
-            res = std::move(m_result);
-
-            deleteLater();
-            return res;
         }
 
         bool isCompleted()const override { return m_completed; }
+        const std::list<ARG_PARAM>& completedArgList()const { return m_completed_arg_list; }
+
+        void run()
+        {
+            m_steps2complete = static_cast<int>(m_arg_parameters.size());
+            while (m_arg_parameters.size() > 0 &&
+                m_available_concurrent_routes_count > 0)
+            {
+                runSingleRequest();
+            }
+        }
 
     protected:
-        void runSingleRequest() 
+
+        void runSingleRequest()
         {
-            if(m_steps2complete <= 0)
-                {
-                    m_completed = true;
-                    notifyOnFinished();
-                }
-            
+            if (m_steps2complete <= 0)
+            {
+                m_completed = true;
+                notifyOnFinished();
+            }
+
             if (m_arg_parameters.empty())
-                {                
-                    return;
-                }
-            
+            {
+                return;
+            }
+
             ARG_PARAM ap = m_arg_parameters.front();
             m_arg_parameters.pop_front();
-            m_result->registerRequest(ap);
-            GoogleTask<RESULT>* t = m_router->routeSingleBatchRequest(ap);
             m_available_concurrent_routes_count--;
-            
-            connect(t, &GoogleTask<RESULT>::finished, this, [=]()
-            {
-                m_result->registerResult(ap, t);
-                afterSingleStepFinished();
-            });
+
+            runArg(ap);
         }
+
+        virtual void runArg(ARG_PARAM& ap) = 0;
 
         void afterSingleStepFinished()
         {
@@ -129,15 +68,104 @@ namespace googleQt{
             m_steps2complete--;
             runSingleRequest();
         }
-
     protected:
+        std::unique_ptr<ROUTER>         m_router{ nullptr };
         std::list<ARG_PARAM>            m_arg_parameters;
-        std::unique_ptr<ROUTER>         m_router        {nullptr};
-        std::unique_ptr<UserBatchResult<ARG_PARAM,RESULT> > m_result;
+        std::list<ARG_PARAM>            m_completed_arg_list;
         int  m_max_concurrent_routes_count{ 4 };
         int  m_available_concurrent_routes_count{ 0 };
         int  m_steps2complete{ 0 };
-        bool m_completed{false};
+        bool m_completed{ false };
     };
 
+    /*
+        The class has meaning close to Haskell 'map' - it will apply function routeRequest from ROUTER
+        to every argument from list and produce list of results. The selection and processing
+        requests happen concurrently with number of queries limited to 4 (no more then 4 queries at a time).
+        (a->r) -> [a] -> [r]
+
+        the execution of the list won't break in case of single request error but batch result will return only
+        results from completed tasks
+    */
+    template <class ARG_PARAM, class ROUTER, class RESULT>
+    class ConcurrentValueRunner : public ConcurrentBaseRunner<ARG_PARAM, ROUTER>
+    {
+    public:
+        ConcurrentValueRunner(const std::list<ARG_PARAM>& arg_params, std::unique_ptr<ROUTER>&& r, ApiEndpoint& ept)
+            :ConcurrentBaseRunner<ARG_PARAM, ROUTER>(arg_params, std::move(r), ept){}
+
+        RESULT_LIST<RESULT>&& detachResult() { return std::move(m_result_list); }
+
+        RESULT_LIST<RESULT>&& waitForResultAndRelease()
+        {
+            if (!EndpointRunnable::isFinished())
+            {
+                EndpointRunnable::m_in_wait_loop = true;
+                EndpointRunnable::waitUntillFinishedOrCancelled();
+            }
+            EndpointRunnable::disposeLater();
+            return std::move(m_result_list);
+        }        
+
+    protected:
+
+        void runArg(ARG_PARAM& ap)override 
+        {
+            GoogleTask<RESULT>* t = ConcurrentBaseRunner<ARG_PARAM, ROUTER>::m_router->routeRequest(ap);
+            EndpointRunnable::connect(t, &GoogleTask<RESULT>::finished, this, [=]()
+            {
+                if (t->isCompleted()) {
+                    m_result_list.emplace_back(t->detachResult());
+                    ConcurrentBaseRunner<ARG_PARAM, ROUTER>::m_completed_arg_list.push_back(ap);
+                }
+                ConcurrentBaseRunner<ARG_PARAM, ROUTER>::afterSingleStepFinished();
+                t->disposeLater();
+            });
+        }
+
+    protected:
+        RESULT_LIST<RESULT>             m_result_list;
+    };
+
+    /**
+        apply function routeRequest from ROUTER to every argument from arg list and produce list of completed args
+        similiar to ConcurrentValueRunner but for tasks that don't bring back data only indication of successfull completion
+        (a->()) -> [a] -> [a]
+
+        completedArgList can be used to get list of completed parameters (usualy id)
+    */
+    template <class ARG_PARAM, class ROUTER>
+    class ConcurrentArgRunner : public ConcurrentBaseRunner<ARG_PARAM, ROUTER>
+    {
+    public:
+        ConcurrentArgRunner(const std::list<ARG_PARAM>& arg_params, std::unique_ptr<ROUTER>&& r, ApiEndpoint& ept)
+            :ConcurrentBaseRunner<ARG_PARAM, ROUTER>(arg_params, std::move(r), ept) {}
+
+
+        RESULT_LIST<ARG_PARAM>&& waitForResultAndRelease()
+        {
+            if (!EndpointRunnable::isFinished())
+            {
+                EndpointRunnable::m_in_wait_loop = true;
+                EndpointRunnable::waitUntillFinishedOrCancelled();
+            }
+            EndpointRunnable::disposeLater();
+            return std::move(ConcurrentBaseRunner<ARG_PARAM, ROUTER>::m_completed_arg_list);
+        }
+
+    protected:
+
+        void runArg(ARG_PARAM& ap)override
+        {
+            GoogleVoidTask* t = ConcurrentBaseRunner<ARG_PARAM, ROUTER>::m_router->routeRequest(ap);
+            EndpointRunnable::connect(t, &GoogleVoidTask::finished, this, [=]()
+            {
+                if (t->isCompleted()) {
+                    ConcurrentBaseRunner<ARG_PARAM, ROUTER>::m_completed_arg_list.push_back(ap);
+                }
+                ConcurrentBaseRunner<ARG_PARAM, ROUTER>::afterSingleStepFinished();
+                t->disposeLater();
+            });
+        }
+    };//ConcurrentArgRunner
 };

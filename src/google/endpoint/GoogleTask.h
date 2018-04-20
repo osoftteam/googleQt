@@ -27,6 +27,10 @@ namespace googleQt{
         GoogleException* error();
         void failed_callback(std::unique_ptr<GoogleException> ex);
 
+        virtual void disposeLater();
+
+        void addFinishedDelegate(std::function<void()> finished_callback);
+        void addDisposeDelegate(std::function<void()> dispose_callback);
     signals:
         void finished();
 
@@ -39,6 +43,8 @@ namespace googleQt{
         bool m_finished{ false };
         mutable bool m_in_wait_loop{ false };
         std::unique_ptr<GoogleException> m_failed;
+        std::list<std::function<void()>> m_dispose_delegates;
+        std::list<std::function<void()>> m_finished_delegates;
     };
 
     /**
@@ -70,7 +76,7 @@ namespace googleQt{
         ///this function will block execution (via event loop) and return
         ///result object using move semantic via std::unique_ptr in case of success or 
         ///raise exception in case of error
-        ///also this function will schedule dispose of the Task via deleteLater
+        ///also this function will schedule dispose of the Task via disposeLater
         std::unique_ptr<RESULT> waitForResultAndRelease()
         {
             std::unique_ptr<RESULT> res;
@@ -88,18 +94,19 @@ namespace googleQt{
             {
                 std::unique_ptr<GoogleException> ex;
                 ex = std::move(m_failed);
-                deleteLater();
+                disposeLater();
                 if (ex)
                     ex->raise();
             }
-            deleteLater();
+            disposeLater();
             return res;
         };
 
         ///composition of async calls, after async call is finished the user function
         ///is called (if not nullptr) and then task object will be scheduled to autorelease
         void then(std::function<void(std::unique_ptr<RESULT>)> after_completed_processing = nullptr,
-            std::function<void(std::unique_ptr<GoogleException>)> on_error = nullptr)
+            std::function<void(std::unique_ptr<GoogleException>)> on_error = nullptr,
+            std::function<void()> on_dispose = nullptr)
         {
             std::function<void(void)> on_finished_processing = [=]() 
             {
@@ -113,8 +120,12 @@ namespace googleQt{
                         on_error(std::move(m_failed));
                     }
                 }
-                deleteLater();
+                disposeLater();
             };
+
+            if (on_dispose) {
+                addDisposeDelegate(on_dispose);
+            }
 
             if (isFinished()) {
                 on_finished_processing();
@@ -154,12 +165,13 @@ namespace googleQt{
 
         ///this function will block execution (via event loop) and return
         ///object in case os success or raise exception in case of error
-        ///also this function will schedule dispose of the Task via deleteLater
+        ///also this function will schedule dispose of the Task via disposeLater
         void waitForResultAndRelease();
         ///composition of async calls, after async call is finished the user function
         ///is called (if not nullptr) and then task object will be scheduled to autorelease
         void then(std::function<void()> after_completed_processing = nullptr,
-            std::function<void(std::unique_ptr<GoogleException>)> on_error = nullptr);
+            std::function<void(std::unique_ptr<GoogleException>)> on_error = nullptr,
+            std::function<void()> on_dispose = nullptr);
 
         void completed_callback(void)
         {
@@ -198,9 +210,10 @@ namespace googleQt{
 
         void waitForResultAndRelease();
         void then(std::function<void()> after_completed_processing = nullptr,
-            std::function<void(std::unique_ptr<GoogleException>)> on_error = nullptr);
+            std::function<void(std::unique_ptr<GoogleException>)> on_error = nullptr,
+            std::function<void()> on_dispose = nullptr);
 
-        void deleteLaterTask();
+        void disposeLater()override;
 
         void completed_callback(void)
         {

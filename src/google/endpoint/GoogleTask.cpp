@@ -6,6 +6,13 @@ using namespace googleQt;
 ///EndpointRunnable
 void EndpointRunnable::notifyOnFinished()
 {
+    if (m_finished_delegates.empty()) {
+        for (auto& d : m_finished_delegates) {
+            d();
+        }
+        m_finished_delegates.clear();
+    }
+
     m_finished = true;
     emit finished();
     if (m_in_wait_loop)
@@ -46,6 +53,27 @@ void EndpointRunnable::failed_callback(std::unique_ptr<GoogleException> ex)
     notifyOnFinished();
 };
 
+void EndpointRunnable::disposeLater() 
+{
+    if (m_dispose_delegates.empty()) {
+        for (auto& d : m_dispose_delegates) {
+            d();
+        }
+        m_dispose_delegates.clear();
+    }
+    deleteLater();
+};
+
+void EndpointRunnable::addDisposeDelegate(std::function<void()> dispose_callback)
+{
+    m_dispose_delegates.push_back(dispose_callback);
+};
+
+void EndpointRunnable::addFinishedDelegate(std::function<void()> finished_callback)
+{
+    m_finished_delegates.push_back(finished_callback);
+};
+
 /**
     GoogleVoidTask
 */
@@ -61,15 +89,16 @@ void GoogleVoidTask::waitForResultAndRelease()
     {
         std::unique_ptr<GoogleException> ex;
         ex = std::move(m_failed);
-        deleteLater();
+        disposeLater();
         if (ex)
             ex->raise();
     }
-    deleteLater();
+    disposeLater();
 };
 
 void GoogleVoidTask::then(std::function<void()> after_completed_processing, 
-    std::function<void(std::unique_ptr<GoogleException>)> on_error)
+    std::function<void(std::unique_ptr<GoogleException>)> on_error,
+    std::function<void()> on_dispose)
 {
     std::function<void(void)> on_finished_processing = [=]()
     {
@@ -83,9 +112,12 @@ void GoogleVoidTask::then(std::function<void()> after_completed_processing,
                 on_error(std::move(m_failed));
             }
         }
-        deleteLater();
+        disposeLater();
     };
 
+    if (on_dispose) {
+        addDisposeDelegate(on_dispose);
+    }
 
     if (isFinished()) {
         on_finished_processing();
@@ -129,13 +161,13 @@ bool TaskAggregator::areAllFinished()const
     return true;
 };
 
-void TaskAggregator::deleteLaterTask() 
+void TaskAggregator::disposeLater()
 {
     for (auto t : m_runnables) {
-        t->deleteLater();
+        t->disposeLater();
     }
 
-    deleteLater();
+    EndpointRunnable::disposeLater();
 };
 
 void TaskAggregator::waitForResultAndRelease()
@@ -163,7 +195,7 @@ void TaskAggregator::waitForResultAndRelease()
                 GoogleException* e = t->error();
                 if (e) {
                     ex.reset(e->clone());
-                    deleteLaterTask();
+                    disposeLater();
                     if (ex)
                         ex->raise();
                     break;
@@ -172,11 +204,12 @@ void TaskAggregator::waitForResultAndRelease()
         }
     }
 
-    deleteLaterTask();
+    disposeLater();
 }
 
 void TaskAggregator::then(std::function<void()> after_completed_processing /*= nullptr*/,
-    std::function<void(std::unique_ptr<GoogleException>)> on_error /*= nullptr*/) 
+    std::function<void(std::unique_ptr<GoogleException>)> on_error /*= nullptr*/,
+    std::function<void()> on_dispose /*= nullptr*/)
 {
     std::function<void(void)> on_finished_processing = [=]()
     {
@@ -199,9 +232,12 @@ void TaskAggregator::then(std::function<void()> after_completed_processing /*= n
                 on_error(std::move(m_failed));
             }
         }
-        deleteLaterTask();
+        disposeLater();
     };
 
+    if (on_dispose) {
+        addDisposeDelegate(on_dispose);
+    }
 
     if (areAllFinished()) {
         on_finished_processing();
