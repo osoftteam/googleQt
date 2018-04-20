@@ -6,7 +6,7 @@ using namespace googleQt;
 ///EndpointRunnable
 void EndpointRunnable::notifyOnFinished()
 {
-    if (m_finished_delegates.empty()) {
+    if (!m_finished_delegates.empty()) {
         for (auto& d : m_finished_delegates) {
             d();
         }
