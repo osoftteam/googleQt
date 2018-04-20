@@ -1324,17 +1324,17 @@ GoogleVoidTask* PhotoUploader::routeRequest(QString contact_id)
 }
 
 template <class PROCESSOR>
-GoogleVoidTask* GcontactCacheRoutes::transferPhotos_Async(const std::list<QString>& id_list, int& progress_status)
+GoogleVoidTask* GcontactCacheRoutes::transferPhotos_Async(const std::list<QString>& id_list, int& )
 {
     GoogleVoidTask* rv = m_endpoint.produceVoidTask();
     if (!id_list.empty()) {
         std::unique_ptr<PROCESSOR> pr(new PROCESSOR(m_c_routes));
         ConcurrentArgRunner<QString, PROCESSOR>* r = new ConcurrentArgRunner<QString, PROCESSOR>(id_list, std::move(pr), m_endpoint);
         r->run();
-        connect(r, &EndpointRunnable::finished, [&]()
+        connect(r, &EndpointRunnable::finished, [=]()
         {
             std::list<QString> completed_ids = r->completedArgList();
-            progress_status = completed_ids.size();
+            //progress_status = completed_ids.size();
             for (auto c_id : completed_ids) {
                 auto c = m_GContactsCache->contacts().findById(c_id);
                 if (c) {
@@ -1344,7 +1344,7 @@ GoogleVoidTask* GcontactCacheRoutes::transferPhotos_Async(const std::list<QStrin
                     qWarning() << "failed to locate contact by ID" << c_id;
                 }
             }
-
+            
             rv->completed_callback();
             r->disposeLater();
         });
