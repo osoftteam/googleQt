@@ -45,8 +45,9 @@ namespace googleQt
             bool hasCache()const;
 
 
-            std::unique_ptr<UserBatchResult<QString, messages::MessageResource>>   getUserBatchMessages(QString userId, EDataState, const std::list<QString>& id_list);
-            UserBatchRunner<QString, mail_cache::MessagesReceiver, messages::MessageResource>* getUserBatchMessages_Async(QString userId, EDataState, const std::list<QString>& id_list);
+            //std::unique_ptr<UserBatchResult<QString, messages::MessageResource>>   
+            RESULT_LIST<messages::MessageResource>&&    getUserBatchMessages(QString userId, EDataState, const std::list<QString>& id_list);
+            ConcurrentValueRunner<QString, mail_cache::MessagesReceiver, messages::MessageResource>* getUserBatchMessages_Async(QString userId, EDataState, const std::list<QString>& id_list);
             
             /// load emails by ID-list while updating local cache
             mail_cache::data_list_uptr getCacheMessages(QString userId, EDataState, const std::list<QString>& id_list);

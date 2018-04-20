@@ -423,7 +423,7 @@ namespace googleQt{
         {
         public:
             MessagesReceiver(GmailRoutes& r, QString userId, EDataState f);
-            GoogleTask<messages::MessageResource>* routeSingleBatchRequest(QString message_id);
+            GoogleTask<messages::MessageResource>* routeRequest(QString message_id);
         protected:
             GmailRoutes&    m_r;
             QString         m_userId;

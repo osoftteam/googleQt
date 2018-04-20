@@ -18,7 +18,7 @@ mail_cache::MessagesReceiver::MessagesReceiver(GmailRoutes& r, QString userId, E
 
 };
 
-GoogleTask<messages::MessageResource>* mail_cache::MessagesReceiver::routeSingleBatchRequest(QString message_id)
+GoogleTask<messages::MessageResource>* mail_cache::MessagesReceiver::routeRequest(QString message_id)
 {   
     gmail::IdArg arg(m_userId, message_id);
     if (m_msg_format == EDataState::snippet)
@@ -404,18 +404,18 @@ void mail_cache::GMailCacheQueryTask::fetchFromCloud_Async(const std::list<QStri
     if (id_list.empty())
         return;
     
-    UserBatchRunner<QString,
+    ConcurrentValueRunner<QString,
                     mail_cache::MessagesReceiver,
-                    messages::MessageResource>* par_runner = NULL;
+                    messages::MessageResource>* par_runner = nullptr;
 
     par_runner = m_r.getUserBatchMessages_Async(m_userId, m_completed->state, id_list);
     
     connect(par_runner, &EndpointRunnable::finished, [=]()
             {
-                RESULT_LIST<messages::MessageResource*> res = par_runner->get();
+                RESULT_LIST<messages::MessageResource>&& res = par_runner->detachResult();
                 for (auto& m : res)
                     {
-                        fetchMessage(m);
+                        fetchMessage(m.get());
                     }
                 std::set<QString> id_set;
                 for (std::list<QString>::const_iterator i = id_list.cbegin(); i != id_list.cend(); i++)
@@ -423,7 +423,7 @@ void mail_cache::GMailCacheQueryTask::fetchFromCloud_Async(const std::list<QStri
                         id_set.insert(*i);
                     }
                 notifyFetchCompleted(m_completed->result_map, id_set);
-                par_runner->deleteLater();
+                par_runner->disposeLater();
             }); 
 };
 

@@ -21,8 +21,7 @@ mail_cache::GmailCacheRoutes::GmailCacheRoutes(Endpoint& endpoint,
     m_GMailCache.reset(new mail_cache::GMailCache(endpoint));
 };
 
-std::unique_ptr<UserBatchResult<QString, 
-                                messages::MessageResource>> mail_cache::GmailCacheRoutes::getUserBatchMessages(QString userId,
+RESULT_LIST<messages::MessageResource>&& mail_cache::GmailCacheRoutes::getUserBatchMessages(QString userId,
                                                                                                    EDataState f,
                                                                                                    const std::list<QString>& id_list)
 {
@@ -56,19 +55,19 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::newResultFetcher(
 };
 
 
-UserBatchRunner<QString,
+ConcurrentValueRunner<QString,
                 mail_cache::MessagesReceiver,
                 messages::MessageResource>* mail_cache::GmailCacheRoutes::getUserBatchMessages_Async(QString userId,
                                                                                          EDataState f, 
                                                                                          const std::list<QString>& id_list)
 {
-    mail_cache::MessagesReceiver* mr = new mail_cache::MessagesReceiver(m_gmail_routes, userId, f);
+    std::unique_ptr<mail_cache::MessagesReceiver> mr(new mail_cache::MessagesReceiver(m_gmail_routes, userId, f));
     
-    UserBatchRunner<QString,
+    ConcurrentValueRunner<QString,
                     mail_cache::MessagesReceiver,
-                    messages::MessageResource>* r = new UserBatchRunner<QString,
+                    messages::MessageResource>* r = new ConcurrentValueRunner<QString,
                                                                         mail_cache::MessagesReceiver,
-                                                                        messages::MessageResource>(id_list, mr, m_endpoint);
+                                                                        messages::MessageResource>(id_list, std::move(mr), m_endpoint);
     r->run();
     return r;
 };
