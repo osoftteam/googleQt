@@ -1350,7 +1350,7 @@ void GcontactCommands::resolve_cache_photo(QString contactid)
         return;
     }
 
-    auto r = m_gt->cacheRoutes();    
+    auto r = m_gt->cacheRoutes(); 
     auto cache = r->cache();
     auto c = cache->contacts().findById(contactid);
     if(!c){
@@ -1370,6 +1370,75 @@ void GcontactCommands::resolve_cache_photo(QString contactid)
     } 
 };
 
+void GcontactCommands::sync_cache_photos()
+{
+    
+    auto r = m_gt->cacheRoutes(); 
+    auto cache = r->cache();
+    std::list<QString> lst_unresolved = cache->contacts().buildUnresolvedPhotoIdList();
+    std::cout << "===unresolved photos===" << std::endl;
+    for(auto s : lst_unresolved){
+        std::cout << s << std::endl;
+    }
+
+    std::list<QString> lst_modified = cache->contacts().buildModifiedPhotoIdList();
+    std::cout << "===modified photos===" << std::endl;
+    for(auto s : lst_modified){
+        std::cout << s << std::endl;
+    }
+    
+    std::cout << "=============" << std::endl;
+    
+    auto t = m_gt->cacheRoutes()->synchronizePhotos_Async();
+    try
+    {
+        t->waitForResultAndRelease();
+        auto& r = m_gt->cacheRoutes()->lastPhotoSyncInfo();
+        std::cout << "Photos synchronized downloaded=" << r.downloaded_photos << " uploaded=" << r.uploaded_photos << std::endl;
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
+void GcontactCommands::add_cache_photo(QString id_space_file_name)
+{
+    QStringList arg_list = id_space_file_name.split(" ",
+        QString::SkipEmptyParts);
+
+    if (arg_list.size() < 2)
+    {
+        std::cout << "Invalid parameters, expected <contactId> <File-Name>" << std::endl;
+        return;
+    }
+
+    QString contactId = arg_list[0];
+    QString file_name = arg_list[1];
+    QString full_file_name = "photo-templates/" + file_name;
+
+    auto r = m_gt->cacheRoutes();
+    auto cache = r->cache();
+    auto c = cache->contacts().findById(contactId);
+    if (!c) {
+        std::cout << "contact not found " << contactId << std::endl;
+        return;
+    }
+
+    if (!QFile::exists(full_file_name)) {
+        std::cout << "File not found " << full_file_name << std::endl;
+        return;
+    }
+
+    if (cache->addPhoto(c, full_file_name)) {
+        std::cout << "photo added " << full_file_name << std::endl;        
+    }
+    else {
+        std::cout << "failed to add photo " << full_file_name << std::endl;
+    } 
+
+    cache->storeContactsToDb();
+};
 
 void GcontactCommands::sync_contacts()
 {

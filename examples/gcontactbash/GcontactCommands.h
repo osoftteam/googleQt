@@ -180,6 +180,17 @@ public:
     void sync_contacts();
     
     /**
+    * sync_cache_photos - synchronize photos
+    */
+    void sync_cache_photos();
+
+    /**
+    * add_cache_photo - add photos
+    */
+    void add_cache_photo(QString id_space_file_name);
+
+
+    /**
     * ls_as_json - list contacts using json
     */
     void ls_as_json();

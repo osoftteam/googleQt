@@ -111,6 +111,8 @@ int main(int argc, char *argv[])
     t.addAction("cache_delete", "delete contact locally", [&](QString arg) {cmd.cache_delete(arg); });
     t.addAction("sync_contacts", "sync contacts cache", [&](QString) {cmd.sync_contacts(); });
     t.addAction("resolve_cache_photo", "resolve cache photo", [&](QString arg) {cmd.resolve_cache_photo(arg); });    
+    t.addAction("sync_cache_photos", "sync photos with cache", [&](QString) {cmd.sync_cache_photos(); });
+    t.addAction("add_cache_photo", "add(replace) contact photo", [&](QString arg) {cmd.add_cache_photo(arg); });
     t.addSeparator();
     
     t.addAction("ls_as_json",       "List Contacts as json", [&](QString ) {cmd.ls_as_json(); });
