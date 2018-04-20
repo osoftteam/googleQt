@@ -2,6 +2,8 @@
 #include <QDebug>
 #include <ctime>
 #include <QDir>
+#include <QImageReader>
+#include <QImageWriter>
 #include <ostream>
 
 #include "GcontactCache.h"
@@ -326,9 +328,9 @@ bool ContactInfo::setFromDbRecord(QSqlQuery* q)
     QString photo_href = q->value(13).toString();
     QString photo_etag = q->value(14).toString();
     int st_tmp = q->value(15).toInt();
-    if(st_tmp < 0 || st_tmp > 1){
-        st_tmp = 0;
+    if(st_tmp < 0 || st_tmp > 2){
         qWarning() << "Invalid DB value for photo status" << st_tmp;
+        st_tmp = 0;
     }
     PhotoInfo::EStatus st = static_cast<PhotoInfo::EStatus>(st_tmp);
     
@@ -357,6 +359,29 @@ std::unique_ptr<BatchRequestContactInfo> ContactInfo::buildBatchRequest(googleQt
     rv->setBatchid(batch_id);
     return rv;
 };
+
+void ContactInfo::markPhotoAsResolved() 
+{
+    m_photo.m_status = PhotoInfo::resolved;
+    setDirty();
+};
+
+void ContactInfo::markPhotoAsModified() 
+{
+    m_photo.m_status = PhotoInfo::modified;
+    setDirty();
+};
+
+bool ContactInfo::isPhotoResolved()const 
+{ 
+    return (m_photo.m_status == PhotoInfo::resolved); 
+};
+
+bool ContactInfo::isPhotoModified()const 
+{ 
+    return (m_photo.m_status == PhotoInfo::modified); 
+};
+
 
 /**
     GroupInfo
@@ -1074,57 +1099,107 @@ bool GContactCache::loadContactConfigFromDb()
 };
 
 
-QString GContactCache::getPhotoMediaPath(ContactInfo::ptr c)const
+QString GContactCache::getPhotoMediaPath(QString contactId, bool ensurePath)const
 {
-    if(!c){
-        return "";
-    }
-
     QString cache_dir = m_sql_storage->contactCacheDir();
     cache_dir += "/contact-photos/";
     cache_dir += m_endpoint.apiClient()->userId();
     cache_dir += "/";
-    QString img_file = cache_dir + QString("%1.jpg").arg(c->id());
+    QString img_file = cache_dir + QString("%1.jpg").arg(contactId);
+
+    if (ensurePath) {
+        QFileInfo fi(img_file);
+        if (fi.exists()) {
+            return img_file;
+        }
+
+        QDir d;
+
+        QString path = fi.path();
+        if (!d.exists(path)) {
+            if (!d.mkpath(path)) {
+                QString errStr = QString("Failed to create directory '%1'").arg(path);
+                qWarning() << errStr;
+                return "";
+            };
+        }
+    }
+
     return img_file;
             
     //    QString rv;
     //    const PhotoInfo& p = c->photo();
     //    if(p.status() == PhotoInfo::resolved && !p.etag().isEmpty())
-        {
+  //      {
             //        cache_dir += QString("/%1.jpg").arg(c->id());
-        }
+        //}
     
     return "";
 };
 
-GoogleTask<QString>* GcontactCacheRoutes::getContactCachePhoto_Async(ContactInfo::ptr c){
-    QString filePath = m_GContactsCache->getPhotoMediaPath(c);
-    std::unique_ptr<QString> s(new QString(filePath));
+bool GContactCache::addPhoto(ContactInfo::ptr c, QString photoFileName)
+{
+    if (!QFile::exists(photoFileName)) {
+        qWarning() << "Photo file not found " << photoFileName;
+        return false;
+    }
+
+    QString targetPath = getPhotoMediaPath(c->id(), true);
+    if (QFile::exists(targetPath)) {
+        if (!QFile::remove(targetPath)) {
+            qWarning() << "Failed to remove cache photo file " << photoFileName;
+            return false;
+        }
+    }
+
+    QImageReader reader;
+    reader.setFileName(photoFileName);
+    QImage image = reader.read();
+    if (image.isNull()) {
+        qWarning() << "Failed to read cache photo file " << photoFileName;
+        return false;
+    }
+
+    QImageWriter writer;
+    writer.setFormat("jpg");
+    writer.setFileName(targetPath);
+    if (!writer.write(image)) {
+        qWarning() << "Failed to store cache photo file " << targetPath;
+        return false;
+    }
+    /*
+    if (!QFile::copy(photoFileName, targetPath)) {
+        qWarning() << "Failed to copy photo file " << photoFileName << " to " << targetPath;
+        return false;
+    }*/
+
+    c->markPhotoAsModified();
+    return true;
+};
+
+
+GoogleTask<QString>* GcontactCacheRoutes::getContactCachePhoto_Async(ContactInfo::ptr c)
+{
     GoogleTask<QString>* rv = m_endpoint.produceTask<QString>();
-    
+    QString filePath = m_GContactsCache->getPhotoMediaPath(c->id(), true);
+    if (filePath.isEmpty()) {
+        QString errStr = QString("Failed to ensure photo path '%1'").arg(c->id());
+        std::unique_ptr<GoogleException> ex(new GoogleException(errStr.toStdString()));
+        rv->failed_callback(std::move(ex));
+        return rv;
+    }
+
     QFileInfo fi(filePath);
-    if(fi.exists()){
+    if (fi.exists()) {
+        std::unique_ptr<QString> s(new QString(filePath));
         rv->completed_callback(std::move(s));
         return rv;
     }    
-
-    QDir d;
-    
-    QString path = fi.path();
-    if(!d.exists(path)){
-        if(!d.mkpath(path)){
-            QString errStr = QString("Failed to create directory '%1'").arg(path);
-            qWarning() <<  errStr;
-            std::unique_ptr<GoogleException> ex(new GoogleException(errStr.toStdString()));
-            rv->failed_callback(std::move(ex));
-            return rv;
-        };
-    }
-    
+            
     QFile* out = new QFile();
     out->setFileName(filePath);
     if (!out->open(QFile::WriteOnly | QIODevice::Truncate)) {
-        QString errStr = QString("Failed to open file '%1'").arg(path);
+        QString errStr = QString("Failed to open file '%1'").arg(filePath);
         qWarning() << errStr;
         std::unique_ptr<GoogleException> ex(new GoogleException(errStr.toStdString()));
         rv->failed_callback(std::move(ex));
@@ -1135,17 +1210,199 @@ GoogleTask<QString>* GcontactCacheRoutes::getContactCachePhoto_Async(ContactInfo
     auto t = m_c_routes.getContacts()->getContactPhoto_Async(arg, out);
     t->then([=]() 
             {
-                out->flush();
-                delete(out);
                 std::unique_ptr<QString> s2(new QString(filePath));
                 rv->completed_callback(std::move(s2));
             },
             [=](std::unique_ptr<GoogleException> ex) 
             {
                 rv->failed_callback(std::move(ex));
-            });            
+            }, 
+            [=]() 
+            {
+                out->flush();
+                delete(out);
+            });
     
     return rv;
+};
+
+/**
+    PhotoReceiver
+*/
+namespace googleQt {
+    namespace gcontact {
+        class PhotoReceiver
+        {
+        public:
+            PhotoReceiver(GcontactRoutes& r) :m_r(r) {};
+            GoogleVoidTask* routeRequest(QString contact_id);
+        protected:
+            GcontactRoutes&     m_r;
+        };
+    }
+}
+
+GoogleVoidTask* PhotoReceiver::routeRequest(QString contact_id)
+{
+    auto cache = m_r.cacheRoutes()->cache();
+    QString filePath = cache->getPhotoMediaPath(contact_id, true);
+    if (filePath.isEmpty()) {
+        GoogleVoidTask* t = m_r.endpoint()->produceVoidTask();
+        QString errStr = QString("Failed to ensure photo path '%1'").arg(contact_id);
+        std::unique_ptr<GoogleException> ex(new GoogleException(errStr.toStdString()));
+        t->failed_callback(std::move(ex));
+        return t;
+    }
+
+    QFile* out = new QFile();
+    out->setFileName(filePath);
+    if (!out->open(QFile::WriteOnly | QIODevice::Truncate)) {
+        GoogleVoidTask* t = m_r.endpoint()->produceVoidTask();
+        QString errStr = QString("Failed to open file '%1'").arg(filePath);
+        qWarning() << errStr;
+        std::unique_ptr<GoogleException> ex(new GoogleException(errStr.toStdString()));
+        t->failed_callback(std::move(ex));
+        return t;
+    }
+
+    DownloadPhotoArg arg(contact_id);
+    GoogleVoidTask* t = m_r.getContacts()->getContactPhoto_Async(arg, out);
+    t->addFinishedDelegate([out]()
+    {
+        out->flush();
+        delete(out);
+    });
+    return t;
+};
+
+/**
+    PhotoUploader
+*/
+namespace googleQt {
+    namespace gcontact {
+        class PhotoUploader
+        {
+        public:
+            PhotoUploader(GcontactRoutes& r) :m_r(r) {};
+            GoogleVoidTask* routeRequest(QString contact_id);
+        protected:
+            GcontactRoutes&     m_r;
+        };
+    }
+}
+
+GoogleVoidTask* PhotoUploader::routeRequest(QString contact_id)
+{
+    auto cache = m_r.cacheRoutes()->cache();
+    QString filePath = cache->getPhotoMediaPath(contact_id, true);
+    if (filePath.isEmpty()) {
+        GoogleVoidTask* t = m_r.endpoint()->produceVoidTask();
+        QString errStr = QString("Failed to ensure photo path '%1'").arg(contact_id);
+        std::unique_ptr<GoogleException> ex(new GoogleException(errStr.toStdString()));
+        t->failed_callback(std::move(ex));
+        return t;
+    }
+
+    QFile* in = new QFile();
+    in->setFileName(filePath);
+    if (!in->open(QFile::ReadOnly)) {
+        GoogleVoidTask* t = m_r.endpoint()->produceVoidTask();
+        QString errStr = QString("Failed to open file '%1'").arg(filePath);
+        qWarning() << errStr;
+        std::unique_ptr<GoogleException> ex(new GoogleException(errStr.toStdString()));
+        t->failed_callback(std::move(ex));
+        return t;
+    }
+
+    UploadPhotoArg arg(contact_id);
+    GoogleVoidTask* t = m_r.getContacts()->uploadContactPhoto_Async(arg, in);
+    t->addFinishedDelegate([in]()
+    {
+        delete(in);
+    });
+    return t;
+}
+
+template <class PROCESSOR>
+GoogleVoidTask* GcontactCacheRoutes::transferPhotos_Async(const std::list<QString>& id_list, int& progress_status)
+{
+    GoogleVoidTask* rv = m_endpoint.produceVoidTask();
+    if (!id_list.empty()) {
+        std::unique_ptr<PROCESSOR> pr(new PROCESSOR(m_c_routes));
+        ConcurrentArgRunner<QString, PROCESSOR>* r = new ConcurrentArgRunner<QString, PROCESSOR>(id_list, std::move(pr), m_endpoint);
+        r->run();
+        connect(r, &EndpointRunnable::finished, [&]()
+        {
+            std::list<QString> completed_ids = r->completedArgList();
+            progress_status = completed_ids.size();
+            for (auto c_id : completed_ids) {
+                auto c = m_GContactsCache->contacts().findById(c_id);
+                if (c) {
+                    c->markPhotoAsResolved();
+                }
+                else {
+                    qWarning() << "failed to locate contact by ID" << c_id;
+                }
+            }
+
+            rv->completed_callback();
+            r->disposeLater();
+        });
+    }
+    else {
+        rv->completed_callback();
+    }
+
+    return rv;
+};
+
+
+GoogleVoidTask* GcontactCacheRoutes::downloadPhotos_Async()
+{
+    std::list<QString> id_list = m_GContactsCache->contacts().buildUnresolvedPhotoIdList();
+    return transferPhotos_Async<gcontact::PhotoReceiver>(id_list, m_last_photo_sync_info.downloaded_photos);
+};
+
+GoogleVoidTask* GcontactCacheRoutes::uploadPhotos_Async() 
+{
+    std::list<QString> id_list = m_GContactsCache->contacts().buildModifiedPhotoIdList();
+    return transferPhotos_Async<gcontact::PhotoUploader>(id_list, m_last_photo_sync_info.uploaded_photos);
+};
+
+GoogleVoidTask* GcontactCacheRoutes::synchronizePhotos_Async() 
+{
+    m_last_photo_sync_info.downloaded_photos = m_last_photo_sync_info.uploaded_photos = 0;
+    m_last_photo_sync_info.exception = "";
+
+    GoogleVoidTask* t = m_endpoint.produceVoidTask();
+
+    GoogleVoidTask* t1 = downloadPhotos_Async();
+    t1->then([=]() {
+        GoogleVoidTask* t2 = uploadPhotos_Async();
+        t2->then([=]() 
+        {
+            t->completed_callback();
+        },
+            [=](std::unique_ptr<GoogleException> ex)
+        {
+            m_last_photo_sync_info.exception = ex->what();
+            t->failed_callback(std::move(ex));
+        }, [=]() 
+        {
+            t2->disposeLater();
+        });
+    }, 
+        [=](std::unique_ptr<GoogleException> ex) 
+    {
+        m_last_photo_sync_info.exception = ex->what();
+        t->failed_callback(std::move(ex));
+    },
+        [=]() 
+    {
+        t1->disposeLater();
+    });
+
+    return t;
 };
 
 GcontactCacheRoutes::GcontactCacheRoutes(googleQt::Endpoint& endpoint, GcontactRoutes& r):m_endpoint(endpoint), m_c_routes(r)
@@ -1153,9 +1410,9 @@ GcontactCacheRoutes::GcontactCacheRoutes(googleQt::Endpoint& endpoint, GcontactR
     m_GContactsCache.reset(new GContactCache(endpoint));
 };
 
-GcontactCacheQueryTask* GcontactCacheRoutes::synchronizeContacts_Async()
+GcontactCacheSyncTask* GcontactCacheRoutes::synchronizeContacts_Async()
 {
-    GcontactCacheQueryTask* rv = new GcontactCacheQueryTask(m_endpoint, m_GContactsCache);
+    GcontactCacheSyncTask* rv = new GcontactCacheSyncTask(m_endpoint, m_GContactsCache);
 
     if (!m_GContactsCache->m_sql_storage) {
         std::unique_ptr<GoogleException> ex(new GoogleException("Local cache DB is not setup. Call setupCache first"));
@@ -1184,7 +1441,7 @@ GcontactCacheQueryTask* GcontactCacheRoutes::synchronizeContacts_Async()
     return rv;
 };
 
-void GcontactCacheRoutes::reloadCache_Async(GcontactCacheQueryTask* rv, QDateTime dtUpdatedMin)
+void GcontactCacheRoutes::reloadCache_Async(GcontactCacheSyncTask* rv, QDateTime dtUpdatedMin)
 {
     ContactListArg entries_arg;
     entries_arg.setOrderby("lastmodified");
@@ -1226,7 +1483,7 @@ void GcontactCacheRoutes::reloadCache_Async(GcontactCacheQueryTask* rv, QDateTim
     });
 };
 
-void GcontactCacheRoutes::applyLocalCacheModifications_Async(GcontactCacheQueryTask* rv) 
+void GcontactCacheRoutes::applyLocalCacheModifications_Async(GcontactCacheSyncTask* rv)
 {
     BatchRequesContactList bc = m_GContactsCache->contacts().buildBatchRequestList();
     BatchRequesGroupList bg = m_GContactsCache->groups().buildBatchRequestList();
@@ -1396,6 +1653,39 @@ std::shared_ptr<ContactInfo> ContactList::findNewCreatedContact(std::shared_ptr<
     std::shared_ptr<ContactInfo> rv;
     return rv;
 };
+
+
+std::list<QString> ContactList::buildUnresolvedPhotoIdList()
+{
+    std::list<QString> lst;
+    for (auto& c : items()) {
+        if (!c->id().isEmpty() && 
+            !c->photo().etag().isEmpty() &&
+            c->photo().status() == PhotoInfo::not_resolved) 
+        {
+            lst.push_back(c->id());
+        }
+    }
+
+    return lst;
+};
+
+std::list<QString> ContactList::buildModifiedPhotoIdList()
+{
+    std::list<QString> lst;
+    for (auto& c : items()) {
+        if (!c->id().isEmpty() &&
+            //!c->photo().etag().isEmpty() &&
+            c->photo().status() == PhotoInfo::modified)
+        {
+            lst.push_back(c->id());
+        }
+    }
+
+    return lst;
+};
+
+
 
 
 #ifdef API_QT_AUTOTEST

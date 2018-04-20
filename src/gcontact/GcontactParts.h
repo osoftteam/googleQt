@@ -211,7 +211,8 @@ namespace googleQt {
             enum EStatus
                 {
                     not_resolved = 0,
-                    resolved = 1
+                    resolved = 1,
+                    modified
                 };
             static PhotoInfo parse(QDomNode n);
 

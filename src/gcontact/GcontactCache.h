@@ -109,6 +109,11 @@ namespace googleQt {
 
             std::unique_ptr<BatchRequestContactInfo> buildBatchRequest(googleQt::EBatchId batch_id);
 
+            void markPhotoAsResolved();
+            void markPhotoAsModified();
+            bool isPhotoResolved()const;
+            bool isPhotoModified()const;
+
 #ifdef API_QT_AUTOTEST
             static std::unique_ptr<ContactInfo> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
@@ -214,8 +219,11 @@ namespace googleQt {
         public:
             /// this is special case of 'limbo' contact - we created it locally, it has DBID, we sent requiest
             /// to server and server assigned cloudID - we have to link cloudID to the contact and update local cache
-            std::shared_ptr<ContactInfo> findNewCreatedContact(std::shared_ptr<BatchResultContactInfo> b);
+            ContactInfo::ptr findNewCreatedContact(std::shared_ptr<BatchResultContactInfo> b);
             
+            std::list<QString> buildUnresolvedPhotoIdList();
+            std::list<QString> buildModifiedPhotoIdList();
+
             class factory {
             public:
                 static std::unique_ptr<ContactList>  create(const QByteArray& data);
@@ -290,9 +298,10 @@ namespace googleQt {
             bool clearDbCache();
 
             bool mergeServerModifications(GroupList& server_glist, ContactList& server_clist);
-            QString getPhotoMediaPath(ContactInfo::ptr c)const;
-            
-            
+            QString getPhotoMediaPath(QString contactId, bool ensurePath = false)const;
+            bool addPhoto(ContactInfo::ptr c, QString photoFileName);
+
+
         protected:
             bool ensureContactTables();
             bool storeContactGroups();
@@ -316,7 +325,7 @@ namespace googleQt {
             friend class GcontactCacheRoutes;
         };
 
-        class GcontactCacheQueryTask : public GoogleVoidTask 
+        class GcontactCacheSyncTask : public GoogleVoidTask 
         {
         public:
             contact_cache_ptr       cache() { return m_cache; }
@@ -325,7 +334,7 @@ namespace googleQt {
             const BatchContactList* updatedContacts()const{return m_updated_contacts.get();}
             const BatchGroupList*   updatedGroups()const{return m_updated_groups.get();}            
         protected:
-            GcontactCacheQueryTask(ApiEndpoint& ept, contact_cache_ptr c) :GoogleVoidTask(ept), m_cache(c) {}        
+            GcontactCacheSyncTask(ApiEndpoint& ept, contact_cache_ptr c) :GoogleVoidTask(ept), m_cache(c) {}
             contact_cache_ptr m_cache;
             std::unique_ptr<ContactList> m_loaded_contacts;
             std::unique_ptr<GroupList> m_loaded_groups;
@@ -338,25 +347,42 @@ namespace googleQt {
         {
             Q_OBJECT
         public:
+            struct PhotoSyncInfo 
+            {
+                int downloaded_photos{0};
+                int uploaded_photos{0};
+                QString exception;
+            };
+
             GcontactCacheRoutes(googleQt::Endpoint& endpoint, GcontactRoutes& gcontact_routes);
 
             contact_cache_ptr       cache() { return m_GContactsCache; }
 
-            GcontactCacheQueryTask* synchronizeContacts_Async();
-            GoogleTask<QString>* getContactCachePhoto_Async(ContactInfo::ptr c);
+            GcontactCacheSyncTask*  synchronizeContacts_Async();
+            GoogleVoidTask*         synchronizePhotos_Async();
+            const PhotoSyncInfo&    lastPhotoSyncInfo()const { return m_last_photo_sync_info; }
+
+            GoogleTask<QString>*    getContactCachePhoto_Async(ContactInfo::ptr c);
 
 #ifdef API_QT_AUTOTEST
             void runAutotest();
 #endif
         protected:
-            void reloadCache_Async(GcontactCacheQueryTask* rv, QDateTime dtUpdatedMin);
-            void applyLocalCacheModifications_Async(GcontactCacheQueryTask* rv);
-
+            void reloadCache_Async(GcontactCacheSyncTask* rv, QDateTime dtUpdatedMin);
+            void applyLocalCacheModifications_Async(GcontactCacheSyncTask* rv);
+            GoogleVoidTask*         downloadPhotos_Async();
+            GoogleVoidTask*         uploadPhotos_Async();
         protected:
             Endpoint&           m_endpoint;
             GcontactRoutes&     m_c_routes;
             contact_cache_ptr   m_GContactsCache;
+            PhotoSyncInfo       m_last_photo_sync_info;
+
+        private:
+            template <class PROCESSOR>
+            GoogleVoidTask*         transferPhotos_Async(const std::list<QString>& id_list, int& progress_status);
         };
+
     };//gcontact
 };
 
