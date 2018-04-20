@@ -1,5 +1,5 @@
 QT       += network xml sql
-QT       -= gui
+QT       += gui
 CONFIG += staticlib
 CONFIG -= flat
 TEMPLATE = lib
