@@ -81,7 +81,7 @@ namespace googleQt {
             bool isIdLimbo()const { return (m_status == localIdLimbo); }
             bool isCreatedLocally()const { return m_id.isEmpty(); }
 
-            QString  originalXml()const { return m_original_xml_string; }
+            QString  parsedXml()const { return m_parsed_xml; }
 
             bool parseXml(const QByteArray & data);
             bool parseXml(const QString & xml);
@@ -109,7 +109,8 @@ namespace googleQt {
 
             QString             m_etag, m_id, m_title, m_content;
             QDateTime           m_updated;
-            QString             m_original_xml_string;
+            //            QString             m_original_xml_string;
+            QString             m_parsed_xml;
             EStatus             m_status;
             mutable void*       m_user_ptr{ nullptr };            
         };//ContactXmlPersistant
@@ -146,10 +147,9 @@ namespace googleQt {
                 return !(*this == o);
             };
 
-            size_t size()const { return m_parts.size(); }
-            const P& operator[](size_t idx)const { return m_parts[idx]; }
-            P* partAt(size_t idx) { if (idx < 0 || idx >= m_parts.size()) return nullptr; return &m_parts[idx]; }
-
+            const std::vector<P>& items()const{return m_parts;}
+            std::vector<P>& items(){return m_parts;}            
+            
             int findPrimary()const
             {
                 int idx = 0;

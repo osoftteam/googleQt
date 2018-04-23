@@ -232,6 +232,34 @@ namespace googleQt {
             EStatus m_status{not_resolved};
             friend class ContactInfo;
         };
+
+        /**
+           link against contact groups
+         */
+        class GroupMembershipInfo : public NullablePart
+        {
+        public:
+            GroupMembershipInfo();
+
+            QString userId()const { return m_userId; }
+            GroupMembershipInfo& setUserId(QString uId) { m_userId = uId; return *this; }
+
+            QString groupId()const{return m_groupId;}
+            GroupMembershipInfo& setGroupId(QString gId){m_groupId = gId;return *this;}
+
+            bool isDeleted()const{return m_is_deleted;}
+            GroupMembershipInfo& setDeleted(bool val){m_is_deleted = val;return *this;}
+
+            bool operator==(const GroupMembershipInfo&) const;
+            bool operator!=(const GroupMembershipInfo&) const;
+
+            QString toString()const;
+        protected:
+            QString m_userId;
+            QString m_groupId;
+            bool    m_is_deleted{false};
+            friend class GroupMembershipInfoList;
+        };
         
         /**
         list of emails
@@ -271,6 +299,21 @@ namespace googleQt {
             static PostalAddressList parse(QDomNode n);
             QString toXmlString()const;
             void toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const;
+        protected:
+            friend class ContactInfo;
+        };
+
+
+        /**
+        list of group links
+        */
+        class GroupMembershipInfoList : public PartList<GroupMembershipInfo>
+        {
+        public:
+            static GroupMembershipInfoList parse(QDomNode n);
+            QString toXmlString()const;
+            void toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const;
+
         protected:
             friend class ContactInfo;
         };

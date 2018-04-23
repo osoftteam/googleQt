@@ -256,7 +256,7 @@ void ContactXmlPersistant::assignContent(const ContactXmlPersistant& src)
     m_title = src.m_title;        
     m_content = src.m_content;
     m_updated = src.m_updated;
-    m_original_xml_string = src.m_original_xml_string;
+    m_parsed_xml = src.m_parsed_xml;
     m_status = src.m_status;
     markAsModified();
 };

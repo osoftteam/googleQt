@@ -588,3 +588,116 @@ bool PhotoInfo::operator!=(const PhotoInfo& o) const
 {
     return !(*this == o);
 };
+
+
+/**
+   GroupMembershipInfo
+*/
+GroupMembershipInfo::GroupMembershipInfo() 
+{
+};
+
+bool GroupMembershipInfo::operator==(const GroupMembershipInfo& o) const
+{
+    COMPARE_NO_CASE(m_groupId);
+    COMPARE_NO_CASE(m_userId);
+    if(m_is_deleted != o.m_is_deleted)
+        return false;
+    return true;
+};
+
+bool GroupMembershipInfo::operator!=(const GroupMembershipInfo& o) const
+{
+    return !(*this == o);
+};
+
+QString GroupMembershipInfo::toString()const
+{
+    QString s = "";
+    if (!isNull()) {
+        s = QString("gmem=%1,%2,deleted=%3")
+            .arg(userId())
+            .arg(groupId())
+            .arg(isDeleted() ? "true" : "false");
+    }
+    return s;
+};
+
+
+/**
+    GroupMembershipInfoList
+*/
+GroupMembershipInfoList GroupMembershipInfoList::parse(QDomNode n)
+{
+    GroupMembershipInfoList rv;
+
+    QDomElement gmem_elem = n.firstChildElement("gContact:groupMembershipInfo");
+    while (!gmem_elem.isNull()) {
+        GroupMembershipInfo ginfo;
+        ginfo.m_is_null = true;
+
+        QDomNamedNodeMap attr_names = gmem_elem.attributes();
+        if (attr_names.size() > 0) {
+            for (int j = 0; j < attr_names.size(); j++) {
+                QDomNode n2 = attr_names.item(j);
+                if (n2.nodeType() == QDomNode::AttributeNode) {
+                    if (n2.nodeName().compare("deleted") == 0) {
+                        QString s = n2.nodeValue().trimmed();
+                        ginfo.m_is_deleted = (s.indexOf("true") != -1);
+                    }
+                    else if (n2.nodeName().compare("href") == 0) {
+                        QString sid = n2.nodeValue().trimmed();
+
+                        qDebug() << "ykh-gmem-parsed href=" << sid;
+
+                        int group_idx = sid.indexOf("/groups/");
+                        int base_idx = sid.indexOf("/base/");
+                        if (base_idx != -1) {
+                            ginfo.m_groupId = sid.right(sid.length() - base_idx - 6);
+                        }
+                        if (group_idx != -1 && base_idx != -1) {
+                            int gstart = group_idx + 8;
+                            int n = base_idx - gstart;
+                            ginfo.m_userId = sid.mid(gstart, n);
+                        }
+                    }
+                }
+            }
+        }
+
+        rv.m_parts.push_back(ginfo);
+
+        qDebug() << "ykh-gmem-parsed" << ginfo.toString();
+
+        gmem_elem = gmem_elem.nextSiblingElement("gContact:groupMembershipInfo");
+    }
+    return rv;
+};
+
+QString GroupMembershipInfoList::toXmlString()const
+{
+    QString s = "";
+    for (auto& p : m_parts) {
+        if (!p.isNull()) {
+            QString usr = QUrl::toPercentEncoding(p.m_userId);      
+            s += QString("<gContact:groupMembershipInfo deleted=\"%1\" href = \"http://www.google.com/m8/feeds/groups/%2/base/%3\"/>\n")
+                .arg(p.isDeleted() ? "true" : "false")
+                .arg(usr)
+                .arg(p.m_groupId);
+        }
+    }
+
+    return s;
+};
+
+void GroupMembershipInfoList::toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const 
+{
+    xml_util::removeNodes(entry_node, "gContact:groupMembershipInfo");
+    for (auto& p : m_parts) {
+        if (!p.isNull()) {
+            QDomElement g_node = xml_util::addNode(doc, entry_node, "gContact:groupMembershipInfo");
+            g_node.setAttribute("deleted", p.isDeleted() ? "true" : "false");
+            g_node.setAttribute("href", QString("http://www.google.com/m8/feeds/groups/%1/base/%2").arg(p.m_userId).arg(p.m_groupId));
+        }
+    }
+};

@@ -132,7 +132,7 @@ void UpdateContactArg::build(const QString& link_path, QUrl& url)const
 
 QString UpdateContactArg::toXml()const
 {
-    return m_contact_info.mergedXml(m_contact_info.originalXml());
+    return m_contact_info.mergedXml(m_contact_info.parsedXml());
 };
 
 QString UpdateContactArg::etag()const 
@@ -260,7 +260,7 @@ void UpdateContactGroupArg::build(const QString& link_path, QUrl& url)const
 
 QString UpdateContactGroupArg::toXml()const
 {
-    return m_group_info.mergedXml(m_group_info.originalXml());
+    return m_group_info.mergedXml(m_group_info.parsedXml());
 };
 
 QString UpdateContactGroupArg::etag()const

@@ -33,6 +33,7 @@ namespace googleQt {
             const OrganizationInfo&    organization()const { return m_organization; }
             const PostalAddressList&   addresses()const { return m_address_list; }            
             const PhotoInfo&           photo()const { return m_photo; }
+            const GroupMembershipInfoList& groups()const { return m_groups; }
 
             /// Ref-function return non-const references and can be used
             /// to modify objects. call ContactInfo::markAsModified to stage
@@ -89,6 +90,11 @@ namespace googleQt {
             ContactInfo& addAddress(const PostalAddress& p);
 
             /**
+            add group
+            */
+            ContactInfo& addGroup(const GroupMembershipInfo& p);
+
+            /**
                 delete old address list and put a new one
             */
             ContactInfo& replaceAddressList(const std::list<PostalAddress>& lst);
@@ -126,8 +132,9 @@ namespace googleQt {
             OrganizationInfo    m_organization;
             EmailInfoList       m_emails;
             PhoneInfoList       m_phones;            
-            PostalAddressList   m_address_list;
+            PostalAddressList   m_address_list;            
             PhotoInfo           m_photo;
+            GroupMembershipInfoList m_groups;
         };
 
         /**
@@ -343,25 +350,29 @@ namespace googleQt {
             friend class GcontactCacheRoutes;
         };
         
+        class PhotoSyncTask : public GoogleVoidTask
+        {
+        public:
+            const std::list<QString>& downloaded()const { return m_downloaded_ids; }
+            const std::list<QString>& uploaded()const { return m_uploaded_ids; }
+        private:
+            PhotoSyncTask(ApiEndpoint& ept) :GoogleVoidTask(ept) {}
+            std::list<QString> m_downloaded_ids;
+            std::list<QString> m_uploaded_ids;
+            friend class GcontactCacheRoutes;
+        };
+
+
         class GcontactCacheRoutes : public QObject
         {
             Q_OBJECT
         public:
-            struct PhotoSyncInfo 
-            {
-                int downloaded_photos{0};
-                int uploaded_photos{0};
-                QString exception;
-            };
-
             GcontactCacheRoutes(googleQt::Endpoint& endpoint, GcontactRoutes& gcontact_routes);
 
             contact_cache_ptr       cache() { return m_GContactsCache; }
 
             GcontactCacheSyncTask*  synchronizeContacts_Async();
-            GoogleVoidTask*         synchronizePhotos_Async();
-            const PhotoSyncInfo&    lastPhotoSyncInfo()const { return m_last_photo_sync_info; }
-
+            PhotoSyncTask*          synchronizePhotos_Async();
             GoogleTask<QString>*    getContactCachePhoto_Async(ContactInfo::ptr c);
 
 #ifdef API_QT_AUTOTEST
@@ -370,17 +381,26 @@ namespace googleQt {
         protected:
             void reloadCache_Async(GcontactCacheSyncTask* rv, QDateTime dtUpdatedMin);
             void applyLocalCacheModifications_Async(GcontactCacheSyncTask* rv);
-            GoogleVoidTask*         downloadPhotos_Async();
-            GoogleVoidTask*         uploadPhotos_Async();
         protected:
             Endpoint&           m_endpoint;
             GcontactRoutes&     m_c_routes;
             contact_cache_ptr   m_GContactsCache;
-            PhotoSyncInfo       m_last_photo_sync_info;
 
         private:
+            class PhotoListTask : public GoogleVoidTask
+            {
+            public:
+                const std::list<QString>& completed()const { return m_completed_ids; }
+            private:
+                PhotoListTask(ApiEndpoint& ept) :GoogleVoidTask(ept) {}
+                std::list<QString> m_completed_ids;
+                friend class GcontactCacheRoutes;
+            };
+
             template <class PROCESSOR>
-            GoogleVoidTask*         transferPhotos_Async(const std::list<QString>& id_list, int& progress_status);
+            PhotoListTask*      transferPhotos_Async(const std::list<QString>& id_list);
+            PhotoListTask*      downloadPhotos_Async();
+            PhotoListTask*      uploadPhotos_Async();
         };
 
     };//gcontact

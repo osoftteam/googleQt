@@ -117,6 +117,13 @@ ContactInfo& ContactInfo::addAddress(const PostalAddress& p)
     return *this;
 };
 
+ContactInfo& ContactInfo::addGroup(const GroupMembershipInfo& p) 
+{
+    m_groups.m_parts.push_back(p);
+    markAsModified();
+    return *this;
+};
+
 ContactInfo& ContactInfo::replaceAddressList(const std::list<PostalAddress>& lst)
 {
     m_address_list.m_parts.clear();
@@ -147,8 +154,6 @@ QString ContactInfo::toString()const
 
 bool ContactInfo::operator == (const ContactInfo& o) const
 {
-    ///do not check on m_original_xml_string - it's for cache storage
-
     COMPARE_NO_CASE(m_etag);
     COMPARE_NO_CASE(m_id);
     COMPARE_NO_CASE(m_title);
@@ -221,6 +226,7 @@ QString ContactInfo::toXml(QString userEmail)const
     rv += m_address_list.toXmlString();
     rv += m_emails.toXmlString();
     rv += m_phones.toXmlString();
+    rv += m_groups.toXmlString();
     rv += "</entry>";
     return rv;
 };
@@ -243,22 +249,23 @@ void ContactInfo::mergeEntryNode(QDomDocument& doc, QDomNode& entry_node)const
     m_emails.toXmlDoc(doc, entry_node);
     m_phones.toXmlDoc(doc, entry_node);
     m_address_list.toXmlDoc(doc, entry_node);
+    m_groups.toXmlDoc(doc, entry_node);
 };
 
 
 bool ContactInfo::parseEntryNode(QDomNode n)
 {
-    m_original_xml_string = "";
-    QTextStream ss(&m_original_xml_string);
+    m_parsed_xml = "";
+    QTextStream ss(&m_parsed_xml);
     n.save(ss, 4);
     ss.flush();
 
-    if (!verifyXml(m_original_xml_string)) {
+    if (!verifyXml(m_parsed_xml)) {
         qWarning() << "Failed to validate contact xml node";
         return false;
     }
 
-    if (m_original_xml_string.isEmpty()) {
+    if (m_parsed_xml.isEmpty()) {
         qWarning() << "Failed to parse contact xml node";
         return false;
     }
@@ -281,6 +288,7 @@ bool ContactInfo::parseEntryNode(QDomNode n)
     m_name = NameInfo::parse(n);
     m_organization = OrganizationInfo::parse(n);
     m_address_list = PostalAddressList::parse(n);
+    m_groups = GroupMembershipInfoList::parse(n);
     m_photo = PhotoInfo::parse(n);
     m_is_null = !m_etag.isEmpty() && m_id.isEmpty();
     return !m_is_null;
@@ -288,11 +296,16 @@ bool ContactInfo::parseEntryNode(QDomNode n)
 
 bool ContactInfo::setFromDbRecord(QSqlQuery* q)
 {
-    QString xml = q->value(1).toString();
-    if (!parseXml(xml)) {
-        qWarning() << "failed to parse contact entry db record size=" << xml.size() << "dbid=" << q->value(3).toInt();
-        qWarning() << "content=" << q->value(5).toString();
-        qWarning() << "original-xml=" << q->value(6).toString();
+    QString original_xml_string = q->value(1).toString();
+    
+    //    qDebug() << "----ykh----- / setFromDbRecord";
+    QString currentXml = q->value(2).toString();
+    //    qDebug() << currentXml;
+    //    qDebug() << "----ykh/END----- / setFromDbRecord";
+    if (!parseXml(currentXml)) {
+        qWarning() << "failed to parse contact entry db record size="
+                   << currentXml.size()
+                   << "dbid=" << q->value(4).toInt();
         qWarning() << "-------------";
         return false;
     }
@@ -304,30 +317,14 @@ bool ContactInfo::setFromDbRecord(QSqlQuery* q)
 
     setRegisterModifications(false); 
     
-    m_updated = QDateTime::fromMSecsSinceEpoch(q->value(2).toLongLong());
-    m_db_id = q->value(3).toInt();
-    m_title = q->value(4).toString();
-    m_content = q->value(5).toString();
-
-    m_original_xml_string = q->value(6).toString();
-
-    NameInfo n;
-    n.setFullName(q->value(7).toString())
-        .setGivenName(q->value(8).toString())
-        .setFamilyName(q->value(9).toString());
-
-
-    OrganizationInfo o;
-    o.setName(q->value(10).toString())
-        .setTitle(q->value(11).toString())
-        .setTypeLabel(q->value(12).toString());
-
-    setName(n);
-    setOrganizationInfo(o);
-
-    QString photo_href = q->value(13).toString();
-    QString photo_etag = q->value(14).toString();
-    int st_tmp = q->value(15).toInt();
+    m_updated = QDateTime::fromMSecsSinceEpoch(q->value(3).toLongLong());
+    m_db_id = q->value(4).toInt();
+    m_title = q->value(5).toString();
+        
+    QString photo_href = q->value(6).toString();
+    QString photo_etag = q->value(7).toString();
+    int st_tmp = q->value(8).toInt();
+    
     if(st_tmp < 0 || st_tmp > 2){
         qWarning() << "Invalid DB value for photo status" << st_tmp;
         st_tmp = 0;
@@ -338,7 +335,6 @@ bool ContactInfo::setFromDbRecord(QSqlQuery* q)
 
     setRegisterModifications(true); 
     return true;
-
 };
 
 void ContactInfo::assignContent(const ContactInfo& src)
@@ -395,12 +391,12 @@ GroupInfo* GroupInfo::createWithId(QString group_id)
 
 bool GroupInfo::parseEntryNode(QDomNode n)
 {
-    m_original_xml_string = "";
-    QTextStream ss(&m_original_xml_string);
+    m_parsed_xml = "";
+    QTextStream ss(&m_parsed_xml);
     n.save(ss, 4);
     ss.flush();
 
-    if (m_original_xml_string.isEmpty()) {
+    if (m_parsed_xml.isEmpty()) {
         qWarning() << "Failed to parse contact xml node";
         return false;
     }
@@ -488,8 +484,6 @@ GroupInfo& GroupInfo::setContent(QString notes)
 
 bool GroupInfo::operator == (const GroupInfo& o) const
 {
-    ///do not check on m_original_xml_string - it's for cache storage
-
     COMPARE_NO_CASE(m_etag);
     COMPARE_NO_CASE(m_id);
     COMPARE_NO_CASE(m_title);
@@ -598,8 +592,8 @@ void GContactCache::attachSQLStorage(std::shared_ptr<mail_cache::GMailSQLiteStor
 bool GContactCache::ensureContactTables()
 {
     /// contacts ///
-    QString sql_entries = QString("CREATE TABLE IF NOT EXISTS %1gcontact_entry(contact_db_id INTEGER PRIMARY KEY, acc_id INTEGER NOT NULL, entry_id TEXT, etag TEXT, title TEXT, content TEXT, "
-                                  "full_name TEXT, given_name TEXT, family_name TEXT, orga_name TEXT, orga_title TEXT, orga_label TEXT, xml_original TEXT, xml_current TEXT, updated INTEGER, status INTEGER, "
+    QString sql_entries = QString("CREATE TABLE IF NOT EXISTS %1gcontact_entry(contact_db_id INTEGER PRIMARY KEY, acc_id INTEGER NOT NULL, entry_id TEXT, etag TEXT, title TEXT, "
+                                  "full_name TEXT, xml_original TEXT, xml_current TEXT, updated INTEGER, status INTEGER, "
                                   "photo_href TEXT, photo_etag TEXT, photo_status INTEGER)").arg(m_sql_storage->m_metaPrefix);
     if (!m_sql_storage->execQuery(sql_entries))
         return false;
@@ -644,9 +638,9 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
     if (cloud_created_contacts.size() > 0) {
         qDebug() << "sql-contacts-store-cloud-created" << cloud_created_contacts.size();
         QString sql_insert;
-        sql_insert = QString("INSERT INTO  %1gcontact_entry(acc_id, title, content, full_name, given_name, family_name, orga_name, orga_title, orga_label,"
-                            "xml_original, xml_current, updated, status, entry_id, etag, photo_href, photo_etag, photo_status)"
-            " VALUES(%2, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        sql_insert = QString("INSERT INTO  %1gcontact_entry(acc_id, title, full_name, "
+                             "xml_original, xml_current, updated, status, entry_id, etag, photo_href, photo_etag, photo_status)"
+            " VALUES(%2, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
             .arg(m_sql_storage->m_metaPrefix)
             .arg(m_sql_storage->m_accId);
         QSqlQuery* q = m_sql_storage->prepareQuery(sql_insert);
@@ -657,14 +651,8 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
 
         for (auto c : cloud_created_contacts) {
             q->addBindValue(c->title());
-            q->addBindValue(c->content());
             q->addBindValue(c->name().fullName());
-            q->addBindValue(c->name().givenName());
-            q->addBindValue(c->name().familyName());
-            q->addBindValue(c->organization().name());
-            q->addBindValue(c->organization().title());
-            q->addBindValue(c->organization().typeLabel());
-            q->addBindValue(c->originalXml());
+            q->addBindValue(c->parsedXml());
             q->addBindValue(c->toXml(m_endpoint.apiClient()->userId()));
             qlonglong upd_time = c->updated().toMSecsSinceEpoch();
             q->addBindValue(upd_time);
@@ -690,8 +678,8 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
     if (updated_contacts.size() > 0) {
         qDebug() << "sql-contacts-store-updated" << updated_contacts.size();
         QString sql_update;
-        sql_update = QString("UPDATE  %1gcontact_entry SET title=?, content=?, full_name=?, given_name=?, family_name=?, orga_name=?, orga_title=?, "
-            "orga_label=?, xml_original=?, xml_current=?, updated=?, status=?, photo_href=?, photo_etag=?, photo_status=? WHERE contact_db_id=? AND acc_id = %2")
+        sql_update = QString("UPDATE  %1gcontact_entry SET title=?, full_name=?, "
+                             "xml_original=?, xml_current=?, updated=?, status=?, photo_href=?, photo_etag=?, photo_status=? WHERE contact_db_id=? AND acc_id = %2")
             .arg(m_sql_storage->m_metaPrefix)
             .arg(m_sql_storage->m_accId);
         QSqlQuery* q = m_sql_storage->prepareQuery(sql_update);
@@ -702,14 +690,8 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
 
         for (auto c : updated_contacts) {
             q->addBindValue(c->title());
-            q->addBindValue(c->content());
             q->addBindValue(c->name().fullName());
-            q->addBindValue(c->name().givenName());
-            q->addBindValue(c->name().familyName());
-            q->addBindValue(c->organization().name());
-            q->addBindValue(c->organization().title());
-            q->addBindValue(c->organization().typeLabel());
-            q->addBindValue(c->originalXml());
+            q->addBindValue(c->parsedXml());
             q->addBindValue(c->toXml(m_endpoint.apiClient()->userId()));
             qlonglong upd_time = c->updated().toMSecsSinceEpoch();
             q->addBindValue(upd_time);
@@ -729,8 +711,8 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
     if (limbo_id_contacts.size() > 0) {
         qDebug() << "sql-contacts-store-limbo" << limbo_id_contacts.size();
         QString sql_update;
-        sql_update = QString("UPDATE  %1gcontact_entry SET title=?, content=?, full_name=?, given_name=?, family_name=?, orga_name=?, orga_title=?, "
-            "orga_label=?, xml_original=?, xml_current=?, updated=?, status=?, entry_id=?, etag=?, photo_href=?, photo_etag=?, photo_status=? WHERE contact_db_id=? AND acc_id = %2")
+        sql_update = QString("UPDATE  %1gcontact_entry SET title=?, full_name=?, "
+                             "xml_original=?, xml_current=?, updated=?, status=?, entry_id=?, etag=?, photo_href=?, photo_etag=?, photo_status=? WHERE contact_db_id=? AND acc_id = %2")
             .arg(m_sql_storage->m_metaPrefix)
             .arg(m_sql_storage->m_accId);
         QSqlQuery* q = m_sql_storage->prepareQuery(sql_update);
@@ -741,14 +723,8 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
 
         for (auto c : limbo_id_contacts) {
             q->addBindValue(c->title());
-            q->addBindValue(c->content());
             q->addBindValue(c->name().fullName());
-            q->addBindValue(c->name().givenName());
-            q->addBindValue(c->name().familyName());
-            q->addBindValue(c->organization().name());
-            q->addBindValue(c->organization().title());
-            q->addBindValue(c->organization().typeLabel());
-            q->addBindValue(c->originalXml());
+            q->addBindValue(c->parsedXml());
             q->addBindValue(c->toXml(m_endpoint.apiClient()->userId()));
             qlonglong upd_time = c->updated().toMSecsSinceEpoch();
             q->addBindValue(upd_time);
@@ -800,7 +776,7 @@ bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& grou
         for (auto c : new_groups) {
             q->addBindValue(c->title());
             q->addBindValue(c->content());
-            q->addBindValue(c->originalXml());
+            q->addBindValue(c->parsedXml());
             qlonglong upd_time = c->updated().toMSecsSinceEpoch();
             q->addBindValue(upd_time);
             q->addBindValue(c->status());
@@ -832,7 +808,7 @@ bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& grou
         for (auto c : updated_groups) {
             q->addBindValue(c->title());
             q->addBindValue(c->content());
-            q->addBindValue(c->originalXml());
+            q->addBindValue(c->parsedXml());
             qlonglong upd_time = c->updated().toMSecsSinceEpoch();
             q->addBindValue(upd_time);
             q->addBindValue(c->status());
@@ -1018,8 +994,8 @@ bool GContactCache::loadContactEntriesFromDb()
 {
     m_contacts.clear();
 
-    QString sql = QString("SELECT status, xml_current, updated, contact_db_id, title, content, xml_original, full_name, given_name, family_name,"
-        "orga_name, orga_title, orga_label, photo_href, photo_etag, photo_status FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2,3) ORDER BY updated DESC")
+    QString sql = QString("SELECT status, xml_original, xml_current, updated, contact_db_id, title, "
+        "photo_href, photo_etag, photo_status FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2,3) ORDER BY updated DESC")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
     QSqlQuery* q = m_sql_storage->selectQuery(sql);
@@ -1324,18 +1300,19 @@ GoogleVoidTask* PhotoUploader::routeRequest(QString contact_id)
 }
 
 template <class PROCESSOR>
-GoogleVoidTask* GcontactCacheRoutes::transferPhotos_Async(const std::list<QString>& id_list, int& )
+GcontactCacheRoutes::PhotoListTask* GcontactCacheRoutes::transferPhotos_Async(const std::list<QString>& id_list)
 {
-    GoogleVoidTask* rv = m_endpoint.produceVoidTask();
+    GcontactCacheRoutes::PhotoListTask* rv = new GcontactCacheRoutes::PhotoListTask(m_endpoint);
     if (!id_list.empty()) {
         std::unique_ptr<PROCESSOR> pr(new PROCESSOR(m_c_routes));
         ConcurrentArgRunner<QString, PROCESSOR>* r = new ConcurrentArgRunner<QString, PROCESSOR>(id_list, std::move(pr), m_endpoint);
         r->run();
         connect(r, &EndpointRunnable::finished, [=]()
         {
-            std::list<QString> completed_ids = r->completedArgList();
+            //std::list<QString> completed_ids = r->completedArgList();
+            rv->m_completed_ids = r->completedArgList();
             //progress_status = completed_ids.size();
-            for (auto c_id : completed_ids) {
+            for (auto c_id : rv->m_completed_ids) {
                 auto c = m_GContactsCache->contacts().findById(c_id);
                 if (c) {
                     c->markPhotoAsResolved();
@@ -1357,35 +1334,34 @@ GoogleVoidTask* GcontactCacheRoutes::transferPhotos_Async(const std::list<QStrin
 };
 
 
-GoogleVoidTask* GcontactCacheRoutes::downloadPhotos_Async()
+GcontactCacheRoutes::PhotoListTask* GcontactCacheRoutes::downloadPhotos_Async()
 {
     std::list<QString> id_list = m_GContactsCache->contacts().buildUnresolvedPhotoIdList();
-    return transferPhotos_Async<gcontact::PhotoReceiver>(id_list, m_last_photo_sync_info.downloaded_photos);
+    return transferPhotos_Async<gcontact::PhotoReceiver>(id_list);
 };
 
-GoogleVoidTask* GcontactCacheRoutes::uploadPhotos_Async() 
+GcontactCacheRoutes::PhotoListTask* GcontactCacheRoutes::uploadPhotos_Async()
 {
     std::list<QString> id_list = m_GContactsCache->contacts().buildModifiedPhotoIdList();
-    return transferPhotos_Async<gcontact::PhotoUploader>(id_list, m_last_photo_sync_info.uploaded_photos);
+    return transferPhotos_Async<gcontact::PhotoUploader>(id_list);
 };
 
-GoogleVoidTask* GcontactCacheRoutes::synchronizePhotos_Async() 
+PhotoSyncTask* GcontactCacheRoutes::synchronizePhotos_Async()
 {
-    m_last_photo_sync_info.downloaded_photos = m_last_photo_sync_info.uploaded_photos = 0;
-    m_last_photo_sync_info.exception = "";
+    PhotoSyncTask* t = new PhotoSyncTask(m_endpoint);
 
-    GoogleVoidTask* t = m_endpoint.produceVoidTask();
-
-    GoogleVoidTask* t1 = downloadPhotos_Async();
+    auto t1 = downloadPhotos_Async();
     t1->then([=]() {
-        GoogleVoidTask* t2 = uploadPhotos_Async();
+        auto t2 = uploadPhotos_Async();
         t2->then([=]() 
         {
+            t->m_downloaded_ids = t1->m_completed_ids;
+            t->m_uploaded_ids = t2->m_completed_ids;
+            m_GContactsCache->storeContactsToDb();
             t->completed_callback();
         },
             [=](std::unique_ptr<GoogleException> ex)
         {
-            m_last_photo_sync_info.exception = ex->what();
             t->failed_callback(std::move(ex));
         }, [=]() 
         {
@@ -1394,7 +1370,6 @@ GoogleVoidTask* GcontactCacheRoutes::synchronizePhotos_Async()
     }, 
         [=](std::unique_ptr<GoogleException> ex) 
     {
-        m_last_photo_sync_info.exception = ex->what();
         t->failed_callback(std::move(ex));
     },
         [=]() 
@@ -1702,6 +1677,7 @@ std::unique_ptr<ContactInfo> ContactInfo::EXAMPLE(int param, int )
     PhoneInfo p1, p2;
     OrganizationInfo o;
     PostalAddress a1, a2;
+    GroupMembershipInfo g;
 
     n.setFamilyName(last).setGivenName(first).setFullName(first + " " + last);
     e1.setAddress(email).setDisplayName(first + " " + last).setPrimary(true).setTypeLabel("home");
@@ -1728,6 +1704,9 @@ std::unique_ptr<ContactInfo> ContactInfo::EXAMPLE(int param, int )
         .setContent(QString("My notest on new contact for '%1'").arg(first))
         .setOrganizationInfo(o)
         .addAddress(a1).addAddress(a2);
+
+    g.setUserId("me%1@gmail.com").setGroupId("my-group-etag");
+    ci.addGroup(g);
 
     ci.m_etag = "my-contact-etag";
     ci.m_id = "my-contact-id";
