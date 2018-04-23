@@ -88,6 +88,7 @@ int main(int argc, char *argv[])
     t.addAction("delete_group", "delete group entry", [&](QString arg) {cmd.delete_group(arg); });
     t.addAction("update_group_title", "change title of a contacts group", [&](QString arg) {cmd.update_group_title(arg); });
     t.addAction("ls_groups_date", "List groups modified after date/time", [&](QString arg) {cmd.ls_groups_date(arg); });
+    t.addAction("ls_group_contacts", "list group contacts", [&](QString arg) {cmd.ls_group_contacts(arg); });
     t.addSeparator();
     t.addAction("download_photo", "download contact photo", [&](QString arg) {cmd.download_photo(arg); });
     t.addAction("upload_photo", "upload contact photo", [&](QString arg) {cmd.upload_photo(arg); });

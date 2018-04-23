@@ -94,7 +94,7 @@ void GcontactCommands::get_contact(QString contactid)
         if(arr.size() > 0){
             std::cout << arr[0]->toXml(m_c.userId()) << std::endl;
             std::cout << "------------------" << std::endl;
-            std::cout << arr[0]->originalXml() << std::endl;
+            std::cout << arr[0]->parsedXml() << std::endl;
         }
     }
     catch (GoogleException& e)
@@ -234,7 +234,7 @@ void GcontactCommands::test_contact_xml()
         std::cout << "identity   - OK" << std::endl;
 
         ContactInfo ci3;
-        if (!ci3.parseXml(ci2.originalXml())) {
+        if (!ci3.parseXml(ci2.parsedXml())) {
             std::cout << "Original Xml parse error" << std::endl;
             return;
         };
@@ -387,7 +387,7 @@ void GcontactCommands::test_merge(QString xmlFileName)
     a_lst.push_back(a2);
     c.replaceAddressList(a_lst);
 
-    std::cout << c.mergedXml(c.originalXml()) << std::endl << std::endl;
+    std::cout << c.mergedXml(c.parsedXml()) << std::endl << std::endl;
 };
 
 void GcontactCommands::update_contact_name(QString contactId_name) 
@@ -706,6 +706,29 @@ void GcontactCommands::update_group_title(QString groupId_title)
     }
 }
 
+void GcontactCommands::ls_group_contacts(QString groupId)
+{
+    if (groupId.isEmpty()) {
+        std::cout << "groupId required" << std::endl;
+        return;
+    }
+   
+    try
+    {
+        ContactListArg arg;
+        arg.setMaxResults(100);
+        arg.setOrderby("lastmodified");
+        arg.setSortorder("descending");
+        arg.setGroup(GcontactRoutes::encodeGroupUri(m_c.userId(), groupId));
+        auto contacts_list = m_gt->getContacts()->list(arg);
+        print_contact_list(contacts_list.get());
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }    
+};
+
 void GcontactCommands::parse_group_file(QString xmlFileName)
 {
     if (xmlFileName.isEmpty()) {
@@ -739,8 +762,8 @@ void GcontactCommands::print_contact_list(gcontact::ContactList* lst)
     for (auto& c : arr) {
         QString info = c->title();
         if (info.isEmpty()) {
-            if (c->emails().size() > 0) {
-                info = c->emails()[0].address();
+            if (c->emails().items().size() > 0) {
+                info = c->emails().items()[0].address();
             }
         }
         std::cout << std::setw(3) << idx++ << ". "
@@ -787,8 +810,8 @@ void GcontactCommands::print_batch_contact_result(const gcontact::BatchContactLi
     for (auto& c : arr) {
         QString info = c->title();
         if (info.isEmpty()) {
-            if (c->emails().size() > 0) {
-                info = c->emails()[0].address();
+            if (c->emails().items().size() > 0) {
+                info = c->emails().items()[0].address();
             }
         }
         std::cout << std::setw(3) << idx++ << ". "
@@ -858,8 +881,8 @@ void print_cache_contact_info(ContactInfo* c, int idx)
 {
     QString info = c->title();
     if (info.isEmpty()) {
-        if (c->emails().size() > 0) {
-            info = c->emails()[0].address();
+        if (c->emails().items().size() > 0) {
+            info = c->emails().items()[0].address();
         }
     }
 
@@ -1393,8 +1416,7 @@ void GcontactCommands::sync_cache_photos()
     try
     {
         t->waitForResultAndRelease();
-        auto& r = m_gt->cacheRoutes()->lastPhotoSyncInfo();
-        std::cout << "Photos synchronized downloaded=" << r.downloaded_photos << " uploaded=" << r.uploaded_photos << std::endl;
+        std::cout << "Photos synchronized downloaded=" << t->downloaded().size() << " uploaded=" << t->uploaded().size() << std::endl;
     }
     catch (GoogleException& e)
     {

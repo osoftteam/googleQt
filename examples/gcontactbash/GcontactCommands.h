@@ -109,6 +109,13 @@ public:
     void ls_groups_date(QString updatedMin);
 
     /**
+    * ls_group_contacts - list contacts in a group
+    * requires groupId
+    */
+    void ls_group_contacts(QString groupId);
+
+    
+    /**
         list contacts in batch mode
     */
     void batch_list_contacts(QString id_space_id);
