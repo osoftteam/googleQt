@@ -28,6 +28,15 @@ googleQt::gcontact::GcontactCacheRoutes* GcontactRoutes::cacheRoutes()
     return m_CacheRoutes.get();
 };
 
+QString GcontactRoutes::encodeGroupUri(QString userId, QString groupId)
+{
+    QString usr = QUrl::toPercentEncoding(userId);
+    QString rv = QString("http://www.google.com/m8/feeds/groups/%2/base/%3")
+        .arg(usr)
+        .arg(groupId);
+    return rv;
+};
+
 #ifdef API_QT_AUTOTEST
 void GcontactRoutes::autotest() 
 {

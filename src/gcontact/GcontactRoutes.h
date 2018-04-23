@@ -23,6 +23,8 @@ namespace googleQt
         contact_group::ContactGroupRoutes* getContactGroup();
         googleQt::gcontact::GcontactCacheRoutes* cacheRoutes();
 
+        static QString encodeGroupUri(QString userId, QString groupId);
+        
 #ifdef API_QT_AUTOTEST
         void autotest();
 #endif
