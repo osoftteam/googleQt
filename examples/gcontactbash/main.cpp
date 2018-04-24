@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     DECLARE_AUTOTEST_INSTANCE(c, "autotest-res.txt");
 
     /// setup DB-cache ///
-    const QString dbPath = "gm-cache.sqlite";
+    const QString dbPath = "contacts-cache/gm-cache.sqlite";
     auto mr = c->gmail();
     if (!mr->setupCache(dbPath, "downloads", "contacts-cache")) {
         std::cout << "Failed to initialize SQLite cache database: " << dbPath.toStdString() << std::endl;
@@ -106,11 +106,11 @@ int main(int argc, char *argv[])
     t.addAction("batch_delete_group", "delete groups in batch", [&](QString arg) {cmd.batch_delete_group(arg); });
 
     t.addSeparator();
+    t.addAction("cache_sync", "sync contacts cache", [&](QString) {cmd.cache_sync(); });
     t.addAction("cache_ls", "print contacts cache", [&](QString) {cmd.cache_ls(); });
-    t.addAction("cache_find_contact_by_id", "find contacts cache entry", [&](QString arg) {cmd.cache_find_contact_by_id(arg); });
+    t.addAction("cache_get_contact", "find contacts cache entry", [&](QString arg) {cmd.cache_get_contact(arg); });
     t.addAction("cache_update", "modify contact names locally", [&](QString arg) {cmd.cache_update(arg); });
     t.addAction("cache_delete", "delete contact locally", [&](QString arg) {cmd.cache_delete(arg); });
-    t.addAction("sync_contacts", "sync contacts cache", [&](QString) {cmd.sync_contacts(); });
     t.addAction("resolve_cache_photo", "resolve cache photo", [&](QString arg) {cmd.resolve_cache_photo(arg); });    
     t.addAction("sync_cache_photos", "sync photos with cache", [&](QString) {cmd.sync_cache_photos(); });
     t.addAction("add_cache_photo", "add(replace) contact photo", [&](QString arg) {cmd.add_cache_photo(arg); });

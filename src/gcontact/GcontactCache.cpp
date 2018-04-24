@@ -147,7 +147,12 @@ QString ContactInfo::toString()const
     QString s = "";
     s += "id=" + m_id + ";etag=" + m_etag + ";updated=" + m_updated.toString(Qt::ISODate)
         + ";title=" + m_title + "content=" + m_content + ";"
-        + m_name.toString() + ";" + m_emails.toString() + ";" + m_phones.toString() + ";" + m_organization.toString() + ";" + m_address_list.toString();
+        + m_name.toString() + ";"
+        + m_emails.toString() + ";"
+        + m_phones.toString() + ";"
+        + m_organization.toString() + ";"
+        + m_address_list.toString() + ";"
+        + m_groups.toString();
     return s;
 };
 

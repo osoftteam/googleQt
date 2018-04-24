@@ -166,7 +166,7 @@ public:
     /**
        cache find contact by id
      */
-    void cache_find_contact_by_id(QString cid);
+    void cache_get_contact(QString cid);
 
     
     /**
@@ -184,7 +184,7 @@ public:
     /**
      * sync_contacts - synchronize contacts cache
      */
-    void sync_contacts();
+    void cache_sync();
     
     /**
     * sync_cache_photos - synchronize photos

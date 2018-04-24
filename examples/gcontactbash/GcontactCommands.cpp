@@ -89,12 +89,15 @@ void GcontactCommands::get_contact(QString contactid)
         ContactListArg arg;
         arg.setContactId(contactid);
         auto contacts_list = m_gt->getContacts()->list(arg);
-        std::cout << contacts_list->toString() << std::endl;
         auto& arr = contacts_list->items();
         if(arr.size() > 0){
-            std::cout << arr[0]->toXml(m_c.userId()) << std::endl;
+            ContactInfo::ptr c = arr[0];
             std::cout << "------------------" << std::endl;
-            std::cout << arr[0]->parsedXml() << std::endl;
+            std::cout << c->toString() << std::endl;
+            std::cout << "------------------" << std::endl;
+            std::cout << c->toXml(m_c.userId()) << std::endl;
+            std::cout << "------------------" << std::endl;
+            std::cout << c->parsedXml() << std::endl;
         }
     }
     catch (GoogleException& e)
@@ -1275,7 +1278,7 @@ void GcontactCommands::cache_ls()
 };
 
 
-void GcontactCommands::cache_find_contact_by_id(QString cid)
+void GcontactCommands::cache_get_contact(QString cid)
 {
     auto r = m_gt->cacheRoutes();
     auto c = r->cache();
@@ -1462,7 +1465,7 @@ void GcontactCommands::add_cache_photo(QString id_space_file_name)
     cache->storeContactsToDb();
 };
 
-void GcontactCommands::sync_contacts()
+void GcontactCommands::cache_sync()
 {
     try
         {
