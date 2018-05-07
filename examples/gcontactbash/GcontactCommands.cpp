@@ -732,6 +732,54 @@ void GcontactCommands::ls_group_contacts(QString groupId)
     }    
 };
 
+void GcontactCommands::set_contact_groups(QString contactId_space_groupId)
+{
+    ///first we get contact, make changes, merge them and upload modified xml
+    QStringList arg_list = contactId_space_groupId.split(" ",
+        QString::SkipEmptyParts);
+
+    if (arg_list.size() < 1)
+    {
+        std::cout << "Invalid parameters, expected <contactId> <groupId1>..." << std::endl;
+        return;
+    }
+
+    QString contactid = arg_list[0];
+
+    try
+    {
+        ContactListArg arg;
+        arg.setContactId(contactid);
+        auto contacts_list = m_gt->getContacts()->list(arg);
+        auto& arr = contacts_list->items();
+        if (arr.size() > 0) {
+            auto c = arr[0];
+            GroupMembershipInfoList& gm = c->groupsRef();
+            gm.items().clear();
+            
+            int i = 1, Max = arg_list.size();
+            for(; i < Max; i++){
+                QString groupid = arg_list[i];
+                GroupMembershipInfo m(m_c.userId(), groupid, false);
+                c->addGroup(m);
+            }
+            
+            UpdateContactArg upd(*(c.get()));
+            upd.setIgnoreEtag(true);
+            auto c_list = m_gt->getContacts()->update(upd);
+            auto& arr2 = c_list->items();
+            if (arr2.size() > 0) {
+                std::cout << "Updated.." << std::endl;
+                std::cout << arr2[0]->toXml(m_c.userId()) << std::endl;
+            }
+        }
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+}
+
 void GcontactCommands::parse_group_file(QString xmlFileName)
 {
     if (xmlFileName.isEmpty()) {

@@ -24,23 +24,23 @@ public:
     GcontactCommands(GoogleClient& c);
     
     /**
-    * ls_contacts - list contacts
+    * list contacts
     */
     void ls_contacts();
 
     /**
-    * get_contact - get single contact entry
+    * get single contact entry
     */
     void get_contact(QString contactid);
 
     /**
-    * create_contact - create single contact entry
+    * create single contact entry
     * requires email adddress, first name, last name - space separated
     */
     void create_contact(QString email_first_last);
 
     /**
-    * delete_contact - delete contact entry
+    * delete contact entry
     * requires contactid
     */
     void delete_contact(QString contactid);
@@ -51,23 +51,23 @@ public:
     void update_contact_name(QString contactId_name);
 
     /**
-    * ls_contacts_date - list contacts modified after date
+    * list contacts modified after date
     */
     void ls_contacts_date(QString updatedMin);
 
 
     /**
-    * download_photo - get contact photo
+    * get contact photo
     */
     void download_photo(QString contactid);
 
     /**
-    * upload_photo - add/update contact photo
+    * add/update contact photo
     */
     void upload_photo(QString contactid_space_file_name);
 
     /**
-    * delete_photo - delete contact photo
+    * delete contact photo
     */
     void delete_photo(QString contactid);
 
@@ -77,23 +77,23 @@ public:
     void resolve_cache_photo(QString contactid);
 
     /**
-    * ls_groups - list contact group
+    * list contact group
     */
     void ls_groups();
 
     /**
-    * get_group - get single group entry
+    * get single group entry
     */
     void get_group(QString groupid);
 
     /**
-    * create_group - create contact group
+    * create contact group
     * requires title, content
     */
     void create_group(QString title_content);
 
     /**
-    * delete_group - delete contact group
+    * delete contact group
     * requires groupId
     */
     void delete_group(QString groupId);
@@ -104,17 +104,21 @@ public:
     void update_group_title(QString groupId_title);
 
     /**
-    * ls_group_date - list group modified after date
+    * list group modified after date
     */
     void ls_groups_date(QString updatedMin);
 
     /**
-    * ls_group_contacts - list contacts in a group
+    * list contacts in a group
     * requires groupId
     */
     void ls_group_contacts(QString groupId);
 
-    
+    /**
+    * set contact groups
+    */
+    void set_contact_groups(QString contactId_space_groupId);
+
     /**
         list contacts in batch mode
     */
@@ -132,12 +136,12 @@ public:
     void batch_update_contact(QString id_space_id);
 
     /**
-    delete contact in batch by id
+    * delete contact in batch by id
     */
     void batch_delete_contact(QString id_space_id);
 
     /**
-    list groups in batch mode
+    * list groups in batch mode
     */
     void batch_list_groups(QString id_space_id);
 
@@ -149,7 +153,7 @@ public:
 
 
     /**
-    modify group title in batch - append '-b'
+    *   modify group title in batch - append '-b'
     */
     void batch_update_group(QString id_space_id);
 
@@ -182,28 +186,28 @@ public:
     
     
     /**
-     * sync_contacts - synchronize contacts cache
+     * synchronize contacts cache
      */
     void cache_sync();
     
     /**
-    * sync_cache_photos - synchronize photos
+    * synchronize photos
     */
     void sync_cache_photos();
 
     /**
-    * add_cache_photo - add photos
+    * add photos
     */
     void add_cache_photo(QString id_space_file_name);
 
 
     /**
-    * ls_as_json - list contacts using json
+    * list contacts using json
     */
     void ls_as_json();
 
     /**
-    * test_contact_xml - create contact obj, export to XML and import back
+    * create contact obj, export to XML and import back
     */
     void test_contact_xml();
 
