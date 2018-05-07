@@ -39,9 +39,9 @@ static QString getAttribute(const QDomNode& n, QString name)
 /**
     ContactInfo
 */
-ContactInfo* ContactInfo::createWithId(QString contact_id) 
+std::unique_ptr<ContactInfo> ContactInfo::createWithId(QString contact_id) 
 {
-    ContactInfo* rv = new ContactInfo();
+    std::unique_ptr<ContactInfo> rv(new ContactInfo());
     rv->m_id = contact_id;
     return rv;
 };
@@ -351,6 +351,7 @@ void ContactInfo::assignContent(const ContactInfo& src)
     m_phones = src.m_phones;
     m_address_list = src.m_address_list;   
     m_photo = src.m_photo;
+    m_groups = src.m_groups;
 };
 
 std::unique_ptr<BatchRequestContactInfo> ContactInfo::buildBatchRequest(googleQt::EBatchId batch_id)
@@ -387,9 +388,9 @@ bool ContactInfo::isPhotoModified()const
 /**
     GroupInfo
 */
-GroupInfo* GroupInfo::createWithId(QString group_id) 
+std::unique_ptr<GroupInfo> GroupInfo::createWithId(QString group_id) 
 {
-    GroupInfo* rv = new GroupInfo();
+    std::unique_ptr<GroupInfo> rv(new GroupInfo());
     rv->m_id = group_id;
     return rv;
 };

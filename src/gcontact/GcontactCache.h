@@ -43,6 +43,7 @@ namespace googleQt {
             NameInfo&            nameRef(){ return m_name; }
             OrganizationInfo&    organizationRef(){ return m_organization; }
             PostalAddressList&   addressesRef(){ return m_address_list; }
+            GroupMembershipInfoList& groupsRef() { return m_groups; }
 
             /**
                 set title
@@ -99,7 +100,7 @@ namespace googleQt {
             */
             ContactInfo& replaceAddressList(const std::list<PostalAddress>& lst);
 
-            static ContactInfo* createWithId(QString contact_id);
+            static std::unique_ptr<ContactInfo> createWithId(QString contact_id);
 
             bool parseEntryNode(QDomNode n)override;
             void mergeEntryNode(QDomDocument& doc, QDomNode& entry_node)const override;
@@ -156,7 +157,7 @@ namespace googleQt {
             */
             GroupInfo& setContent(QString notes);
 
-            static GroupInfo* createWithId(QString group_id);
+            static std::unique_ptr<GroupInfo> createWithId(QString group_id);
 
             QString toString()const;
             QString toXml(QString userEmail)const;
