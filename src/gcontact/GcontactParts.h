@@ -241,6 +241,8 @@ namespace googleQt {
         public:
             GroupMembershipInfo();
 
+            GroupMembershipInfo(QString userId, QString groupId, bool isDeleted);
+
             QString userId()const { return m_userId; }
             GroupMembershipInfo& setUserId(QString uId) { m_userId = uId; return *this; }
 

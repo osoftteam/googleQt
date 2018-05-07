@@ -597,6 +597,13 @@ GroupMembershipInfo::GroupMembershipInfo()
 {
 };
 
+GroupMembershipInfo::GroupMembershipInfo(QString userId, QString groupId, bool isDeleted):
+m_userId(userId),
+m_groupId(groupId),
+m_is_deleted(isDeleted)
+{
+};
+
 bool GroupMembershipInfo::operator==(const GroupMembershipInfo& o) const
 {
     COMPARE_NO_CASE(m_groupId);
