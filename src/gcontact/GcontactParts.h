@@ -19,17 +19,17 @@ namespace googleQt {
             /**
                 set full name
             */
-            NameInfo& setFullName(QString s) { m_fullName = s; return *this; }
+            void setFullName(QString s) { m_fullName = s;}
 
             /**
                 set given name
             */
-            NameInfo& setGivenName(QString s) { m_givenName = s; return *this; }
+            void setGivenName(QString s) { m_givenName = s;}
 
             /**
             set family name
             */
-            NameInfo& setFamilyName(QString s) { m_familyName = s; return *this; }
+            void setFamilyName(QString s) { m_familyName = s;}
 
             bool isEmpty()const override;
 
@@ -57,9 +57,9 @@ namespace googleQt {
             QString title()const { return m_title; }
             QString typeLabel()const { return m_type_label; };
 
-            OrganizationInfo& setName(QString s) { m_name = s; return *this; }
-            OrganizationInfo& setTitle(QString s) { m_title = s; return *this; }
-            OrganizationInfo& setTypeLabel(QString s) { m_type_label = s; return *this; }
+            void setName(QString s) { m_name = s; }
+            void setTitle(QString s) { m_title = s; }
+            void setTypeLabel(QString s) { m_type_label = s; }
 
             bool isEmpty()const override;
 
@@ -94,14 +94,14 @@ namespace googleQt {
             QString typeLabel()const { return m_type_label; };
             bool isPrimary()const { return m_is_primary; }
 
-            PostalAddress& setCity(QString s) { m_city = s; return *this; }
-            PostalAddress& setStreet(QString s) { m_street = s; return *this; }
-            PostalAddress& setRegion(QString s) { m_region = s; return *this; }
-            PostalAddress& setPostcode(QString s) { m_postcode = s; return *this; }
-            PostalAddress& setCountry(QString s) { m_country = s; return *this; }
-            PostalAddress& setFormattedAddress(QString s) { m_formattedAddress = s; return *this; }            
-            PostalAddress& setTypeLabel(QString s) { m_type_label = s; return *this; }
-            PostalAddress& setPrimary(bool val){ m_is_primary = val; return *this;}
+            void setCity(QString s) { m_city = s; }
+            void setStreet(QString s) { m_street = s; }
+            void setRegion(QString s) { m_region = s; }
+            void setPostcode(QString s) { m_postcode = s; }
+            void setCountry(QString s) { m_country = s; }
+            void setFormattedAddress(QString s) { m_formattedAddress = s; }
+            void setTypeLabel(QString s) { m_type_label = s; }
+            void setPrimary(bool val){ m_is_primary = val; }
 
             QString toString()const;
             bool operator==(const PostalAddress&) const;
@@ -132,19 +132,19 @@ namespace googleQt {
             /**
                 set phone number
             */
-            PhoneInfo& setNumber(QString s) { m_number = s; return *this; };
+            void setNumber(QString s) { m_number = s; };
             /**
                 set phone uri
             */
-            PhoneInfo& setUri(QString s) { m_uri = s; return *this; };
+            void setUri(QString s) { m_uri = s; };
             /**
                 set phone label - other, home, work
             */
-            PhoneInfo& setTypeLabel(QString s) { m_type_label = s; return *this; };
+            void setTypeLabel(QString s) { m_type_label = s; };
             /**
                 set primary property
             */
-            PhoneInfo& setPrimary(bool val){ m_is_primary = val; return *this; }
+            void setPrimary(bool val){ m_is_primary = val; }
 
             QString toString()const;
             bool operator==(const PhoneInfo&) const;
@@ -174,21 +174,21 @@ namespace googleQt {
             /**
                 set email address
             */
-            EmailInfo& setAddress(QString val){ m_address = val; return *this; };
+            void setAddress(QString val){ m_address = val;};
             /**
                 set display name
             */
-            EmailInfo& setDisplayName(QString val){ m_display_name = val; return *this; };
+            void setDisplayName(QString val){ m_display_name = val;};
 
             /**
                 set label type - other, home, work
             */
-            EmailInfo& setTypeLabel(QString val){ m_type_label = val; return *this;};
+            void setTypeLabel(QString val){ m_type_label = val;};
 
             /**
                 set primary type
             */
-            EmailInfo& setPrimary(bool val) { m_is_primary = val;  return *this;}
+            void setPrimary(bool val) { m_is_primary = val;}
             
             QString toString()const;
             bool operator==(const EmailInfo&) const;
@@ -241,16 +241,15 @@ namespace googleQt {
         public:
             GroupMembershipInfo();
 
-            GroupMembershipInfo(QString userId, QString groupId, bool isDeleted);
+            GroupMembershipInfo(QString userId, QString groupId);
 
             QString userId()const { return m_userId; }
-            GroupMembershipInfo& setUserId(QString uId) { m_userId = uId; return *this; }
+            void setUserId(QString uId) { m_userId = uId;}
 
             QString groupId()const{return m_groupId;}
-            GroupMembershipInfo& setGroupId(QString gId){m_groupId = gId;return *this;}
+            void setGroupId(QString gId){m_groupId = gId;}
 
             bool isDeleted()const{return m_is_deleted;}
-            GroupMembershipInfo& setDeleted(bool val){m_is_deleted = val;return *this;}
 
             bool operator==(const GroupMembershipInfo&) const;
             bool operator!=(const GroupMembershipInfo&) const;

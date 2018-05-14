@@ -597,10 +597,9 @@ GroupMembershipInfo::GroupMembershipInfo()
 {
 };
 
-GroupMembershipInfo::GroupMembershipInfo(QString userId, QString groupId, bool isDeleted):
+GroupMembershipInfo::GroupMembershipInfo(QString userId, QString groupId):
 m_userId(userId),
-m_groupId(groupId),
-m_is_deleted(isDeleted)
+m_groupId(groupId)
 {
 };
 

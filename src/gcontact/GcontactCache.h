@@ -96,6 +96,11 @@ namespace googleQt {
             ContactInfo& addGroup(const GroupMembershipInfo& p);
 
             /**
+            replace groups with new ids
+            */
+            ContactInfo& setGroups(QString userId, const std::list<QString>& groupIdlist);
+
+            /**
                 delete old address list and put a new one
             */
             ContactInfo& replaceAddressList(const std::list<PostalAddress>& lst);

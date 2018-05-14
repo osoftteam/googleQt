@@ -124,6 +124,17 @@ ContactInfo& ContactInfo::addGroup(const GroupMembershipInfo& p)
     return *this;
 };
 
+ContactInfo& ContactInfo::setGroups(QString userId, const std::list<QString>& groupIdlist)
+{
+    m_groups.items().clear();
+    for (auto gid : groupIdlist) {
+        GroupMembershipInfo m(userId, gid);
+        m_groups.m_parts.push_back(m);
+    }
+    markAsModified();
+    return *this;
+};
+
 ContactInfo& ContactInfo::replaceAddressList(const std::list<PostalAddress>& lst)
 {
     m_address_list.m_parts.clear();
@@ -479,12 +490,14 @@ QString GroupInfo::toString()const
 GroupInfo& GroupInfo::setTitle(QString val)
 {
     m_title = val;
+    markAsModified();
     return *this;
 };
 
 GroupInfo& GroupInfo::setContent(QString notes)
 {
     m_content = notes;
+    markAsModified();
     return *this;
 };
 
@@ -506,10 +519,18 @@ bool GroupInfo::operator!=(const GroupInfo& o) const
 bool GroupInfo::setFromDbRecord(QSqlQuery* q) 
 {
     QString xml = q->value(1).toString();
-    if (!parseXml(xml)) {
-        qWarning() << "failed to parse contact group db record" << xml.size();
-        return false;
+    QString group_id = q->value(6).toString();
+    bool new_group = xml.isEmpty() && group_id.isEmpty();
+
+    if (!new_group) {
+#ifndef API_QT_AUTOTEST
+        if (!parseXml(xml)) {
+            qWarning() << "failed to parse contact group db record xml-size=" << xml.size();
+            return false;
+        }
+#endif
     }
+
     bool ok = false;
     m_status = ContactXmlPersistant::validatedStatus(q->value(0).toInt(), &ok);
     if (!ok) {
@@ -522,6 +543,7 @@ bool GroupInfo::setFromDbRecord(QSqlQuery* q)
     m_db_id = q->value(3).toInt();
     m_title = q->value(4).toString();
     m_content = q->value(5).toString();
+    m_id = q->value(6).toString();
     setRegisterModifications(true);
     return true;
 };
@@ -604,7 +626,7 @@ bool GContactCache::ensureContactTables()
     if (!m_sql_storage->execQuery(sql_entries))
         return false;
 
-    QString sql_groups = QString("CREATE TABLE IF NOT EXISTS %1gcontact_group(group_db_id INTEGER PRIMARY KEY, acc_id INTEGER NOT NULL, entry_id TEXT, etag TEXT, title TEXT, content TEXT,"
+    QString sql_groups = QString("CREATE TABLE IF NOT EXISTS %1gcontact_group(group_db_id INTEGER PRIMARY KEY, acc_id INTEGER NOT NULL, group_id TEXT, etag TEXT, title TEXT, content TEXT,"
         "xml_original TEXT, updated INTEGER, status INTEGER)").arg(m_sql_storage->m_metaPrefix);
     if (!m_sql_storage->execQuery(sql_groups))
         return false;
@@ -695,10 +717,14 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
         }
 
         for (auto c : updated_contacts) {
+            QString xml_current = c->toXml(m_endpoint.apiClient()->userId());
+            qDebug() << "sql-updated dbid=" << c->dbID() << "title=" << c->title() << "fullname=" << c->name().fullName();
+            qDebug() << xml_current;
+            qDebug() << "================================";
             q->addBindValue(c->title());
             q->addBindValue(c->name().fullName());
             q->addBindValue(c->parsedXml());
-            q->addBindValue(c->toXml(m_endpoint.apiClient()->userId()));
+            q->addBindValue(xml_current);
             qlonglong upd_time = c->updated().toMSecsSinceEpoch();
             q->addBindValue(upd_time);
             q->addBindValue(c->status());
@@ -768,7 +794,7 @@ bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& grou
 
     if (new_groups.size() > 0) {
         QString sql_insert;
-        sql_insert = QString("INSERT INTO  %1gcontact_group(acc_id, title, content, xml_original, updated, status, entry_id, etag)"
+        sql_insert = QString("INSERT INTO  %1gcontact_group(acc_id, title, content, xml_original, updated, status, group_id, etag)"
             " VALUES(%2, ?, ?, ?, ?, ?, ?, ?)")
             .arg(m_sql_storage->m_metaPrefix)
             .arg(m_sql_storage->m_accId);
@@ -978,7 +1004,7 @@ bool GContactCache::loadContactGroupsFromDb()
 {
     m_groups.clear();
 
-    QString sql = QString("SELECT status, xml_original, updated, group_db_id, title, content FROM %1gcontact_group WHERE acc_id=%2 AND status IN(1,2,3) ORDER BY updated DESC")
+    QString sql = QString("SELECT status, xml_original, updated, group_db_id, title, content, group_id FROM %1gcontact_group WHERE acc_id=%2 AND status IN(1,2,3) ORDER BY updated DESC")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
     QSqlQuery* q = m_sql_storage->selectQuery(sql);
@@ -1685,23 +1711,38 @@ std::unique_ptr<ContactInfo> ContactInfo::EXAMPLE(int param, int )
     PostalAddress a1, a2;
     GroupMembershipInfo g;
 
-    n.setFamilyName(last).setGivenName(first).setFullName(first + " " + last);
-    e1.setAddress(email).setDisplayName(first + " " + last).setPrimary(true).setTypeLabel("home");
-    e2.setAddress(QString("2") + email).setDisplayName(first + " " + last).setPrimary(false).setTypeLabel("work");
-    p1.setNumber(QString("1-111-111%1").arg(param)).setPrimary(true);
-    p2.setNumber(QString("2-222-222%1").arg(param)).setPrimary(false);
-    o.setName("1-organization-name").setTitle("title-in-the-organization");
-    a1.setCity("Mountain View-1").setTypeLabel("work")
-        .setStreet(QString("1111-%1 Amphitheatre Pkwy").arg(param))
-        .setRegion("CA").setPostcode(QString("11111-%1").arg(param))
-        .setCountry("United States")
-        .setPrimary(true);
+    n.setFamilyName(last);
+    n.setGivenName(first); 
+    n.setFullName(first + " " + last);
+    e1.setAddress(email);
+    e1.setDisplayName(first + " " + last);
+    e1.setPrimary(true);
+    e1.setTypeLabel("home");
+    e2.setAddress(QString("2") + email);
+    e2.setDisplayName(first + " " + last);
+    e2.setPrimary(false);
+    e2.setTypeLabel("work");
+    p1.setNumber(QString("1-111-111%1").arg(param)); 
+    p1.setPrimary(true);
+    p2.setNumber(QString("2-222-222%1").arg(param));
+    p2.setPrimary(false);
+    o.setName("1-organization-name"); 
+    o.setTitle("title-in-the-organization");
+    a1.setCity("Mountain View-1"); 
+    a1.setTypeLabel("work");
+    a1.setStreet(QString("1111-%1 Amphitheatre Pkwy").arg(param));
+    a1.setRegion("CA"); 
+    a1.setPostcode(QString("11111-%1").arg(param));
+    a1.setCountry("United States");
+    a1.setPrimary(true);
 
-    a2.setCity("Mountain View-2").setTypeLabel("home")
-        .setStreet(QString("2222-%1 Amphitheatre Pkwy").arg(param))
-        .setRegion("NY").setPostcode(QString("22222-%1").arg(param))
-        .setCountry("United States")
-        .setPrimary(false);
+    a2.setCity("Mountain View-2"); 
+    a2.setTypeLabel("home");
+    a2.setStreet(QString("2222-%1 Amphitheatre Pkwy").arg(param));
+    a2.setRegion("NY"); 
+    a2.setPostcode(QString("22222-%1").arg(param));
+    a2.setCountry("United States");
+    a2.setPrimary(false);
 
 
     ci.setName(n).setTitle("Title for " + first + " " + last)
@@ -1711,7 +1752,8 @@ std::unique_ptr<ContactInfo> ContactInfo::EXAMPLE(int param, int )
         .setOrganizationInfo(o)
         .addAddress(a1).addAddress(a2);
 
-    g.setUserId("me%1@gmail.com").setGroupId("my-group-etag");
+    g.setUserId("me%1@gmail.com");
+    g.setGroupId("my-group-etag");
     ci.addGroup(g);
 
     ci.m_etag = "my-contact-etag";
@@ -1780,31 +1822,52 @@ std::unique_ptr<ContactInfo> createMergeContactParty(QString xmlOrigin)
     c->setContent("=NEW-CONTENT=");
 
     OrganizationInfo o;
-    o.setName("=NEW-organization-name=").setTitle("=NEW-title-in-the-organization=");
+    o.setName("=NEW-organization-name="); 
+    o.setTitle("=NEW-title-in-the-organization=");
     c->setOrganizationInfo(o);
     NameInfo n;
-    n.setFamilyName("=NEW-last=").setGivenName("=NEW-first").setFullName("=NEW-first_and_last=");
+    n.setFamilyName("=NEW-last=");
+    n.setGivenName("=NEW-first");
+    n.setFullName("=NEW-first_and_last=");
     c->setName(n);
 
     PhoneInfo p1, p2;
     std::list<PhoneInfo> lst;
-    p1.setNumber("=NEW-1-111-1111=").setPrimary(true);
-    p2.setNumber("=NEW-2-222-2222=").setPrimary(false);
+    p1.setNumber("=NEW-1-111-1111=");
+    p1.setPrimary(true);
+    p2.setNumber("=NEW-2-222-2222=");
+    p2.setPrimary(false);
     lst.push_back(p1);
     lst.push_back(p2);
     c->replacePhones(lst);
 
     EmailInfo e1, e2;
-    e1.setAddress("=NEW-first-email=").setDisplayName("=NEW-first-last=").setPrimary(true).setTypeLabel("home");
-    e2.setAddress("=NEW-second-email=").setDisplayName("=NEW-second-first-last=").setPrimary(false).setTypeLabel("work");
+    e1.setAddress("=NEW-first-email="); 
+    e1.setDisplayName("=NEW-first-last=");
+    e1.setPrimary(true);
+    e1.setTypeLabel("home");
+    e2.setAddress("=NEW-second-email="); 
+    e2.setDisplayName("=NEW-second-first-last=");
+    e2.setPrimary(false);
+    e2.setTypeLabel("work");
     std::list<EmailInfo> e_lst;
     e_lst.push_back(e1);
     e_lst.push_back(e2);
     c->replaceEmails(e_lst);
 
     PostalAddress a1, a2;
-    a1.setCity("=NEW-ADDR-1=").setStreet("=NEW-STREET1=").setRegion("=NEW-REGION1=").setPostcode("=NEW-ZIP1=").setCountry("=NEW-COUNTRY1=").setPrimary(true);
-    a2.setCity("=NEW-ADDR-2=").setStreet("=NEW-STREET2=").setRegion("=NEW-REGION2=").setPostcode("=NEW-ZIP2=").setCountry("=NEW-COUNTRY2=").setPrimary(false);
+    a1.setCity("=NEW-ADDR-1="); 
+    a1.setStreet("=NEW-STREET1="); 
+    a1.setRegion("=NEW-REGION1="); 
+    a1.setPostcode("=NEW-ZIP1="); 
+    a1.setCountry("=NEW-COUNTRY1="); 
+    a1.setPrimary(true);
+    a2.setCity("=NEW-ADDR-2="); 
+    a2.setStreet("=NEW-STREET2="); 
+    a2.setRegion("=NEW-REGION2="); 
+    a2.setPostcode("=NEW-ZIP2="); 
+    a2.setCountry("=NEW-COUNTRY2="); 
+    a2.setPrimary(false);
     std::list<PostalAddress> a_lst;
     a_lst.push_back(a1);
     a_lst.push_back(a2);
