@@ -181,12 +181,27 @@ void GcontactCommands::test_contact_xml()
     OrganizationInfo o;
     PostalAddress a;
 
-    n.setFamilyName(last).setGivenName(first).setFullName(first + " " + last);
-    e1.setAddress(email).setDisplayName(first + " " + last).setPrimary(true).setTypeLabel("home");
-    e2.setAddress(QString("2") + email).setDisplayName(first + " " + last).setPrimary(false).setTypeLabel("work");
-    p.setNumber("1-111-1111").setPrimary(true);
-    o.setName("organization-name").setTitle("title-in-the-organization");
-    a.setCity("Mountain View").setStreet("1600 Amphitheatre Pkwy").setRegion("CA").setPostcode("94043").setCountry("United States").setPrimary(true);
+    n.setFamilyName(last); 
+    n.setGivenName(first); 
+    n.setFullName(first + " " + last);
+    e1.setAddress(email);
+    e1.setDisplayName(first + " " + last);
+    e1.setPrimary(true);
+    e1.setTypeLabel("home");
+    e2.setAddress(QString("2") + email); 
+    e2.setDisplayName(first + " " + last);
+    e2.setPrimary(false);
+    e2.setTypeLabel("work");
+    p.setNumber("1-111-1111");
+    p.setPrimary(true);
+    o.setName("organization-name"); 
+    o.setTitle("title-in-the-organization");
+    a.setCity("Mountain View"); 
+    a.setStreet("1600 Amphitheatre Pkwy");
+    a.setRegion("CA");
+    a.setPostcode("94043");
+    a.setCountry("United States");
+    a.setPrimary(true);
 
     ci.setName(n).setTitle("Title of " + first + " " + last)
         .addEmail(e1).addEmail(e2)
@@ -360,31 +375,52 @@ void GcontactCommands::test_merge(QString xmlFileName)
     c.setContent("=NEW-CONTENT=");
 
     OrganizationInfo o;
-    o.setName("=NEW-organization-name=").setTitle("=NEW-title-in-the-organization=");
+    o.setName("=NEW-organization-name="); 
+    o.setTitle("=NEW-title-in-the-organization=");
     c.setOrganizationInfo(o);
     NameInfo n;
-    n.setFamilyName("=NEW-last=").setGivenName("=NEW-first").setFullName("=NEW-first_and_last=");
+    n.setFamilyName("=NEW-last="); 
+    n.setGivenName("=NEW-first");
+    n.setFullName("=NEW-first_and_last=");
     c.setName(n);
 
     PhoneInfo p1, p2;
     std::list<PhoneInfo> lst;
-    p1.setNumber("=NEW-1-111-1111=").setPrimary(true);
-    p2.setNumber("=NEW-2-222-2222=").setPrimary(false);
+    p1.setNumber("=NEW-1-111-1111=");
+    p1.setPrimary(true);
+    p2.setNumber("=NEW-2-222-2222=");
+    p2.setPrimary(false);
     lst.push_back(p1);
     lst.push_back(p2);
     c.replacePhones(lst);
 
     EmailInfo e1, e2;
-    e1.setAddress("=NEW-first-email=").setDisplayName("=NEW-first-last=").setPrimary(true).setTypeLabel("home");
-    e2.setAddress("=NEW-second-email=").setDisplayName("=NEW-second-first-last=").setPrimary(false).setTypeLabel("work");
+    e1.setAddress("=NEW-first-email="); 
+    e1.setDisplayName("=NEW-first-last="); 
+    e1.setPrimary(true); 
+    e1.setTypeLabel("home");
+    e2.setAddress("=NEW-second-email=");
+    e2.setDisplayName("=NEW-second-first-last=");
+    e2.setPrimary(false);
+    e2.setTypeLabel("work");
     std::list<EmailInfo> e_lst;
     e_lst.push_back(e1);
     e_lst.push_back(e2);
     c.replaceEmails(e_lst);
 
     PostalAddress a1, a2;
-    a1.setCity("=NEW-ADDR-1=").setStreet("=NEW-STREET1=").setRegion("=NEW-REGION1=").setPostcode("=NEW-ZIP1=").setCountry("=NEW-COUNTRY1=").setPrimary(true);
-    a2.setCity("=NEW-ADDR-2=").setStreet("=NEW-STREET2=").setRegion("=NEW-REGION2=").setPostcode("=NEW-ZIP2=").setCountry("=NEW-COUNTRY2=").setPrimary(false);
+    a1.setCity("=NEW-ADDR-1="); 
+    a1.setStreet("=NEW-STREET1="); 
+    a1.setRegion("=NEW-REGION1="); 
+    a1.setPostcode("=NEW-ZIP1="); 
+    a1.setCountry("=NEW-COUNTRY1="); 
+    a1.setPrimary(true);
+    a2.setCity("=NEW-ADDR-2="); 
+    a2.setStreet("=NEW-STREET2="); 
+    a2.setRegion("=NEW-REGION2="); 
+    a2.setPostcode("=NEW-ZIP2="); 
+    a2.setCountry("=NEW-COUNTRY2="); 
+    a2.setPrimary(false);
     std::list<PostalAddress> a_lst;
     a_lst.push_back(a1);
     a_lst.push_back(a2);
@@ -410,7 +446,8 @@ void GcontactCommands::update_contact_name(QString contactId_name)
     QString last_name = arg_list[2];
 
     NameInfo n;
-    n.setGivenName(first_name).setFamilyName(last_name);
+    n.setGivenName(first_name); 
+    n.setFamilyName(last_name);
     
     try
     {
@@ -760,7 +797,7 @@ void GcontactCommands::set_contact_groups(QString contactId_space_groupId)
             int i = 1, Max = arg_list.size();
             for(; i < Max; i++){
                 QString groupid = arg_list[i];
-                GroupMembershipInfo m(m_c.userId(), groupid, false);
+                GroupMembershipInfo m(m_c.userId(), groupid);
                 c->addGroup(m);
             }
             
@@ -1010,11 +1047,23 @@ std::unique_ptr<gcontact::ContactInfo> GcontactCommands::generateContactInfo(QSt
     OrganizationInfo o;
     PostalAddress a;
 
-    n.setFamilyName(last).setGivenName(first).setFullName(first + " " + last);
-    e.setAddress(email).setDisplayName(first + " " + last).setPrimary(true).setTypeLabel("home");
-    p.setNumber("1-111-1111").setPrimary(true);
-    o.setName("organization-name").setTitle("title-in-the-organization");
-    a.setCity("Mountain View").setStreet("1600 Amphitheatre Pkwy").setRegion("CA").setPostcode("94043").setCountry("United States").setPrimary(true);
+    n.setFamilyName(last); 
+    n.setGivenName(first); 
+    n.setFullName(first + " " + last);
+    e.setAddress(email);
+    e.setDisplayName(first + " " + last);
+    e.setPrimary(true);
+    e.setTypeLabel("home");
+    p.setNumber("1-111-1111");
+    p.setPrimary(true);
+    o.setName("organization-name"); 
+    o.setTitle("title-in-the-organization");
+    a.setCity("Mountain View");
+    a.setStreet("1600 Amphitheatre Pkwy");
+    a.setRegion("CA");
+    a.setPostcode("94043");
+    a.setCountry("United States");
+    a.setPrimary(true);
 
     ci->setName(n).setTitle("Title for " + first + " " + last)
         .addEmail(e)
