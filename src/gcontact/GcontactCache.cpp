@@ -1444,7 +1444,28 @@ GcontactCacheSyncTask* GcontactCacheRoutes::synchronizeContacts_Async()
         dtUpdatedMin = dtUpdatedMin.addSecs(1).toUTC();
     }
     
-    reloadCache_Async(rv, dtUpdatedMin);
+    // sync as follows:
+    // 1. local group changes first
+    // 2. server group & contacts changes
+    // 3. local contact changes
+
+    BatchRequesGroupList bg = m_GContactsCache->groups().buildBatchRequestList();
+    if(!bg.items().empty()){
+        BatchGroupArg arg(bg); 
+        auto groups_btask = m_endpoint.client()->gcontact()->getContactGroup()->batch_Async(arg);
+        groups_btask->then([=](std::unique_ptr<gcontact::BatchGroupList> rlst)
+                           {
+                               rv->m_updated_groups = std::move(rlst);
+                               reloadCache_Async(rv, dtUpdatedMin);
+                           }, 
+                           [=](std::unique_ptr<GoogleException> ex)
+                           {
+                               rv->failed_callback(std::move(ex));
+                           });        
+    }
+    else{
+        reloadCache_Async(rv, dtUpdatedMin);
+    }
     return rv;
 };
 
@@ -1477,7 +1498,7 @@ void GcontactCacheRoutes::reloadCache_Async(GcontactCacheSyncTask* rv, QDateTime
             //at this point we should have loaded server changes
             //now we will try to apply our changes - modifications and deleted records
 
-            applyLocalCacheModifications_Async(rv);
+            applyLocalContacEntriesModifications_Async(rv);
         }
         else {
             std::unique_ptr<GoogleException> ex(new GoogleException("Failed to merge/store DB cache."));
@@ -1490,24 +1511,16 @@ void GcontactCacheRoutes::reloadCache_Async(GcontactCacheSyncTask* rv, QDateTime
     });
 };
 
-void GcontactCacheRoutes::applyLocalCacheModifications_Async(GcontactCacheSyncTask* rv)
+void GcontactCacheRoutes::applyLocalContacEntriesModifications_Async(GcontactCacheSyncTask* rv)
 {
-    BatchRequesContactList bc = m_GContactsCache->contacts().buildBatchRequestList();
-    BatchRequesGroupList bg = m_GContactsCache->groups().buildBatchRequestList();
-        
-    BatchContactArg arg1(bc);
-    BatchGroupArg arg2(bg);
+    BatchRequesContactList bc = m_GContactsCache->contacts().buildBatchRequestList();        
+    BatchContactArg arg(bc);
 
-    auto entries_btask = m_endpoint.client()->gcontact()->getContacts()->batch_Async(arg1);
-    auto groups_btask = m_endpoint.client()->gcontact()->getContactGroup()->batch_Async(arg2);
-    TaskAggregator* agg = new TaskAggregator(m_endpoint);
-    agg->add(entries_btask);
-    agg->add(groups_btask);
-    agg->then(
-        [=]() 
+    auto entries_btask = m_endpoint.client()->gcontact()->getContacts()->batch_Async(arg);
+    entries_btask->then(
+        [=](std::unique_ptr<gcontact::BatchContactList> rlst) 
         {
-            rv->m_updated_contacts = entries_btask->detachResult();
-            rv->m_updated_groups = groups_btask->detachResult();
+            rv->m_updated_contacts = std::move(rlst);
 
             auto& arr = rv->m_updated_contacts->items();
             for (auto& b : arr) {

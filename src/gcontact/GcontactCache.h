@@ -386,7 +386,8 @@ namespace googleQt {
 #endif
         protected:
             void reloadCache_Async(GcontactCacheSyncTask* rv, QDateTime dtUpdatedMin);
-            void applyLocalCacheModifications_Async(GcontactCacheSyncTask* rv);
+            void applyLocalContacEntriesModifications_Async(GcontactCacheSyncTask* rv);
+            // void applyLocalGroupModifications_Async(GcontactCacheSyncTask* rv);
         protected:
             Endpoint&           m_endpoint;
             GcontactRoutes&     m_c_routes;
