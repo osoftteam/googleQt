@@ -1574,21 +1574,32 @@ void GcontactCommands::cache_sync()
             ContactList& cl = c->contacts();
             GroupList& gl = c->groups();
 
-            std::cout << "=== loaded entries: " << t->loadedContacts()->items().size() << std::endl;
-            if(t->loadedContacts()->items().size() > 0){
-                print_cache_contact_list(t->loadedContacts());
+            if(t->loadedContacts()){
+                std::cout << "=== loaded entries: " << t->loadedContacts()->items().size() << std::endl;
+                if(t->loadedContacts()->items().size() > 0){
+                    print_cache_contact_list(t->loadedContacts());
+                }
             }
-            std::cout << "=== loaded groups: " << t->loadedGroups()->items().size() << std::endl;
-            if(t->loadedGroups()->items().size() > 0){
-                print_cache_group_list(t->loadedGroups());
+
+            if(t->loadedGroups()){
+                std::cout << "=== loaded groups: " << t->loadedGroups()->items().size() << std::endl;
+                if(t->loadedGroups()->items().size() > 0){
+                    print_cache_group_list(t->loadedGroups());
+                }
             }
-            std::cout << "=== updated entries: " << t->updatedContacts()->items().size() << std::endl;
-            if(t->updatedContacts()->items().size() > 0){
-                print_batch_contact_result(t->updatedContacts());
+
+            if(t->updatedContacts()){
+                std::cout << "=== updated entries: " << t->updatedContacts()->items().size() << std::endl;
+                if(t->updatedContacts()->items().size() > 0){
+                    print_batch_contact_result(t->updatedContacts());
+                }
             }
-            std::cout << "=== updated groups: " << t->updatedGroups()->items().size() << std::endl;
-            if(t->updatedGroups()->items().size() > 0){
-                print_batch_group_result(t->updatedGroups());
+
+            if(t->updatedGroups()){
+                std::cout << "=== updated groups: " << t->updatedGroups()->items().size() << std::endl;
+                if(t->updatedGroups()->items().size() > 0){
+                    print_batch_group_result(t->updatedGroups());
+                }
             }
                         
             std::cout << "=== entries-in-cache: " << cl.items().size() << std::endl;

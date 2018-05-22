@@ -685,7 +685,7 @@ QString GroupMembershipInfoList::toXmlString()const
     QString s = "";
     for (auto& p : m_parts) {
         if (!p.isNull()) {
-            QString usr = QUrl::toPercentEncoding(p.m_userId);      
+            QString usr = p.m_userId;//QUrl::toPercentEncoding(p.m_userId);
             s += QString("<gContact:groupMembershipInfo deleted=\"%1\" href = \"http://www.google.com/m8/feeds/groups/%2/base/%3\"/>\n")
                 .arg(p.isDeleted() ? "true" : "false")
                 .arg(usr)
