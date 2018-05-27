@@ -215,6 +215,21 @@ namespace googleQt {
             void remove(std::shared_ptr<T> c) {
                 c->markAsDeleted();
             }
+
+            void idlimbo(std::shared_ptr<T> c){
+                if (c->id().isEmpty()) {
+                    qWarning() << "ERROR. Expected valid cloud ID";
+                    return;                    
+                }
+                
+                if(findById(c->id())){
+                    qWarning() << "ERROR. Duplicate ID not allowed in infolist" << c->id();
+                    return;
+                }
+                
+                c->markAsIdLimbo();
+                m_id2item[c->id()] = c;
+            }
             
             QString toString()const
             {
