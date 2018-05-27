@@ -232,7 +232,7 @@ namespace googleQt {
         public:
             /// this is special case of 'limbo' contact - we created it locally, it has DBID, we sent requiest
             /// to server and server assigned cloudID - we have to link cloudID to the contact and update local cache
-            ContactInfo::ptr findNewCreatedContact(std::shared_ptr<BatchResultContactInfo> b);
+            ContactInfo::ptr findNewCreated(std::shared_ptr<BatchResultContactInfo> b);
             
             std::list<QString> buildUnresolvedPhotoIdList();
             std::list<QString> buildModifiedPhotoIdList();
@@ -250,6 +250,10 @@ namespace googleQt {
         class GroupList : public BatchBuilderInfoList<GroupInfo, BatchRequesGroupList>
         {
         public:
+            /// this is special case of 'limbo' group - we created it locally, it has DBID, we sent requiest
+            /// to server and server assigned cloudID - we have to link cloudID to the contact and update local cache
+            GroupInfo::ptr findNewCreated(std::shared_ptr<BatchResultGroupInfo> b);
+
             class factory {
             public:
                 static std::unique_ptr<GroupList>  create(const QByteArray& data);
@@ -345,14 +349,16 @@ namespace googleQt {
             const ContactList*      loadedContacts()const{return m_loaded_contacts.get();}
             const GroupList*        loadedGroups()const{return m_loaded_groups.get();}
             const BatchContactList* updatedContacts()const{return m_updated_contacts.get();}
-            const BatchGroupList*   updatedGroups()const{return m_updated_groups.get();}            
+            const BatchGroupList*   updatedGroups()const{return m_updated_groups.get();}
+            const std::map<QString, std::shared_ptr<BatchRequestGroupInfo>>& deleted_groups()const{return m_deleted_groups;}
         protected:
             GcontactCacheSyncTask(ApiEndpoint& ept, contact_cache_ptr c) :GoogleVoidTask(ept), m_cache(c) {}
-            contact_cache_ptr m_cache;
-            std::unique_ptr<ContactList> m_loaded_contacts;
-            std::unique_ptr<GroupList> m_loaded_groups;
+            contact_cache_ptr                 m_cache;
+            std::unique_ptr<ContactList>      m_loaded_contacts;
+            std::unique_ptr<GroupList>        m_loaded_groups;
             std::unique_ptr<BatchContactList> m_updated_contacts;
-            std::unique_ptr<BatchGroupList> m_updated_groups;
+            std::unique_ptr<BatchGroupList>   m_updated_groups;
+            std::map<QString, std::shared_ptr<BatchRequestGroupInfo>> m_deleted_groups;
             friend class GcontactCacheRoutes;
         };
         

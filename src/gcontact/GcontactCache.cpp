@@ -312,12 +312,8 @@ bool ContactInfo::parseEntryNode(QDomNode n)
 
 bool ContactInfo::setFromDbRecord(QSqlQuery* q)
 {
-    QString original_xml_string = q->value(1).toString();
-    
-    //    qDebug() << "----ykh----- / setFromDbRecord";
+    QString original_xml_string = q->value(1).toString();    
     QString currentXml = q->value(2).toString();
-    //    qDebug() << currentXml;
-    //    qDebug() << "----ykh/END----- / setFromDbRecord";
     if (!parseXml(currentXml)) {
         qWarning() << "failed to parse contact entry db record size="
                    << currentXml.size()
@@ -639,29 +635,33 @@ bool GContactCache::ensureContactTables()
     return true;
 };
 
+#define MAKE_DB_UPDATE_LISTS                        \
+    CLIST cloud_created_contacts;                   \
+    CLIST updated_contacts;                         \
+    CLIST limbo_id_contacts;                        \
+    for (auto& c : contact_list) {                  \
+        if (c->isDbIdNull()) {                      \
+            cloud_created_contacts.push_back(c);    \
+        }                                           \
+        else {                                      \
+            if (c->isDirty()) {                     \
+                if (c->isIdLimbo()) {               \
+                    c->markAsNormalCopy();          \
+                    limbo_id_contacts.push_back(c); \
+                }                                   \
+                else {                              \
+                    updated_contacts.push_back(c);  \
+                }                                   \
+                c->setDirty(false);                 \
+            }                                       \
+        }                                           \
+    }                                               \
+
+
 bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& contact_list)
 {    
     using CLIST = std::list<ContactInfo::ptr>;
-    CLIST cloud_created_contacts;
-    CLIST updated_contacts;
-    CLIST limbo_id_contacts;
-    for (auto& c : contact_list) {
-        if (c->isDbIdNull()) {
-            cloud_created_contacts.push_back(c);
-        }
-        else {
-            if(c->isDirty()){
-                if (c->isIdLimbo()) {
-                    c->markAsNormalCopy();
-                    limbo_id_contacts.push_back(c);
-                }
-                else {
-                    updated_contacts.push_back(c);
-                }
-                c->setDirty(false);
-            }
-        }
-    }
+    MAKE_DB_UPDATE_LISTS;
 
     if (cloud_created_contacts.size() > 0) {
         qDebug() << "sql-contacts-store-cloud-created" << cloud_created_contacts.size();
@@ -778,21 +778,13 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
     return true;
 };
 
-bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& group_list)
+bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& contact_list)
 {
     using CLIST = std::list<GroupInfo::ptr>;
-    CLIST new_groups;
-    CLIST updated_groups;
-    for (auto& g : group_list) {
-        if (g->isDbIdNull()) {
-            new_groups.push_back(g);
-        }
-        else {
-            updated_groups.push_back(g);
-        }
-    }
+    MAKE_DB_UPDATE_LISTS;
 
-    if (new_groups.size() > 0) {
+    if (cloud_created_contacts.size() > 0) {
+        qDebug() << "sql-groups-store-cloud-created" << cloud_created_contacts.size() << (*cloud_created_contacts.begin())->id();
         QString sql_insert;
         sql_insert = QString("INSERT INTO  %1gcontact_group(acc_id, title, content, xml_original, updated, status, group_id, etag)"
             " VALUES(%2, ?, ?, ?, ?, ?, ?, ?)")
@@ -805,7 +797,7 @@ bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& grou
             return false;
         }
 
-        for (auto c : new_groups) {
+        for (auto c : cloud_created_contacts) {
             q->addBindValue(c->title());
             q->addBindValue(c->content());
             q->addBindValue(c->parsedXml());
@@ -825,7 +817,9 @@ bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& grou
             }
         }//for
     }
-    else if (updated_groups.size() > 0) {
+    
+    if (updated_contacts.size() > 0) {
+        qDebug() << "sql-groups-store-updated" << updated_contacts.size() << (*updated_contacts.begin())->id();
         QString sql_update;
         sql_update = QString("UPDATE  %1gcontact_group SET title=?, content=?, xml_original=?, updated=?, status=? WHERE group_db_id=? AND acc_id = %2")
             .arg(m_sql_storage->m_metaPrefix)
@@ -837,7 +831,7 @@ bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& grou
             return false;
         }
 
-        for (auto c : updated_groups) {
+        for (auto c : updated_contacts) {
             q->addBindValue(c->title());
             q->addBindValue(c->content());
             q->addBindValue(c->parsedXml());
@@ -851,6 +845,38 @@ bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& grou
                 continue;
             }
         }//for
+    }
+
+    if (limbo_id_contacts.size() > 0) {
+        qDebug() << "sql-groups-store-limbo" << limbo_id_contacts.size() << (*limbo_id_contacts.begin())->id();
+        QString sql_update;
+
+        sql_update = QString("UPDATE  %1gcontact_group SET title=?, content=?, xml_original=?, updated=?, status=?, group_id=?, etag=? WHERE group_db_id=? AND acc_id = %2")
+            .arg(m_sql_storage->m_metaPrefix)
+            .arg(m_sql_storage->m_accId);
+
+        QSqlQuery* q = m_sql_storage->prepareQuery(sql_update);
+        if (!q) {
+            qWarning() << "Failed to prepare contact group update-SQL" << sql_update;
+            return false;
+        }
+
+        for (auto c : limbo_id_contacts) {
+            q->addBindValue(c->title());
+            q->addBindValue(c->content());
+            q->addBindValue(c->parsedXml());
+            qlonglong upd_time = c->updated().toMSecsSinceEpoch();
+            q->addBindValue(upd_time);
+            q->addBindValue(c->status());
+            q->addBindValue(c->id());
+            q->addBindValue(c->etag());
+            q->addBindValue(c->dbID());
+            if (!q->exec()) {
+                QString error = q->lastError().text();
+                qWarning() << "ERROR. Failed to update contact group" << error;
+                continue;
+            }
+        }
     }
 
     return true;
@@ -1417,6 +1443,68 @@ GcontactCacheRoutes::GcontactCacheRoutes(googleQt::Endpoint& endpoint, GcontactR
     m_GContactsCache.reset(new GContactCache(endpoint));
 };
 
+template<class B, class L>
+void applyBatchStep(std::shared_ptr<B> b, L& lst)
+{
+    if (b->succeded()) {
+        auto c = lst.findById(b->id());
+        if (c) {
+            switch (b->batchResultId())
+            {
+            case EBatchId::delete_operation:
+            {
+                lst.retire(c);
+            }break;
+            case EBatchId::update:
+            {
+                c->markAsNormalCopy();
+            }break;
+            default:
+            {
+                qWarning() << "Unexpected batch operation"
+                    << b->id()
+                    << b->batchResultOperationType()
+                    << b->batchResultStatusReason();
+            }break;
+            }
+        }//c - found
+        else {
+            if (b->batchResultId() == EBatchId::create) {
+                auto c = lst.findNewCreated(b);
+                if (c) {
+                    c->assignContent(*(b.get()));
+                    lst.idlimbo(c);
+                }
+                else {
+                    qWarning() << "Cache/create obj locate on batch operation failed"
+                        << b->id()
+                        << b->batchResultOperationType()
+                        << b->batchResultStatusReason();
+                }
+            }
+            else {
+                qWarning() << "Cache obj locate on batch operation failed"
+                    << b->id()
+                    << b->batchResultOperationType()
+                    << b->batchResultStatusReason();
+            }
+        }//c - not found
+    }
+    else {// !succeded()
+        auto c = lst.findById(b->id());
+
+        if (c && b->batchResultStatusCode() == 404 && b->batchResultId() == EBatchId::delete_operation) {
+            lst.retire(c);
+        }
+        else {
+            qWarning() << "Batch operation failed"
+                << b->id()
+                << b->batchResultOperationType()
+                << b->batchResultStatusReason();
+        }
+    }
+}
+
 GcontactCacheSyncTask* GcontactCacheRoutes::synchronizeContacts_Async()
 {
     GcontactCacheSyncTask* rv = new GcontactCacheSyncTask(m_endpoint, m_GContactsCache);
@@ -1429,7 +1517,7 @@ GcontactCacheSyncTask* GcontactCacheRoutes::synchronizeContacts_Async()
 
 
     QDateTime dtUpdatedMin = m_GContactsCache->lastSyncTime();
-    
+
     if (!dtUpdatedMin.isValid()) {
         ///first time sync, purge local cache just in case..
         if (!m_GContactsCache->clearDbCache()) {
@@ -1438,36 +1526,63 @@ GcontactCacheSyncTask* GcontactCacheRoutes::synchronizeContacts_Async()
             return rv;
         }
     }
-    else{
+    else {
         /// 1 sec - seems resonable for time diff on updated items
         /// we take all contacts from server newer than last sync + 1 sec
         dtUpdatedMin = dtUpdatedMin.addSecs(1).toUTC();
     }
-    
+
     // sync as follows:
     // 1. local group changes first
     // 2. server group & contacts changes
     // 3. local contact changes
 
+    //    std::vector<std::shared_ptr<BatchRequestGroupInfo>> delete_batch_requests;
+    
     BatchRequesGroupList bg = m_GContactsCache->groups().buildBatchRequestList();
-    if(!bg.items().empty()){
-        BatchGroupArg arg(bg); 
+    for (auto& gbr : bg.items()){
+        if(gbr->batchId() == EBatchId::delete_operation){
+            rv->m_deleted_groups[gbr->id()] = gbr;
+        }
+    }
+    if (!bg.items().empty()) {
+        BatchGroupArg arg(bg);
         auto groups_btask = m_endpoint.client()->gcontact()->getContactGroup()->batch_Async(arg);
         groups_btask->then([=](std::unique_ptr<gcontact::BatchGroupList> rlst)
-                           {
-                               rv->m_updated_groups = std::move(rlst);
-                               reloadCache_Async(rv, dtUpdatedMin);
-                           }, 
-                           [=](std::unique_ptr<GoogleException> ex)
-                           {
-                               rv->failed_callback(std::move(ex));
-                           });        
+        {
+            rv->m_updated_groups = std::move(rlst);
+            auto& arr = rv->m_updated_groups->items();
+            for (auto& b : arr) {
+                applyBatchStep<BatchResultGroupInfo, GroupList>(b, m_GContactsCache->groups());
+            }
+            ///update deleted groups
+            for (auto& gbr_it : rv->m_deleted_groups){
+                auto g = m_GContactsCache->groups().findById(gbr_it.first);
+                if (g) {
+                    m_GContactsCache->groups().retire(g);
+                }
+                else{
+                    qWarning() << "Batch-delete operation error - failed to locate group id"
+                               << gbr_it.first;
+                }
+            }
+            bool ok = m_GContactsCache->storeContactsToDb();
+            if(!ok){
+                qWarning() << "failed to store contacts";
+            }
+            reloadCache_Async(rv, dtUpdatedMin);
+        },
+            [=](std::unique_ptr<GoogleException> ex)
+        {
+            rv->failed_callback(std::move(ex));
+        });
     }
-    else{
+    else {
         reloadCache_Async(rv, dtUpdatedMin);
     }
     return rv;
 };
+
 
 void GcontactCacheRoutes::reloadCache_Async(GcontactCacheSyncTask* rv, QDateTime dtUpdatedMin)
 {
@@ -1492,7 +1607,18 @@ void GcontactCacheRoutes::reloadCache_Async(GcontactCacheSyncTask* rv, QDateTime
     agg->then([=]() 
     {
         rv->m_loaded_contacts = entries_task->detachResult();
-        rv->m_loaded_groups = groups_task->detachResult();
+        rv->m_loaded_groups.reset(new GroupList);
+        std::unique_ptr<GroupList> loaded_groups = groups_task->detachResult();
+        //rv->m_loaded_groups = groups_task->detachResult();
+
+        for(auto& gi : loaded_groups->items()){
+            if(rv->deleted_groups().find(gi->id()) == rv->deleted_groups().end()){
+                rv->m_loaded_groups->add(gi);
+            }
+            else{
+                qDebug() << "g-update-skipped-as-deleted" << gi->id() << gi->title();
+            }
+        }
         
         if (m_GContactsCache->mergeServerModifications(*(rv->m_loaded_groups.get()), *(rv->m_loaded_contacts.get()))) {
             //at this point we should have loaded server changes
@@ -1524,63 +1650,7 @@ void GcontactCacheRoutes::applyLocalContacEntriesModifications_Async(GcontactCac
 
             auto& arr = rv->m_updated_contacts->items();
             for (auto& b : arr) {
-                if(b->succeded()){
-                    auto c = m_GContactsCache->contacts().findById(b->id());
-                    if(c){
-                        switch(b->batchResultId())
-                            {
-                            case EBatchId::delete_operation:
-                                {
-                                    m_GContactsCache->contacts().retire(c);
-                                }break;
-                            case EBatchId::update:
-                                {
-                                    c->markAsNormalCopy();
-                                }break;
-                            default:
-                                {
-                                    qWarning() << "Unexpected batch operation"
-                                               << b->id()
-                                               << b->batchResultOperationType()
-                                               << b->batchResultStatusReason();                        
-                                }break;
-                            }
-                    }
-                    else{
-                        if(b->batchResultId() == EBatchId::create){
-                            auto c = m_GContactsCache->contacts().findNewCreatedContact(b);
-                            if(c){
-                                c->assignContent(*(b.get()));
-                                c->markAsIdLimbo();
-                            }
-                            else{
-                                qWarning() << "Cache/create obj locate on batch operation failed"
-                                           << b->id()
-                                           << b->batchResultOperationType()
-                                           << b->batchResultStatusReason();                                
-                            }
-                        }
-                        else{
-                            qWarning() << "Cache obj locate on batch operation failed"
-                                       << b->id()
-                                       << b->batchResultOperationType()
-                                       << b->batchResultStatusReason();
-                        }
-                    }
-                }
-                else{
-                    auto c = m_GContactsCache->contacts().findById(b->id());
-                    
-                    if(c && b->batchResultStatusCode() == 404 && b->batchResultId() == EBatchId::delete_operation){
-                        m_GContactsCache->contacts().retire(c);
-                    }
-                    else{
-                        qWarning() << "Batch operation failed"
-                                   << b->id()
-                                   << b->batchResultOperationType()
-                                   << b->batchResultStatusReason();
-                    }
-                }
+                applyBatchStep<BatchResultContactInfo, ContactList>(b, m_GContactsCache->contacts());
             }
             
             bool ok = m_GContactsCache->storeContactsToDb();
@@ -1630,6 +1700,26 @@ std::unique_ptr<ContactList> ContactList::factory::create(const QByteArray& data
     return rv;
 };
 
+std::shared_ptr<GroupInfo> GroupList::findNewCreated(std::shared_ptr<BatchResultGroupInfo> b)
+{    
+    QString title = b->title();
+
+    for (auto& c : items()) {
+        if (c->id().isEmpty()) {
+            QString title2 = c->title().trimmed();
+            if (!title2.isEmpty()) {
+                if (title.compare(title2) == 0) {
+                    qDebug() << "located group by title";
+                    return c;
+                }
+            }
+        }
+    }
+
+    std::shared_ptr<GroupInfo> rv;
+    return rv;
+};
+
 std::unique_ptr<GroupList> GroupList::factory::create(const QByteArray& data)
 {
     std::unique_ptr<GroupList> rv(new GroupList());
@@ -1651,7 +1741,7 @@ std::unique_ptr<BatchGroupList> BatchGroupList::factory::create(const QByteArray
     return rv;
 };
 
-std::shared_ptr<ContactInfo> ContactList::findNewCreatedContact(std::shared_ptr<BatchResultContactInfo> b)
+std::shared_ptr<ContactInfo> ContactList::findNewCreated(std::shared_ptr<BatchResultContactInfo> b)
 {
     const NameInfo& n = b->name();
     QString name = n.givenName() + " " + n.familyName();
@@ -1673,6 +1763,7 @@ std::shared_ptr<ContactInfo> ContactList::findNewCreatedContact(std::shared_ptr<
     std::shared_ptr<ContactInfo> rv;
     return rv;
 };
+
 
 
 std::list<QString> ContactList::buildUnresolvedPhotoIdList()
