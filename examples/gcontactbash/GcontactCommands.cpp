@@ -1213,6 +1213,7 @@ void GcontactCommands::batch_delete_contact(QString id_space_id)
         BatchContactArg arg(batch_list);
         auto c_list = m_gt->getContacts()->batch(arg);
         std::cout << "contact deleted" << std::endl;
+        print_batch_contact_result(c_list.get());
     }
     catch (GoogleException& e)
     {
@@ -1351,8 +1352,9 @@ void GcontactCommands::batch_delete_group(QString id_space_id)
             batch_list.add(std::move(ci));
         }
         BatchGroupArg arg(batch_list);
-        m_gt->getContactGroup()->batch(arg);
+        auto g_list = m_gt->getContactGroup()->batch(arg);
         std::cout << "groups deleted" << std::endl;
+        print_batch_group_result(g_list.get());
     }
     catch (GoogleException& e)
     {
