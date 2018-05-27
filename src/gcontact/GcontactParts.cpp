@@ -653,9 +653,6 @@ GroupMembershipInfoList GroupMembershipInfoList::parse(QDomNode n)
                     }
                     else if (n2.nodeName().compare("href") == 0) {
                         QString sid = n2.nodeValue().trimmed();
-
-                        //                     qDebug() << "ykh-gmem-parsed href=" << sid;
-
                         int group_idx = sid.indexOf("/groups/");
                         int base_idx = sid.indexOf("/base/");
                         if (base_idx != -1) {
@@ -672,9 +669,6 @@ GroupMembershipInfoList GroupMembershipInfoList::parse(QDomNode n)
         }
 
         rv.m_parts.push_back(ginfo);
-
-        //        qDebug() << "ykh-gmem-parsed" << ginfo.toString();
-
         gmem_elem = gmem_elem.nextSiblingElement("gContact:groupMembershipInfo");
     }
     return rv;
