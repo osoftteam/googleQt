@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
     t.addAction("get",          "Get Task by tasklistID & taskID", [&](QString arg) {cmd.get(arg); });
     t.addAction("insert",       "Insert new task", [&](QString arg) {cmd.insert(arg); });
     t.addAction("update",       "Update a task", [&](QString arg) {cmd.update(arg); });
+    t.addAction("update_note",   "Update a task note", [&](QString arg) {cmd.update_note(arg); });
     t.addAction("delete",       "Delete a task", [&](QString arg) {cmd.delete_task(arg); });
     t.start();
     return 0;

@@ -41,6 +41,12 @@ public:
     void update(QString tlistid_space_taskid_title);
 
     /**
+    * update_note - update note of a task, requires tasklist ID, task ID
+    */
+    void update_note(QString tlistid_space_taskid_note);
+
+    
+    /**
     * deleteTask - delete task by task list ID and task ID
     */
     void delete_task(QString tlistid_space_taskid);

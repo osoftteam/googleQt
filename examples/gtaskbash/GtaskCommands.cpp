@@ -62,6 +62,7 @@ void GtaskCommands::ls(QString tasklist_arg)
             std::cout << idx++ << ". " << Terminal::pad_trunc(r.title(), 30)
                       << " " << Terminal::pad(r.id(), 50)
                       << std::endl;
+            //printTask(&r);
         }
         QString nextToken = tasks_col->nextpagetoken();
         if (!nextToken.isEmpty()) {
@@ -146,6 +147,35 @@ void GtaskCommands::update(QString tlistid_space_taskid_title)
         TaskIdArg arg(tasklist_id, task_id);
         tasks::TaskResource new_task(task_id);
         new_task.setTitle(title);
+
+        std::unique_ptr<tasks::TaskResource> t = m_gt->getTasks()->update(arg, new_task);
+        printTask(t.get());
+        m_c.printLastApiCall();
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
+void GtaskCommands::update_note(QString tlistid_space_taskid_note)
+{
+    QStringList arg_list = tlistid_space_taskid_note.split(" ", QString::SkipEmptyParts);
+    if (arg_list.size() < 3)
+    {
+        std::cout << "Invalid parameters, expected <task_list_id> <task_id> <note>" << std::endl;
+        return;
+    }
+
+    QString tasklist_id = arg_list[0];
+    QString task_id = arg_list[1];
+    QString note = arg_list[2];
+
+    try
+    {
+        TaskIdArg arg(tasklist_id, task_id);
+        tasks::TaskResource new_task(task_id);
+        new_task.setNotes(note);
 
         std::unique_ptr<tasks::TaskResource> t = m_gt->getTasks()->update(arg, new_task);
         printTask(t.get());
