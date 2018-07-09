@@ -1281,7 +1281,7 @@ GoogleVoidTask* PhotoReceiver::routeRequest(QString contact_id)
     auto cache = m_r.cacheRoutes()->cache();
     QString filePath = cache->getPhotoMediaPath(contact_id, true);
     if (filePath.isEmpty()) {
-        GoogleVoidTask* t = m_r.endpoint()->produceVoidTask();
+        GoogleVoidTask* t = m_r.endpoint().produceVoidTask();
         QString errStr = QString("Failed to ensure photo path '%1'").arg(contact_id);
         std::unique_ptr<GoogleException> ex(new GoogleException(errStr.toStdString()));
         t->failed_callback(std::move(ex));
@@ -1291,7 +1291,7 @@ GoogleVoidTask* PhotoReceiver::routeRequest(QString contact_id)
     QFile* out = new QFile();
     out->setFileName(filePath);
     if (!out->open(QFile::WriteOnly | QIODevice::Truncate)) {
-        GoogleVoidTask* t = m_r.endpoint()->produceVoidTask();
+        GoogleVoidTask* t = m_r.endpoint().produceVoidTask();
         QString errStr = QString("Failed to open file '%1'").arg(filePath);
         qWarning() << errStr;
         std::unique_ptr<GoogleException> ex(new GoogleException(errStr.toStdString()));
@@ -1330,7 +1330,7 @@ GoogleVoidTask* PhotoUploader::routeRequest(QString contact_id)
     auto cache = m_r.cacheRoutes()->cache();
     QString filePath = cache->getPhotoMediaPath(contact_id, true);
     if (filePath.isEmpty()) {
-        GoogleVoidTask* t = m_r.endpoint()->produceVoidTask();
+        GoogleVoidTask* t = m_r.endpoint().produceVoidTask();
         QString errStr = QString("Failed to ensure photo path '%1'").arg(contact_id);
         std::unique_ptr<GoogleException> ex(new GoogleException(errStr.toStdString()));
         t->failed_callback(std::move(ex));
@@ -1340,7 +1340,7 @@ GoogleVoidTask* PhotoUploader::routeRequest(QString contact_id)
     QFile* in = new QFile();
     in->setFileName(filePath);
     if (!in->open(QFile::ReadOnly)) {
-        GoogleVoidTask* t = m_r.endpoint()->produceVoidTask();
+        GoogleVoidTask* t = m_r.endpoint().produceVoidTask();
         QString errStr = QString("Failed to open file '%1'").arg(filePath);
         qWarning() << errStr;
         std::unique_ptr<GoogleException> ex(new GoogleException(errStr.toStdString()));

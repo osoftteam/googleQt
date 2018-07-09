@@ -16,8 +16,8 @@ namespace googleQt
     class GcontactRoutes {
     public:
 
-        GcontactRoutes(Endpoint*);
-        Endpoint* endpoint() { return m_endpoint; }
+        GcontactRoutes(Endpoint&);
+        Endpoint& endpoint() { return m_endpoint; }
 
         contacts::ContactsRoutes* getContacts();
         contact_group::ContactGroupRoutes* getContactGroup();
@@ -30,9 +30,9 @@ namespace googleQt
 #endif
 
     protected:
+        Endpoint&  m_endpoint;
         std::unique_ptr<contacts::ContactsRoutes> m_contacts;
         std::unique_ptr<contact_group::ContactGroupRoutes> m_contact_group;
-        Endpoint*  m_endpoint;
         std::unique_ptr<googleQt::gcontact::GcontactCacheRoutes>    m_CacheRoutes;
     };  
 };//googleQt

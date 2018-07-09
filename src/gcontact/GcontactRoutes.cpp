@@ -1,15 +1,15 @@
 #include "GcontactRoutes.h"
 using namespace googleQt;
 
-GcontactRoutes::GcontactRoutes(Endpoint* e):m_endpoint(e)
+GcontactRoutes::GcontactRoutes(Endpoint& e):m_endpoint(e)
 {
-    m_CacheRoutes.reset(new googleQt::gcontact::GcontactCacheRoutes(*e, *this));
+    
 };
 
 contacts::ContactsRoutes* GcontactRoutes::getContacts()
 {
   if(!m_contacts){
-    m_contacts.reset(new contacts::ContactsRoutes(m_endpoint));
+    m_contacts.reset(new contacts::ContactsRoutes(&m_endpoint));
   }
   return m_contacts.get();
 };
@@ -17,7 +17,7 @@ contacts::ContactsRoutes* GcontactRoutes::getContacts()
 contact_group::ContactGroupRoutes* GcontactRoutes::getContactGroup()
 {
     if (!m_contact_group) {
-        m_contact_group.reset(new contact_group::ContactGroupRoutes(m_endpoint));
+        m_contact_group.reset(new contact_group::ContactGroupRoutes(&m_endpoint));
     }
     return m_contact_group.get();
 };
@@ -25,6 +25,10 @@ contact_group::ContactGroupRoutes* GcontactRoutes::getContactGroup()
 
 googleQt::gcontact::GcontactCacheRoutes* GcontactRoutes::cacheRoutes() 
 {
+    if(!m_CacheRoutes){
+        m_CacheRoutes.reset(new googleQt::gcontact::GcontactCacheRoutes(m_endpoint, *this));
+    }
+    
     return m_CacheRoutes.get();
 };
 
@@ -40,6 +44,6 @@ QString GcontactRoutes::encodeGroupUri(QString userId, QString groupId)
 #ifdef API_QT_AUTOTEST
 void GcontactRoutes::autotest() 
 {
-    m_CacheRoutes->runAutotest();
+    cacheRoutes()->runAutotest();
 };
 #endif
