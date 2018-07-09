@@ -10,36 +10,85 @@ using namespace gtask;
 /**
     TaskListReceiver
 */
-TaskListReceiver::TaskListReceiver(GtaskRoutes& r) :m_r(r)
+TaskListReceiver::TaskListReceiver(GtaskCacheRoutes& r) :m_r(r)
 {
 };
 
 GoogleTask<tasklists::TaskListResource>* TaskListReceiver::routeRequest(QString tasklist_id)
 {
     TaskListContainerIdArg arg(tasklist_id);
-    return m_r.getTasklists()->get_Async(arg);
+    auto t = m_r.task_routes().getTasklists()->get_Async(arg);
+    if(t){
+        QObject::connect(t, &GoogleTask<tasklists::TaskListResource>::finished, [=]()
+            {
+                if (t->isCompleted()) {
+                    auto r = t->get();
+                    if(r){
+                        m_r.cache()->updateTaskList(r);
+                    }
+                };
+            });        
+    }
+    return t;
 };
 
 /**
     TaskReceiver
 */
-TaskReceiver::TaskReceiver(GtaskRoutes& r) :m_r(r)
+TaskReceiver::TaskReceiver(GtaskCacheRoutes& r)
+    :m_r(r)
 {
 };
 
 GoogleTask<tasks::TaskCollectionRes>* TaskReceiver::routeRequest(QString tasklist_id)
 {
     TaskListArg arg(tasklist_id);
-    return m_r.getTasks()->list_Async(arg);
+    auto t = m_r.task_routes().getTasks()->list_Async(arg);
+    if(t){
+        QObject::connect(t, &GoogleTask<tasks::TaskCollectionRes>::finished, [=]()
+            {
+                if (t->isCompleted()) {
+                    auto r = t->get();
+                    if(r){
+                        auto i = m_r.cache()->task_lists().find(tasklist_id);
+                        if(i != m_r.cache()->task_lists().end()){
+                            i->second->setDetailsFromResource(r);
+                            qDebug() << "TaskReceiver::routeRequest got tlist" << tasklist_id;
+                        }
+                    }
+                }
+            });
+    }
+    return t;
 };
 
-
-TaskList::TaskList(tasklists::TaskListResource* r) 
+/**
+   TaskInfo
+*/
+TaskInfo::TaskInfo(const tasks::TaskResource* r) 
 {
     setFromResource(r);
 };
 
-void TaskList::setFromResource(tasklists::TaskListResource* r) 
+void TaskInfo::setFromResource(const tasks::TaskResource* r) 
+{
+    m_id = r->id();
+    m_etag = r->etag();
+    m_title = r->title();
+    m_notes = r->notes();
+    m_updated = r->updated();
+};
+
+
+/**
+   TaskList
+*/
+TaskList::TaskList(const tasklists::TaskListResource* r) 
+{
+    setFromResource(r);
+};
+
+void TaskList::setFromResource(const tasklists::TaskListResource* r) 
 {
     m_id = r->id();
     m_etag = r->etag();
@@ -47,6 +96,21 @@ void TaskList::setFromResource(tasklists::TaskListResource* r)
     m_updated = r->updated();
 };
 
+void TaskList::setDetailsFromResource(const tasks::TaskCollectionRes* c)
+{
+    for (auto& tr : c->items())
+        {
+            auto i = m_id2t.find(tr.id());
+            if(i != m_id2t.end()){
+                TaskInfo::ptr t = i->second;
+                t->setFromResource(&tr);
+            }
+            else{
+                TaskInfo::ptr t(new TaskInfo(&tr));
+                m_id2t[tr.id()] = t;
+            }
+        }
+};
 
 /**
     TaskCache
@@ -81,23 +145,38 @@ GoogleVoidTask* GtaskCacheRoutes::loadTaskLists(const TIDLIST& idlist)
     GoogleVoidTask* rv = m_t_routes.endpoint()->produceVoidTask();
 
     auto par_runner = getTaskList_Async(idlist);
-    connect(par_runner, &EndpointRunnable::finished, [=]()
-    {
-        RESULT_LIST<tasklists::TaskListResource>&& res = par_runner->detachResult();
-        for (auto& m : res)
-        {
-            m_cache->updateTaskList(m.get());
-        }
-        par_runner->disposeLater();
+    if(par_runner){
+        connect(par_runner, &EndpointRunnable::finished, [=]()
+                {
+                    par_runner->disposeLater();
+
+                    auto par_details_runner = getTasks_Async(idlist);
+                    if(par_details_runner){
+                        connect(par_details_runner, &EndpointRunnable::finished, [=]()
+                                {
+                                    par_details_runner->disposeLater();
+                                    rv->completed_callback();
+                                });
+                    }
+                    else{
+                        rv->completed_callback();
+                    }
+                });
+    }
+    else{
         rv->completed_callback();
-    });
+    }
 
     return rv;
 };
 
 ConcurrentValueRunner<QString, TaskListReceiver, tasklists::TaskListResource>* GtaskCacheRoutes::getTaskList_Async(const TIDLIST& idlist) 
 {
-    std::unique_ptr<TaskListReceiver> mr(new TaskListReceiver(m_t_routes));
+    if(idlist.empty()){
+        return nullptr;
+    }
+    
+    std::unique_ptr<TaskListReceiver> mr(new TaskListReceiver(*this));
 
     ConcurrentValueRunner<QString,
         TaskListReceiver,
@@ -107,3 +186,19 @@ ConcurrentValueRunner<QString, TaskListReceiver, tasklists::TaskListResource>* G
     r->run();
     return r;
 };
+
+ConcurrentValueRunner<QString, TaskReceiver, tasks::TaskCollectionRes>* GtaskCacheRoutes::getTasks_Async(const TIDLIST& idlist)
+{
+    if(idlist.empty()){
+        return nullptr;
+    }
+    
+    std::unique_ptr<TaskReceiver> mr(new TaskReceiver(*this));
+
+    auto r = new ConcurrentValueRunner<QString,
+                                       TaskReceiver,
+                                       tasks::TaskCollectionRes>(idlist, std::move(mr), *(m_t_routes.endpoint()));
+    r->run();
+    return r;
+};
+

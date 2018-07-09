@@ -23,3 +23,11 @@ tasks::TasksRoutes* GtaskRoutes::getTasks()
   return m_Tasks.get();
 };
 
+googleQt::gtask_cache::GtaskCacheRoutes* GtaskRoutes::cacheRoutes()
+{
+    if(!m_CacheRoutes){
+        m_CacheRoutes.reset(new gtask_cache::GtaskCacheRoutes(*this));
+    }
+
+    return m_CacheRoutes.get();
+};
