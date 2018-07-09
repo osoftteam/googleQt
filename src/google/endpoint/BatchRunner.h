@@ -31,6 +31,11 @@ namespace googleQt{
         void run()
         {
             m_steps2complete = static_cast<int>(m_arg_parameters.size());
+            if(m_steps2complete < 1){
+                m_completed = true;
+                notifyOnFinished();                
+            }
+            
             while (m_arg_parameters.size() > 0 &&
                 m_available_concurrent_routes_count > 0)
             {
