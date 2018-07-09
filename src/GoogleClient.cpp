@@ -112,7 +112,7 @@ GdriveRoutes* GoogleClient::gdrive()
 GcontactRoutes* GoogleClient::gcontact()
 {
     if (!m_contact_routes) {
-        m_contact_routes.reset(new GcontactRoutes(m_endpoint.get()));
+        m_contact_routes.reset(new GcontactRoutes(*(m_endpoint.get())));
     }
     return m_contact_routes.get();
 };
