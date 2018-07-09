@@ -368,6 +368,55 @@ void GtaskCommands::update_tlist(QString tlistid_space_title)
     }
 };
 
+void GtaskCommands::reload_cache(QString tlistids)
+{
+    QStringList arg_list = tlistids.split(" ", QString::SkipEmptyParts);
+    if (arg_list.size() < 1)
+    {
+        std::cout << "Invalid parameters, expected <task_list_id1> ..." << std::endl;
+        return;
+    }
+
+    std::list<QString> lst;
+    foreach (const QString &s, arg_list) {
+        lst.push_back(s);
+    }
+
+    try
+    {
+        auto r = m_gt->cacheRoutes();
+        auto t = r->loadTaskLists(lst);
+        t->waitForResultAndRelease();
+        auto c = r->cache();
+        const gtask_cache::TaskCache::ID2TLIST& id2tl = c->task_lists();
+        for(auto& i : id2tl){
+            auto tl = i.second;
+            std::cout << tl->id() << " | "
+                      << tl->etag() << " | "
+                      << tl->title() << " | "
+                      << tl->updated().toString()
+                      << std::endl;
+            const gtask_cache::TaskList::ID2T& id2t = tl->tasks_map();
+            std::cout << "tasks# " << id2t.size() << std::endl;
+            for(auto j : id2t){
+                auto t = j.second;
+                std::cout << "    ";
+                std::cout << t->id() << " | "
+                          << t->etag() << " | "
+                          << t->title() << " | "
+                          << t->notes() << " | "
+                          << t->updated().toString()
+                          << std::endl;                
+            }            
+            std::cout << std::endl;
+        }        
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
 void GtaskCommands::printTask(tasks::TaskResource* r) 
 {
     std::cout << Terminal::pad("id", 15) << r->id() << std::endl

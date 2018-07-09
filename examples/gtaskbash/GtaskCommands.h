@@ -86,6 +86,7 @@ public:
     */
     void delete_tlist(QString tlistid);
 
+    void reload_cache(QString tlistids);
 
 protected:
     void printTask(tasks::TaskResource*);
