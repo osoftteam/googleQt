@@ -91,7 +91,8 @@ public:
 protected:
     void printTask(tasks::TaskResource*);
     void printTaskList(tasklists::TaskListResource*);
-
+    void printCacheTitles();
+    void printCacheParents();
 
 protected:
     GoogleClient& m_c;

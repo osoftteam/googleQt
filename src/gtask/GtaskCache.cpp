@@ -77,6 +77,8 @@ void TaskInfo::setFromResource(const tasks::TaskResource* r)
     m_title = r->title();
     m_notes = r->notes();
     m_updated = r->updated();
+    m_parent = r->parent();
+    m_position = r->position();
 };
 
 

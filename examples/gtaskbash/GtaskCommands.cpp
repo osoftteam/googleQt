@@ -387,29 +387,19 @@ void GtaskCommands::reload_cache(QString tlistids)
         auto r = m_gt->cacheRoutes();
         auto t = r->loadTaskLists(lst);
         t->waitForResultAndRelease();
-        auto c = r->cache();
-        const gtask_cache::TaskCache::ID2TLIST& id2tl = c->task_lists();
-        for(auto& i : id2tl){
-            auto tl = i.second;
-            std::cout << tl->id() << " | "
-                      << tl->etag() << " | "
-                      << tl->title() << " | "
-                      << tl->updated().toString()
-                      << std::endl;
-            const gtask_cache::TaskList::ID2T& id2t = tl->tasks_map();
-            std::cout << "tasks# " << id2t.size() << std::endl;
-            for(auto j : id2t){
-                auto t = j.second;
-                std::cout << "    ";
-                std::cout << t->id() << " | "
-                          << t->etag() << " | "
-                          << t->title() << " | "
-                          << t->notes() << " | "
-                          << t->updated().toString()
-                          << std::endl;                
-            }            
-            std::cout << std::endl;
-        }        
+
+        int tmp;
+        std::cout << "Select print format:" << std::endl;
+        std::cout << "1. Table of titles" << std::endl;
+        std::cout << "2. Parent info" << std::endl;
+        std::cin >> tmp;
+
+        switch(tmp)
+            {
+            case 1:printCacheTitles();break;
+            case 2:printCacheParents();break;
+            default:break;
+            }
     }
     catch (GoogleException& e)
     {
@@ -441,4 +431,60 @@ void GtaskCommands::printTaskList(tasklists::TaskListResource* r)
               << Terminal::pad("etag", 15) << r->etag() << std::endl
               << Terminal::pad("updated", 15) << r->updated().toString(Qt::SystemLocaleShortDate) << std::endl
               << Terminal::pad("selflink", 15) << r->selflink() << std::endl;
+};
+
+void GtaskCommands::printCacheTitles()
+{
+    auto r = m_gt->cacheRoutes();
+    auto c = r->cache();
+
+    const gtask_cache::TaskCache::ID2TLIST& id2tl = c->task_lists();
+    for(auto& i : id2tl){
+        auto tl = i.second;
+        std::cout << tl->id() << " | "
+                  << tl->etag() << " | "
+                  << tl->title() << " | "
+                  << tl->updated().toString()
+                  << std::endl;
+        const gtask_cache::TaskList::ID2T& id2t = tl->tasks_map();
+        std::cout << "tasks# " << id2t.size() << std::endl;
+        for(auto j : id2t){
+            auto t = j.second;
+            std::cout << "    ";
+            std::cout << t->id() << " | "
+                      << t->etag() << " | "
+                      << t->title() << " | "
+                      << t->notes() << " | "
+                      << t->updated().toString()
+                      << std::endl;                
+        }            
+        std::cout << std::endl;
+    }
+};
+
+void GtaskCommands::printCacheParents()
+{
+    auto r = m_gt->cacheRoutes();
+    auto c = r->cache();
+    
+    const gtask_cache::TaskCache::ID2TLIST& id2tl = c->task_lists();
+    for(auto& i : id2tl){
+        auto tl = i.second;
+        std::cout << tl->id() << " | "
+                  << tl->etag() << " | "
+                  << tl->title() << " | "
+                  << tl->updated().toString()
+                  << std::endl;
+        const gtask_cache::TaskList::ID2T& id2t = tl->tasks_map();
+        std::cout << "tasks# " << id2t.size() << std::endl;
+        for(auto j : id2t){
+            auto t = j.second;
+            std::cout << "    ";
+            std::cout << t->id() << " | "
+                      << t->title() << " | "
+                      << (t->parent().isEmpty() ? "*" : t->parent()) << " | "
+                      << t->position()
+                      << std::endl;
+        }
+    }
 };

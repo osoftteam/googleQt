@@ -25,10 +25,12 @@ namespace googleQt
             using ptr  = std::shared_ptr<TaskInfo>;
             using tarr = std::vector<ptr>;
 
-            QString etag()const { return m_etag; }
-            QString id()const { return m_id; }
-            QString title()const { return m_title; }
-            QString notes()const { return m_notes; }
+            QString etag()const   { return m_etag; }
+            QString id()const     { return m_id; }
+            QString title()const  { return m_title; }
+            QString notes()const  { return m_notes; }
+            QString parent()const { return m_parent;}
+            QString position()const{return m_position;}
             const QDateTime& updated()const { return m_updated; }            
 
             tarr&   items(){return m_items;}
@@ -38,6 +40,7 @@ namespace googleQt
             void setFromResource(const tasks::TaskResource* r);
             
             QString             m_etag, m_id, m_title, m_notes;
+            QString             m_parent, m_position;
             QDateTime           m_updated;
             tarr                m_items;
             
