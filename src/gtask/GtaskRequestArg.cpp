@@ -63,8 +63,6 @@ void TaskIdArg::build(const QString& link_path, QUrl& url)const
 {
     UrlBuilder b(link_path + QString("/%1/tasks/%2").arg(m_tasklist).arg(m_task),
                  url);
-    //  QString link = link_path + QString("/%1").arg(m_tasklist);
-    //  url.setUrl(link);
 };
 
 /**
@@ -101,8 +99,11 @@ TaskMoveArg::TaskMoveArg(QString task_list_id, QString task_id):TaskIdArg(task_l
 };
 
 void TaskMoveArg::build(const QString& link_path, QUrl& url)const
-{
-    TaskListIdArg::build(link_path + "/move", url);
+{    
+    UrlBuilder b(link_path + QString("/%1/tasks/%2/move").arg(m_tasklist).arg(m_task),
+                 url);
+    b.add("parent", m_parent).add("previous", m_previous);
+    /*
     if (!m_parent.isEmpty() || !m_previous.isEmpty())
     {
         QUrlQuery uq;
@@ -111,7 +112,7 @@ void TaskMoveArg::build(const QString& link_path, QUrl& url)const
         if (!m_previous.isEmpty())
             uq.addQueryItem("previous", m_previous);
         url.setQuery(uq);
-    }
+        }*/
 };
 
 /**
