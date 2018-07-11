@@ -53,16 +53,21 @@ void GtaskCommands::ls(QString tasklist_arg)
         arg.setShowDeleted(showDeleted);
         arg.setShowHidden(showHidden);
         auto tasks_col = m_gt->getTasks()->list(arg);
-        std::cout << tasklist << " [" << tasks_col->items().size() << "]" << std::endl;
+        std::cout << " [" << tasks_col->items().size() << " tasks] " << tasklist << std::endl;
         std::cout << Terminal::pad(QString(""), 80, '-') << std::endl;
         int idx = 1;
         for (auto t : tasks_col->items())
         {
             tasks::TaskResource& r = t;
             std::cout << idx++ << ". " << Terminal::pad_trunc(r.title(), 30)
-                      << " " << Terminal::pad(r.id(), 50)
-                      << std::endl;
-            //printTask(&r);
+                      << " " << Terminal::pad(r.id(), 50);
+            if(r.parent().isEmpty()){
+                std::cout << std::endl;
+            }
+            else{
+                std::cout << " | ";
+                std::cout << Terminal::pad(r.parent(), 50) << std::endl;
+            }
         }
         QString nextToken = tasks_col->nextpagetoken();
         if (!nextToken.isEmpty()) {
@@ -230,8 +235,9 @@ void GtaskCommands::clearCompleted(QString tlistid)
 void GtaskCommands::move(QString four_arguments)
 {
     QStringList arg_list = four_arguments.split(" ", QString::SkipEmptyParts);
-    if (arg_list.size() < 4)
+    if (arg_list.size() < 3)
     {
+        std::cout << "Invalid parameters, expected <task_list_id> <task_id> <parent_id>" << std::endl;
         std::cout << "Invalid parameters, expected <task_list_id> <task_id> <parent_id> <position_id>" << std::endl;
         return;
     }
@@ -239,8 +245,11 @@ void GtaskCommands::move(QString four_arguments)
     QString tasklist_id = arg_list[0];
     QString task_id = arg_list[1];
     QString parent_id = arg_list[2];
-    QString position_id = arg_list[3];
-
+    QString position_id;
+    if(arg_list.size() > 3){
+        position_id = arg_list[3];
+    }
+    
     try
     {
         TaskMoveArg arg(tasklist_id, task_id);
@@ -470,13 +479,13 @@ void GtaskCommands::printCacheParents()
     const gtask_cache::TaskCache::ID2TLIST& id2tl = c->task_lists();
     for(auto& i : id2tl){
         auto tl = i.second;
-        std::cout << tl->id() << " | "
-                  << tl->etag() << " | "
-                  << tl->title() << " | "
-                  << tl->updated().toString()
-                  << std::endl;
         const gtask_cache::TaskList::ID2T& id2t = tl->tasks_map();
-        std::cout << "tasks# " << id2t.size() << std::endl;
+
+        std::cout << "[" << id2t.size() << " tasks] ";
+        std::cout << tl->id() << " | "
+                  << tl->title() << " | "
+                  << std::endl << std::endl;
+        
         for(auto j : id2t){
             auto t = j.second;
             std::cout << "    ";

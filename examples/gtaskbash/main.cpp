@@ -75,6 +75,7 @@ int main(int argc, char *argv[])
     t.addAction("insert",       "Insert new task", [&](QString arg) {cmd.insert(arg); });
     t.addAction("update",       "Update a task", [&](QString arg) {cmd.update(arg); });
     t.addAction("update_note",  "Update a task note", [&](QString arg) {cmd.update_note(arg); });
+    t.addAction("move",       "Move task", [&](QString arg) {cmd.move(arg); });
     t.addAction("delete",       "Delete a task", [&](QString arg) {cmd.delete_task(arg); });
     t.addSeparator();
     t.addAction("reload_cache", "Reload task list", [&](QString arg) {cmd.reload_cache(arg); });
