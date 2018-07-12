@@ -36,6 +36,7 @@ namespace googleQt
             tarr&   items(){return m_items;}
 
         protected:
+            TaskInfo();
             TaskInfo(const tasks::TaskResource* r);
             void setFromResource(const tasks::TaskResource* r);
             
@@ -56,11 +57,12 @@ namespace googleQt
                 using ptr  = std::shared_ptr<RootTaskInfo>;
             };
 
-            using ptr  = std::shared_ptr<TaskList>;
-            using ID2T = std::map<QString, TaskInfo::ptr>;
-       
-            ID2T& tasks_map(){return m_id2t;}
-            const ID2T& tasks_map()const{return m_id2t;}
+            using ptr   = std::shared_ptr<TaskList>;
+            using ID2T  = std::map<QString, TaskInfo::ptr>;
+
+            RootTaskInfo::ptr  root(){return m_root_task;}
+            ID2T&              tasks_map(){return m_id2t;}
+            const ID2T&        tasks_map()const{return m_id2t;}
             
             QString etag()const { return m_etag; }
             QString id()const { return m_id; }

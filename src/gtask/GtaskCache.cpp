@@ -10,6 +10,11 @@ using namespace gtask;
 /**
     TaskListReceiver
 */
+TaskInfo::TaskInfo()
+{
+
+};
+
 TaskListReceiver::TaskListReceiver(GtaskCacheRoutes& r) :m_r(r)
 {
 };
@@ -100,6 +105,9 @@ void TaskList::setFromResource(const tasklists::TaskListResource* r)
 
 void TaskList::setDetailsFromResource(const tasks::TaskCollectionRes* c)
 {
+    m_id2t.clear();
+    m_root_task.reset(new RootTaskInfo);
+    
     for (auto& tr : c->items())
         {
             auto i = m_id2t.find(tr.id());
@@ -112,6 +120,25 @@ void TaskList::setDetailsFromResource(const tasks::TaskCollectionRes* c)
                 m_id2t[tr.id()] = t;
             }
         }
+
+    /// rebuild tree
+    for(auto i : m_id2t){
+        auto t = i.second;
+        if(t->parent().isEmpty()){
+            m_root_task->m_items.push_back(t);
+        }
+        else{
+            auto j = m_id2t.find(t->parent());
+            if(j != m_id2t.end()){
+                auto t2 = j->second;
+                t2->m_items.push_back(t);
+            }
+            else{
+                qWarning() << "failed to locate parent task" << t->parent() << "for" << t->id();
+            }
+        }
+    }
+    
 };
 
 /**
