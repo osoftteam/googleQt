@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GoogleClient.h"
+#include "gtask/GtaskCache.h"
 
 using namespace googleQt;
 
@@ -13,6 +14,13 @@ namespace googleQt {
     namespace tasklists {
         class TaskListResource;
     };
+    /*
+    namespace gtask_cache{
+        class TaskInfo;
+        class TaskInfo{
+            class ptr;
+        };
+        };*/
 }//googleQt
 
 class GtaskCommands
@@ -93,7 +101,9 @@ protected:
     void printTaskList(tasklists::TaskListResource*);
     void printCacheTitles();
     void printCacheParents();
-
+    void printCacheTree();
+    void printTaskInTree(googleQt::gtask_cache::TaskInfo::ptr p, int ident);
+    
 protected:
     GoogleClient& m_c;
     GtaskRoutes*  m_gt;

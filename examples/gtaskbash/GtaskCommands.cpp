@@ -401,12 +401,14 @@ void GtaskCommands::reload_cache(QString tlistids)
         std::cout << "Select print format:" << std::endl;
         std::cout << "1. Table of titles" << std::endl;
         std::cout << "2. Parent info" << std::endl;
+        std::cout << "3. Tree" << std::endl;
         std::cin >> tmp;
 
         switch(tmp)
             {
             case 1:printCacheTitles();break;
             case 2:printCacheParents();break;
+            case 3:printCacheTree();break;
             default:break;
             }
     }
@@ -484,7 +486,7 @@ void GtaskCommands::printCacheParents()
         std::cout << "[" << id2t.size() << " tasks] ";
         std::cout << tl->id() << " | "
                   << tl->title() << " | "
-                  << std::endl << std::endl;
+                  << std::endl;
         
         for(auto j : id2t){
             auto t = j.second;
@@ -495,5 +497,46 @@ void GtaskCommands::printCacheParents()
                       << t->position()
                       << std::endl;
         }
+
+        std::cout << std::endl;
     }
+};
+
+void GtaskCommands::printTaskInTree(googleQt::gtask_cache::TaskInfo::ptr p, int ident)
+{
+    for(auto t : p->items()){
+        QString s_ident = "";
+        for(int i = 0; i < 3*ident; i++){
+            s_ident += " ";
+        }
+        s_ident += "|--";
+        QString s = s_ident + t->title();
+        std::cout << s;
+        int pad_len = 70 - s.size();
+        std::cout << Terminal::pad("", pad_len, '.');
+        std::cout << " ";
+        std::cout << t->id();
+        std::cout << std::endl;
+        printTaskInTree(t, ident + 1);
+    }    
+};
+
+void GtaskCommands::printCacheTree()
+{    
+    auto r = m_gt->cacheRoutes();
+    auto c = r->cache();
+    const gtask_cache::TaskCache::ID2TLIST& id2tl = c->task_lists();
+    for(auto& k : id2tl){
+        auto tl = k.second;
+        std::cout << "[" << tl->tasks_map().size() << " tasks] ";
+        std::cout << tl->id() << " | "
+                  << tl->title()
+                  << std::endl;
+
+        auto t = tl->root();
+        if(t){
+            printTaskInTree(t, 0);
+        }
+        std::cout << std::endl;
+    } 
 };
