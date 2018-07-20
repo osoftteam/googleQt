@@ -81,6 +81,7 @@ int main(int argc, char *argv[])
     t.addAction("delete_contact",   "delete contact entry", [&](QString arg) {cmd.delete_contact(arg); });
     t.addAction("update_contact_name", "change name of a contact entry", [&](QString arg) {cmd.update_contact_name(arg); });    
     t.addAction("ls_contacts_date", "List contacts modified after date/time", [&](QString arg) {cmd.ls_contacts_date(arg); });
+    t.addAction("update_contact_user_field", "Update/add user field", [&](QString arg) {cmd.update_contact_user_field(arg); });
     t.addSeparator();
     t.addAction("ls_groups", "List Contact Groups", [&](QString) {cmd.ls_groups(); });
     t.addAction("get_group", "get single group entry", [&](QString arg) {cmd.get_group(arg); });

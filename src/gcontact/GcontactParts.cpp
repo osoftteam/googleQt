@@ -701,3 +701,97 @@ void GroupMembershipInfoList::toXmlDoc(QDomDocument& doc, QDomNode& entry_node)c
         }
     }
 };
+
+/**
+UserDefinedFieldInfo
+*/
+UserDefinedFieldInfo::UserDefinedFieldInfo() 
+{
+
+};
+
+UserDefinedFieldInfo::UserDefinedFieldInfo(QString key, QString value):
+m_key(key),
+m_value(value)
+{
+
+};
+
+bool UserDefinedFieldInfo::operator==(const UserDefinedFieldInfo& o) const
+{
+    COMPARE_NO_CASE(m_key);
+    COMPARE_NO_CASE(m_value);
+    return true;
+};
+
+bool UserDefinedFieldInfo::operator!=(const UserDefinedFieldInfo& o) const
+{
+    return !(*this == o);
+};
+
+QString UserDefinedFieldInfo::UserDefinedFieldInfo::toString()const
+{
+    QString s = "";
+    if (!isNull()) {
+        s = QString("userField=(%1,%2)")
+            .arg(key())
+            .arg(value());
+    }
+    return s;
+};
+
+/**
+    UserDefinedFieldInfoList
+*/
+UserDefinedFieldInfoList UserDefinedFieldInfoList::parse(QDomNode n)
+{
+    UserDefinedFieldInfoList rv;
+    QDomElement gcf_elem = n.firstChildElement("gContact:userDefinedField");
+    while (!gcf_elem.isNull()) {
+        UserDefinedFieldInfo cinfo;
+        cinfo.m_is_null = false;
+        //..
+        QDomNamedNodeMap attr_names = gcf_elem.attributes();
+        if (attr_names.size() > 0) {
+            for (int j = 0; j < attr_names.size(); j++) {
+                QDomNode n2 = attr_names.item(j);
+                if (n2.nodeType() == QDomNode::AttributeNode) {
+                    if (n2.nodeName().compare("key") == 0) {
+                        cinfo.m_key = n2.nodeValue().trimmed();
+                    }
+                    else if (n2.nodeName().compare("value") == 0) {
+                        cinfo.m_value = n2.nodeValue().trimmed();
+                    }
+                }
+            }
+        }
+        //..
+
+        rv.m_parts.push_back(cinfo);
+        gcf_elem = gcf_elem.nextSiblingElement("gContact:userDefinedField");
+    }
+    return rv;
+};
+
+QString UserDefinedFieldInfoList::toXmlString()const 
+{
+    QString s = "";
+    for (auto& p : m_parts) {
+        if (!p.isNull()) {
+            s += QString("<gContact:userDefinedField key=\"%1\" value=\"%2\"/>\n").arg(p.key()).arg(p.value());
+        }
+    }
+    return s;
+};
+
+void UserDefinedFieldInfoList::toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const
+{
+    xml_util::removeNodes(entry_node, "gContact:userDefinedField");
+    for (auto& p : m_parts) {
+        if (!p.isNull()) {
+            QDomElement def_node = xml_util::addNode(doc, entry_node, "gContact:userDefinedField");
+            def_node.setAttribute("key", p.key());
+            def_node.setAttribute("value", p.value());
+        }
+    }
+};

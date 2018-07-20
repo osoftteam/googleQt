@@ -55,6 +55,10 @@ public:
     */
     void ls_contacts_date(QString updatedMin);
 
+    /**
+        add/modify contact custom field
+    */
+    void update_contact_user_field(QString contactId_key_value);
 
     /**
     * get contact photo

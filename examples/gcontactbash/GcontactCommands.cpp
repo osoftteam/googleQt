@@ -77,6 +77,56 @@ void GcontactCommands::ls_contacts_date(QString updatedMin)
     }
 }
 
+void GcontactCommands::update_contact_user_field(QString contactId_key_value) 
+{
+    QStringList arg_list = contactId_key_value.split(" ",
+        QString::SkipEmptyParts);
+
+    if (arg_list.size() < 3)
+    {
+        std::cout << "Invalid parameters, expected <contactId> <Key> <Value>" << std::endl;
+        return;
+    }
+
+    QString contactid = arg_list[0];
+    QString key = arg_list[1];
+    QString value = arg_list[2];
+
+    try
+    {
+        ContactListArg arg;
+        arg.setContactId(contactid);
+        auto contacts_list = m_gt->getContacts()->list(arg);
+        auto& arr = contacts_list->items();
+        if (arr.size() > 0) {
+            auto c = arr[0];
+            auto& lst = c->userFieldsRef();
+            auto i = std::find_if(lst.items().begin(), lst.items().end(), [&](const UserDefinedFieldInfo& f) {return f.key() == key; });
+            if (i != lst.items().end()) {
+                UserDefinedFieldInfo& f = *i;
+                f.setValue(value);
+            }
+            else {
+                UserDefinedFieldInfo f(key, value);
+                c->addUserField(f);
+            }
+
+            UpdateContactArg upd(*(c.get()));
+            upd.setIgnoreEtag(true);
+            auto c_list = m_gt->getContacts()->update(upd);
+            auto& arr2 = c_list->items();
+            if (arr2.size() > 0) {
+                std::cout << "Updated.." << std::endl;
+                std::cout << arr2[0]->toXml(m_c.userId()) << std::endl;
+            }
+        }
+    }
+    catch (GoogleException& e)
+    {
+        std::cout << "Exception: " << e.what() << std::endl;
+    }
+};
+
 void GcontactCommands::get_contact(QString contactid)
 {
     if (contactid.isEmpty()) {
@@ -98,6 +148,14 @@ void GcontactCommands::get_contact(QString contactid)
             std::cout << c->toXml(m_c.userId()) << std::endl;
             std::cout << "------------------" << std::endl;
             std::cout << c->parsedXml() << std::endl;
+            std::cout << "------------------" << std::endl;            
+            auto& lst = c->userFields();
+            if (!lst.items().empty()) {
+                std::cout << "----- user defined fields ----" << std::endl;
+                for (auto& f : lst.items()) {
+                    std::cout << f.key() << " = " << f.value() << std::endl;
+                }
+            }
         }
     }
     catch (GoogleException& e)
@@ -1612,3 +1670,4 @@ void GcontactCommands::cache_sync()
         std::cout << "Exception: " << e.what() << std::endl;
     }            
 };
+

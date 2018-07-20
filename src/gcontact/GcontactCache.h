@@ -33,7 +33,8 @@ namespace googleQt {
             const OrganizationInfo&    organization()const { return m_organization; }
             const PostalAddressList&   addresses()const { return m_address_list; }            
             const PhotoInfo&           photo()const { return m_photo; }
-            const GroupMembershipInfoList& groups()const { return m_groups; }
+            const GroupMembershipInfoList& groups()const { return m_mgroups; }
+            const UserDefinedFieldInfoList& userFields()const { return m_user_def_fields; }
 
             /// Ref-function return non-const references and can be used
             /// to modify objects. call ContactInfo::markAsModified to stage
@@ -43,7 +44,8 @@ namespace googleQt {
             NameInfo&            nameRef(){ return m_name; }
             OrganizationInfo&    organizationRef(){ return m_organization; }
             PostalAddressList&   addressesRef(){ return m_address_list; }
-            GroupMembershipInfoList& groupsRef() { return m_groups; }
+            GroupMembershipInfoList& groupsRef() { return m_mgroups; }
+            UserDefinedFieldInfoList& userFieldsRef() { return m_user_def_fields; }
 
             /**
                 set title
@@ -105,6 +107,13 @@ namespace googleQt {
             */
             ContactInfo& replaceAddressList(const std::list<PostalAddress>& lst);
 
+            //..
+            /**
+            add user field
+            */
+            ContactInfo& addUserField(const UserDefinedFieldInfo& f);
+            //...
+
             static std::unique_ptr<ContactInfo> createWithId(QString contact_id);
 
             bool parseEntryNode(QDomNode n)override;
@@ -140,7 +149,8 @@ namespace googleQt {
             PhoneInfoList       m_phones;            
             PostalAddressList   m_address_list;            
             PhotoInfo           m_photo;
-            GroupMembershipInfoList m_groups;
+            GroupMembershipInfoList  m_mgroups;
+            UserDefinedFieldInfoList m_user_def_fields;
         };
 
         /**
@@ -161,6 +171,14 @@ namespace googleQt {
             set notes
             */
             GroupInfo& setContent(QString notes);
+
+            /**
+                in case of regular group it's just the title
+                in case of system group we trim away system prefix
+            */
+            QString displayTitle()const;
+
+            bool isSystemGroup()const {return m_issystem_group;};
 
             static std::unique_ptr<GroupInfo> createWithId(QString group_id);
 
@@ -183,7 +201,10 @@ namespace googleQt {
 
         protected:
             virtual QString toXmlBegin()const;
-
+            void            setupTitle(QString title);
+        protected:
+            bool    m_issystem_group{false};
+            QString m_display_title;
         };
 
         class BatchRequestContactInfo : public ContactInfo,

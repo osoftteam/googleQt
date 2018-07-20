@@ -34,7 +34,8 @@ namespace googleQt
             const QDateTime& updated()const { return m_updated; }            
 
             tarr&   items(){return m_items;}
-
+            
+            
         protected:
             TaskInfo();
             TaskInfo(const tasks::TaskResource* r);

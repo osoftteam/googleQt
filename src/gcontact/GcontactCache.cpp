@@ -119,17 +119,17 @@ ContactInfo& ContactInfo::addAddress(const PostalAddress& p)
 
 ContactInfo& ContactInfo::addGroup(const GroupMembershipInfo& p) 
 {
-    m_groups.m_parts.push_back(p);
+    m_mgroups.m_parts.push_back(p);
     markAsModified();
     return *this;
 };
 
 ContactInfo& ContactInfo::setGroups(QString userId, const std::list<QString>& groupIdlist)
 {
-    m_groups.items().clear();
+    m_mgroups.items().clear();
     for (auto gid : groupIdlist) {
         GroupMembershipInfo m(userId, gid);
-        m_groups.m_parts.push_back(m);
+        m_mgroups.m_parts.push_back(m);
     }
     markAsModified();
     return *this;
@@ -153,6 +153,13 @@ ContactInfo& ContactInfo::setOrganizationInfo(const OrganizationInfo& o)
     return *this;
 };
 
+ContactInfo& ContactInfo::addUserField(const UserDefinedFieldInfo& f) 
+{
+    m_user_def_fields.m_parts.push_back(f);
+    markAsModified();
+    return *this;
+};
+
 QString ContactInfo::toString()const 
 {
     QString s = "";
@@ -163,7 +170,8 @@ QString ContactInfo::toString()const
         + m_phones.toString() + ";"
         + m_organization.toString() + ";"
         + m_address_list.toString() + ";"
-        + m_groups.toString();
+        + m_mgroups.toString() + ";"
+        + m_user_def_fields.toString();
     return s;
 };
 
@@ -200,6 +208,14 @@ bool ContactInfo::operator == (const ContactInfo& o) const
     }
 
     if (m_photo != o.m_photo) {
+        return false;
+    }
+
+    if (m_mgroups != o.m_mgroups) {
+        return false;
+    }
+
+    if (m_user_def_fields != o.m_user_def_fields) {
         return false;
     }
 
@@ -242,7 +258,8 @@ QString ContactInfo::toXml(QString userEmail)const
     rv += m_address_list.toXmlString();
     rv += m_emails.toXmlString();
     rv += m_phones.toXmlString();
-    rv += m_groups.toXmlString();
+    rv += m_mgroups.toXmlString();
+    rv += m_user_def_fields.toXmlString();
     rv += "</entry>";
     return rv;
 };
@@ -265,7 +282,8 @@ void ContactInfo::mergeEntryNode(QDomDocument& doc, QDomNode& entry_node)const
     m_emails.toXmlDoc(doc, entry_node);
     m_phones.toXmlDoc(doc, entry_node);
     m_address_list.toXmlDoc(doc, entry_node);
-    m_groups.toXmlDoc(doc, entry_node);
+    m_mgroups.toXmlDoc(doc, entry_node);
+    m_user_def_fields.toXmlDoc(doc, entry_node);
 };
 
 
@@ -304,7 +322,8 @@ bool ContactInfo::parseEntryNode(QDomNode n)
     m_name = NameInfo::parse(n);
     m_organization = OrganizationInfo::parse(n);
     m_address_list = PostalAddressList::parse(n);
-    m_groups = GroupMembershipInfoList::parse(n);
+    m_mgroups = GroupMembershipInfoList::parse(n);
+    m_user_def_fields = UserDefinedFieldInfoList::parse(n);
     m_photo = PhotoInfo::parse(n);
     m_is_null = !m_etag.isEmpty() && m_id.isEmpty();
     return !m_is_null;
@@ -358,7 +377,8 @@ void ContactInfo::assignContent(const ContactInfo& src)
     m_phones = src.m_phones;
     m_address_list = src.m_address_list;   
     m_photo = src.m_photo;
-    m_groups = src.m_groups;
+    m_mgroups = src.m_mgroups;
+    m_user_def_fields = src.m_user_def_fields;
 };
 
 std::unique_ptr<BatchRequestContactInfo> ContactInfo::buildBatchRequest(googleQt::EBatchId batch_id)
@@ -402,6 +422,21 @@ std::unique_ptr<GroupInfo> GroupInfo::createWithId(QString group_id)
     return rv;
 };
 
+void GroupInfo::setupTitle(QString title) 
+{
+    m_title = title;
+    int sys_idx = m_title.indexOf("System Group:");
+    m_issystem_group = (sys_idx == 0);
+    if (m_issystem_group) {
+        m_display_title = m_title.mid(sys_idx).trimmed();
+    }
+};
+
+QString GroupInfo::displayTitle()const 
+{
+    return isSystemGroup() ? m_display_title : m_title;
+};
+
 bool GroupInfo::parseEntryNode(QDomNode n)
 {
     m_parsed_xml = "";
@@ -424,7 +459,7 @@ bool GroupInfo::parseEntryNode(QDomNode n)
 
     QString s = n.firstChildElement("updated").text().trimmed();
     m_updated = QDateTime::fromString(s, Qt::ISODate);
-    m_title = n.firstChildElement("title").text().trimmed();
+    setupTitle(n.firstChildElement("title").text().trimmed());
     m_content = n.firstChildElement("content").text().trimmed();
 
     m_is_null = !m_etag.isEmpty() && m_id.isEmpty();
@@ -537,7 +572,7 @@ bool GroupInfo::setFromDbRecord(QSqlQuery* q)
     
     m_updated = QDateTime::fromMSecsSinceEpoch(q->value(2).toLongLong());
     m_db_id = q->value(3).toInt();
-    m_title = q->value(4).toString();
+    setupTitle(q->value(4).toString());
     m_content = q->value(5).toString();
     m_id = q->value(6).toString();
     setRegisterModifications(true);
@@ -718,9 +753,9 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
 
         for (auto c : updated_contacts) {
             QString xml_current = c->toXml(m_endpoint.apiClient()->userId());
-            qDebug() << "sql-updated dbid=" << c->dbID() << "title=" << c->title() << "fullname=" << c->name().fullName();
-            qDebug() << xml_current;
-            qDebug() << "================================";
+            //qDebug() << "sql-updated dbid=" << c->dbID() << "title=" << c->title() << "fullname=" << c->name().fullName();
+            //qDebug() << xml_current;
+            //qDebug() << "================================";
             q->addBindValue(c->title());
             q->addBindValue(c->name().fullName());
             q->addBindValue(c->parsedXml());
@@ -1814,6 +1849,7 @@ std::unique_ptr<ContactInfo> ContactInfo::EXAMPLE(int param, int )
     OrganizationInfo o;
     PostalAddress a1, a2;
     GroupMembershipInfo g;
+    UserDefinedFieldInfo f1, f2;
 
     n.setFamilyName(last);
     n.setGivenName(first); 
@@ -1859,6 +1895,13 @@ std::unique_ptr<ContactInfo> ContactInfo::EXAMPLE(int param, int )
     g.setUserId("me%1@gmail.com");
     g.setGroupId("my-group-etag");
     ci.addGroup(g);
+
+    f1.setKey("key1");
+    f1.setValue("value1");
+    f2.setKey("key2");
+    f2.setValue("value2");
+    ci.addUserField(f1);
+    ci.addUserField(f2);
 
     ci.m_etag = "my-contact-etag";
     ci.m_id = "my-contact-id";
@@ -2187,6 +2230,7 @@ static QString XmlContactsResponseSample(std::set<QString>& id_set)
         "<gd:phoneNumber rel = \"http://schemas.google.com/g/2005#home\">917 111-1111</gd:phoneNumber>\n"
         "<gd:phoneNumber rel = \"http://schemas.google.com/g/2005#work\" uri=\"tel:+1-917-222-2222\">917 222-2222</gd:phoneNumber>\n"
         "<gContact:groupMembershipInfo deleted = \"false\" href=\"http://www.google.com/m8/feeds/groups/me%40gmail.com/base/6\"/>\n"
+        "<gContact:userDefinedField key=\"k1\" value=\"v1\"/>\n"
         "</entry>\n";
 
 

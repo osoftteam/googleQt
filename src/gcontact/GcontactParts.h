@@ -240,7 +240,6 @@ namespace googleQt {
         {
         public:
             GroupMembershipInfo();
-
             GroupMembershipInfo(QString userId, QString groupId);
 
             QString userId()const { return m_userId; }
@@ -262,6 +261,31 @@ namespace googleQt {
             friend class GroupMembershipInfoList;
         };
         
+        /**
+            custom field/value pair
+        */
+        class UserDefinedFieldInfo : public NullablePart 
+        {
+        public:
+            UserDefinedFieldInfo();
+            UserDefinedFieldInfo(QString key, QString value);
+
+            QString     key()const { return m_key; }            
+            QString     value()const { return m_value; }
+
+            void        setKey(QString s) { m_key = s; }
+            void        setValue(QString s) { m_value = s; }
+
+            bool operator==(const UserDefinedFieldInfo&) const;
+            bool operator!=(const UserDefinedFieldInfo&) const;
+
+            QString toString()const;
+        protected:
+            QString m_key;
+            QString m_value;
+            friend class UserDefinedFieldInfoList;
+        };
+
         /**
         list of emails
         */
@@ -319,5 +343,18 @@ namespace googleQt {
             friend class ContactInfo;
         };
 
+        /**
+        list of user defiled fields
+        */
+        class UserDefinedFieldInfoList : public PartList<UserDefinedFieldInfo>
+        {
+        public:
+            static UserDefinedFieldInfoList parse(QDomNode n);
+            QString toXmlString()const;
+            void toXmlDoc(QDomDocument& doc, QDomNode& entry_node)const;
+
+        protected:
+            friend class ContactInfo;
+        };
     };
 };
