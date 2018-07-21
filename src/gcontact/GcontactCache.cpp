@@ -428,7 +428,7 @@ void GroupInfo::setupTitle(QString title)
     int sys_idx = m_title.indexOf("System Group:");
     m_issystem_group = (sys_idx == 0);
     if (m_issystem_group) {
-        m_display_title = m_title.mid(sys_idx).trimmed();
+        m_display_title = m_title.mid(13).trimmed();
     }
 };
 
