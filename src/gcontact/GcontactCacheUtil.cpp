@@ -249,6 +249,21 @@ ContactXmlPersistant::EStatus ContactXmlPersistant::validatedStatus(int val, boo
     return rv;
 };
 
+QString ContactXmlPersistant::status2string(EStatus status)
+{
+#define CASE_STATUS(S) case S: rv = #S;break;
+
+    QString rv = "status-error";
+    switch(status){
+        CASE_STATUS(localCopy);
+        CASE_STATUS(localModified);
+        CASE_STATUS(localRemoved);
+        CASE_STATUS(localRetired);
+        CASE_STATUS(localIdLimbo);
+    }
+    return rv;
+};
+
 void ContactXmlPersistant::assignContent(const ContactXmlPersistant& src) 
 {
     m_etag = src.m_etag;

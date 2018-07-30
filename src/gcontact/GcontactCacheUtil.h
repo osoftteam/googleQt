@@ -94,6 +94,7 @@ namespace googleQt {
 
             /// int -> status enum, does some validation
             static EStatus validatedStatus(int val, bool* ok = nullptr);            
+            static QString status2string(EStatus status);
 
             /// userPtr - custom user data pointer
             void* userPtr()const { return m_user_ptr; }

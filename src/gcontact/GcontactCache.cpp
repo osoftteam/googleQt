@@ -364,6 +364,14 @@ bool ContactInfo::setFromDbRecord(QSqlQuery* q)
     
     m_photo.setupFromLocalDb(photo_href, photo_etag, st);
 
+#ifdef API_QT_AUTOTEST
+    if (m_id.isEmpty()) {
+        /// normaly ID should be comming from server (original XML)
+        /// but for autotest we can pick up from DB field
+        m_id = q->value(9).toString();
+    }
+#endif
+
     setRegisterModifications(true); 
     return true;
 };
@@ -1088,7 +1096,7 @@ bool GContactCache::loadContactEntriesFromDb()
     m_contacts.clear();
 
     QString sql = QString("SELECT status, xml_original, xml_current, updated, contact_db_id, title, "
-        "photo_href, photo_etag, photo_status FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2,3) ORDER BY updated DESC")
+        "photo_href, photo_etag, photo_status, entry_id FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2,3) ORDER BY updated DESC")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
     QSqlQuery* q = m_sql_storage->selectQuery(sql);
