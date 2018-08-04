@@ -78,6 +78,7 @@ ContactInfo& ContactInfo::addEmail(const EmailInfo& e)
 {
     m_emails.m_parts.push_back(e);
     markAsModified();
+    m_emails.rebuildLabelsMap();
     return *this;
 };
 
@@ -85,6 +86,7 @@ ContactInfo& ContactInfo::addPhone(const PhoneInfo& p)
 {
     m_phones.m_parts.push_back(p);
     markAsModified();
+    m_phones.rebuildLabelsMap();
     return *this;
 };
 
@@ -95,6 +97,7 @@ ContactInfo& ContactInfo::replaceEmails(const std::list<EmailInfo>& lst)
     for (auto& p : lst) {
         m_emails.m_parts.push_back(p);
     }
+    m_emails.rebuildLabelsMap();
     return *this;
 };
 
@@ -106,6 +109,7 @@ ContactInfo& ContactInfo::replacePhones(const std::list<PhoneInfo>& lst)
     for (auto& p : lst) {
         m_phones.m_parts.push_back(p);
     }
+    m_phones.rebuildLabelsMap();
     return *this;
 };
 
@@ -114,6 +118,7 @@ ContactInfo& ContactInfo::addAddress(const PostalAddress& p)
 {
     m_address_list.m_parts.push_back(p);
     markAsModified();
+    m_address_list.rebuildLabelsMap();
     return *this;
 };
 
@@ -142,6 +147,7 @@ ContactInfo& ContactInfo::replaceAddressList(const std::list<PostalAddress>& lst
     for (auto& p : lst) {
         m_address_list.m_parts.push_back(p);
     }
+    m_address_list.rebuildLabelsMap();
     return *this;
 };
 
@@ -325,6 +331,11 @@ bool ContactInfo::parseEntryNode(QDomNode n)
     m_mgroups = GroupMembershipInfoList::parse(n);
     m_user_def_fields = UserDefinedFieldInfoList::parse(n);
     m_photo = PhotoInfo::parse(n);
+
+    m_emails.rebuildLabelsMap();
+    m_phones.rebuildLabelsMap();
+    m_address_list.rebuildLabelsMap();
+
     m_is_null = !m_etag.isEmpty() && m_id.isEmpty();
     return !m_is_null;
 }
@@ -387,6 +398,10 @@ void ContactInfo::assignContent(const ContactInfo& src)
     m_photo = src.m_photo;
     m_mgroups = src.m_mgroups;
     m_user_def_fields = src.m_user_def_fields;
+
+    m_emails.rebuildLabelsMap();
+    m_phones.rebuildLabelsMap();
+    m_address_list.rebuildLabelsMap();
 };
 
 std::unique_ptr<BatchRequestContactInfo> ContactInfo::buildBatchRequest(googleQt::EBatchId batch_id)
