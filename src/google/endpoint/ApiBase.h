@@ -183,7 +183,8 @@ namespace googleQt {
     std::list<QString> split_string(QString s);
     /// converts size to string with KB, MB or GB suffix
     QString size_human(qreal num);
-
+    /// trims string to alpha-num characters, makes is lowercase for typeLabels in GContacts
+    QString trim_alpha_label(QString lbl);
 
     class VoidType
     {

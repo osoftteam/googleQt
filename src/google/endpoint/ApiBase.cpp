@@ -180,6 +180,12 @@ QString googleQt::size_human(qreal num)
     return QString().setNum(num, 'f', 2) + " " + unit;
 }
 
+QString googleQt::trim_alpha_label(QString lbl)
+{
+    QString rv = lbl.trimmed().toLower().remove(QRegExp("[^a-zA-Z\\d\\s]")).remove(QRegExp("\\s"));
+    return rv;
+};
+
 /**
 xml_util
 */
