@@ -116,6 +116,9 @@ namespace googleQt {
             mutable void*       m_user_ptr{ nullptr };            
         };//ContactXmlPersistant
 
+        /**
+            collection of 'parts' - emails, phones, addresses, etc.
+        */
         template <class P>
         class PartList
         {
@@ -151,24 +154,93 @@ namespace googleQt {
             const std::vector<P>& items()const{return m_parts;}
             std::vector<P>& items(){return m_parts;}            
             
-            int findPrimary()const
-            {
-                int idx = 0;
-                if(m_parts.size() == 0){
-                    return -1;
-                }
-                for (auto& p : m_parts) {
-                    if(p.isPrimary()){
-                        return idx;
-                    }
-                    idx++;
-                }
-                return 0;//primary not found, return first one
-            }
         protected:
             std::vector<P> m_parts;
         };//PartList
 
+          /**
+            collection of labeled 'parts' - has cache to lookup part by label
+            if anything changes rebuildLabelsMap should be called.
+          */
+        template <class T>
+        class LabeledPartList : public PartList<T> 
+        {
+        public:
+            using LABELS_MAP = std::map<QString, int>;
+
+            const LABELS_MAP&   labelsMap()const { return m_labels_map; };
+            void                rebuildLabelsMap()const 
+            {
+                m_idx_primary = -1;
+                m_labels_map.clear();
+                auto Max = PartList<T>::m_parts.size();
+                for (size_t i = 0; i < Max; i++) {
+                    const auto& p = PartList<T>::m_parts[i];
+                    QString lbl = p.typeLabel();
+                    if (!lbl.isEmpty()) {
+                        m_labels_map[lbl] = i;
+                    }
+                    if (p.isPrimary()) {
+                        m_idx_primary = static_cast<int>(i);
+                    }
+                }                
+            }
+
+            int findByLabel(QString lbl)const
+            {
+                auto i = m_labels_map.find(lbl);
+                if (i == m_labels_map.end()) {
+                    return -1;
+                }
+
+                auto idx = i->second;
+                if (idx < 0 || idx >= static_cast<int>(PartList<T>::m_parts.size())) {
+                    qWarning() << "Invalid labels cache index" << idx << PartList<T>::m_parts.size();
+                    return -1;
+                }
+
+                ///might want to comment out following 4 line
+                const T& p = PartList<T>::m_parts[idx];
+                if (p.typeLabel().compare(lbl) != 0) {
+                    qWarning() << "Invalid labels cache value" << idx << p.typeLabel() << lbl;
+                    return -1;
+                }
+                return idx;
+            };
+
+            void removeByLabel(QString lbl) 
+            {
+                int idx = findByLabel(lbl);
+                if (idx != -1) {
+                    PartList<T>::m_parts.erase(PartList<T>::m_parts.begin() + idx);
+                    rebuildLabelsMap();
+                }
+            }
+
+            int findPrimary()const
+            {
+                if (m_idx_primary == -1) {
+                    return -1;
+                }
+                if (m_idx_primary < 0 || m_idx_primary >= static_cast<int>(PartList<T>::m_parts.size())) {
+                    qWarning() << "Invalid primary cache index" << m_idx_primary << PartList<T>::m_parts.size();
+                    return -1;
+                }
+
+                ///might want to comment out following 4 line
+                const T& p = PartList<T>::m_parts[m_idx_primary];
+                if (!p.isPrimary()) {
+                    qWarning() << "Invalid primary cache value" << m_idx_primary;
+                    return -1;
+                }
+
+                return m_idx_primary;
+            }
+
+        protected:
+            mutable LABELS_MAP  m_labels_map;
+            mutable int m_idx_primary{ -1 };
+        };
 
         template <class T>
         class InfoList
