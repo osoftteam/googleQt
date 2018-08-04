@@ -289,7 +289,7 @@ namespace googleQt {
         /**
         list of emails
         */
-        class EmailInfoList : public PartList<EmailInfo>
+        class EmailInfoList : public LabeledPartList<EmailInfo>
         {
         public:
             static EmailInfoList parse(QDomNode n);
@@ -303,7 +303,7 @@ namespace googleQt {
         /**
             list of phones
         */
-        class PhoneInfoList : public PartList<PhoneInfo>
+        class PhoneInfoList : public LabeledPartList<PhoneInfo>
         {
         public:
             static PhoneInfoList parse(QDomNode n);
@@ -316,7 +316,7 @@ namespace googleQt {
         /**
         list of postal addresses
         */
-        class PostalAddressList : public PartList<PostalAddress>
+        class PostalAddressList : public LabeledPartList<PostalAddress>
         {
         public:
             using ADDRESS_ARR = std::vector<PostalAddress>;
