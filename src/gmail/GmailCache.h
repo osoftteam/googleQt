@@ -359,6 +359,7 @@ namespace googleQt{
 
             bool loadAttachmentsFromDb(MessageData& m);
             bool deleteAttachmentsFromDb(QString msg_id);
+            bool markMailAsTrashedInDb(MessageData& m);
 
             QString findUser(int accId);
             int findAccount(QString userId);

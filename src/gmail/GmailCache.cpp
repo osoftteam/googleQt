@@ -1017,6 +1017,35 @@ bool mail_cache::GMailSQLiteStorage::loadAttachmentsFromDb(MessageData& m)
     return true;
 };
 
+bool mail_cache::GMailSQLiteStorage::markMailAsTrashedInDb(MessageData& m) 
+{
+    int accId = m.accountId();
+    if (accId == -1) {
+        qWarning() << "ERROR. Invalid accountId" << m.id();
+        return false;
+    }
+
+    auto lb = findLabel(mail_cache::SysLabel::TRASH);
+    if (!lb) {
+        qWarning() << "ERROR. Failed to locate label by id" << m.id();
+        return false;
+    }
+
+    m.m_labels |= lb->labelMask();
+
+    auto sql_update = QString("UPDATE %1gmail_msg SET msg_labels=? WHERE msg_id=? AND acc_id=?")
+        .arg(m_metaPrefix);
+
+    QSqlQuery* q = prepareQuery(sql_update);
+    if (!q)return false;
+
+    q->addBindValue(static_cast<qint64>(m.labelsBitMap()));
+    q->addBindValue(m.id());
+    q->addBindValue(accId);
+
+    return true;
+};
+
 QString mail_cache::GMailSQLiteStorage::findAttachmentFile(att_ptr att)const 
 {
     QString rv;
