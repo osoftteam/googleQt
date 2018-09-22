@@ -322,25 +322,38 @@ QString ApiAutotest::getString(const char* class_name, const char* field_name, Q
     return rv;
 };
 
+void ApiAutotest::cancellAll()const
+{
+    m_cancelRequest = true;
+};
+
 void ApiAutotest::emulateAutotestDownloadProgress(googleQt::ApiClient* cl)
 {
-    qApp->processEvents();
-    if (isProgressEmulationEnabled()) {
-        static int max_progress     = 100;
-        static int step_progress    = 20;
-        for (int progress = 0; progress < max_progress; progress += step_progress) {
-            cl->downloadProgress(progress, max_progress);
-            sleep(100);
+    if(!m_cancelRequest){
+        qApp->processEvents();
+        if (isProgressEmulationEnabled()) {
+            static int max_progress     = 100;
+            static int step_progress    = 20;
+            for (int progress = 0; progress < max_progress; progress += step_progress) {
+                cl->downloadProgress(progress, max_progress);
+                sleep(100);
+                if(m_cancelRequest)
+                    break;
+            }
         }
     }
 };
 
 void ApiAutotest::sleep(int millisecondsToWait)
 {
-    QTime endTime = QTime::currentTime().addMSecs(millisecondsToWait);
-    while (QTime::currentTime() < endTime)
-    {
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+    if(!m_cancelRequest){
+        QTime endTime = QTime::currentTime().addMSecs(millisecondsToWait);
+        while (QTime::currentTime() < endTime)
+            {
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+                if(m_cancelRequest)
+                    break;
+            }
     }
 };
 

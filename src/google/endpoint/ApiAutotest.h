@@ -52,15 +52,17 @@ namespace googleQt{
         void enableAttachmentDataGeneration(bool val){m_attachmentDataGenerationOn = val;}
 
         bool isProgressEmulationEnabled()const { return m_progress_emul_enabled; }
-        void enableProgressEmulation(bool val) { m_progress_emul_enabled = val; }
+        void enableProgressEmulation(bool val) { m_progress_emul_enabled = val; m_cancelRequest = false;}
 
         void emulateAutotestDownloadProgress(googleQt::ApiClient* cl);
         void sleep(int millisecondsToWait);
+        void cancellAll()const;
 
     protected:
         CLASS_ID_MAP m_availID;
         CLASS2BATCH_LIST m_availBatchID;
         bool m_attachmentDataGenerationOn{true};
+        mutable bool m_cancelRequest{false};
         #endif //API_QT_AUTOTEST
 
     protected:

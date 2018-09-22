@@ -52,6 +52,9 @@ void ApiEndpoint::setProxy(const QNetworkProxy& proxy)
 
 void ApiEndpoint::cancelAll()
 {
+#ifdef API_QT_AUTOTEST
+    ApiAutotest::INSTANCE().cancellAll();
+#endif
     NET_REPLIES_IN_PROGRESS copy_of_replies = m_replies_in_progress;
     std::for_each(copy_of_replies.begin(), copy_of_replies.end(), [](std::pair<QNetworkReply*, std::shared_ptr<FINISHED_REQ>> p)
     {
@@ -103,7 +106,7 @@ void ApiEndpoint::updateLastRequestInfo(QString s)
 QNetworkReply* ApiEndpoint::getData(const QNetworkRequest &req)
 {
     TRACE_REQUEST("GET", req, "");
-
+    
 #ifdef API_QT_AUTOTEST
     LOG_REQUEST;
     return nullptr;
