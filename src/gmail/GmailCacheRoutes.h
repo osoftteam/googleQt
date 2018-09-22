@@ -62,11 +62,13 @@ namespace googleQt
             mail_cache::data_list_uptr getNextCacheMessages(QString userId,
                 int messagesCount = 40,
                 QString pageToken = "",
-                QStringList* labels = nullptr);
+                QStringList* labels = nullptr,
+                QString q = "");
             mail_cache::GMailCacheQueryTask* getNextCacheMessages_Async(QString userId,
                 int messagesCount = 40,
                 QString pageToken = "",
-                QStringList* labels = nullptr);
+                QStringList* labels = nullptr,
+                QString q = "");
 
             GoogleVoidTask* trashCacheMessage_Async(QString userId, QString msg_id);
 

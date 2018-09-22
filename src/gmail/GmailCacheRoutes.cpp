@@ -101,13 +101,15 @@ mail_cache::data_list_uptr mail_cache::GmailCacheRoutes::getCacheMessages(int nu
 mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheMessages_Async(QString userId,
     int messagesCount /*= 40*/,
     QString pageToken /*= ""*/,
-    QStringList* labels /*= nullptr*/)
+    QStringList* labels /*= nullptr*/,
+    QString q /*= ""*/)
 {
     mail_cache::GMailCacheQueryTask* rfetcher = newResultFetcher(userId, EDataState::snippet);
 
     gmail::ListArg listArg;
     listArg.setMaxResults(messagesCount);
     listArg.setPageToken(pageToken);
+    listArg.setQ(q);
     if (labels)
     {
         listArg.labels() = *labels;
@@ -134,12 +136,14 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheMessa
 mail_cache::data_list_uptr mail_cache::GmailCacheRoutes::getNextCacheMessages(QString userId,
     int messagesCount /*= 40*/,
     QString pageToken /*= ""*/,
-    QStringList* labels /*= nullptr*/)
+    QStringList* labels /*= nullptr*/,
+    QString q /*= ""*/)
 {
     return getNextCacheMessages_Async(userId,
         messagesCount,
-        pageToken,
-        labels)->waitForResultAndRelease();
+        pageToken,        
+        labels,
+        q)->waitForResultAndRelease();
 };
 
 GoogleVoidTask* mail_cache::GmailCacheRoutes::trashCacheMessage_Async(QString userId, QString msg_id)
