@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
     demo::Terminal t("gmail");
     t.addAction("ls",               "List Messages", [&](QString arg) {cmd.ls(arg);} );
     t.addAction("ls_by_labels",     "List Messages by label ID", [&](QString arg) {cmd.ls_by_labels(arg);} );
+    t.addAction("search",     "Search for Messages", [&](QString arg) {cmd.search(arg);} );
     t.addAction("get",              "Get Message by ID", [&](QString arg) {cmd.get(arg);} );
     t.addAction("get_snippet",      "Get Message snippet by ID", [&](QString arg) {cmd.get_snippet(arg);} );    
     t.addAction("get_raw",          "Get Message by ID using raw format", [&](QString arg) {cmd.get(arg);} );

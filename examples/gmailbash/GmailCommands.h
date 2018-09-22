@@ -33,6 +33,12 @@ public:
        ls_by_labels - list messages that belong to labels provided
     */
     void ls_by_labels(QString labelIds);
+
+    /**
+       search - search for messages 
+    */
+    void search(QString q);
+
     
     /**
        get - get message by id using default (full) format
@@ -188,7 +194,7 @@ public:
     void base64url_decode(QString data);
     
 protected:
-    void listMessages(QString nextToken, QString labelIds);
+    void listMessages(QString nextToken, QString labelIds, QString query = "");
     void listThreads(QString nextToken, QString labelIds);
     void listDrafts(QString nextToken);
     void printSnippet(messages::MessageResource*);

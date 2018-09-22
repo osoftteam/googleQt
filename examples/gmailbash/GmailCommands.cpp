@@ -14,7 +14,7 @@ GmailCommands::GmailCommands(GoogleClient& c):m_c(c)
     m_gm = m_c.gmail();
 };
 
-void GmailCommands::listMessages(QString nextToken, QString labelIds)
+void GmailCommands::listMessages(QString nextToken, QString labelIds, QString query)
 {
     try
         {
@@ -23,6 +23,9 @@ void GmailCommands::listMessages(QString nextToken, QString labelIds)
             listArg.setPageToken(nextToken);
             if(!labelIds.isEmpty()){
                 listArg.labels() = labelIds.split(" ");
+            }
+            if(!query.isEmpty()){
+                listArg.setQ(query);
             }
 
             auto mlist = m_gm->getMessages()->list(listArg);
@@ -151,6 +154,23 @@ void GmailCommands::ls(QString nextToken)
 void GmailCommands::ls_by_labels(QString labelIds)
 {
     listMessages("", labelIds);
+};
+
+void GmailCommands::search(QString q)
+{
+    if(q.isEmpty()){
+        std::cout << "Please provide search query" << std::endl;
+        std::cout << "example ------------------" << std::endl;
+        std::cout << "\"november rain\"" << std::endl;
+        std::cout << "from:user@yahoo.com" << std::endl;
+        std::cout << "from:fred OR from:anna" << std::endl;
+        std::cout << "subject:toyota prius" << std::endl;
+        std::cout << "has:drive has:document" << std::endl;
+        std::cout << "is:unread" << std::endl;
+        return;
+    }
+    
+    listMessages("", "", q);
 };
 
 void GmailCommands::send_prepared_rfc822(QString messageFileName)
