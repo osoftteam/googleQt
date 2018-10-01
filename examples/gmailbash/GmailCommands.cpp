@@ -54,7 +54,7 @@ void GmailCommands::listThreads(QString nextToken, QString labelIds)
     try
         {
             gmail::ListArg listArg;
-            listArg.setMaxResults(40);
+            listArg.setMaxResults(20);
             listArg.setPageToken(nextToken);
             if (!labelIds.isEmpty()) {
                 listArg.labels() = labelIds.split(" ");
@@ -62,9 +62,15 @@ void GmailCommands::listThreads(QString nextToken, QString labelIds)
 
             int idx = 1;
             auto threads_list = m_gm->getThreads()->list(listArg);
-            for (auto t : threads_list->threads())
+            for (auto t1 : threads_list->threads())
                 {
-                    std::cout << idx++ << ". " << t.id() << std::endl;
+                    auto t = m_gm->getThreads()->get(gmail::IdArg(m_c.userId(), t1.id()));
+                    std::cout << idx++ << ". "
+                              << "tid=" << t->id()
+                              << " snipped=" << t->snipped()
+                              << " historyid=" << t->historyid()
+                              << " messagescount=" << t->messages().size()
+                              << std::endl;                    
                 }
 
             nextToken = threads_list->nextpagetoken();
@@ -752,12 +758,25 @@ void GmailCommands::ls_threads(QString nextToken)
     listThreads(nextToken, "");
 };
 
-void GmailCommands::get_thread(QString thread_id)
+void GmailCommands::get_thread(QString id_list)
 {
+    std::list<QString> arg_list = split_string(id_list);
+    if (arg_list.empty()) 
+        {
+            std::cout << "Space separated thread ID list required" << std::endl;
+            return;
+        }
+    
     try
         {
-            auto t = m_gm->getThreads()->get(gmail::IdArg(m_c.userId(), thread_id));
-            std::cout << "tid=" << t->id() << " snipped=" << t->snipped() << " historyid=" << t->historyid() << " messagescount=" << t->messages().size() << std::endl;
+            for(auto s : arg_list){
+                auto t = m_gm->getThreads()->get(gmail::IdArg(m_c.userId(), s));
+                std::cout << "tid=" << t->id()
+                          << " snipped=" << t->snipped()
+                          << " historyid=" << t->historyid()
+                          << " messagescount=" << t->messages().size()
+                          << std::endl;
+            }
         }
     catch (GoogleException& e)
         {
