@@ -101,9 +101,7 @@ googleQt::mail_cache::GmailCacheRoutes* GmailRoutes::cacheRoutes()
 void GmailRoutes::onUserReset()
 {
     if (m_CacheRoutes) {
-        if (m_CacheRoutes->hasCache()) {
-            m_CacheRoutes->resetSQLiteCache();
-        }
+        m_CacheRoutes->resetSQLiteCache();
     }
 };
 
