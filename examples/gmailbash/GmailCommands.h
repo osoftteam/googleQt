@@ -185,6 +185,7 @@ public:
     */
     void down_att_async(QString msgId);
     
+	void get_cache_threads(QString );
 
     void export_last_result(QString );
     void print_last_result(QString );

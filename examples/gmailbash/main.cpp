@@ -112,6 +112,8 @@ int main(int argc, char *argv[])
     t.addAction("download_attachments", "Download all attachments of message", [&](QString arg) {cmd.download_attachments(arg); });
     t.addAction("down_att_async", "Download all attachments of message (async way)", [&](QString arg) {cmd.down_att_async(arg); });
     t.addSeparator();
+	t.addAction("get_cache_threads", "Check for new threads & emails on cloud, if found return and update cache, otherwise return cache messages", [&](QString arg) {cmd.get_cache_threads(arg); });
+	t.addSeparator();
     t.addAction("export_last_result",   "Export last response to a file", [&](QString arg) {cmd.export_last_result(arg); });
     t.addAction("print_last_result",   "Print last response", [&](QString arg) {cmd.print_last_result(arg); });
     t.addAction("print_user_id",   "Print user ID", [&](QString arg) {cmd.print_user_id(arg); });

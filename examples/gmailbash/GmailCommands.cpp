@@ -64,12 +64,9 @@ void GmailCommands::listThreads(QString nextToken, QString labelIds)
             auto threads_list = m_gm->getThreads()->list(listArg);
             for (auto t1 : threads_list->threads())
                 {
-                    auto t = m_gm->getThreads()->get(gmail::IdArg(m_c.userId(), t1.id()));
                     std::cout << idx++ << ". "
-                              << "tid=" << t->id()
-                              << " snipped=" << t->snipped()
-                              << " historyid=" << t->historyid()
-                              << " messagescount=" << t->messages().size()
+                              << "tid=" << t1.id()
+                              << " historyid=" << t1.historyid()
                               << std::endl;                    
                 }
 
@@ -1115,4 +1112,29 @@ void GmailCommands::check_email_cache(QString nextToken)
         {
             std::cout << "Exception: " << e.what() << std::endl;
         }    
+};
+
+
+void GmailCommands::get_cache_threads(QString) 
+{
+	try
+	{
+		auto lst = m_gm->cacheRoutes()->getNextCacheThreads(20);
+		std::cout << "loaded thread from cache: " << lst->result_list.size() << std::endl;
+
+		int n = 1;
+		for (auto& i : lst->result_list)
+		{
+			mail_cache::ThreadData* t = i.get();
+			std::cout << n << ". " << t->id() << "|";
+			std::cout << t->historyId() << "|";
+			std::cout << t->messagesCount() << "|";
+			std::cout << t->snippet() << "|" << std::endl;
+			n++;
+		}
+	}
+	catch (GoogleException& e)
+	{
+		std::cout << "Exception: " << e.what() << std::endl;
+	}
 };
