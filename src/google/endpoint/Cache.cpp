@@ -15,3 +15,10 @@ bool googleQt::CacheData::isLoaded(EDataState st)const
     return rv;
 };
 
+///CacheDataWithHistory
+googleQt::CacheDataWithHistory::CacheDataWithHistory(QString id, quint64 hid) 
+	:CacheData(EDataState::snippet, id),
+	m_history_id(hid)
+{
+
+};
