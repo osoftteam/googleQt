@@ -64,7 +64,7 @@ ConcurrentValueRunner<QString,
     return r;
 };
 
-mail_cache::data_list_uptr mail_cache::GmailCacheRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
+mail_cache::mdata_list_uptr mail_cache::GmailCacheRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
 {
     return getCacheMessages_Async(state, id_list)->waitForResultAndRelease();
 };
@@ -82,13 +82,15 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheMessages_
     return rfetcher;
 };
 
-mail_cache::data_list_uptr mail_cache::GmailCacheRoutes::getCacheMessages(int numberOfMessages, uint64_t labelFilter)
+mail_cache::mdata_list_uptr mail_cache::GmailCacheRoutes::getCacheMessages(int numberOfMessages, uint64_t labelFilter)
 {
-    mail_cache::GMailCacheQueryTask* rfetcher = newMessageResultFetcher(EDataState::snippet);
-    m_GMsgCache->topCacheData(rfetcher, numberOfMessages, labelFilter);
-    return rfetcher->waitForResultAndRelease();
+    return m_GMsgCache->topCacheData(numberOfMessages, labelFilter);
 };
 
+mail_cache::tdata_list_uptr mail_cache::GmailCacheRoutes::getCacheThreads(int numberOfThreads, uint64_t labelFilter)
+{
+    return m_GThreadCache->topCacheData(numberOfThreads, labelFilter);
+};
 
 mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheMessages_Async(
     int messagesCount /*= 40*/,
@@ -114,7 +116,8 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheMessa
         {
             id_list.push_back(m.id());
         }
-        rfetcher->setNextPageToken(mlist->nextpagetoken());
+        //        rfetcher->setNextPageToken(mlist->nextpagetoken());
+        rfetcher->m_nextPageToken = mlist->nextpagetoken();
         getCacheMessages_Async(EDataState::snippet, id_list, rfetcher);
     },
         [=](std::unique_ptr<GoogleException> ex)
@@ -125,7 +128,7 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheMessa
     return rfetcher;
 };
 
-mail_cache::data_list_uptr mail_cache::GmailCacheRoutes::getNextCacheMessages(
+mail_cache::mdata_list_uptr mail_cache::GmailCacheRoutes::getNextCacheMessages(
     int messagesCount /*= 40*/,
     QString pageToken /*= ""*/,
     QStringList* labels /*= nullptr*/,
@@ -162,7 +165,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::trashCacheMessage_Async(QString us
 
 ConcurrentValueRunner<QString, 
 	mail_cache::ThreadsReceiver, 
-	threads::ThreadResource>* mail_cache::GmailCacheRoutes::getUserBatchThreads_Async(QString userId, const std::list<QString>& id_list)
+	threads::ThreadResource>* mail_cache::GmailCacheRoutes::getUserBatchThreads_Async(const std::list<QString>& id_list)
 {
 	std::unique_ptr<mail_cache::ThreadsReceiver> tr(new mail_cache::ThreadsReceiver(m_gmail_routes));
 	auto r = new ConcurrentValueRunner<QString,
@@ -171,6 +174,20 @@ ConcurrentValueRunner<QString,
 	r->run();
 	return r;
 };
+
+mail_cache::tdata_list_uptr mail_cache::GmailCacheRoutes::getNextCacheThreads(
+	int messagesCount /*= 40*/,
+	QString pageToken /*= ""*/,
+	QStringList* labels /*= nullptr*/,
+	QString q /*= ""*/) 
+{
+	return getNextCacheThreads_Async(
+		messagesCount,
+		pageToken,
+		labels,
+		q)->waitForResultAndRelease();
+};
+
 
 mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheThreads_Async(
 	int threadsCount /*= 40*/,
@@ -188,60 +205,39 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheThr
 		listArg.labels() = *labels;
 	}
 
+	///this will return list of thread Ids with HistoryId
 	m_gmail_routes.getThreads()->list_Async(listArg)->then([=](std::unique_ptr<threads::ThreadListRes> tlist)
 	{
-		std::list<QString> id_list;
+		std::list<HistId> id_list;
 		for (auto& m : tlist->threads())
 		{
-			id_list.push_back(m.id());
+			HistId h;
+			h.id = m.id();
+			h.hid = m.historyid();
+			id_list.push_back(h);
 		}
-		//t->fetchFromCloud_Async(id_list);
-		getCacheThreads_Async(id_list, rfetcher);
+        rfetcher->m_nextPageToken = tlist->nextpagetoken();
+        getCacheThreads_Async(id_list, rfetcher);
 	},
 		[=](std::unique_ptr<GoogleException> ex)
 	{
 		rfetcher->failed_callback(std::move(ex));
 	});
 
-	/*
-	mail_cache::GThreadCacheSyncTask* t = new mail_cache::GThreadCacheSyncTask(*this);
-
-	gmail::ListArg listArg;
-	listArg.setMaxResults(threadsCount);
-	listArg.setPageToken(pageToken);
-	listArg.setQ(q);
-	if (labels)
-	{
-		listArg.labels() = *labels;
-	}
-
-	m_gmail_routes.getThreads()->list_Async(listArg)->then([=](std::unique_ptr<threads::ThreadListRes> tlist)
-	{
-		std::list<QString> id_list;
-		for (auto& m : tlist->threads())
-		{
-			id_list.push_back(m.id());
-		}
-		t->fetchFromCloud_Async(id_list);
-	},
-		[=](std::unique_ptr<GoogleException> ex)
-	{
-		t->failed_callback(std::move(ex));
-	});
-	*/
 	return rfetcher;
 };
 
+
+
 mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheThreads_Async(
-	const std::list<QString>& id_list,
+	const std::list<HistId>& id_list,
 	mail_cache::GThreadCacheQueryTask* rfetcher /*= nullptr*/)
 {
 	if (!rfetcher)
 	{
 		rfetcher = newThreadResultFetcher();
 	}
-	m_GThreadCache->query_Async(EDataState::snippet, id_list, rfetcher);
-	//xx rfetcher->fetchFromCloud_Async(id_list);
+	m_GThreadCache->queryWithHistory_Async(id_list, rfetcher);
 	return rfetcher;
 };
 
@@ -554,7 +550,7 @@ bool mail_cache::GmailCacheRoutes::messageHasLabel(mail_cache::MessageData* d, Q
 void mail_cache::GmailCacheRoutes::autotestParDBLoad(EDataState state, const std::list<QString>& id_list)
 {
     mail_cache::GMailCacheQueryTask* r = getCacheMessages_Async(state, id_list);
-    mail_cache::data_list_uptr res = r->waitForResultAndRelease();
+    mail_cache::mdata_list_uptr res = r->waitForResultAndRelease();
     ApiAutotest::INSTANCE() << QString("loaded/cached %1 messages, mem_cache-hit: %2, db-cache-hit: %3")
         .arg(res->result_list.size())
         .arg(r->mem_cache_hit_count())
@@ -597,7 +593,7 @@ void mail_cache::GmailCacheRoutes::runAutotest()
     AUTOTEST_GENERATE_SNIPPET;
     AUTOTEST_GENERATE_BODY;
 
-    m_GMailCache->mem_clear();
+	m_GMsgCache->mem_clear();
     autotestParDBLoad(EDataState::snippet, id_list);
 
     std::function<void(void)>deleteFirst10 = [=]()
@@ -610,7 +606,7 @@ void mail_cache::GmailCacheRoutes::runAutotest()
                 break;
         }
 
-        m_GMailCache->persistent_clear(set2remove);
+		m_GMsgCache->persistent_clear(set2remove);
     };
 
     deleteFirst10();
@@ -628,7 +624,7 @@ void mail_cache::GmailCacheRoutes::runAutotest()
     if (print_cache)
     {
         using MSG_LIST = std::list<std::shared_ptr<mail_cache::MessageData>>;
-        mail_cache::data_list_uptr lst = getCacheMessages(-1);
+        mail_cache::mdata_list_uptr lst = getCacheMessages(-1);
         for (auto& i : lst->result_list)
         {
             mail_cache::MessageData* m = i.get();
@@ -644,12 +640,13 @@ void mail_cache::GmailCacheRoutes::runAutotest()
         QString s = QString("Total messages %1").arg(lst->result_list.size());
         ApiAutotest::INSTANCE() << s;
     }
-    //*** check latest emails
+
+	qDebug() << "check latest emails";
     bool check_email = true;
     if (check_email)
     {
         idx = 1;
-        mail_cache::data_list_uptr lst2 = getNextCacheMessages();
+        mail_cache::mdata_list_uptr lst2 = getNextCacheMessages();
         for (auto& i : lst2->result_list)
         {
             mail_cache::MessageData* m = i.get();
@@ -682,7 +679,7 @@ void mail_cache::GmailCacheRoutes::runAutotest()
             auto g_iterator = imperative_groups.begin();
             uint64_t lmask = (*l_iterator)->labelMask();
             uint64_t gmask = (*g_iterator)->labelMask();
-            mail_cache::data_list_uptr lst = getCacheMessages(-1);
+            mail_cache::mdata_list_uptr lst = getCacheMessages(-1);
             int counter = 0;
             int totalNumber = lst->result_list.size();
             int imperative_group_size = totalNumber / imperative_groups.size();
@@ -714,6 +711,29 @@ void mail_cache::GmailCacheRoutes::runAutotest()
             }
         }
     }
+
+
+	qDebug() << "check latest threads";
+	bool check_thread = true;
+	if (check_thread)
+	{
+		idx = 1;
+		auto lst2 = getNextCacheThreads();
+		for (auto& i : lst2->result_list)
+		{
+			auto* t = i.get();
+			QString s = QString("%1. %2 %3 %4")
+				.arg(idx)
+				.arg(t->id())
+				.arg(t->historyId())
+				.arg(t->snippet());
+			ApiAutotest::INSTANCE() << s;
+			idx++;
+		}
+		QString s = QString("Next(new) threads %1").arg(lst2->result_list.size());
+		ApiAutotest::INSTANCE() << s;
+	}
+
     ApiAutotest::INSTANCE().enableProgressEmulation(true);
     ApiAutotest::INSTANCE().enableAttachmentDataGeneration(true);
     ApiAutotest::INSTANCE().enableRequestLog(true);

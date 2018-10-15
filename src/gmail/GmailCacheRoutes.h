@@ -48,16 +48,16 @@ namespace googleQt
             ConcurrentValueRunner<QString, mail_cache::MessagesReceiver, messages::MessageResource>* getUserBatchMessages_Async(EDataState, const std::list<QString>& id_list);
             
             /// load emails by ID-list while updating local cache
-            mail_cache::data_list_uptr getCacheMessages(EDataState, const std::list<QString>& id_list);
+            mail_cache::mdata_list_uptr getCacheMessages(EDataState, const std::list<QString>& id_list);
             mail_cache::GMailCacheQueryTask* getCacheMessages_Async(EDataState, const std::list<QString>& id_list,
                 mail_cache::GMailCacheQueryTask* rfetcher = nullptr);
 
             /// load messages from cache, numberOfMessages = -1 if all messages from cache
-            mail_cache::data_list_uptr getCacheMessages(int numberOfMessages, uint64_t labelFilter = 0);
-
+            mail_cache::mdata_list_uptr getCacheMessages(int numberOfMessages, uint64_t labelFilter = 0);
+            mail_cache::tdata_list_uptr getCacheThreads(int numberOfThreads, uint64_t labelFilter = 0);
 
             /// check for new emails - get top messagesCount messages and update cache
-            mail_cache::data_list_uptr getNextCacheMessages(
+            mail_cache::mdata_list_uptr getNextCacheMessages(
                 int messagesCount = 40,
                 QString pageToken = "",
                 QStringList* labels = nullptr,
@@ -70,9 +70,14 @@ namespace googleQt
 
             GoogleVoidTask* trashCacheMessage_Async(QString userId, QString msg_id);
 
-			ConcurrentValueRunner<QString, mail_cache::ThreadsReceiver, threads::ThreadResource>* getUserBatchThreads_Async(QString userId, const std::list<QString>& id_list);
+			ConcurrentValueRunner<QString, mail_cache::ThreadsReceiver, threads::ThreadResource>* getUserBatchThreads_Async(const std::list<QString>& id_list);
 
 			/// check for new thread - get top threadsCount threads and update cache
+			mail_cache::tdata_list_uptr getNextCacheThreads(
+				int messagesCount = 40,
+				QString pageToken = "",
+				QStringList* labels = nullptr,
+				QString q = "");
 			mail_cache::GThreadCacheQueryTask* getNextCacheThreads_Async(
 				int threadsCount = 40,
 				QString pageToken = "",
@@ -80,7 +85,8 @@ namespace googleQt
 				QString q = "");
 
 			/// load threads by ID-list while updating local cache
-			mail_cache::GThreadCacheQueryTask* getCacheThreads_Async(const std::list<QString>& id_list,
+			//mail_cache::tdata_list_uptr getCacheThreads(const std::list<QString>& id_list);
+			mail_cache::GThreadCacheQueryTask* getCacheThreads_Async(const std::list<HistId>& id_list,
 				mail_cache::GThreadCacheQueryTask* rfetcher = nullptr);
 
             /// async refresh labels DB table
