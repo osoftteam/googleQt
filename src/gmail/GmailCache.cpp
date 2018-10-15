@@ -65,20 +65,23 @@ mail_cache::GMailCache::GMailCache(ApiEndpoint& ept)
 
 };
 
-void mail_cache::GMailCache::topCacheData(GMailCacheQueryTask* rfetcher, int number2load, uint64_t labelFilter)
+mail_cache::mdata_list_uptr mail_cache::GMailCache::topCacheData(int number2load, uint64_t labelFilter)
 {
+    mail_cache::mdata_list_uptr r(new CacheDataList<MessageData>());
+    
     int count = 0;
     for (auto& i : m_ord) {
         auto m = i;
         if (m->inLabelFilter(labelFilter)) {
-            rfetcher->add(i);
+            r->result_map[m->id()] = m;
+            r->result_list.push_back(m);
             if (number2load > 0) {
                 if (++count >= number2load)
                     break;
             }
         }
     }
-    rfetcher->notifyOnCompletedFromCache();
+    return r;
 }
 
 ///GThreadCache
@@ -87,6 +90,26 @@ mail_cache::GThreadCache::GThreadCache(ApiEndpoint& ept)
 {
 
 };
+
+mail_cache::tdata_list_uptr mail_cache::GThreadCache::topCacheData(int number2load, uint64_t labelFilter)
+{
+    mail_cache::tdata_list_uptr r(new CacheDataList<ThreadData>());
+    
+    int count = 0;
+    for (auto& i : m_ord) {
+        auto t = i;
+        // if (m->inLabelFilter(labelFilter)) {
+            r->result_map[t->id()] = t;
+            r->result_list.push_back(t);
+            if (number2load > 0) {
+                if (++count >= number2load)
+                    break;
+            }
+            //}
+    }
+    return r;
+}
+
 
 ///MessageData
 mail_cache::MessageData::MessageData(int accId,
@@ -394,17 +417,43 @@ mail_cache::ThreadData::ThreadData(QString id,
 	quint64 history_id,
 	int		messages_count,
 	QString snippet):
-	CacheData(EDataState::snippet, id),
-	m_history_id(history_id),
+	CacheDataWithHistory(id, history_id),
 	m_messages_count(messages_count),
 	m_snippet(snippet)
 {
 
 };
 
-void mail_cache::ThreadData::merge(CacheData* other) 
+void mail_cache::ThreadData::merge(CacheData* ) 
 {
-	qWarning() << "need implementation";
+	qWarning() << "NA";
+};
+
+void mail_cache::ThreadData::add_msg(msg_ptr m) 
+{
+	m_messages.push_back(m);
+	m_map[m->id()] = m;
+};
+
+mail_cache::msg_ptr mail_cache::ThreadData::findMessage(QString id)
+{
+	mail_cache::msg_ptr r;
+	auto i = m_map.find(id);
+	if (i != m_map.end()) {
+		r = i->second;
+	}
+	return r;
+};
+
+mail_cache::msg_ptr mail_cache::ThreadData::head()
+{
+    if(m_head_msg){
+        return m_head_msg;
+    }
+    if(!m_messages.empty()){
+        m_head_msg = *(m_messages.begin());
+    }
+    return m_head_msg;
 };
 
 ///GMailCacheQueryTask
@@ -429,7 +478,7 @@ void mail_cache::GMailCacheQueryTask::fetchFromCloud_Async(const std::list<QStri
                 RESULT_LIST<messages::MessageResource>&& res = par_runner->detachResult();
                 for (auto& m : res)
                     {
-                        fetchMessage(m.get());
+                        fetchMessage(m.get());                        
                     }
                 std::set<QString> id_set;
                 for (std::list<QString>::const_iterator i = id_list.cbegin(); i != id_list.cend(); i++)
@@ -509,6 +558,8 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
 		return;
 	}
 
+    msg_ptr md;
+    
     switch (m_completed->state)
         {
         case googleQt::EDataState::snippet:
@@ -517,7 +568,7 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
                 loadLabels(m, labels);
                 QString from, to, cc, bcc, subject;
                 loadHeaders(m, from, to, cc, bcc, subject);
-                msg_ptr md(new MessageData(m_r.storage()->currentAccountId(),
+                md.reset(new MessageData(m_r.storage()->currentAccountId(),
                                            m->id(),
                                            m->threadid(),
                                            from, 
@@ -583,7 +634,7 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
                         loadLabels(m, labels);
                         QString from, to, cc, bcc, subject;
                         loadHeaders(m, from, to, cc, bcc, subject);
-                        std::shared_ptr<MessageData> md(new MessageData(m_r.storage()->currentAccountId(),
+                        md.reset(new MessageData(m_r.storage()->currentAccountId(),
                                                                                         m->id(),
 																						m->threadid(),
                                                                                         from, 
@@ -600,7 +651,7 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
                     }
                 else
                     {
-                        std::shared_ptr<MessageData> md = i->second;
+                        md = i->second;
                         if (!md->isLoaded(googleQt::EDataState::snippet)) 
                             {
                                 uint64_t labels;
@@ -614,6 +665,19 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
                     }
             }break;//body
         }
+
+
+    if(md){
+        auto t = m_r.tcache()->mem_object(md->threadId());
+        if(t){
+            t->add_msg(md);
+        }
+        else{
+            qWarning() << "failed to locate thread for message"
+                       << md->id()
+                       << md->threadId();
+        }
+    }    
 };
 
 static bool compare_internalDate(mail_cache::msg_ptr& f,
@@ -622,7 +686,7 @@ static bool compare_internalDate(mail_cache::msg_ptr& f,
     return (f->internalDate() > s->internalDate());
 };
 
-std::unique_ptr<CacheDataList<mail_cache::MessageData>> mail_cache::GMailCacheQueryTask::waitForResultAndRelease()
+mail_cache::mdata_list_uptr mail_cache::GMailCacheQueryTask::waitForResultAndRelease()
 {
     if (!isFinished())
         {
@@ -636,8 +700,7 @@ std::unique_ptr<CacheDataList<mail_cache::MessageData>> mail_cache::GMailCacheQu
 ///GThreadCacheSyncTask
 mail_cache::GThreadCacheQueryTask::GThreadCacheQueryTask(googleQt::mail_cache::GmailCacheRoutes& r,
 	std::shared_ptr<GThreadCache> c)
-	://GoogleVoidTask(r.endpoint()),
-	CacheQueryTask<ThreadData>(EDataState::snippet, r.endpoint(), c),
+	:CacheQueryTask<ThreadData>(EDataState::snippet, r.endpoint(), c),
 	m_r(r)
 {
 
@@ -648,37 +711,97 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const std::list<QSt
 	if (id_list.empty())
 		return;
 
-	auto par_runner = m_r.getUserBatchThreads_Async(m_r.endpoint().apiClient()->userId(), id_list);
+	auto par_runner = m_r.getUserBatchThreads_Async(id_list);
 
 	connect(par_runner, &EndpointRunnable::finished, [=]()
 	{
+		std::list<QString> msg_list2resolve;
+
 		RESULT_LIST<threads::ThreadResource>&& res = par_runner->detachResult();
-		for (auto& m : res)
+		for (auto& t : res)
 		{
-		//	fetchMessage(m.get());
+			auto td = m_cache->mem_object(t->id());
+			if (td) {
+				bool is_updated = false;
+				///we have thread in cache, check on new mesages
+				auto mlst = t->messages();
+				if (!mlst.empty()) {
+					for (const auto& m : mlst) {
+						auto md = td->findMessage(m.id());
+						if (!md) {
+							msg_list2resolve.push_back(m.id());
+							is_updated = true;
+						}
+					}
+				}
+
+				if (is_updated) {
+					m_updated_threads.push_back(td);
+				}
+			}
+			else{
+				///new thread, get all mesages
+				thread_ptr td(new ThreadData(t->id(), t->historyid(), t->messages().size(), t->snipped()));
+				m_cache->mem_insert(t->id(), td);
+
+				auto mlst = t->messages();
+				if (!mlst.empty()) {
+					for (const auto& m : mlst) {
+						msg_list2resolve.push_back(m.id());
+					}
+				}
+				m_new_threads.push_back(td);
+			}
+			//fetchThread(t.get());
 		}
-		
-		/*
-		std::set<QString> id_set;
-		for (std::list<QString>::const_iterator i = id_list.cbegin(); i != id_list.cend(); i++)
+        
+		auto r = m_r.getCacheMessages_Async(EDataState::snippet, msg_list2resolve);
+		r->then([=](std::unique_ptr<googleQt::CacheDataList<googleQt::mail_cache::MessageData>> mlst)
 		{
-			id_set.insert(*i);
-		}
-		*/
-		///todo - sync data 
-		notifyOnFinished();
-		//notifyFetchCompleted(m_completed->result_map, id_set);
+			if (!m_updated_threads.empty()) {
+				m_cache->update_persistent_storage(EDataState::snippet, m_updated_threads);
+			}
+			if (!m_new_threads.empty()) {
+				m_cache->insert_persistent_storage(EDataState::snippet, m_new_threads);
+			}
+            notifyOnCompletedFromCache();
+		},
+			[=](std::unique_ptr<GoogleException> ex)
+		{
+			failed_callback(std::move(ex));
+		});
+
 		par_runner->disposeLater();
 	});
 };
 
 
-void mail_cache::GThreadCacheQueryTask::fetchMessage(threads::ThreadResource* t) 
+std::list<QString> mail_cache::GThreadCacheQueryTask::fetchThread(threads::ThreadResource* t)
 {
+	std::list<QString> msg_list;
+
 	thread_ptr td(new ThreadData(t->id(), t->historyid(), t->messages().size(), t->snipped()));
     add(td);
-    //	m_loaded_threads[p->threadId()] = p;
+	auto mlst = t->messages();
+	if (!mlst.empty()) {
+		for (const auto& m : mlst) {
+			msg_list.push_back(m.id());
+		}		
+	}
+	return msg_list;
 };
+
+mail_cache::tdata_list_uptr mail_cache::GThreadCacheQueryTask::waitForResultAndRelease()
+{
+	if (!isFinished())
+	{
+		m_in_wait_loop = true;
+		waitUntillFinishedOrCancelled();
+	}
+	//m_completed->result_list.sort(compare_internalDate);
+	return std::move(m_completed);
+};
+
 
 ///GMailSQLiteStorage
 mail_cache::GMailSQLiteStorage::GMailSQLiteStorage(mcache_ptr mc,
@@ -909,7 +1032,7 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
     
     m_acc_labels.clear();
     m_acc_maskbase2labels.clear();
-	m_threads.clear();
+	
     for (int i = 0; i < 64; i++)
         m_avail_label_base.insert(i);
 
@@ -918,13 +1041,13 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
         return false;
     }
 
-    if (!m_mstorage->loadMessagesFromDb()){
-        qWarning() << "ERROR. Failed to load messages from DB";
-        return false;
-    }
-
-	if (!loadThreadsFromDb()) {
+	if (!m_tstorage->loadThreadsFromDb()) {
 		qWarning() << "ERROR. Failed to load threads from DB";
+		return false;
+	}
+
+	if (!m_mstorage->loadMessagesFromDb()) {
+		qWarning() << "ERROR. Failed to load messages from DB";
 		return false;
 	}
 
@@ -935,6 +1058,7 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
     };
 
     mc->setupLocalStorage(m_mstorage.get());
+	tc->setupLocalStorage(m_tstorage.get());
     
     m_initialized = true;
     return m_initialized;
@@ -946,36 +1070,6 @@ void mail_cache::GMailSQLiteStorage::close_db()
         m_db.close();
     }
     m_initialized = false;
-};
-
-
-
-
-bool mail_cache::GMailSQLiteStorage::loadThreadsFromDb() 
-{
-	QString sql = QString("SELECT thread_id, history_id, messages_count, snippet FROM %1gmail_thread WHERE acc_id=%2 ORDER BY update_time DESC")
-		.arg(m_metaPrefix)
-		.arg(m_accId);
-	QSqlQuery* q = selectQuery(sql);
-	if (!q)
-		return false;
-
-	while (q->next())
-	{
-		QString thread_id = q->value(0).toString();
-		quint64 history_id = q->value(1).toULongLong();
-		int		messages_count = q->value(2).toInt();
-		QString snippet = q->value(3).toString();
-
-		thread_ptr t = std::shared_ptr<ThreadData>(new ThreadData(
-			thread_id,
-			history_id,
-			messages_count,
-			snippet));
-		m_threads[thread_id] = t;
-	}
-
-	return true;
 };
 
 
@@ -1693,16 +1787,6 @@ bool mail_cache::GMailSQLiteStorage::execQuery(QString sql)
                        << sql;
             return false;
         }
-    else {
-        /*
-#ifdef _DEBUG
-        qDebug() << "db-affected" << m_query->numRowsAffected();
-        if (m_query->numRowsAffected() == 0 && sql.indexOf("CREATE") == -1) {
-            qDebug() << "last0rows" << sql;
-        }
-#endif
-*/
-    }
 
     return true;
 };
@@ -1745,6 +1829,30 @@ QString mail_cache::GMailSQLiteStorage::lastSqlError()const
 	return error;
 };
 
+mail_cache::thread_ptr mail_cache::GMailSQLiteStorage::findThread(QString thread_id)
+{
+	mail_cache::thread_ptr rv;
+
+	tcache_ptr tc = lock_tcache();
+	if (!tc) {
+		return nullptr;
+	}
+
+	rv = tc->mem_object(thread_id);
+	return rv;
+};
+
+/*
+mail_cache::GThreadsStorage* mail_cache::GMailSQLiteStorage::tstorage()
+{
+	return m_tstorage.get();
+};
+
+mail_cache::GMessagesStorage* mail_cache::GMailSQLiteStorage::mstorage()
+{
+	return m_mstorage.get();
+};*/
+
 /**
 	GMessagesStorage
 */
@@ -1766,6 +1874,8 @@ std::list<QString> mail_cache::GMessagesStorage::load_db(EDataState state,
 		return rv;
 	}
 
+	thread_ptr thread_in_select = nullptr;
+
 	std::set<QString> db_loaded;
 	std::function<bool(const std::list<QString>& lst)> loadSublist = [&](const std::list<QString>& lst) -> bool
 	{
@@ -1786,19 +1896,32 @@ std::list<QString> mail_cache::GMessagesStorage::load_db(EDataState state,
 			sql += " AND (msg_state = 2 OR msg_state = 3)";
 		}break;
 		}
-		sql += " ORDER BY internal_date DESC";
+		sql += " ORDER BY  thread_id, internal_date DESC";
 		QSqlQuery* q = m_storage->selectQuery(sql);
 		if (!q)
 			return false;
 		while (q->next())
 		{
-			auto md = loadMessage(q);
-			if (md)
-			{
-				cache->mem_insert(md->id(), md);
-				db_loaded.insert(md->id());
-				cr->add(md);
-			}
+			QString thread_id = q->value(2).toString();
+			if (!thread_id.isEmpty()) {
+				if (!thread_in_select ||
+					thread_in_select->id() != thread_id)
+				{
+					thread_in_select = m_storage->findThread(thread_id);
+				}
+
+				if (!thread_in_select) {
+					qWarning() << "lost thread in DB" << thread_id << "for message" << q->value(1).toString();
+				}
+
+				auto md = loadMessageFromDb(thread_in_select, q);
+				if (md)
+				{
+					cache->mem_insert(md->id(), md);
+					db_loaded.insert(md->id());
+					cr->add(md);
+				}
+			}//thread_id
 		}
 		return true;
 	};
@@ -1821,64 +1944,6 @@ std::list<QString> mail_cache::GMessagesStorage::load_db(EDataState state,
 	return rv;
 };
 
-mail_cache::msg_ptr mail_cache::GMessagesStorage::loadMessage(QSqlQuery* q)
-{
-	mail_cache::msg_ptr md;
-
-	int agg_state = q->value(0).toInt();
-	if (agg_state < 1 || agg_state > 3)
-	{
-		qWarning() << "ERROR. Invalid DB state" << agg_state << q->value(1).toString();
-		return nullptr;
-	}
-	QString msg_id = q->value(1).toString();
-	if (msg_id.isEmpty())
-	{
-		qWarning() << "ERROR. Invalid(empty) msg_id";
-		return nullptr;
-	}
-
-	QString thread_id = q->value(2).toString();
-	if (thread_id.isEmpty())
-	{
-		qWarning() << "ERROR. Invalid(empty) thread_id";
-		return nullptr;
-	}
-
-
-	QString msg_from = q->value(3).toString();
-	QString msg_to = q->value(4).toString();
-	QString msg_cc = q->value(5).toString();
-	QString msg_bcc = q->value(6).toString();
-	QString msg_subject = q->value(7).toString();
-	QString msg_snippet = q->value(8).toString();
-	QString msg_plain = "";
-	QString msg_html = "";
-
-	if (agg_state > 1)
-	{
-		msg_plain = q->value(9).toString();
-		msg_html = q->value(10).toString();
-	}
-	qlonglong  msg_internalDate = q->value(11).toLongLong();
-	qlonglong  msg_labels = q->value(12).toLongLong();
-
-	md = std::shared_ptr<MessageData>(new MessageData(m_storage->currentAccountId(),
-		thread_id,
-		agg_state,
-		msg_id,
-		msg_from,
-		msg_to,
-		msg_cc,
-		msg_bcc,
-		msg_subject,
-		msg_snippet,
-		msg_plain,
-		msg_html,
-		msg_internalDate,
-		msg_labels));
-	return md;
-};
 
 void mail_cache::GMessagesStorage::update_db(
 	EDataState state,
@@ -1973,7 +2038,7 @@ void mail_cache::GMessagesStorage::update_db(
 				qWarning() << "ERROR. SQL insert failed" << q->lastError().text() << i->id();
 			}
 			else
-			{
+			{                
 				int rows_affected = q->numRowsAffected();
 				if (rows_affected > 0)
 					inserted_records++;
@@ -1994,6 +2059,10 @@ void mail_cache::GMessagesStorage::update_db(
 	}
 };
 
+void mail_cache::GMessagesStorage::insert_db(EDataState, CACHE_QUERY_RESULT_LIST<MessageData>& )
+{
+	qWarning() << "NA";
+};
 
 void mail_cache::GMessagesStorage::insertDbAttachmentData(const mail_cache::MessageData& m)
 {
@@ -2074,13 +2143,15 @@ bool mail_cache::GMessagesStorage::isValid()const
 
 bool mail_cache::GMessagesStorage::loadMessagesFromDb()
 {
-    mcache_ptr cache = m_cache.lock();
+    auto cache = m_cache.lock();
     if (!cache) {
         return false;
     }
 
+	thread_ptr thread_in_select = nullptr;
+
     QString sql = QString("SELECT msg_state, msg_id, thread_id, msg_from, msg_to, msg_cc, msg_bcc, "
-                          "msg_subject, msg_snippet, msg_plain, msg_html, internal_date, msg_labels FROM %1gmail_msg WHERE acc_id=%2 ORDER BY internal_date DESC")
+                          "msg_subject, msg_snippet, msg_plain, msg_html, internal_date, msg_labels FROM %1gmail_msg WHERE acc_id=%2 ORDER BY thread_id, internal_date DESC")
         .arg(m_storage->metaPrefix())
         .arg(m_storage->currentAccountId());
     QSqlQuery* q = m_storage->selectQuery(sql);
@@ -2090,24 +2161,36 @@ bool mail_cache::GMessagesStorage::loadMessagesFromDb()
     int loaded_objects = 0;
     while (q->next())
         {
-            std::shared_ptr<MessageData> md = loadMessageFromDB(q);
-            if (md == nullptr)
-                continue;
-			cache->mem_insert(md->id(), md);
-            loaded_objects++;
-        }
+			QString thread_id = q->value(2).toString();
+			if (!thread_id.isEmpty()) {
+				if (!thread_in_select ||
+					thread_in_select->id() != thread_id) 
+				{
+					thread_in_select = m_storage->findThread(thread_id);
+				}
 
+				if (thread_in_select) {
+					auto md = loadMessageFromDb(thread_in_select, q);
+					if (md == nullptr)
+						continue;
+					cache->mem_insert(md->id(), md);
+					loaded_objects++;
+				}
+				else {
+					qWarning() << "lost thread in DB" << thread_id << "for message" << q->value(1).toString();
+				}
+			}//thread_id
+        }
     
 #ifdef API_QT_AUTOTEST
-    ApiAutotest::INSTANCE() << QString("DB-loaded %1 records, mem-cache-size: %3")
+    ApiAutotest::INSTANCE() << QString("messages/DB-loaded %1 records, mem-cache-size: %2")
         .arg(loaded_objects).arg(cache->mem_size());
 #endif
-
 
     return true;
 };
 
-mail_cache::msg_ptr mail_cache::GMessagesStorage::loadMessageFromDB(QSqlQuery* q)
+mail_cache::msg_ptr mail_cache::GMessagesStorage::loadMessageFromDb(thread_ptr t1, QSqlQuery* q)
 {
     mail_cache::msg_ptr md;
 
@@ -2123,14 +2206,13 @@ mail_cache::msg_ptr mail_cache::GMessagesStorage::loadMessageFromDB(QSqlQuery* q
             qWarning() << "ERROR. Invalid(empty) msg_id";
             return nullptr;
         }
-
+	
 	QString thread_id = q->value(2).toString();
 	if (thread_id.isEmpty())
 	{
 		qWarning() << "ERROR. Invalid(empty) thread_id";
 		return nullptr;
-	}
-
+	}	
 
     QString msg_from = q->value(3).toString();
     QString msg_to = q->value(4).toString();
@@ -2150,19 +2232,22 @@ mail_cache::msg_ptr mail_cache::GMessagesStorage::loadMessageFromDB(QSqlQuery* q
     qlonglong  msg_labels = q->value(12).toLongLong();
 
     md = std::shared_ptr<MessageData>(new MessageData(m_storage->currentAccountId(),
-													  thread_id,
-                                                      agg_state, 
-                                                      msg_id, 
-                                                      msg_from, 
-                                                      msg_to, 
-                                                      msg_cc,
-                                                      msg_bcc,
-                                                      msg_subject, 
-                                                      msg_snippet, 
-                                                      msg_plain, 
-                                                      msg_html, 
-                                                      msg_internalDate,
-                                                      msg_labels));
+		thread_id,
+		agg_state, 
+		msg_id, 
+		msg_from, 
+		msg_to, 
+		msg_cc,
+		msg_bcc,
+		msg_subject, 
+		msg_snippet, 
+		msg_plain, 
+		msg_html, 
+		msg_internalDate,
+		msg_labels));
+	if (t1) {
+		t1->add_msg(md);
+	}
     return md;
 };
 
@@ -2195,7 +2280,7 @@ std::list<QString> mail_cache::GThreadsStorage::load_db(EDataState, const std::l
 			.arg(comma_ids)
 			.arg(m_storage->currentAccountId());
 
-        sql += " ORDER BY internal_date DESC";
+        sql += " ORDER BY update_time DESC";
         QSqlQuery* q = m_storage->selectQuery(sql);
         if (!q)
             return false;    
@@ -2230,6 +2315,39 @@ std::list<QString> mail_cache::GThreadsStorage::load_db(EDataState, const std::l
 	return rv;    
 };
 
+bool mail_cache::GThreadsStorage::loadThreadsFromDb()
+{
+	auto cache = m_cache.lock();
+	if (!cache) {
+		return false;
+	}
+
+	QString sql = QString("SELECT thread_id, history_id, messages_count, snippet FROM %1gmail_thread WHERE acc_id=%2 ORDER BY update_time DESC")
+		.arg(m_storage->metaPrefix())
+		.arg(m_storage->currentAccountId());
+	QSqlQuery* q = m_storage->selectQuery(sql);
+	if (!q)
+		return false;
+
+	int loaded_objects = 0;
+	while (q->next())
+	{
+		auto td = loadThread(q);
+		if (td == nullptr)
+			continue;
+		cache->mem_insert(td->id(), td);
+		loaded_objects++;
+	}
+
+#ifdef API_QT_AUTOTEST
+	ApiAutotest::INSTANCE() << QString("threads/DB-loaded %1 records, mem-cache-size: %2")
+		.arg(loaded_objects).arg(cache->mem_size());
+#endif
+
+	return true;
+};
+
+
 mail_cache::thread_ptr mail_cache::GThreadsStorage::loadThread(QSqlQuery* q)
 {
     mail_cache::thread_ptr td;
@@ -2252,6 +2370,23 @@ mail_cache::thread_ptr mail_cache::GThreadsStorage::loadThread(QSqlQuery* q)
     return td;
 };
 
+QString mail_cache::GThreadsStorage::insertSQL()const 
+{
+	QString sql_insert = QString("INSERT INTO %1gmail_thread(history_id, messages_count, snippet, thread_id, acc_id) VALUES(?, ?, ?, ?, ?)")
+		.arg(m_storage->metaPrefix());
+	return sql_insert;
+};
+
+bool mail_cache::GThreadsStorage::execSQLwithValues(QSqlQuery* q, mail_cache::ThreadData* t) 
+{
+	q->addBindValue(t->m_history_id);
+	q->addBindValue(t->m_messages_count);
+	q->addBindValue(t->m_snippet);
+	q->addBindValue(t->m_id);
+	q->addBindValue(m_storage->currentAccountId());
+	return q->exec();
+};
+
 void mail_cache::GThreadsStorage::update_db(
 	EDataState ,
 	CACHE_QUERY_RESULT_LIST<mail_cache::ThreadData>& r)
@@ -2259,21 +2394,7 @@ void mail_cache::GThreadsStorage::update_db(
 	QString sql_update, sql_insert;
     sql_update = QString("UPDATE %1gmail_thread SET history_id=?, messages_count=?, snippet=? WHERE thread_id=? AND acc_id=?")
         .arg(m_storage->metaPrefix());
-    sql_insert = QString("INSERT INTO %1gmail_thread(history_id, messages_count, snippet, thread_id, acc_id) VALUES(?, ?, ?, ?, ?)")
-        .arg(m_storage->metaPrefix());    
-
-	std::function<bool(QSqlQuery*, mail_cache::ThreadData*)> execWithValues =
-		[&](QSqlQuery* q,
-			mail_cache::ThreadData* m) -> bool
-	{
-        q->addBindValue(m->historyId());
-        q->addBindValue(m->messagesCount());
-        q->addBindValue(m->snippet());
-        q->addBindValue(m->id());
-        q->addBindValue(m_storage->currentAccountId());
-
-		return q->exec();
-	};
+    sql_insert = insertSQL();
 
 	int updated_records = 0;
 	int inserted_records = 0;
@@ -2283,7 +2404,7 @@ void mail_cache::GThreadsStorage::update_db(
 		thread_ptr& m = i;
 		QSqlQuery* q = m_storage->prepareQuery(sql_update);
 		if (!q)return;
-		bool ok = execWithValues(q, m.get());
+		bool ok = execSQLwithValues(q, m.get());
 		if (!ok)
 		{
 			qWarning() << "ERROR. SQL update failed" << q->lastError().text() << i->id();
@@ -2293,7 +2414,7 @@ void mail_cache::GThreadsStorage::update_db(
 		{
 			q = m_storage->prepareQuery(sql_insert);
 			if (!q)return;
-			ok = execWithValues(q, m.get());
+			ok = execSQLwithValues(q, m.get());
 			if (!ok)
 			{
 				qWarning() << "ERROR. SQL insert failed" << q->lastError().text() << i->id();
@@ -2308,6 +2429,22 @@ void mail_cache::GThreadsStorage::update_db(
 		else
 		{
 			updated_records++;
+		}
+	}
+};
+
+void mail_cache::GThreadsStorage::insert_db(EDataState, CACHE_QUERY_RESULT_LIST<ThreadData>& r)
+{
+	QString sql_insert = insertSQL();
+
+	for (auto& i : r)
+	{
+		thread_ptr& m = i;
+		QSqlQuery* q = m_storage->prepareQuery(sql_insert);
+		if (!q)return;
+		bool ok = execSQLwithValues(q, m.get());
+		if (!ok){
+			qWarning() << "ERROR. SQL update failed" << q->lastError().text() << i->id();
 		}
 	}
 };
