@@ -36,8 +36,8 @@ namespace googleQt{
 		using thread_map		= std::map<QString, thread_ptr>;
         using label_ptr         = std::shared_ptr<googleQt::mail_cache::LabelData>;
         using att_ptr           = std::shared_ptr<googleQt::mail_cache::AttachmentData>;
-        using mdata_list_uptr    = std::unique_ptr<CacheDataList<MessageData>>;
-		using tdata_list_uptr   = std::unique_ptr<CacheDataList<ThreadData>>;
+        using mdata_result      = std::unique_ptr<CacheDataResult<MessageData>>;
+		using tdata_result      = std::unique_ptr<CacheDataResult<ThreadData>>;
         using ATTACHMENTS_LIST  = std::list<att_ptr>;
         using acc_ptr           = std::shared_ptr<googleQt::mail_cache::AccountData>;
         using mcache_ptr         = std::shared_ptr<mail_cache::GMailCache>;
@@ -76,8 +76,8 @@ namespace googleQt{
             QString html()const { return m_html; }
             qlonglong internalDate()const { return m_internalDate; }
 
-            bool inLabelFilter(uint64_t data)const;
-            bool inLabelFilter(const std::set<uint64_t>& ANDfilter)const;
+            bool hasLabel(uint64_t data)const;
+            bool hasAllLabels(uint64_t data)const;
             
             /// each label is a bit in int64
             uint64_t labelsBitMap()const{return m_labels;}
@@ -287,19 +287,28 @@ namespace googleQt{
 			msg_ptr findMessage(QString id);
             const msg_list& messages()const{return m_messages;}
             msg_list& messages(){return m_messages;}
-            msg_ptr head();
+			msg_ptr head() { return m_head; };
+			qlonglong internalDate()const;
+
+            /// each label is a bit in int64
+            uint64_t labelsBitMap()const{return m_labels;}
+
+            bool hasLabel(uint64_t data)const;
+            bool hasAllLabels(uint64_t data)const;
 		protected:			
 			int			m_messages_count;
 			QString		m_snippet;
+            uint64_t    m_labels{0};
 			msg_list	m_messages;
 			msg_map		m_map;
-            msg_ptr     m_head_msg;
+            msg_ptr     m_head;
 		private:
 			ThreadData(
 				QString id,
 				quint64 history_id,
 				int		messages_count,
-				QString snippet);			
+				QString snippet,
+                uint64_t lbmap);
 			void add_msg(msg_ptr);
 
             friend class GThreadCacheQueryTask;
@@ -348,7 +357,7 @@ namespace googleQt{
                                 std::shared_ptr<GMailCache> c);
             void fetchFromCloud_Async(const std::list<QString>& id_list)override;
 
-            mdata_list_uptr waitForResultAndRelease();
+            mdata_result waitForResultAndRelease();
             QString nextPageToken()const{return m_nextPageToken;}
             
         protected:
@@ -373,10 +382,10 @@ namespace googleQt{
 			GThreadCacheQueryTask(googleQt::mail_cache::GmailCacheRoutes& r, std::shared_ptr<GThreadCache> c);
 			void fetchFromCloud_Async(const std::list<QString>& id_list);
             QString nextPageToken()const{return m_nextPageToken;}
-			tdata_list_uptr waitForResultAndRelease();
+			tdata_result waitForResultAndRelease();
 		protected:
 			///return list of messages
-			std::list<QString> fetchThread(threads::ThreadResource* t);
+			//std::list<QString> fetchThread(threads::ThreadResource* t);
 
 		protected:
 			googleQt::mail_cache::GmailCacheRoutes&  m_r;
@@ -390,7 +399,8 @@ namespace googleQt{
         {
         public:
             GMailCache(ApiEndpoint& ept);
-            mail_cache::mdata_list_uptr topCacheData(int number2load, uint64_t labelFilter);
+            mail_cache::mdata_result topCacheData(int number2load, uint64_t labelFilter);
+			void reorder_data_on_completed_fetch(const CACHE_LIST<MessageData>& )override {};
         };
 
 
@@ -398,7 +408,10 @@ namespace googleQt{
 		{
         public:
             GThreadCache(ApiEndpoint& ept);
-            mail_cache::tdata_list_uptr topCacheData(int number2load, uint64_t labelFilter);
+            mail_cache::tdata_result topCacheData(int number2load, uint64_t labelFilter);
+			///remove empty threads - without any messages
+			void verifyData();
+			void reorder_data_on_completed_fetch(const CACHE_LIST<ThreadData>& from_cloud)override;
 		};
 
 		class GMessagesStorage : public LocalPersistentStorage<MessageData, GMailCacheQueryTask>
@@ -407,10 +420,9 @@ namespace googleQt{
 			GMessagesStorage(GMailSQLiteStorage* s, mcache_ptr c);
 
 			bool isValid()const override;
-			std::list<QString> load_db(EDataState state, const std::list<QString>& id_list, GMailCacheQueryTask* cr)override;
-			void update_db(EDataState state, CACHE_QUERY_RESULT_LIST<MessageData>& r)override;
+			void update_db(EDataState state, CACHE_LIST<MessageData>& r)override;
 			void remove_db(const std::set<QString>& ids2remove)override;
-			void insert_db(EDataState state, CACHE_QUERY_RESULT_LIST<MessageData>& r)override;
+			void insert_db(EDataState state, CACHE_LIST<MessageData>& r)override;
 		protected:
 			///create message object from db and attach to a thread
             std::shared_ptr<MessageData> loadMessageFromDb(thread_ptr t, QSqlQuery* q);
@@ -427,14 +439,15 @@ namespace googleQt{
 		{
 		public:
             GThreadsStorage(GMailSQLiteStorage* s, tcache_ptr c);
-            std::list<QString> load_db(EDataState state, const std::list<QString>& id_list, GThreadCacheQueryTask* cr)override;
-            void update_db(EDataState state, CACHE_QUERY_RESULT_LIST<ThreadData>& r)override;
+            void update_db(EDataState state, CACHE_LIST<ThreadData>& r)override;
             void remove_db(const std::set<QString>& ids2remove)override;
-			void insert_db(EDataState state, CACHE_QUERY_RESULT_LIST<ThreadData>& r)override;
+			void insert_db(EDataState state, CACHE_LIST<ThreadData>& r)override;
             bool isValid()const override;
         protected:
             std::shared_ptr<ThreadData> loadThread(QSqlQuery* q);
 			bool loadThreadsFromDb();
+			///remove empty threads - without any messages
+			void verifyThreads();
 
 			QString insertSQL()const;
 			bool execSQLwithValues(QSqlQuery* q, mail_cache::ThreadData* t);
