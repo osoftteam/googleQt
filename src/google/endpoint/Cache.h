@@ -10,13 +10,11 @@
 namespace googleQt {
 
     template<class O>
-    using CACHE_QUERY_RESULT_MAP  = std::map<QString, std::shared_ptr<O>>;
+    using CACHE_MAP = std::map<QString, std::shared_ptr<O>>;
     template<class O>
-    using CACHE_QUERY_RESULT_LIST = std::list<std::shared_ptr<O>>;
+    using CACHE_LIST = std::list<std::shared_ptr<O>>;
     template<class O>
-	using CACHE_MAP = CACHE_QUERY_RESULT_MAP<O>;
-    template<class O>
-	using CACHE_ORD = CACHE_QUERY_RESULT_LIST<O>;
+	using CACHE_ARR = std::vector<std::shared_ptr<O>>;
 
     enum class EDataState
     {
@@ -69,16 +67,17 @@ namespace googleQt {
         virtual size_t mem_size()const = 0;
         virtual void mem_clear() = 0;
         virtual void persistent_clear(const std::set<QString>& ids2delete) = 0;
-        virtual void update_persistent_storage(EDataState state, CACHE_QUERY_RESULT_MAP<O>& r, const std::set<QString>& fetched_ids) = 0;
-		virtual void update_persistent_storage(EDataState state, CACHE_QUERY_RESULT_LIST<O>& r) = 0;
-		virtual void insert_persistent_storage(EDataState state, CACHE_QUERY_RESULT_LIST<O>& r) = 0;
+        virtual void update_persistent_storage(EDataState state, CACHE_MAP<O>& r, const std::set<QString>& fetched_ids) = 0;
+		virtual void update_persistent_storage(EDataState state, CACHE_LIST<O>& r) = 0;
+		virtual void insert_persistent_storage(EDataState state, CACHE_LIST<O>& r) = 0;
+		virtual void reorder_data_on_completed_fetch(const CACHE_LIST<O>& from_cloud) = 0;
 
         void merge(EDataState state, 
-            CACHE_QUERY_RESULT_MAP<O>& r, 
+            CACHE_MAP<O>& r, 
             const std::set<QString>& fetched_ids)
         {          
             
-            for (typename CACHE_QUERY_RESULT_MAP<O>::iterator i = r.begin();
+            for (typename CACHE_MAP<O>::iterator i = r.begin();
                  i != r.end(); i++) 
                 {
                     QString id = i->first;
@@ -98,33 +97,31 @@ namespace googleQt {
     };
 
     template <class O>
-    class CacheDataList
+    class CacheDataResult
     {
     public:
-        CACHE_QUERY_RESULT_MAP<O> result_map;
-        CACHE_QUERY_RESULT_LIST<O> result_list;
+        CACHE_MAP<O> result_map;
+        CACHE_LIST<O> result_list;
+		CACHE_LIST<O> from_cloud;
         EDataState state;
     };
 
     template <class O>
-    using CacheTaskParent = googleQt::GoogleTask<CacheDataList<O>>;
+    using CacheTaskParent = googleQt::GoogleTask<CacheDataResult<O>>;
     
     
     template <class O, class R>
     class LocalPersistentStorage
     {
     public:
-        virtual std::list<QString> load_db(EDataState state, 
-                                           const std::list<QString>& id_list,
-                                           R* cr) = 0;
-        virtual void update_db(EDataState state, CACHE_QUERY_RESULT_LIST<O>& r) = 0;
-		virtual void insert_db(EDataState state, CACHE_QUERY_RESULT_LIST<O>& r) = 0;
+        virtual void update_db(EDataState state, CACHE_LIST<O>& r) = 0;
+		virtual void insert_db(EDataState state, CACHE_LIST<O>& r) = 0;
         virtual void update_db(EDataState state,
-            CACHE_QUERY_RESULT_MAP<O>& r, 
+            CACHE_MAP<O>& r, 
             const std::set<QString>& fetched_ids)
         {
-            CACHE_QUERY_RESULT_LIST<O> lst;
-            typedef typename CACHE_QUERY_RESULT_MAP<O>::iterator ITR;
+            CACHE_LIST<O> lst;
+            typedef typename CACHE_MAP<O>::iterator ITR;
             for (ITR i = r.begin(); i != r.end(); i++) 
                 {
                     if (fetched_ids.find(i->first) != fetched_ids.cend())
@@ -187,7 +184,11 @@ namespace googleQt {
 				m_mcache.erase(*i);
 			}
 
-			m_ord.remove_if([&](const std::shared_ptr<O>& o) { return (ids2delete.find(o->id()) != ids2delete.end()); });
+			m_ord.erase(std::remove_if(m_ord.begin(), m_ord.end(), 
+				[&](const std::shared_ptr<O>& o) { return (ids2delete.find(o->id()) != ids2delete.end()); }
+				), 
+				m_ord.end());
+			//m_ord.remove_if([&](const std::shared_ptr<O>& o) { return (ids2delete.find(o->id()) != ids2delete.end()); });
 
             if (m_localDB &&
                 m_localDB->isValid())
@@ -198,7 +199,7 @@ namespace googleQt {
 
         void update_persistent_storage(
             EDataState state,
-            CACHE_QUERY_RESULT_MAP<O>& r, 
+            CACHE_MAP<O>& r, 
             const std::set<QString>& fetched_ids)override
         {
             if(m_localDB &&
@@ -209,7 +210,7 @@ namespace googleQt {
                 }            
         }
 
-		void update_persistent_storage(EDataState state, CACHE_QUERY_RESULT_LIST<O>& r)override
+		void update_persistent_storage(EDataState state, CACHE_LIST<O>& r)override
 		{
 			if (m_localDB &&
 				m_localDB->isValid() &&
@@ -219,7 +220,7 @@ namespace googleQt {
 			}
 		}
 
-		void insert_persistent_storage(EDataState state, CACHE_QUERY_RESULT_LIST<O>& r)override
+		void insert_persistent_storage(EDataState state, CACHE_LIST<O>& r)override
 		{
 			if (m_localDB &&
 				m_localDB->isValid() &&
@@ -239,7 +240,7 @@ namespace googleQt {
                     std::shared_ptr<O> obj = mem_object(id);
                     if (obj && obj->isLoaded(load))
                         {
-                            rfetcher->add(obj);
+                            rfetcher->add_result(obj, false);
                             rfetcher->inc_mem_cache_hit_count();
                         }
                     else 
@@ -247,16 +248,6 @@ namespace googleQt {
                             missed_cache.push_back(id);
                         }
                 }//swipping cache
-
-            if(m_localDB &&
-               m_localDB->isValid() &&
-               !missed_cache.empty())
-                {
-                    size_t items2load = missed_cache.size();
-                    missed_cache = m_localDB->load_db(load, missed_cache, rfetcher);
-                    items2load -= missed_cache.size();
-                    rfetcher->set_db_cache_hit_count(items2load);
-                }
             
             if (!missed_cache.empty())
                 {
@@ -278,7 +269,7 @@ namespace googleQt {
 				std::shared_ptr<O> obj = mem_object(id);
 				if (obj && obj->historyId() == hid)
 				{
-					rfetcher->add(obj);
+					rfetcher->add_result(obj, false);
 					rfetcher->inc_mem_cache_hit_count();
 				}
 				else
@@ -286,16 +277,6 @@ namespace googleQt {
 					missed_cache.push_back(id);
 				}
 			}//swipping cache
-
-			if (m_localDB &&
-				m_localDB->isValid() &&
-				!missed_cache.empty())
-			{
-				size_t items2load = missed_cache.size();
-				missed_cache = m_localDB->load_db(EDataState::snippet, missed_cache, rfetcher);
-				items2load -= missed_cache.size();
-				rfetcher->set_db_cache_hit_count(items2load);
-			}
 
 			if (!missed_cache.empty())
 			{
@@ -321,7 +302,7 @@ namespace googleQt {
     protected:
         ApiEndpoint&                m_endpoint;
         CACHE_MAP<O>                m_mcache;
-        CACHE_ORD<O>                m_ord;
+        CACHE_ARR<O>                m_ord;
 		LocalPersistentStorage<O, R>* m_localDB{nullptr};
         bool                        m_valid{true};
     };//GoogleCache
@@ -336,16 +317,16 @@ namespace googleQt {
 	{
 	public:
 		CacheQueryTask(EDataState load, ApiEndpoint& ept, std::shared_ptr<GoogleCacheBase<O>> c)
-			:GoogleTask<CacheDataList<O>>(ept),
+			:GoogleTask<CacheDataResult<O>>(ept),
 			m_cache(c) {
-			CacheTaskParent<O>::m_completed.reset(new CacheDataList<O>); CacheTaskParent<O>::m_completed->state = load;
+			CacheTaskParent<O>::m_completed.reset(new CacheDataResult<O>); CacheTaskParent<O>::m_completed->state = load;
 		};
 
 		virtual void fetchFromCloud_Async(const std::list<QString>& id_list) = 0;
-		std::unique_ptr<CacheDataList<O>> waitForResultAndRelease() = delete;
+		std::unique_ptr<CacheDataResult<O>> waitForResultAndRelease() = delete;
 
 		void notifyOnCompletedFromCache() { m_query_completed = true; CacheTaskParent<O>::notifyOnFinished(); };
-		void notifyFetchCompleted(CACHE_QUERY_RESULT_MAP<O>& r, const std::set<QString>& fetched_ids)
+		void notifyFetchCompleted(CACHE_MAP<O>& r, const std::set<QString>& fetched_ids)
 		{
 			m_query_completed = true;
 			m_cache->merge(CacheTaskParent<O>::m_completed->state, r, fetched_ids);
@@ -354,7 +335,7 @@ namespace googleQt {
 
 		bool isCompleted()const override { return m_query_completed; }
 
-		void add(std::shared_ptr<O> obj) { CacheTaskParent<O>::m_completed->result_map[obj->id()] = obj; CacheTaskParent<O>::m_completed->result_list.push_back(obj); };
+		void add_result(std::shared_ptr<O> obj, bool from_cloud) { CacheTaskParent<O>::m_completed->result_map[obj->id()] = obj; CacheTaskParent<O>::m_completed->result_list.push_back(obj); if (from_cloud)CacheTaskParent<O>::m_completed->from_cloud.push_back(obj);};
 		void inc_mem_cache_hit_count() { m_cache_hit_count++; }
 		void set_db_cache_hit_count(size_t val) { m_db_cache_hit_count = val; }
 		size_t mem_cache_hit_count()const { return m_cache_hit_count; }
