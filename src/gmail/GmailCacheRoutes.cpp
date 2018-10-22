@@ -64,7 +64,7 @@ ConcurrentValueRunner<QString,
     return r;
 };
 
-mail_cache::mdata_list_uptr mail_cache::GmailCacheRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
+mail_cache::mdata_result mail_cache::GmailCacheRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
 {
     return getCacheMessages_Async(state, id_list)->waitForResultAndRelease();
 };
@@ -82,12 +82,12 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheMessages_
     return rfetcher;
 };
 
-mail_cache::mdata_list_uptr mail_cache::GmailCacheRoutes::getCacheMessages(int numberOfMessages, uint64_t labelFilter)
+mail_cache::mdata_result mail_cache::GmailCacheRoutes::getCacheMessages(int numberOfMessages, uint64_t labelFilter)
 {
     return m_GMsgCache->topCacheData(numberOfMessages, labelFilter);
 };
 
-mail_cache::tdata_list_uptr mail_cache::GmailCacheRoutes::getCacheThreads(int numberOfThreads, uint64_t labelFilter)
+mail_cache::tdata_result mail_cache::GmailCacheRoutes::getCacheThreads(int numberOfThreads, uint64_t labelFilter)
 {
     return m_GThreadCache->topCacheData(numberOfThreads, labelFilter);
 };
@@ -128,7 +128,7 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheMessa
     return rfetcher;
 };
 
-mail_cache::mdata_list_uptr mail_cache::GmailCacheRoutes::getNextCacheMessages(
+mail_cache::mdata_result mail_cache::GmailCacheRoutes::getNextCacheMessages(
     int messagesCount /*= 40*/,
     QString pageToken /*= ""*/,
     QStringList* labels /*= nullptr*/,
@@ -175,7 +175,7 @@ ConcurrentValueRunner<QString,
 	return r;
 };
 
-mail_cache::tdata_list_uptr mail_cache::GmailCacheRoutes::getNextCacheThreads(
+mail_cache::tdata_result mail_cache::GmailCacheRoutes::getNextCacheThreads(
 	int messagesCount /*= 40*/,
 	QString pageToken /*= ""*/,
 	QStringList* labels /*= nullptr*/,
@@ -540,18 +540,18 @@ bool mail_cache::GmailCacheRoutes::messageHasLabel(mail_cache::MessageData* d, Q
     if (m_lite_storage) {
         mail_cache::LabelData* lb = m_lite_storage->findLabel(label_id);
         if (lb) {
-            rv = d->inLabelFilter(lb->labelMask());
+            rv = d->hasLabel(lb->labelMask());
         }
     }
     return rv;
 };
 
 #ifdef API_QT_AUTOTEST
-void mail_cache::GmailCacheRoutes::autotestParDBLoad(EDataState state, const std::list<QString>& id_list)
+void mail_cache::GmailCacheRoutes::autotestThreadDBLoad(const std::list<HistId>& id_list)
 {
-    mail_cache::GMailCacheQueryTask* r = getCacheMessages_Async(state, id_list);
-    mail_cache::mdata_list_uptr res = r->waitForResultAndRelease();
-    ApiAutotest::INSTANCE() << QString("loaded/cached %1 messages, mem_cache-hit: %2, db-cache-hit: %3")
+    auto* r = getCacheThreads_Async(id_list);
+    auto res = r->waitForResultAndRelease();
+    ApiAutotest::INSTANCE() << QString("loaded/cached %1 threads, mem_cache-hit: %2, db-cache-hit: %3")
         .arg(res->result_list.size())
         .arg(r->mem_cache_hit_count())
         .arg(r->db_cache_hit_count());
@@ -561,8 +561,7 @@ void mail_cache::GmailCacheRoutes::runAutotest()
 {
 //#define AUTOTEST_SIZE 100
 #define AUTOTEST_SIZE 10
-#define AUTOTEST_GENERATE_BODY //autotestParDBLoad(EDataState::body, id_list);
-#define AUTOTEST_GENERATE_SNIPPET autotestParDBLoad(EDataState::snippet, id_list);
+#define AUTOTEST_GENERATE_SNIPPET autotestThreadDBLoad(id_list);
 
     ApiAutotest::INSTANCE() << "start-mail-test";
     ApiAutotest::INSTANCE() << "1";
@@ -579,11 +578,13 @@ void mail_cache::GmailCacheRoutes::runAutotest()
     ApiAutotest::INSTANCE() << js["raw"].toString();
     ApiAutotest::INSTANCE() << "";
 
-    std::list<QString> id_list;
+    std::list<HistId> id_list;
     for (int i = 1; i <= AUTOTEST_SIZE; i++)
     {
-        QString id = QString("idR_%1").arg(i);
-        id_list.push_back(id);
+		HistId hid;
+		hid.id = QString("idR_%1").arg(i);
+		hid.hid = 2 * i;
+        id_list.push_back(hid);
     };
 
     ApiAutotest::INSTANCE().enableRequestLog(false);
@@ -591,40 +592,36 @@ void mail_cache::GmailCacheRoutes::runAutotest()
     ApiAutotest::INSTANCE().enableProgressEmulation(false);
     AUTOTEST_GENERATE_SNIPPET;
     AUTOTEST_GENERATE_SNIPPET;
-    AUTOTEST_GENERATE_BODY;
 
 	m_GMsgCache->mem_clear();
-    autotestParDBLoad(EDataState::snippet, id_list);
+	AUTOTEST_GENERATE_SNIPPET;
 
     std::function<void(void)>deleteFirst10 = [=]()
     {
         std::set<QString> set2remove;
         for (auto j = id_list.begin(); j != id_list.end(); j++)
         {
-            set2remove.insert(*j);
+            set2remove.insert(j->id);
             if (set2remove.size() >= 10)
                 break;
         }
 
-		m_GMsgCache->persistent_clear(set2remove);
+		m_GThreadCache->persistent_clear(set2remove);
     };
 
     deleteFirst10();
     AUTOTEST_GENERATE_SNIPPET;
-    AUTOTEST_GENERATE_BODY;
 
     deleteFirst10();
-    AUTOTEST_GENERATE_BODY;
     AUTOTEST_GENERATE_SNIPPET;
     AUTOTEST_GENERATE_SNIPPET;
-    AUTOTEST_GENERATE_BODY;
 
     int idx = 1;
     bool print_cache = true;
     if (print_cache)
     {
         using MSG_LIST = std::list<std::shared_ptr<mail_cache::MessageData>>;
-        mail_cache::mdata_list_uptr lst = getCacheMessages(-1);
+        mail_cache::mdata_result lst = getCacheMessages(-1);
         for (auto& i : lst->result_list)
         {
             mail_cache::MessageData* m = i.get();
@@ -646,7 +643,7 @@ void mail_cache::GmailCacheRoutes::runAutotest()
     if (check_email)
     {
         idx = 1;
-        mail_cache::mdata_list_uptr lst2 = getNextCacheMessages();
+        mail_cache::mdata_result lst2 = getNextCacheMessages();
         for (auto& i : lst2->result_list)
         {
             mail_cache::MessageData* m = i.get();
@@ -679,7 +676,7 @@ void mail_cache::GmailCacheRoutes::runAutotest()
             auto g_iterator = imperative_groups.begin();
             uint64_t lmask = (*l_iterator)->labelMask();
             uint64_t gmask = (*g_iterator)->labelMask();
-            mail_cache::mdata_list_uptr lst = getCacheMessages(-1);
+            mail_cache::mdata_result lst = getCacheMessages(-1);
             int counter = 0;
             int totalNumber = lst->result_list.size();
             int imperative_group_size = totalNumber / imperative_groups.size();
@@ -738,7 +735,6 @@ void mail_cache::GmailCacheRoutes::runAutotest()
     ApiAutotest::INSTANCE().enableAttachmentDataGeneration(true);
     ApiAutotest::INSTANCE().enableRequestLog(true);
 
-#undef AUTOTEST_GENERATE_BODY
 #undef AUTOTEST_SIZE
 };
 
