@@ -31,15 +31,9 @@ int main(int argc, char *argv[]) {
     authInfo->setEmail("me@gmail.com");
     std::shared_ptr<GoogleClient > c(new GoogleClient(appInfo.release(), authInfo.release()));
     
-    std::cout << "Press ENTER to start autotest. The result will be generated: " << argResFile << std::endl;
-
     DECLARE_AUTOTEST_INSTANCE(c, argResFile);
     
-    std::cin.ignore();
     autotest.generateCalls();
-    std::cout << "finished" << std::endl;
-    
-    std::cin.ignore();
-
+    std::cout << "finished" << std::endl;    
     return 0;
 }
