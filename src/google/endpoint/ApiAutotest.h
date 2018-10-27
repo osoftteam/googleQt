@@ -9,10 +9,10 @@ namespace googleQt{
 
 #ifdef API_QT_AUTOTEST
     using IDSET = std::set<QString>;
-	using IDVALMAP = std::map<QString, int>;//map ID-val -> usage-count
-    using CLASS_ID_MAP = std::map<QString, IDSET>;	
-	using MEMBER_VAL = std::map<QString, IDVALMAP>;
-	using CLASS_MEMBER_VAL = std::map<QString, MEMBER_VAL>;
+    using IDVALMAP = std::map<QString, int>;//map ID-val -> usage-count
+    using CLASS_ID_MAP = std::map<QString, IDSET>;  
+    using MEMBER_VAL = std::map<QString, IDVALMAP>;
+    using CLASS_MEMBER_VAL = std::map<QString, MEMBER_VAL>;
     using BATCH_LIST = std::list<std::pair<QString, googleQt::EBatchId>>;
     using CLASS2BATCH_LIST = std::map<QString, BATCH_LIST>;
 #endif
@@ -50,7 +50,7 @@ namespace googleQt{
         BATCH_LIST getReservedBatchList(const char* class_name);
         quint64 getInt(const char* class_name, const char* field_name, int default_id_num);
         QString getString(const char* class_name, const char* field_name, QString default_value);
-		void addMemberValue(const char* class_name, const char* field_name, QString val);
+        void addMemberValue(const char* class_name, const char* field_name, QString val);
 
 
         bool isAttachmentDataGenerationEnabled()const{return m_attachmentDataGenerationOn;}
@@ -64,9 +64,9 @@ namespace googleQt{
         void cancellAll()const;
 
     protected:
-        CLASS_ID_MAP		m_availID;
-        CLASS2BATCH_LIST	m_availBatchID;
-		CLASS_MEMBER_VAL	m_availMemberValue;
+        CLASS_ID_MAP        m_availID;
+        CLASS2BATCH_LIST    m_availBatchID;
+        CLASS_MEMBER_VAL    m_availMemberValue;
         bool m_attachmentDataGenerationOn{true};
         mutable bool m_cancelRequest{false};
         #endif //API_QT_AUTOTEST

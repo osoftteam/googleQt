@@ -196,24 +196,24 @@ void ApiAutotest::addId(const char* class_name, QString id)
 
 void ApiAutotest::addMemberValue(const char* class_name, const char* field_name, QString val)
 {
-	auto i = m_availMemberValue.find(class_name);
-	if (i != m_availMemberValue.end())
-	{
-		//i->second[field_name].push_back(std::pair<QString, int>(val, 0));
-		i->second[field_name].insert(std::make_pair(val, 0));
-	}
-	else 
-	{
-		MEMBER_VAL m;
-		auto& j = m[field_name].find(val);
-		if (j != m[field_name].end()) {
-			j->second = j->second - 1;
-		}
-		else {
-			m[field_name].insert(std::make_pair(val, 0));
-		}
-		m_availMemberValue[class_name] = m;
-	}
+    auto i = m_availMemberValue.find(class_name);
+    if (i != m_availMemberValue.end())
+    {
+        //i->second[field_name].push_back(std::pair<QString, int>(val, 0));
+        i->second[field_name].insert(std::make_pair(val, 0));
+    }
+    else 
+    {
+        MEMBER_VAL m;
+        auto& j = m[field_name].find(val);
+        if (j != m[field_name].end()) {
+            j->second = j->second - 1;
+        }
+        else {
+            m[field_name].insert(std::make_pair(val, 0));
+        }
+        m_availMemberValue[class_name] = m;
+    }
 };
 
 void ApiAutotest::addBatchId(const char* class_name, std::pair<QString, googleQt::EBatchId> bid) 
@@ -290,12 +290,12 @@ QString ApiAutotest::getId(const char* class_name, int default_id_num)
                         .arg(QDateTime::currentMSecsSinceEpoch())
                         .arg(qrand());
                 }
-			else if(strcmp(class_name, "threads::ThreadResource") == 0){
-				rv = QString("thread_id_%1_%2_%3")
-					.arg(default_id_num)
-					.arg(QDateTime::currentMSecsSinceEpoch())
-					.arg(qrand());
-			}
+            else if(strcmp(class_name, "threads::ThreadResource") == 0){
+                rv = QString("thread_id_%1_%2_%3")
+                    .arg(default_id_num)
+                    .arg(QDateTime::currentMSecsSinceEpoch())
+                    .arg(qrand());
+            }
             else
                 {
                     rv = QString("id_%1").arg(default_id_num);
@@ -345,34 +345,34 @@ QString ApiAutotest::getString(const char* class_name, const char* field_name, Q
                 .arg(qrand());
         }
     }
-	else if (strcmp(class_name, "messages::MessageResource") == 0)
-	{
-		if (strcmp(field_name, "m_threadId") == 0)
-		{
-			auto i = m_availMemberValue.find(class_name);
-			if (i != m_availMemberValue.end()) {
-				auto j = i->second.find(field_name);
-				if (j != i->second.end()) {
-					if (!j->second.empty()) {
-						IDVALMAP& v2usage = j->second;
-						if (!v2usage.empty()) {
-							IDVALMAP::iterator min_it = v2usage.begin();
-							for (IDVALMAP::iterator k = v2usage.begin(); k != v2usage.end(); k++) {
-								if (k->second < min_it->second) {
-									min_it = k;
-								}
-							}
+    else if (strcmp(class_name, "messages::MessageResource") == 0)
+    {
+        if (strcmp(field_name, "m_threadId") == 0)
+        {
+            auto i = m_availMemberValue.find(class_name);
+            if (i != m_availMemberValue.end()) {
+                auto j = i->second.find(field_name);
+                if (j != i->second.end()) {
+                    if (!j->second.empty()) {
+                        IDVALMAP& v2usage = j->second;
+                        if (!v2usage.empty()) {
+                            IDVALMAP::iterator min_it = v2usage.begin();
+                            for (IDVALMAP::iterator k = v2usage.begin(); k != v2usage.end(); k++) {
+                                if (k->second < min_it->second) {
+                                    min_it = k;
+                                }
+                            }
 
-							if (min_it != v2usage.end()) {
-								min_it->second += 1;
-								rv = min_it->first;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+                            if (min_it != v2usage.end()) {
+                                min_it->second += 1;
+                                rv = min_it->first;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     return rv;
 };
