@@ -183,27 +183,27 @@ namespace googleQt{
             void    setId(QString id) { m_id = id; };
 
             /**
-			!!!Warning!!! this class can be used to retrieve email or thread data,
-			see gmail reference and comments below
+            !!!Warning!!! this class can be used to retrieve email or thread data,
+            see gmail reference and comments below
 
-			For email messages routes format has following meaning
-				   "full": Returns the full email message data with body content 
-				   parsed in the payload field; the raw field is not used. (default)
-				   "metadata": Returns only email message ID, labels, and email 
-				   headers.
-				   "minimal": Returns only email message ID and labels; does not
-				   return the email headers, body, or payload.
-				   "raw": Returns the full email message data with body content 
-				   in the raw field as a base64url encoded string; the payload 
-				   field is not used.
+            For email messages routes format has following meaning
+                   "full": Returns the full email message data with body content 
+                   parsed in the payload field; the raw field is not used. (default)
+                   "metadata": Returns only email message ID, labels, and email 
+                   headers.
+                   "minimal": Returns only email message ID and labels; does not
+                   return the email headers, body, or payload.
+                   "raw": Returns the full email message data with body content 
+                   in the raw field as a base64url encoded string; the payload 
+                   field is not used.
 
-			For email thread routes format has following meaning
-				"full": Returns the parsed email message content in the payload field 
-				and the raw field is not used. (default)
-				"metadata": Returns email headers with message metadata such as identifiers 
-				and labels.
-				"minimal": Only returns email message metadata such as identifiers and 
-				labels, it does not return the email headers, body, or payload.
+            For email thread routes format has following meaning
+                "full": Returns the parsed email message content in the payload field 
+                and the raw field is not used. (default)
+                "metadata": Returns email headers with message metadata such as identifiers 
+                and labels.
+                "minimal": Only returns email message metadata such as identifiers and 
+                labels, it does not return the email headers, body, or payload.
 
              */
             
