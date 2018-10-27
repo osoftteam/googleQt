@@ -101,7 +101,7 @@ void ContactXmlPersistant::printXmlParseError(QString contextMsg,
             reportError("error", ex);            
             return false;
         };
-        QString	errorString() const override{ return ""; }
+        QString errorString() const override{ return ""; }
         bool fatalError(const QXmlParseException & ex) override 
         { 
             reportError("fatal-error", ex);
