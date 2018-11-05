@@ -45,6 +45,33 @@ namespace googleQt{
         using storage_ptr       = std::shared_ptr<mail_cache::GMailSQLiteStorage>;
         using THREADS_LIST      = std::map<QString, thread_ptr>;
 
+		/**
+			reserved syslabels, they are looked up faster
+			the order in enum is important since it goes to bitmask
+		*/
+		enum class SysLabel
+		{
+			NONE = -1,
+			IMPORTANT = 0,
+			CHAT,
+			SENT,
+			INBOX,
+			TRASH,
+			DRAFT,
+			SPAM,
+			STARRED,
+			UNREAD,
+			CATEGORY_PERSONAL,
+			CATEGORY_SOCIAL,
+			CATEGORY_FORUMS,
+			CATEGORY_UPDATES,
+			CATEGORY_PROMOTIONS
+		};
+
+		extern QString sysLabelId(SysLabel l);
+		extern QString sysLabelName(SysLabel l);
+		extern uint64_t reservedSysLabelMask(SysLabel l);
+
         /**
            MessageData - local persistant rfc822 basic data.
            Number of headers limited to CC BCC From To Subject
@@ -78,7 +105,8 @@ namespace googleQt{
 
             bool hasLabel(uint64_t data)const;
             bool hasAllLabels(uint64_t data)const;
-            
+			bool hasReservedSysLabel(SysLabel l)const;
+
             /// each label is a bit in int64
             uint64_t labelsBitMap()const{return m_labels;}
              
@@ -208,27 +236,6 @@ namespace googleQt{
         };
 
 
-        enum class SysLabel
-        {
-            NONE = -1,
-                IMPORTANT = 0,
-                CHAT,
-                SENT,
-                INBOX,
-                TRASH,
-                DRAFT,
-                SPAM,
-                STARRED,
-                UNREAD,
-                CATEGORY_PERSONAL,
-                CATEGORY_SOCIAL,
-                CATEGORY_FORUMS,
-                CATEGORY_UPDATES,
-                CATEGORY_PROMOTIONS
-                };
-
-        extern QString sysLabelId(SysLabel l);
-        extern QString sysLabelName(SysLabel l);
         
         /**
            LabelData - system/user labels in gmail, implemented as bitmap,
@@ -497,7 +504,7 @@ namespace googleQt{
 
             LabelData* findLabel(QString label_id);
             LabelData* findLabel(SysLabel sys_label);
-            LabelData* ensureLabel(int accId, QString label_id, bool system_label);
+            LabelData* ensureLabel(int accId, QString label_id, bool system_label, int mask_base = -1);
             void update_message_labels_db(int accId, QString msg_id, uint64_t flags);
             void update_attachment_local_file_db(googleQt::mail_cache::msg_ptr m, 
                                                  googleQt::mail_cache::att_ptr a, 
@@ -554,7 +561,9 @@ namespace googleQt{
             LabelData* insertDbLabel(int accId,
                                      QString label_id,
                                      QString name, 
-                                     QString label_type);
+                                     bool system_label,
+                                     int mask_base = -1
+                                     /*QString label_type*/);
             LabelData* createAndInsertLabel(
                                             QString label_id,
                                             QString label_name,

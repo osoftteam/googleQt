@@ -75,7 +75,7 @@ mail_cache::mdata_result mail_cache::GMailCache::topCacheData(int number2load, u
     int count = 0;
     for (auto& i : m_ord) {
         auto m = i;
-        if (m->hasLabel(labelFilter)) {
+        if (m->hasAllLabels(labelFilter)) {
             r->result_map[m->id()] = m;
             r->result_list.push_back(m);
             if (number2load > 0) {
@@ -101,7 +101,7 @@ mail_cache::tdata_result mail_cache::GThreadCache::topCacheData(int number2load,
     int count = 0;
     for (auto& i : m_ord) {
         auto t = i;
-        if (t->hasLabel(labelFilter)) {
+        if (t->hasAllLabels(labelFilter)) {
             r->result_map[t->id()] = t;
             r->result_list.push_back(t);
             if (number2load > 0) {
@@ -274,6 +274,12 @@ void mail_cache::MessageData::updateBody(QString plain, QString html)
     //m_state_agg |= static_cast<int>(EDataState::body);
     m_plain = plain;
     m_html = html;
+};
+
+bool mail_cache::MessageData::hasReservedSysLabel(SysLabel l)const 
+{
+	auto lmask = reservedSysLabelMask(l);
+	return hasLabel(lmask);
 };
 
 bool mail_cache::MessageData::hasLabel(uint64_t data)const
@@ -1161,10 +1167,11 @@ void mail_cache::GMailSQLiteStorage::close_db()
 
 static std::map<QString, QString> syslabelID2Name;
 static std::map<mail_cache::SysLabel, QString> syslabel2Name;
+static std::map<QString, mail_cache::SysLabel> reservedLabelID2SysLabel;
 
 static std::vector<QString>& getSysLabels()
 {
-#define ADD_SYS_LABEL(L, N)sys_labels.push_back(#L);syslabelID2Name[#L] = N;syslabel2Name[mail_cache::SysLabel::L] = N;
+#define ADD_SYS_LABEL(L, N)sys_labels.push_back(#L);syslabelID2Name[#L] = N;syslabel2Name[mail_cache::SysLabel::L] = N;reservedLabelID2SysLabel[#L] = mail_cache::SysLabel::L;
 
     static std::vector<QString> sys_labels;
     if(sys_labels.empty()){
@@ -1187,6 +1194,19 @@ static std::vector<QString>& getSysLabels()
 
 #undef ADD_SYS_LABEL
 }
+
+uint64_t mail_cache::reservedSysLabelMask(SysLabel l) 
+{
+	std::vector<QString>& labels_arr = getSysLabels();
+	int idx = (int)l;
+	if (idx < 0 || idx >= (int)labels_arr.size()) {
+		qWarning() << "ERROR. Invalid SysLabel index" << idx << labels_arr.size();
+		return 0;
+	}
+	static uint64_t theone = 1;
+	uint64_t label_mask = (theone << idx);
+	return label_mask;
+};
 
 QString mail_cache::sysLabelId(SysLabel l)
 {
@@ -1225,19 +1245,34 @@ bool mail_cache::GMailSQLiteStorage::loadLabelsFromDb()
     if (!q)
         return false;
 
-    std::set<QString> system_labels2ensure;
+	///init static table
+	std::vector<QString>& sys_labels = getSysLabels();
+	if (sys_labels.empty()) {
+		qWarning() << "ERROR. Static table of syslabels empty";
+		return false;
+	}
+
+
+    std::map<QString, int> system_labels2ensure;
+    for(auto& i : reservedLabelID2SysLabel){
+        auto lbId = i.first;
+        int mask_base = static_cast<int>(i.second);
+        system_labels2ensure[lbId] = mask_base;
+    }
+    /*
     std::vector<QString>& sys_labels = getSysLabels();
     for(auto& lbl : sys_labels){
         system_labels2ensure.insert(lbl);
     }
+    */
     
 #ifdef API_QT_AUTOTEST
     ///default autotest labels
-    system_labels2ensure.insert("id_1");
-    system_labels2ensure.insert("id_2");
-    system_labels2ensure.insert("id_3");
-    system_labels2ensure.insert("id_4");
-    system_labels2ensure.insert("id_5");
+    system_labels2ensure["id_1"] = -1;
+    system_labels2ensure["id_2"] = -1;
+    system_labels2ensure["id_3"] = -1;
+    system_labels2ensure["id_4"] = -1;
+    system_labels2ensure["id_5"] = -1;
 #endif
 
     while (q->next())
@@ -1248,22 +1283,31 @@ bool mail_cache::GMailSQLiteStorage::loadLabelsFromDb()
             uint64_t unread_messages = q->value(3).toLongLong();
             int mask_base = q->value(4).toInt();
 
-            if (createAndInsertLabel(label_id,
-                                     label_name,
-                                     label_is_system,
-                                     unread_messages,
-                                     mask_base))
+            auto lbl = createAndInsertLabel(label_id,
+                                            label_name,
+                                            label_is_system,
+                                            unread_messages,
+                                            mask_base);
+            if (lbl)
                 {
                     system_labels2ensure.erase(label_id);
                 }
         }
 
     if (!system_labels2ensure.empty()) {
-        for (auto& s : system_labels2ensure) {
-            mail_cache::LabelData* lbl = ensureLabel(m_accId, s, true);
+        for (auto& i : system_labels2ensure) {
+            //...ykh
+            auto lblId = i.first;
+            auto mask_base = i.second;
+
+			qDebug() << "ykh-ensure-lbl" << lblId << mask_base;
+
+            mail_cache::LabelData* lbl = ensureLabel(m_accId, lblId, true, mask_base);
             if (!lbl) {
-                qWarning() << "ERROR. Failed to create label" << s << m_acc_labels.size();
-            }
+                qWarning() << "ERROR. Failed to create label" 
+					<< lblId 
+					<< m_acc_labels.size();
+            }            
         }
     }
 
@@ -1489,7 +1533,8 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::insertDbLabel(const label
 mail_cache::LabelData* mail_cache::GMailSQLiteStorage::insertDbLabel(int accId, 
                                                                      QString label_id,
                                                                      QString label_name,
-                                                                     QString label_type) 
+                                                                     bool system_label/*QString label_type*/,
+                                                                     int mask_base) 
 {
     if (m_avail_label_base.empty()) 
         {
@@ -1497,8 +1542,10 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::insertDbLabel(int accId,
             return nullptr;
         }
 
-    auto i = m_avail_label_base.begin();
-    int mask_base = *i;
+    if(mask_base == -1){
+        auto i = m_avail_label_base.begin();
+        mask_base = *i;
+    }
 
     QString sql_insert;
     sql_insert = QString("INSERT INTO  %1gmail_label(acc_id, label_id, label_name, label_type, label_mask) VALUES(%2, ?, ?, ?, ?)")
@@ -1507,10 +1554,11 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::insertDbLabel(int accId,
     QSqlQuery* q = prepareQuery(sql_insert);
     if (!q)return nullptr;
 
-    int label_type_as_int = 2;
+    int label_type_as_int = system_label ? 1 : 2;
+    /*
     if (label_type.compare("system", Qt::CaseInsensitive) == 0) {
         label_type_as_int = 1;
-    }
+        }*/
 
     q->addBindValue(label_id);
     q->addBindValue(label_name);
@@ -1734,7 +1782,8 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::findLabel(SysLabel sys_la
     return findLabel(lable_id);
 };
 
-mail_cache::LabelData* mail_cache::GMailSQLiteStorage::ensureLabel(int accId, QString label_id, bool system_label)
+
+mail_cache::LabelData* mail_cache::GMailSQLiteStorage::ensureLabel(int accId, QString label_id, bool system_label, int mask_base)
 {
     auto i = m_acc_labels.find(label_id);
     if (i != m_acc_labels.end()) {
@@ -1752,9 +1801,11 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::ensureLabel(int accId, QS
     mail_cache::LabelData* rv = insertDbLabel(accId,
                                               label_id,
                                               label_name,
-                                              system_label ? "system" : "user");
+                                              system_label,
+                                              mask_base);
     return rv;
 };
+
 
 std::list<mail_cache::LabelData*> mail_cache::GMailSQLiteStorage::getLabelsInSet(std::set<QString>* in_optional_idset /*= nullptr*/)
 {
