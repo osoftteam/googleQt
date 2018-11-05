@@ -68,10 +68,6 @@ namespace googleQt
             mail_cache::GMailCacheQueryTask* getCacheMessages_Async(EDataState, const std::list<QString>& id_list,
                 mail_cache::GMailCacheQueryTask* rfetcher = nullptr);
 
-            /// load messages from cache, numberOfMessages = -1 if all messages from cache
-            mail_cache::mdata_result getCacheMessages(int numberOfMessages, uint64_t labelFilter = 0);
-            mail_cache::tdata_result getCacheThreads(int numberOfThreads, uint64_t labelFilter = 0);
-
             /// check for new emails - get top messagesCount messages and update cache
             mail_cache::mdata_result getNextCacheMessages(
                 int messagesCount = 40,
@@ -96,6 +92,7 @@ namespace googleQt
             void refreshLabels();
             std::list<mail_cache::LabelData*> getLoadedLabels(std::set<QString>* in_optional_idset = nullptr);
             std::list<mail_cache::LabelData*> getMessageLabels(mail_cache::MessageData* d);
+			std::list<mail_cache::LabelData*> getThreadLabels(mail_cache::ThreadData* d);
             bool messageHasLabel(mail_cache::MessageData* d, QString label_id)const;
 
 
