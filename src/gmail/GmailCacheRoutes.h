@@ -80,7 +80,7 @@ namespace googleQt
                 QStringList* labels = nullptr,
                 QString q = "");
 
-            GoogleVoidTask* trashCacheMessage_Async(QString userId, QString msg_id);
+            GoogleVoidTask* trashCacheMessage_Async(QString msg_id);
 
             ConcurrentValueRunner<QString, mail_cache::ThreadsReceiver, threads::ThreadResource>* getUserBatchThreads_Async(const std::list<QString>& id_list);
 

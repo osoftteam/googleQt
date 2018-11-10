@@ -131,10 +131,10 @@ mail_cache::mdata_result mail_cache::GmailCacheRoutes::getNextCacheMessages(
         q)->waitForResultAndRelease();
 };
 
-GoogleVoidTask* mail_cache::GmailCacheRoutes::trashCacheMessage_Async(QString userId, QString msg_id)
+GoogleVoidTask* mail_cache::GmailCacheRoutes::trashCacheMessage_Async(QString msg_id)
 {
     GoogleVoidTask* rv = m_endpoint.produceVoidTask();
-    googleQt::gmail::TrashMessageArg arg(userId, msg_id);
+    googleQt::gmail::TrashMessageArg arg(m_endpoint.client()->userId(), msg_id);
     m_gmail_routes.getMessages()->trash_Async(arg)->then([=]()
     {
         //clean up cache
