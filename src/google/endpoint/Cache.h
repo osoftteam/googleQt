@@ -258,10 +258,15 @@ namespace googleQt {
                 QString id = i->id;
                 quint64 hid = i->hid;
                 std::shared_ptr<O> obj = mem_object(id);
-                if (obj && obj->historyId() == hid)
+                if (obj)
                 {
-                    rfetcher->add_result(obj, false);
-                    rfetcher->inc_mem_cache_hit_count();
+                    bool locatedHist = (hid == 0) || (hid != 0 && obj->historyId() == hid);
+                    if(locatedHist){
+                        rfetcher->add_result(obj, false);
+                        rfetcher->inc_mem_cache_hit_count();
+                    }else{
+                        missed_cache.push_back(id);
+                    }
                 }
                 else
                 {
