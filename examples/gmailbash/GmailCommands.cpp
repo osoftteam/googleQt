@@ -389,7 +389,7 @@ void GmailCommands::remove_label(QString message_id_label)
 
 void GmailCommands::printSnippet(messages::MessageResource* r)
 {
-    std::set<QString> headers_to_print = {"From", "To", "Subject", "CC", "BCC"};
+    //    std::set<QString> headers_to_print = {"From", "To", "Subject", "CC", "BCC"};
     
     std::cout << "id="<< r->id() << std::endl
               << "tid=" << r->threadid() << std::endl
@@ -757,6 +757,7 @@ void GmailCommands::ls_threads(QString nextToken)
 
 void GmailCommands::get_thread(QString id_list)
 {
+    static std::set<QString> headers_to_print = {"From", "To"};
     std::list<QString> arg_list = split_string(id_list);
     if (arg_list.empty()) 
         {
@@ -773,6 +774,22 @@ void GmailCommands::get_thread(QString id_list)
                           << " historyid=" << t->historyid()
                           << " messagescount=" << t->messages().size()
                           << std::endl;
+                for(auto& m : t->messages()){
+                    std::cout << "    id="<< m.id()
+                              << " ";
+                    auto p = m.payload();
+                    auto header_list = p.headers();
+                    for(auto h : header_list)
+                        {
+                            if(headers_to_print.find(h.name())
+                               != headers_to_print.end())
+                                std::cout << h.name() << ":"
+                                          << h.value();
+                        }
+                    std::cout << " ";
+                    std::cout << m.snippet();
+                    std::cout << std::endl;
+                }
             }
         }
     catch (GoogleException& e)
