@@ -1296,12 +1296,8 @@ bool mail_cache::GMailSQLiteStorage::loadLabelsFromDb()
 
     if (!system_labels2ensure.empty()) {
         for (auto& i : system_labels2ensure) {
-            //...ykh
             auto lblId = i.first;
             auto mask_base = i.second;
-
-			qDebug() << "ykh-ensure-lbl" << lblId << mask_base;
-
             mail_cache::LabelData* lbl = ensureLabel(m_accId, lblId, true, mask_base);
             if (!lbl) {
                 qWarning() << "ERROR. Failed to create label" 
@@ -2684,9 +2680,6 @@ bool mail_cache::GThreadsStorage::updateDbInBatch(CACHE_LIST<ThreadData>& r)
                 << "native-code:" << q->lastError().nativeErrorCode()
                 << "errtext:" << q->lastError().text();
             return false;
-        }
-        else {
-            qDebug() << "ykh-thread-sql-update-batch-ok" << q->lastQuery();
         }
 
         return m_storage->commitTransaction();
