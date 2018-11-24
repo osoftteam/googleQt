@@ -38,11 +38,12 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::newMessageResultF
     return rfetcher;
 };
 
-mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::newThreadResultFetcher()
+mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::newThreadResultFetcher(query_ptr q)
 {
     auto rfetcher = new mail_cache::GThreadCacheQueryTask(
-        *this,
-        m_GThreadCache);
+                                                          *this,
+                                                          m_GThreadCache,
+                                                          q);
     return rfetcher;
 };
 
@@ -169,13 +170,15 @@ mail_cache::tdata_result mail_cache::GmailCacheRoutes::getNextCacheThreads(
     int messagesCount /*= 40*/,
     QString pageToken /*= ""*/,
     QStringList* labels /*= nullptr*/,
-    QString q /*= ""*/) 
+    QString q /*= ""*/,
+    bool save_query /*= false*/) 
 {
     return getNextCacheThreads_Async(
         messagesCount,
         pageToken,
         labels,
-        q)->waitForResultAndRelease();
+        q,
+        save_query)->waitForResultAndRelease();
 };
 
 
@@ -183,13 +186,21 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheThr
     int threadsCount /*= 40*/,
     QString pageToken /*= ""*/,
     QStringList* labels /*= nullptr*/,
-    QString q /*= ""*/)
+    QString q_str /*= ""*/,
+    bool save_query /*= false*/)
 {
-    auto rfetcher = newThreadResultFetcher();
+    q_str = q_str.trimmed();
+    
+    query_ptr q;
+    if(save_query && !q_str.isEmpty()){
+        q = m_lite_storage->m_qstorage->ensureQueryData(q_str);
+    }
+    
+    auto rfetcher = newThreadResultFetcher(q);
     gmail::ListArg listArg;
     listArg.setMaxResults(threadsCount);
     listArg.setPageToken(pageToken);
-    listArg.setQ(q);
+    listArg.setQ(q_str);
     if (labels)
     {
         listArg.labels() = *labels;
@@ -422,11 +433,11 @@ std::list<mail_cache::LabelData*> mail_cache::GmailCacheRoutes::getMessageLabels
 
 std::list<mail_cache::LabelData*> mail_cache::GmailCacheRoutes::getThreadLabels(mail_cache::ThreadData* d)
 {
-	if (!m_lite_storage) {
-		std::list<mail_cache::LabelData*> on_error;
-		return on_error;
-	}
-	return m_lite_storage->unpackLabels(d->labelsBitMap());
+    if (!m_lite_storage) {
+        std::list<mail_cache::LabelData*> on_error;
+        return on_error;
+    }
+    return m_lite_storage->unpackLabels(d->labelsBitMap());
 };
 
 #define TRY_LABEL_MODIFY(F, M, S) bool rv = false;                      \
@@ -638,27 +649,27 @@ void mail_cache::GmailCacheRoutes::runAutotest()
     }
 
     qDebug() << "check latest emails";
-	bool check_email = true;
-	if (check_email)
-	{
-		idx = 1;
-		auto lst2 = getNextCacheThreads();
-		for (auto& i : lst2->result_list)
-		{
-			auto mlst = i->messages();
-			for (auto& j : mlst)
-			{
-				auto m = j.get();
-				QString s = QString("%1. %2 %3").arg(idx).arg(m->id()).arg(m->snippet());
-				ApiAutotest::INSTANCE() << s;
-				idx++;
-			}
+    bool check_email = true;
+    if (check_email)
+    {
+        idx = 1;
+        auto lst2 = getNextCacheThreads();
+        for (auto& i : lst2->result_list)
+        {
+            auto mlst = i->messages();
+            for (auto& j : mlst)
+            {
+                auto m = j.get();
+                QString s = QString("%1. %2 %3").arg(idx).arg(m->id()).arg(m->snippet());
+                ApiAutotest::INSTANCE() << s;
+                idx++;
+            }
 
-			QString s = QString("Next(new) threads %1").arg(lst2->result_list.size());
-			ApiAutotest::INSTANCE() << s;
-		}
-	}
-	/*
+            QString s = QString("Next(new) threads %1").arg(lst2->result_list.size());
+            ApiAutotest::INSTANCE() << s;
+        }
+    }
+    /*
     bool check_email = true;
     if (check_email)
     {
@@ -674,7 +685,7 @@ void mail_cache::GmailCacheRoutes::runAutotest()
         QString s = QString("Next(new) messages %1").arg(lst2->result_list.size());
         ApiAutotest::INSTANCE() << s;
     }
-	*/
+    */
 
     bool randomize_labels = true;
     if (randomize_labels)
@@ -709,37 +720,37 @@ void mail_cache::GmailCacheRoutes::runAutotest()
                 .arg(imperative_group_size);
             for (auto& i : lst->result_list)
             {
-				auto result_mask = lmask | gmask;
-				auto t = i.get();
-				auto mlst = t->messages();
-				QString s = QString("label-down thread '%1' with %2 messages to %3")
-							.arg(t->id())
-							.arg(mlst.size())
-							.arg(result_mask);
-				ApiAutotest::INSTANCE() << s;
+                auto result_mask = lmask | gmask;
+                auto t = i.get();
+                auto mlst = t->messages();
+                QString s = QString("label-down thread '%1' with %2 messages to %3")
+                            .arg(t->id())
+                            .arg(mlst.size())
+                            .arg(result_mask);
+                ApiAutotest::INSTANCE() << s;
 
-				for (auto& j : mlst) {
-					mail_cache::MessageData* m = j.get();
-					m_lite_storage->update_message_labels_db(m_lite_storage->m_accId, m->id(), result_mask);
-				}
+                for (auto& j : mlst) {
+                    mail_cache::MessageData* m = j.get();
+                    m_lite_storage->update_message_labels_db(m_lite_storage->m_accId, m->id(), result_mask);
+                }
 
-				counter++;
-				l_iterator++; if (l_iterator == labels.end())l_iterator = labels.begin();
-				lmask = (*l_iterator)->labelMask();
+                counter++;
+                l_iterator++; if (l_iterator == labels.end())l_iterator = labels.begin();
+                lmask = (*l_iterator)->labelMask();
 
-				if (counter > imperative_group_size) {
-					counter = 0;
+                if (counter > imperative_group_size) {
+                    counter = 0;
 
-					g_iterator++; if (g_iterator == imperative_groups.end())g_iterator = imperative_groups.begin();
-					gmask = (*g_iterator)->labelMask();
+                    g_iterator++; if (g_iterator == imperative_groups.end())g_iterator = imperative_groups.begin();
+                    gmask = (*g_iterator)->labelMask();
 
-					qDebug() << QString("Next Label group: %1/%2")
-						.arg((*g_iterator)->labelName())
-						.arg(gmask);
-				}
+                    qDebug() << QString("Next Label group: %1/%2")
+                        .arg((*g_iterator)->labelName())
+                        .arg(gmask);
+                }
 
-				//qDdebug() << "updating thread";
-				/*
+                //qDdebug() << "updating thread";
+                /*
                 mail_cache::MessageData* m = i.get();
                 m_lite_storage->update_message_labels_db(m_lite_storage->m_accId, m->id(), lmask | gmask);
 
@@ -757,7 +768,7 @@ void mail_cache::GmailCacheRoutes::runAutotest()
                         .arg((*g_iterator)->labelName())
                         .arg(gmask);
                 }
-				*/
+                */
             }
         }
     }

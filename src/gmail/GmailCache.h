@@ -27,13 +27,17 @@ namespace googleQt{
         class GThreadCache;
         class GmailCacheRoutes;
         class ThreadData;
+        class QueryData;
 
         using msg_ptr           = std::shared_ptr<googleQt::mail_cache::MessageData>;
         using thread_ptr        = std::shared_ptr<googleQt::mail_cache::ThreadData>;
+        using query_ptr         = std::shared_ptr<googleQt::mail_cache::QueryData>;
         using msg_list          = std::list<msg_ptr>;
         using msg_map           = std::map<QString, msg_ptr>;
         using thread_list       = std::list<thread_ptr>;
         using thread_map        = std::map<QString, thread_ptr>;
+        using query_map         = std::map<QString, query_ptr>;
+        using query_db_map      = std::map<int, query_ptr>;
         using label_ptr         = std::shared_ptr<googleQt::mail_cache::LabelData>;
         using att_ptr           = std::shared_ptr<googleQt::mail_cache::AttachmentData>;
         using mdata_result      = std::unique_ptr<CacheDataResult<MessageData>>;
@@ -45,32 +49,32 @@ namespace googleQt{
         using storage_ptr       = std::shared_ptr<mail_cache::GMailSQLiteStorage>;
         using THREADS_LIST      = std::map<QString, thread_ptr>;
 
-		/**
-			reserved syslabels, they are looked up faster
-			the order in enum is important since it goes to bitmask
-		*/
-		enum class SysLabel
-		{
-			NONE = -1,
-			IMPORTANT = 0,
-			CHAT,
-			SENT,
-			INBOX,
-			TRASH,
-			DRAFT,
-			SPAM,
-			STARRED,
-			UNREAD,
-			CATEGORY_PERSONAL,
-			CATEGORY_SOCIAL,
-			CATEGORY_FORUMS,
-			CATEGORY_UPDATES,
-			CATEGORY_PROMOTIONS
-		};
+        /**
+            reserved syslabels, they are looked up faster
+            the order in enum is important since it goes to bitmask
+        */
+        enum class SysLabel
+        {
+            NONE = -1,
+            IMPORTANT = 0,
+            CHAT,
+            SENT,
+            INBOX,
+            TRASH,
+            DRAFT,
+            SPAM,
+            STARRED,
+            UNREAD,
+            CATEGORY_PERSONAL,
+            CATEGORY_SOCIAL,
+            CATEGORY_FORUMS,
+            CATEGORY_UPDATES,
+            CATEGORY_PROMOTIONS
+        };
 
-		extern QString sysLabelId(SysLabel l);
-		extern QString sysLabelName(SysLabel l);
-		extern uint64_t reservedSysLabelMask(SysLabel l);
+        extern QString sysLabelId(SysLabel l);
+        extern QString sysLabelName(SysLabel l);
+        extern uint64_t reservedSysLabelMask(SysLabel l);
 
         /**
            MessageData - local persistant rfc822 basic data.
@@ -105,7 +109,7 @@ namespace googleQt{
 
             bool hasLabel(uint64_t data)const;
             bool hasAllLabels(uint64_t data)const;
-			bool hasReservedSysLabel(SysLabel l)const;
+            bool hasReservedSysLabel(SysLabel l)const;
 
             /// each label is a bit in int64
             uint64_t labelsBitMap()const{return m_labels;}
@@ -325,6 +329,25 @@ namespace googleQt{
             friend class GMailSQLiteStorage;
         };      
 
+        /// query results - collection of threads
+        class QueryData
+        {
+        public:
+            QString         q()const { return m_q; }
+            void            setQ(QString val) { m_q = val; }
+        protected:          
+            int             m_db_id{ -1 };
+            QString         m_q;            
+            thread_list     m_threads;
+            thread_map      m_map;
+            bool            m_threads_db_loaded{false};
+        private:
+            QueryData(int dbid, QString qstr);
+
+            friend class GQueryStorage;
+            friend class GMailSQLiteStorage;
+        };
+
         class DiagnosticData 
         {
         public:
@@ -386,16 +409,15 @@ namespace googleQt{
         class GThreadCacheQueryTask : public CacheQueryTask<ThreadData>
         {
         public:
-            GThreadCacheQueryTask(googleQt::mail_cache::GmailCacheRoutes& r, std::shared_ptr<GThreadCache> c);
+            GThreadCacheQueryTask(googleQt::mail_cache::GmailCacheRoutes& r,
+                                  std::shared_ptr<GThreadCache> c,
+                                  query_ptr q = nullptr);
             void fetchFromCloud_Async(const std::list<QString>& id_list);
             QString nextPageToken()const{return m_nextPageToken;}
             tdata_result waitForResultAndRelease();
         protected:
-            ///return list of messages
-            //std::list<QString> fetchThread(threads::ThreadResource* t);
-
-        protected:
             googleQt::mail_cache::GmailCacheRoutes&  m_r;
+            query_ptr m_q;
             QString m_nextPageToken;
             thread_list m_updated_threads;
             thread_list m_new_threads;
@@ -473,9 +495,27 @@ namespace googleQt{
         protected:
             GMailSQLiteStorage*     m_storage;
             std::weak_ptr<mail_cache::GThreadCache> m_cache;
-            friend class GMailSQLiteStorage;            
+            friend class GMailSQLiteStorage;
+            friend class GQueryStorage;
         };
 
+        /// GQueryStorage - we can store query results locally if needed
+        /// this is for specific folder filters when we can store query 
+        /// results offline, also improve GUI updates
+        class GQueryStorage 
+        {
+        public:
+            GQueryStorage(GThreadsStorage* s);
+            query_ptr ensureQueryData(QString q);
+        protected:
+            bool loadQueriesFromDb();
+            bool loadQueryThreadsFromDb(query_ptr d);
+        protected:
+            GThreadsStorage*        m_tstorage;
+            query_map               m_qmap;
+            query_db_map            m_q_dbmap;
+            friend class GMailSQLiteStorage;
+        };
         
         /**
            GMailSQLiteStorage - utility class as helper for GMailCache.
@@ -540,6 +580,8 @@ namespace googleQt{
             int addAccountDb(QString userId);
 
             thread_ptr findThread(QString thread_id);
+
+            //void resolveQueryThreads(QueryData& );
         protected:
             QString metaPrefix()const { return m_metaPrefix; }
             bool execQuery(QString sql);
@@ -583,6 +625,7 @@ namespace googleQt{
             std::weak_ptr<GThreadCache>         m_thread_cache;
             std::unique_ptr<GMessagesStorage>   m_mstorage;
             std::unique_ptr<GThreadsStorage>    m_tstorage;
+            std::unique_ptr<GQueryStorage>      m_qstorage;
             std::weak_ptr<gcontact::GContactCache>    m_contact_cache;
             std::map<QString, std::shared_ptr<LabelData>> m_acc_labels;
             std::map<int, std::shared_ptr<LabelData>> m_acc_maskbase2labels;
@@ -600,6 +643,7 @@ namespace googleQt{
             friend class googleQt::gcontact::GContactCache;
             friend class googleQt::mail_cache::GMessagesStorage;
             friend class googleQt::mail_cache::GThreadsStorage;
+            friend class googleQt::mail_cache::GQueryStorage;
         };//GMailSQLiteStorage
 
 

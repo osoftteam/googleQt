@@ -49,12 +49,14 @@ namespace googleQt
                 int messagesCount = 40,
                 QString pageToken = "",
                 QStringList* labels = nullptr,
-                QString q = "");
+                QString q_str = "",
+                bool save_query = false);
             mail_cache::GThreadCacheQueryTask* getNextCacheThreads_Async(
                 int threadsCount = 40,
                 QString pageToken = "",
                 QStringList* labels = nullptr,
-                QString q = "");
+                QString q_str = "",
+                bool save_query = false);
 
             /// load threads by ID-list while updating local cache
             mail_cache::GThreadCacheQueryTask* getCacheThreads_Async(const std::list<HistId>& id_list,
@@ -92,7 +94,7 @@ namespace googleQt
             void refreshLabels();
             std::list<mail_cache::LabelData*> getLoadedLabels(std::set<QString>* in_optional_idset = nullptr);
             std::list<mail_cache::LabelData*> getMessageLabels(mail_cache::MessageData* d);
-			std::list<mail_cache::LabelData*> getThreadLabels(mail_cache::ThreadData* d);
+            std::list<mail_cache::LabelData*> getThreadLabels(mail_cache::ThreadData* d);
             bool messageHasLabel(mail_cache::MessageData* d, QString label_id)const;
 
 
@@ -117,7 +119,7 @@ namespace googleQt
 
         protected:
             mail_cache::GMailCacheQueryTask* newMessageResultFetcher(EDataState state);
-            mail_cache::GThreadCacheQueryTask* newThreadResultFetcher();
+            mail_cache::GThreadCacheQueryTask* newThreadResultFetcher(query_ptr q=nullptr);
             GoogleTask<messages::MessageResource>* setLabel_Async(QString label_id,
                 mail_cache::MessageData* d,
                 bool label_on,
