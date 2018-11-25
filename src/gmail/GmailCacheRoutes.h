@@ -59,7 +59,7 @@ namespace googleQt
                 bool save_query = false);
 
             /// load threads by ID-list while updating local cache
-            mail_cache::GThreadCacheQueryTask* getCacheThreads_Async(const std::list<HistId>& id_list,
+            mail_cache::GThreadCacheQueryTask* getCacheThreadList_Async(const std::list<HistId>& id_list,
                 mail_cache::GThreadCacheQueryTask* rfetcher = nullptr);
 
             RESULT_LIST<messages::MessageResource>&&    getUserBatchMessages(EDataState, const std::list<QString>& id_list);

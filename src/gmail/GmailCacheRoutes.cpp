@@ -210,15 +210,22 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheThr
     m_gmail_routes.getThreads()->list_Async(listArg)->then([=](std::unique_ptr<threads::ThreadListRes> tlist)
     {
         std::list<HistId> id_list;
+		
         for (auto& m : tlist->threads())
         {
             HistId h;
             h.id = m.id();
             h.hid = m.historyid();
             id_list.push_back(h);
+
+			if (q) {
+				if (q->m_map.find(m.id()) == q->m_map.end()) {
+					q->m_new_threads.push_back(m.id());
+				}
+			}
         }
         rfetcher->m_nextPageToken = tlist->nextpagetoken();
-        getCacheThreads_Async(id_list, rfetcher);
+		getCacheThreadList_Async(id_list, rfetcher);
     },
         [=](std::unique_ptr<GoogleException> ex)
     {
@@ -230,7 +237,7 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheThr
 
 
 
-mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheThreads_Async(
+mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheThreadList_Async(
     const std::list<HistId>& id_list,
     mail_cache::GThreadCacheQueryTask* rfetcher /*= nullptr*/)
 {
@@ -559,7 +566,7 @@ bool mail_cache::GmailCacheRoutes::messageHasLabel(mail_cache::MessageData* d, Q
 #ifdef API_QT_AUTOTEST
 void mail_cache::GmailCacheRoutes::autotestThreadDBLoad(const std::list<HistId>& id_list)
 {
-    auto* r = getCacheThreads_Async(id_list);
+    auto* r = getCacheThreadList_Async(id_list);
     auto res = r->waitForResultAndRelease();
     ApiAutotest::INSTANCE() << QString("loaded/cached %1 threads, mem_cache-hit: %2, db-cache-hit: %3")
         .arg(res->result_list.size())
