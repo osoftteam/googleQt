@@ -321,12 +321,16 @@ namespace googleQt {
         virtual void fetchFromCloud_Async(const std::list<QString>& id_list) = 0;
         std::unique_ptr<CacheDataResult<O>> waitForResultAndRelease() = delete;
 
-        void notifyOnCompletedFromCache() { m_query_completed = true; CacheTaskParent<O>::notifyOnFinished(); };
-        void notifyFetchCompleted(CACHE_LIST<O>& r/*, const std::set<QString>& fetched_ids*/)
+        virtual void notifyOnCompletedFromCache() 
+		{ 
+			m_query_completed = true; 
+			CacheTaskParent<O>::notifyOnFinished(); 
+		};
+
+        void notifyFetchCompletedWithMergeRequest(CACHE_LIST<O>& r)
         {
-            m_query_completed = true;
-            m_cache->merge(CacheTaskParent<O>::m_completed->state, r/*, fetched_ids*/);
-            CacheTaskParent<O>::notifyOnFinished();
+            m_cache->merge(CacheTaskParent<O>::m_completed->state, r);
+			notifyOnCompletedFromCache();
         }
 
         bool isCompleted()const override { return m_query_completed; }
