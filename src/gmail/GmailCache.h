@@ -415,7 +415,7 @@ namespace googleQt{
             GThreadCacheQueryTask(googleQt::mail_cache::GmailCacheRoutes& r,
                                   std::shared_ptr<GThreadCache> c,
                                   query_ptr q = nullptr);
-            void fetchFromCloud_Async(const std::list<QString>& id_list);
+            void fetchFromCloud_Async(const std::list<QString>& id_list)override;
 			void notifyOnCompletedFromCache()override;
             QString nextPageToken()const{return m_nextPageToken;}
             tdata_result waitForResultAndRelease();
