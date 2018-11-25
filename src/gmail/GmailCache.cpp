@@ -592,7 +592,7 @@ void mail_cache::GMailCacheQueryTask::fetchFromCloud_Async(const std::list<QStri
                     s->updateMessagesDiagnostic(1, m_completed->result_list.size());
                 }
                 par_runner->disposeLater();
-                notifyFetchCompleted(m_completed->result_list);                
+				notifyFetchCompletedWithMergeRequest(m_completed->result_list);
             }); 
 };
 
@@ -874,7 +874,6 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const std::list<QSt
                 for (auto t : m_new_threads) {
                     if (t->head()) {
                         add_result(t, true);
-                        ///maintain q-cache here
                     }
                 }
             }
@@ -902,6 +901,14 @@ mail_cache::tdata_result mail_cache::GThreadCacheQueryTask::waitForResultAndRele
     return std::move(m_completed);
 };
 
+void mail_cache::GThreadCacheQueryTask::notifyOnCompletedFromCache()
+{
+	if (m_q && m_q->hasNewUnsavedThreads()) {
+		m_r.storage()->insert_new_q_db_threads(m_q);
+	}
+
+	CacheQueryTask<ThreadData>::notifyOnCompletedFromCache();
+};
 
 ///GMailSQLiteStorage
 mail_cache::GMailSQLiteStorage::GMailSQLiteStorage(mcache_ptr mc,
@@ -2045,6 +2052,11 @@ mail_cache::thread_ptr mail_cache::GMailSQLiteStorage::findThread(QString thread
     return rv;
 };
 
+void mail_cache::GMailSQLiteStorage::insert_new_q_db_threads(query_ptr q) 
+{
+	m_qstorage->insert_db_threads(q, q->m_new_threads);
+};
+
 /*
 void mail_cache::GMailSQLiteStorage::resolveQueryThreads(QueryData& q) 
 {
@@ -2154,7 +2166,6 @@ void mail_cache::GMessagesStorage::bindSQL(EDataState state, QSqlQuery* q, CACHE
     q->addBindValue(internalDate);
     q->addBindValue(labelsBitMap);
     q->addBindValue(id);
-    //q->addBindValue(currentAccountId);
     q->addBindValue(threadId);
 };
 
@@ -3017,4 +3028,45 @@ mail_cache::query_ptr mail_cache::GQueryStorage::ensureQueryData(QString q_str)
     }
 
     return nullptr;
+};
+
+QString mail_cache::GQueryStorage::insertSQLthreads(query_ptr q)const
+{
+	QString sql_insert = QString("INSERT INTO %1gmail_qres(thread_id, acc_id, q_id) VALUES(?, %2, %3)")
+		.arg(m_tstorage->m_storage->metaPrefix())
+		.arg(m_tstorage->m_storage->currentAccountId())
+		.arg(q->m_db_id);
+	return sql_insert;
+};
+
+void mail_cache::GQueryStorage::bindSQL(QSqlQuery* q, std::list<QString>& r)
+{
+	QVariantList threadId;
+	for (auto& i : r)
+	{
+		threadId << i;
+	}
+	q->addBindValue(threadId);
+};
+
+void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd, std::list<QString>& r)
+{
+	auto q = m_tstorage->m_storage->startTransaction(insertSQLthreads(qd));
+	if (q) {
+		bindSQL(q, r);
+		if (!q->execBatch())
+		{
+			m_tstorage->m_storage->rollbackTransaction();
+			qWarning() << "ERROR. SQL Q/insert-threads batch failed"
+				<< "err-type:" << q->lastError().type()
+				<< "native-code:" << q->lastError().nativeErrorCode()
+				<< "errtext:" << q->lastError().text();
+			return;
+		}
+
+		bool rv = m_tstorage->m_storage->commitTransaction();
+		if (!rv) {
+			qWarning() << "Failed commit Q-threads transaction";
+		}
+	}
 };

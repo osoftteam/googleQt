@@ -335,17 +335,20 @@ namespace googleQt{
         public:
             QString         q()const { return m_q; }
             void            setQ(QString val) { m_q = val; }
+			bool			hasNewUnsavedThreads()const { return !m_new_threads.empty(); }
         protected:          
-            int             m_db_id{ -1 };
-            QString         m_q;            
-            thread_list     m_threads;
-            thread_map      m_map;
+            int					m_db_id{ -1 };
+            QString				m_q;            
+            thread_list			m_threads;
+            thread_map			m_map;
+			std::list<QString>	m_new_threads;
             bool            m_threads_db_loaded{false};
         private:
             QueryData(int dbid, QString qstr);
 
             friend class GQueryStorage;
             friend class GMailSQLiteStorage;
+			friend class GmailCacheRoutes;
         };
 
         class DiagnosticData 
@@ -413,6 +416,7 @@ namespace googleQt{
                                   std::shared_ptr<GThreadCache> c,
                                   query_ptr q = nullptr);
             void fetchFromCloud_Async(const std::list<QString>& id_list);
+			void notifyOnCompletedFromCache()override;
             QString nextPageToken()const{return m_nextPageToken;}
             tdata_result waitForResultAndRelease();
         protected:
@@ -507,9 +511,12 @@ namespace googleQt{
         public:
             GQueryStorage(GThreadsStorage* s);
             query_ptr ensureQueryData(QString q);
+			void insert_db_threads(query_ptr q, std::list<QString>& r);
         protected:
             bool loadQueriesFromDb();
             bool loadQueryThreadsFromDb(query_ptr d);
+			QString insertSQLthreads(query_ptr q)const;
+			void bindSQL(QSqlQuery* q, std::list<QString>& r);
         protected:
             GThreadsStorage*        m_tstorage;
             query_map               m_qmap;
@@ -580,7 +587,7 @@ namespace googleQt{
             int addAccountDb(QString userId);
 
             thread_ptr findThread(QString thread_id);
-
+			void insert_new_q_db_threads(query_ptr q);
             //void resolveQueryThreads(QueryData& );
         protected:
             QString metaPrefix()const { return m_metaPrefix; }
