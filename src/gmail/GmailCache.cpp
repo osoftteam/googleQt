@@ -904,7 +904,7 @@ mail_cache::tdata_result mail_cache::GThreadCacheQueryTask::waitForResultAndRele
 void mail_cache::GThreadCacheQueryTask::notifyOnCompletedFromCache()
 {
 	if (m_q && m_q->hasNewUnsavedThreads()) {
-		m_r.storage()->insert_new_q_db_threads(m_q);
+		m_r.storage()->qstorage()->insert_db_threads(m_q);
 	}
 
 	CacheQueryTask<ThreadData>::notifyOnCompletedFromCache();
@@ -1050,8 +1050,8 @@ bool mail_cache::GMailSQLiteStorage::ensureMailTables()
     if (!execQuery(sql_q))
         return false;
 
-    //  if (!execQuery(QString("CREATE UNIQUE INDEX IF NOT EXISTS %1gmail_q_accid_idx ON %1gmail_q(acc_id, q_id)").arg(m_metaPrefix)))
-    //      return false;
+    if (!execQuery(QString("CREATE UNIQUE INDEX IF NOT EXISTS %1gmail_q_query_idx ON %1gmail_q(acc_id, q_query)").arg(m_metaPrefix)))
+        return false;
 
     /// query-results ///
     QString sql_qres = QString("CREATE TABLE IF NOT EXISTS %1gmail_qres(acc_id INTEGER NOT NULL, q_id INTEGER NOT NULL, thread_id TEXT NOT NULL)")
@@ -1061,6 +1061,9 @@ bool mail_cache::GMailSQLiteStorage::ensureMailTables()
 
     if (!execQuery(QString("CREATE INDEX IF NOT EXISTS %1gmail_qres_accid_idx ON %1gmail_qres(acc_id, q_id)").arg(m_metaPrefix)))
         return false;
+
+	if (!execQuery(QString("CREATE UNIQUE INDEX IF NOT EXISTS %1gmail_qres_u_idx ON %1gmail_qres(acc_id, q_id, thread_id)").arg(m_metaPrefix)))
+		return false;
 
     return true;
 };
@@ -1734,7 +1737,28 @@ bool mail_cache::GMailSQLiteStorage::deleteAccountFromDb(int accId)
         qWarning() << "ERROR.Failed to delete attachments" << sql;
         return false;
     }
-    
+
+	//..
+	sql = QString("DELETE FROM %1gmail_qres WHERE acc_id = %2")
+		.arg(m_metaPrefix)
+		.arg(accId);
+	ok = execQuery(sql);
+	if (!ok) {
+		qWarning() << "ERROR.Failed to delete gmail_qres" << sql;
+		return false;
+	}
+
+	sql = QString("DELETE FROM %1gmail_q WHERE acc_id = %2")
+		.arg(m_metaPrefix)
+		.arg(accId);
+	ok = execQuery(sql);
+	if (!ok) {
+		qWarning() << "ERROR.Failed to delete gmail_q" << sql;
+		return false;
+	}
+
+	//..
+
     sql = QString("DELETE FROM %1gmail_account WHERE acc_id = %2")
         .arg(m_metaPrefix)
         .arg(accId);
@@ -2051,37 +2075,6 @@ mail_cache::thread_ptr mail_cache::GMailSQLiteStorage::findThread(QString thread
     rv = tc->mem_object(thread_id);
     return rv;
 };
-
-void mail_cache::GMailSQLiteStorage::insert_new_q_db_threads(query_ptr q) 
-{
-	m_qstorage->insert_db_threads(q, q->m_new_threads);
-};
-
-/*
-void mail_cache::GMailSQLiteStorage::resolveQueryThreads(QueryData& q) 
-{
-    //mail_cache::thread_ptr rv;
-
-    tcache_ptr tc = lock_tcache();
-    if (!tc) {
-        return;
-    }
-
-    if (!q.m_unresolved_thread_ids.empty()) {
-        for (auto& i : q.m_unresolved_thread_ids) {
-            auto t = tc->mem_object(i);
-            if (t) {
-                q.m_threads.push_back(t);
-                q.m_map[t->id()] = t;
-            }
-            else {
-                qWarning() << "unresolved threadid" << i << "for Q " << q.q();
-            }
-        }
-        q.m_unresolved_thread_ids.clear();
-    }
-};
-*/
 
 /**
     GMessagesStorage
@@ -2923,39 +2916,6 @@ bool mail_cache::GQueryStorage::loadQueriesFromDb()
         .arg(loaded_objects);
 #endif
 
-    /*
-    QString sql_res = QString("SELECT q_id, thread_id FROM %1gmail_qres "
-        "WHERE acc_id=%2 ORDER BY q_id")
-        .arg(m_tstorage->m_storage->metaPrefix())
-        .arg(m_tstorage->m_storage->currentAccountId());
-    QSqlQuery* qres = m_tstorage->m_storage->selectQuery(sql_res);
-    if (!qres)
-        return false;
-
-    query_ptr q_in_select = nullptr;
-
-    loaded_objects = 0;
-    while (qres->next())
-    {
-        int q_id = qres->value(0).toInt();
-        QString thread_id = qres->value(1).toString();
-
-        if (!q_in_select || q_in_select->m_db_id != q_id) {
-            auto i = m_q_dbmap.find(q_id);
-            if (i != m_q_dbmap.end()) {
-                q_in_select = i->second;
-            }
-        }
-
-        if (q_in_select) {
-            ///locate thread data
-            q_in_select->m_unresolved_thread_ids.push_back(thread_id);
-        }
-        else {
-            qWarning() << "lost Qid in DB" << q_id;
-        }
-    }
-    */
     return true;
 };
 
@@ -2984,22 +2944,32 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q)
     {
         QString thread_id = qres->value(0).toString();
         auto t = tc->mem_object(thread_id);
-        q->m_threads.push_back(t);
-        q->m_map[thread_id] = t;
+        q->m_qthreads.push_back(t);
+        q->m_qmap[thread_id] = t;
         loaded_objects++;
     }
+
+	qDebug() << "ykh-loadQueryThreadsFromDb" << q->m_db_id << sql_res << "loaded=" << loaded_objects;
 
 #ifdef API_QT_AUTOTEST
     ApiAutotest::INSTANCE() << QString("query-threads/DB-loaded %1 records")
         .arg(loaded_objects);
 #endif
 
+	if (!q->m_qthreads.empty()) {		
+		std::sort(q->m_qthreads.begin(), q->m_qthreads.end(), [&](mail_cache::thread_ptr t1, mail_cache::thread_ptr t2)
+		{
+			bool rv = (t1->internalDate() > t2->internalDate());
+			return rv;
+		});		
+	}
+
     q->m_threads_db_loaded = true;
     
     return true;
 };
 
-mail_cache::query_ptr mail_cache::GQueryStorage::ensureQueryData(QString q_str)
+mail_cache::query_ptr mail_cache::GQueryStorage::ensure_q(QString q_str)
 {
     auto i = m_qmap.find(q_str);
     if(i != m_qmap.end()){
@@ -3026,9 +2996,35 @@ mail_cache::query_ptr mail_cache::GQueryStorage::ensureQueryData(QString q_str)
         m_q_dbmap[q_id] = qd;
         return qd;
     }
+	else {
+		qWarning() << "ERROR. SQL ensure_q failed"
+			<< "err-type:" << q->lastError().type()
+			<< "native-code:" << q->lastError().nativeErrorCode()
+			<< "errtext:" << q->lastError().text()
+			<< "q_query=" << q_str;
+		return nullptr;
+	}
 
     return nullptr;
 };
+
+mail_cache::query_ptr mail_cache::GQueryStorage::lookup_q(QString q_str)
+{
+	auto i = m_qmap.find(q_str);
+	if (i == m_qmap.end()) {
+		return nullptr;
+	}
+
+	auto q = i->second;
+	if (q->m_threads_db_loaded) {
+		if (!loadQueryThreadsFromDb(q)) {
+			qWarning() << "Failed to load query from DB" << q_str;
+			return nullptr;
+		};
+	}
+	return q;
+};
+
 
 QString mail_cache::GQueryStorage::insertSQLthreads(query_ptr q)const
 {
@@ -3049,24 +3045,78 @@ void mail_cache::GQueryStorage::bindSQL(QSqlQuery* q, std::list<QString>& r)
 	q->addBindValue(threadId);
 };
 
-void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd, std::list<QString>& r)
+void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
 {
-	auto q = m_tstorage->m_storage->startTransaction(insertSQLthreads(qd));
-	if (q) {
-		bindSQL(q, r);
-		if (!q->execBatch())
-		{
-			m_tstorage->m_storage->rollbackTransaction();
-			qWarning() << "ERROR. SQL Q/insert-threads batch failed"
-				<< "err-type:" << q->lastError().type()
-				<< "native-code:" << q->lastError().nativeErrorCode()
-				<< "errtext:" << q->lastError().text();
-			return;
-		}
+	auto tc = m_tstorage->m_storage->lock_tcache();
+	if (!tc) {
+		qWarning() << "expected thread storage cache ptr";
+		return;
+	}
 
-		bool rv = m_tstorage->m_storage->commitTransaction();
-		if (!rv) {
-			qWarning() << "Failed commit Q-threads transaction";
+	std::list<QString>	new_threads;
+	for (auto& i : qd->m_qnew_thread_ids) {
+		if (qd->m_qmap.find(i) == qd->m_qmap.end()) {
+			auto t = tc->mem_object(i);
+			if (t) {
+				new_threads.push_back(i);
+				qd->m_qthreads.push_back(t);
+				qd->m_qmap[i] = t;
+			}
+			else {
+				qWarning() << "failed to locate thread in cache" << i;
+			}
 		}
 	}
+
+	if (qd && !new_threads.empty()) {
+		auto q = m_tstorage->m_storage->startTransaction(insertSQLthreads(qd));
+		if (q) {
+			bindSQL(q, new_threads);
+			if (!q->execBatch())
+			{
+				m_tstorage->m_storage->rollbackTransaction();
+				qWarning() << "ERROR. SQL Q/insert-threads batch failed"
+					<< "err-type:" << q->lastError().type()
+					<< "native-code:" << q->lastError().nativeErrorCode()
+					<< "errtext:" << q->lastError().text();
+				return;
+			}
+
+			bool rv = m_tstorage->m_storage->commitTransaction();
+			if (!rv) {
+				qWarning() << "Failed commit Q-threads transaction";
+			}
+		}
+
+		if (!qd->m_qthreads.empty()) {			
+			std::sort(qd->m_qthreads.begin(), qd->m_qthreads.end(), [&](mail_cache::thread_ptr t1, mail_cache::thread_ptr t2)
+			{
+				bool rv = (t1->internalDate() > t2->internalDate());
+				return rv;
+			});
+		}
+	}
+};
+
+bool mail_cache::GQueryStorage::remove_q(query_ptr q) 
+{
+	QString sql_res = QString("DELETE FROM %1gmail_qres WHERE q_id=%2 AND acc_id=%3")
+		.arg(m_tstorage->m_storage->metaPrefix())
+		.arg(q->m_db_id)
+		.arg(m_tstorage->m_storage->currentAccountId());
+	QSqlQuery* qr = m_tstorage->m_storage->prepareQuery(sql_res);
+	if (!qr)return false;
+	if (!qr->exec()) return false;
+
+	QString sql_q = QString("DELETE FROM %1gmail_q WHERE q_id=%2 AND acc_id=%3")
+		.arg(m_tstorage->m_storage->metaPrefix())
+		.arg(q->m_db_id)
+		.arg(m_tstorage->m_storage->currentAccountId());
+	QSqlQuery* qq = m_tstorage->m_storage->prepareQuery(sql_q);
+	if (!qq)return false;
+	if (!qq->exec()) return false;
+
+	m_qmap.erase(q->qStr());
+	m_q_dbmap.erase(q->m_db_id);
+	return true;
 };

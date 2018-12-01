@@ -170,15 +170,13 @@ mail_cache::tdata_result mail_cache::GmailCacheRoutes::getNextCacheThreads(
     int messagesCount /*= 40*/,
     QString pageToken /*= ""*/,
     QStringList* labels /*= nullptr*/,
-    QString q /*= ""*/,
-    bool save_query /*= false*/) 
+    QString q /*= ""*/) 
 {
     return getNextCacheThreads_Async(
         messagesCount,
         pageToken,
         labels,
-        q,
-        save_query)->waitForResultAndRelease();
+        q)->waitForResultAndRelease();
 };
 
 
@@ -186,17 +184,17 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheThr
     int threadsCount /*= 40*/,
     QString pageToken /*= ""*/,
     QStringList* labels /*= nullptr*/,
-    QString q_str /*= ""*/,
-    bool save_query /*= false*/)
+    QString q_str /*= ""*/ /*,
+    bool save_query = false*/)
 {
     q_str = q_str.trimmed();
-    
+    /*
     query_ptr q;
     if(save_query && !q_str.isEmpty()){
-        q = m_lite_storage->m_qstorage->ensureQueryData(q_str);
+        q = m_lite_storage->m_qstorage->ensure_q(q_str);
     }
-    
-    auto rfetcher = newThreadResultFetcher(q);
+    */
+    auto rfetcher = newThreadResultFetcher();
     gmail::ListArg listArg;
     listArg.setMaxResults(threadsCount);
     listArg.setPageToken(pageToken);
@@ -217,12 +215,12 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheThr
             h.id = m.id();
             h.hid = m.historyid();
             id_list.push_back(h);
-
+			/*
 			if (q) {
 				if (q->m_map.find(m.id()) == q->m_map.end()) {
 					q->m_new_threads.push_back(m.id());
 				}
-			}
+			}*/
         }
         rfetcher->m_nextPageToken = tlist->nextpagetoken();
 		getCacheThreadList_Async(id_list, rfetcher);
@@ -235,6 +233,57 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheThr
     return rfetcher;
 };
 
+mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async(
+	query_ptr q,
+	int threadsCount /*= 40*/,
+	QString pageToken /*= ""*/) 
+{
+	auto rfetcher = newThreadResultFetcher(q);
+	gmail::ListArg listArg;
+	listArg.setMaxResults(threadsCount);
+	listArg.setPageToken(pageToken);
+	listArg.setQ(q->qStr());
+
+	///this will return list of thread Ids with HistoryId
+	m_gmail_routes.getThreads()->list_Async(listArg)->then([=](std::unique_ptr<threads::ThreadListRes> tlist)
+	{
+		std::list<HistId> id_list;
+
+		for (auto& m : tlist->threads())
+		{
+			HistId h;
+			h.id = m.id();
+			h.hid = m.historyid();
+			id_list.push_back(h);
+
+			if (q) {
+				if (q->m_qmap.find(m.id()) == q->m_qmap.end()) {
+					q->m_qnew_thread_ids.push_back(m.id());
+				}
+			}
+		}
+		rfetcher->m_nextPageToken = tlist->nextpagetoken();
+		getCacheThreadList_Async(id_list, rfetcher);
+	},
+		[=](std::unique_ptr<GoogleException> ex)
+	{
+		rfetcher->failed_callback(std::move(ex));
+	});
+
+	return rfetcher;
+};
+
+mail_cache::tdata_result mail_cache::GmailCacheRoutes::getQCache(
+	mail_cache::query_ptr q,
+	int resultsCount /*= 40*/,
+	QString pageToken /*= ""*/) 
+{
+	return getQCache_Async(
+		q,
+		resultsCount,
+		pageToken)->waitForResultAndRelease();
+
+};
 
 
 mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheThreadList_Async(
@@ -676,23 +725,41 @@ void mail_cache::GmailCacheRoutes::runAutotest()
             ApiAutotest::INSTANCE() << s;
         }
     }
-    /*
-    bool check_email = true;
-    if (check_email)
-    {
-        idx = 1;
-        mail_cache::mdata_result lst2 = getNextCacheMessages();
-        for (auto& i : lst2->result_list)
-        {
-            mail_cache::MessageData* m = i.get();
-            QString s = QString("%1. %2 %3").arg(idx).arg(m->id()).arg(m->snippet());
-            ApiAutotest::INSTANCE() << s;
-            idx++;
-        }
-        QString s = QString("Next(new) messages %1").arg(lst2->result_list.size());
-        ApiAutotest::INSTANCE() << s;
-    }
-    */
+
+	//....
+	qDebug() << "check Q cache";
+	bool check_q = true;
+	if (check_q)
+	{
+		idx = 1;
+
+		std::list<QString> qfilters;
+		qfilters.push_back("from:mike@gmail.com");
+		qfilters.push_back("from:judy@gmail.com");
+		qfilters.push_back("from:john@gmail.com");
+		qfilters.push_back("from:mary@gmail.com");
+
+		for (auto& q_str : qfilters) {
+			auto q1 = m_lite_storage->m_qstorage->ensure_q(q_str);
+			if (q1) {
+				auto lst2 = getQCache(q1);
+				for (auto& i : lst2->result_list) {
+					auto mlst = i->messages();
+					for (auto& j : mlst)
+					{
+						auto m = j.get();
+						QString s = QString("%1. %2 %3").arg(idx).arg(m->id()).arg(m->snippet());
+						ApiAutotest::INSTANCE() << s;
+						idx++;
+					}
+
+					QString s = QString("Next(new) Q/threads %1").arg(lst2->result_list.size());
+					ApiAutotest::INSTANCE() << s;
+				}
+			}
+		}
+	}
+	//...
 
     bool randomize_labels = true;
     if (randomize_labels)

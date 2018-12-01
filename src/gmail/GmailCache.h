@@ -35,6 +35,7 @@ namespace googleQt{
         using msg_list          = std::list<msg_ptr>;
         using msg_map           = std::map<QString, msg_ptr>;
         using thread_list       = std::list<thread_ptr>;
+		using thread_arr		= std::vector<thread_ptr>;
         using thread_map        = std::map<QString, thread_ptr>;
         using query_map         = std::map<QString, query_ptr>;
         using query_db_map      = std::map<int, query_ptr>;
@@ -333,15 +334,19 @@ namespace googleQt{
         class QueryData
         {
         public:
-            QString         q()const { return m_q; }
-            void            setQ(QString val) { m_q = val; }
-			bool			hasNewUnsavedThreads()const { return !m_new_threads.empty(); }
+            QString				qStr()const { return m_q; }
+            void				setQStr(QString val) { m_q = val; }
+			bool				hasNewUnsavedThreads()const { return !m_qnew_thread_ids.empty(); }
+			const thread_arr&	qtarr()const { return m_qthreads; }
+			thread_arr&			qtarr(){ return m_qthreads; }
+			const thread_map&	qtmap()const { return m_qmap; }
+
         protected:          
             int					m_db_id{ -1 };
             QString				m_q;            
-            thread_list			m_threads;
-            thread_map			m_map;
-			std::list<QString>	m_new_threads;
+			thread_arr			m_qthreads;
+            thread_map			m_qmap;
+			std::list<QString>	m_qnew_thread_ids;
             bool            m_threads_db_loaded{false};
         private:
             QueryData(int dbid, QString qstr);
@@ -509,10 +514,12 @@ namespace googleQt{
         class GQueryStorage 
         {
         public:
-            GQueryStorage(GThreadsStorage* s);
-            query_ptr ensureQueryData(QString q);
-			void insert_db_threads(query_ptr q, std::list<QString>& r);
+            GQueryStorage(GThreadsStorage* s);            			
+			query_ptr ensure_q(QString q_str);
+			query_ptr lookup_q(QString q_str);
+			bool remove_q(query_ptr q);
         protected:
+			void insert_db_threads(query_ptr q);
             bool loadQueriesFromDb();
             bool loadQueryThreadsFromDb(query_ptr d);
 			QString insertSQLthreads(query_ptr q)const;
@@ -522,6 +529,7 @@ namespace googleQt{
             query_map               m_qmap;
             query_db_map            m_q_dbmap;
             friend class GMailSQLiteStorage;
+			friend class GThreadCacheQueryTask;
         };
         
         /**
@@ -586,9 +594,9 @@ namespace googleQt{
             /// returns ID of new account or -1 in case of error            
             int addAccountDb(QString userId);
 
+			GQueryStorage*   qstorage() { return  m_qstorage.get(); }
+
             thread_ptr findThread(QString thread_id);
-			void insert_new_q_db_threads(query_ptr q);
-            //void resolveQueryThreads(QueryData& );
         protected:
             QString metaPrefix()const { return m_metaPrefix; }
             bool execQuery(QString sql);

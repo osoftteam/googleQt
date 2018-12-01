@@ -46,17 +46,25 @@ namespace googleQt
 
             /// check for new thread - get top threadsCount threads and update cache
             mail_cache::tdata_result getNextCacheThreads(
-                int messagesCount = 40,
+                int resultsCount = 40,
                 QString pageToken = "",
                 QStringList* labels = nullptr,
-                QString q_str = "",
-                bool save_query = false);
+                QString q_str = "");
             mail_cache::GThreadCacheQueryTask* getNextCacheThreads_Async(
-                int threadsCount = 40,
+                int resultsCount = 40,
                 QString pageToken = "",
                 QStringList* labels = nullptr,
-                QString q_str = "",
-                bool save_query = false);
+                QString q_str = "");
+
+			mail_cache::tdata_result getQCache(
+				query_ptr q,
+				int resultsCount = 40,
+				QString pageToken = "");
+			mail_cache::GThreadCacheQueryTask* getQCache_Async(
+				query_ptr q,
+				int resultsCount = 40,
+				QString pageToken = "");
+
 
             /// load threads by ID-list while updating local cache
             mail_cache::GThreadCacheQueryTask* getCacheThreadList_Async(const std::list<HistId>& id_list,
