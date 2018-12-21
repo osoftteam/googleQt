@@ -280,6 +280,12 @@ QByteArray SendMimeMessageArg::toRfc822()const
     rv =  QString("From: %1\r\n").arg(m_From).toStdString().c_str();
     rv += QString("To: %1\r\n").arg(m_To);
     rv += QString("Subject: %1\r\n").arg(m_Subject);
+	if (!m_references.isEmpty()) {
+		rv += QString("References: \r\n").arg(m_references);
+	}
+	if (!m_InReplyToMsgId.isEmpty()) {
+		rv += QString("In-Reply-To: <%1@mail.gmail.com>\r\n").arg(m_InReplyToMsgId);
+	}
     rv += QString("MIME-Version: 1.0\r\n");
     rv += QString("Content-Type: multipart/alternative; boundary=\"%1\"\r\n\r\n").arg(boundary);
     for (auto& p : m_body_parts)
@@ -310,7 +316,10 @@ void SendMimeMessageArg::toJson(QJsonObject& js)const
 {
     QByteArray data(toRfc822());
     QString res = data.toBase64(QByteArray::Base64UrlEncoding);
-    js["raw"] = res;    
+    js["raw"] = res;
+	if (!m_threadId.isEmpty()) {
+		js["threadId"] = m_threadId;
+	}
 };
 
 SendMimeMessageArg::operator QJsonObject()const {

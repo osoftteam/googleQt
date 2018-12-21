@@ -107,6 +107,7 @@ namespace googleQt{
             QString plain()const { return m_plain; }
             QString html()const { return m_html; }
             qlonglong internalDate()const { return m_internalDate; }
+			QString references()const {return m_references;}
 
             bool hasLabel(uint64_t data)const;
             bool hasAllLabels(uint64_t data)const;
@@ -125,7 +126,8 @@ namespace googleQt{
                                QString bcc,
                                QString subject,
                                QString snippet,
-                               qlonglong labels);
+                               qlonglong labels,
+							   QString references);
             void updateBody(QString plain, QString html);
         protected:
             int     m_accountId{-1};
@@ -141,6 +143,7 @@ namespace googleQt{
             qlonglong m_internalDate;
             uint64_t m_labels;
             ATTACHMENTS_LIST m_attachments;
+			QString m_references;
         private:
             ///constructor for small(snippet) object
             MessageData(int accId,
@@ -153,7 +156,8 @@ namespace googleQt{
                 QString subject,
                 QString snippet,
                 qlonglong internalDate,
-                qlonglong labels);
+                qlonglong labels,
+				QString references);
 
             ///constructor for big(snippet+context) object
             MessageData(int accId,
@@ -168,7 +172,8 @@ namespace googleQt{
                 QString plain,
                 QString html,
                 qlonglong internalDate,
-                qlonglong labels);
+                qlonglong labels,
+				QString references);
 
             ///constructor for loading from DB
             MessageData(int accId,
@@ -184,7 +189,8 @@ namespace googleQt{
                         QString plain,
                         QString html,
                         qlonglong internalDate,
-                        qlonglong labels);
+                        qlonglong labels,
+						QString references);
 
             friend class GMailCacheQueryTask;
             friend class GMailSQLiteStorage;
@@ -405,7 +411,8 @@ namespace googleQt{
                              QString& to,
                              QString& cc,
                              QString& bcc,
-                             QString& subject);
+                             QString& subject,
+							 QString& references);
             void loadLabels(messages::MessageResource* m, uint64_t& labels);
             void loadAttachments(messages::MessageResource* m, ATTACHMENTS_LIST& lst);
         protected:

@@ -29,6 +29,7 @@ GoogleTask<messages::MessageResource>* mail_cache::MessagesReceiver::routeReques
             arg.headers().push_back("To");
             arg.headers().push_back("Cc");
             arg.headers().push_back("Bcc");
+			arg.headers().push_back("References");
         }
     else if (m_msg_format == EDataState::body)
         {
@@ -172,7 +173,8 @@ mail_cache::MessageData::MessageData(int accId,
                                      QString subject,
                                      QString snippet,
                                      qlonglong internalDate,
-                                     qlonglong labels)
+                                     qlonglong labels,
+									 QString references)
     :CacheData(EDataState::snippet, id),
     m_accountId(accId),
     m_thread_id(thread_id),
@@ -182,7 +184,8 @@ mail_cache::MessageData::MessageData(int accId,
     m_bcc(bcc),
     m_subject(subject),
     m_snippet(snippet),
-    m_internalDate(internalDate)     
+    m_internalDate(internalDate),
+	m_references(references)
 {
     m_labels = labels;
 };
@@ -199,7 +202,8 @@ mail_cache::MessageData::MessageData(int accId,
                                      QString plain,
                                      QString html,
                                      qlonglong internalDate,
-                                     qlonglong labels)
+                                     qlonglong labels,
+									 QString references)
 :CacheData(EDataState::body, id),
     m_accountId(accId),
     m_thread_id(thread_id),
@@ -211,7 +215,8 @@ mail_cache::MessageData::MessageData(int accId,
     m_snippet(snippet),
     m_plain(plain),
     m_html(html),
-    m_internalDate(internalDate)
+    m_internalDate(internalDate),
+	m_references(references)
 {
     m_labels = labels;
 };
@@ -229,8 +234,8 @@ mail_cache::MessageData::MessageData(int accId,
                                      QString plain,
                                      QString html,
                                      qlonglong internalDate,
-                                     qlonglong labels/*,
-                                     qreal zoom*/)
+                                     qlonglong labels,
+									 QString references)
 :CacheData(EDataState::body, id),
 m_accountId(accId),
     m_thread_id(thread_id),
@@ -242,10 +247,10 @@ m_accountId(accId),
     m_snippet(snippet),
     m_plain(plain),
     m_html(html),
-    m_internalDate(internalDate)
+    m_internalDate(internalDate),
+	m_references(references)
 {
     m_flags.agg_state = agg_state;
-    //m_state_agg = agg_state;
     m_labels = labels;
 };
 
@@ -255,10 +260,10 @@ void mail_cache::MessageData::updateSnippet(QString from,
                                             QString bcc,
                                             QString subject,
                                             QString snippet,
-                                            qlonglong labels)
+                                            qlonglong labels,
+											QString references)
 {
     m_flags.agg_state |= static_cast<int>(EDataState::snippet);
-    //m_state_agg |= static_cast<int>(EDataState::snippet);
     m_from = from;
     m_to = to;
     m_cc = cc;
@@ -266,6 +271,7 @@ void mail_cache::MessageData::updateSnippet(QString from,
     m_subject = subject;
     m_snippet = snippet;
     m_labels = labels;
+	m_references = references;
 };
 
 void mail_cache::MessageData::updateBody(QString plain, QString html)
@@ -601,7 +607,8 @@ void mail_cache::GMailCacheQueryTask::loadHeaders(messages::MessageResource* m,
                                                   QString& to,
                                                   QString& cc,
                                                   QString& bcc,
-                                                  QString& subject)
+                                                  QString& subject,
+												  QString& references)
 {
     auto& header_list = m->payload().headers();
     for (auto& h : header_list)
@@ -626,6 +633,10 @@ void mail_cache::GMailCacheQueryTask::loadHeaders(messages::MessageResource* m,
                 {
                     subject = h.value();
                 }
+			else if (h.name().compare("References", Qt::CaseInsensitive) == 0)
+			{
+				references = h.value();
+			}
         }
 };
 
@@ -668,8 +679,8 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
             {
                 uint64_t labels;
                 loadLabels(m, labels);
-                QString from, to, cc, bcc, subject;
-                loadHeaders(m, from, to, cc, bcc, subject);
+                QString from, to, cc, bcc, subject, references;
+                loadHeaders(m, from, to, cc, bcc, subject, references);
                 md.reset(new MessageData(m_r.storage()->currentAccountId(),
                                            m->id(),
                                            m->threadid(),
@@ -680,7 +691,8 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
                                            subject, 
                                            m->snippet(), 
                                            m->internaldate(),
-                                           labels));
+                                           labels,
+										   references));
                 //snipped - there will be no attachments here and no body..
                 add_result(md, true);
             }break;
@@ -734,19 +746,20 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
                     {
                         uint64_t labels;
                         loadLabels(m, labels);
-                        QString from, to, cc, bcc, subject;
-                        loadHeaders(m, from, to, cc, bcc, subject);
+                        QString from, to, cc, bcc, subject, references;
+                        loadHeaders(m, from, to, cc, bcc, subject, references);
                         md.reset(new MessageData(m_r.storage()->currentAccountId(),
-                                                                                        m->id(),
-                                                                                        m->threadid(),
-                                                                                        from, 
-                                                                                        to, 
-                                                                                        cc, 
-                                                                                        bcc, 
-                                                                                        subject, 
-                                                                                        m->snippet(), 
-                                                                                        m->internaldate(),
-                                                                                        labels));
+                                            m->id(),
+                                            m->threadid(),
+                                            from, 
+                                            to, 
+                                            cc, 
+                                            bcc, 
+                                            subject, 
+                                            m->snippet(), 
+                                            m->internaldate(),
+                                            labels, 
+											references));
                         add_result(md, true);
                         loadAttachments(m, md->m_attachments);
                         md->updateBody(plain_text, html_text);
@@ -758,9 +771,9 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
                             {
                                 uint64_t labels;
                                 loadLabels(m, labels);
-                                QString from, to, cc, bcc, subject;
-                                loadHeaders(m, from, to, cc, bcc, subject);
-                                md->updateSnippet(from, to, cc, bcc, subject, m->snippet(), labels);
+                                QString from, to, cc, bcc, subject, references;
+                                loadHeaders(m, from, to, cc, bcc, subject, references);
+                                md->updateSnippet(from, to, cc, bcc, subject, m->snippet(), labels, references);
                             }
                         loadAttachments(m, md->m_attachments);
                         md->updateBody(plain_text, html_text);
@@ -1004,7 +1017,7 @@ bool mail_cache::GMailSQLiteStorage::ensureMailTables()
     /// messages ///
     QString sql_messages = QString("CREATE TABLE IF NOT EXISTS %1gmail_msg(acc_id INTEGER NOT NULL, thread_id TEXT NOT NULL, msg_id TEXT NOT NULL, msg_from TEXT, "
         "msg_to TEXT, msg_cc TEXT, msg_bcc TEXT, msg_subject TEXT, msg_snippet TEXT, msg_plain TEXT, "
-        "msg_html TEXT, internal_date INTEGER, msg_state INTEGER, msg_cache_lock INTEGER, msg_labels INTEGER)").arg(m_metaPrefix);
+        "msg_html TEXT, internal_date INTEGER, msg_state INTEGER, msg_cache_lock INTEGER, msg_labels INTEGER, msg_references TEXT)").arg(m_metaPrefix);
     if (!execQuery(sql_messages))
         return false;
 
@@ -2088,7 +2101,7 @@ mail_cache::GMessagesStorage::GMessagesStorage(GMailSQLiteStorage* s, mcache_ptr
 QString mail_cache::GMessagesStorage::insertSnippetSQL()const 
 {
     QString sql = QString("INSERT INTO %1gmail_msg(msg_state, msg_from, msg_to, msg_cc, msg_bcc, msg_subject, "
-        "msg_snippet, internal_date, msg_labels, msg_id, acc_id, thread_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, %2, ?)")
+        "msg_snippet, internal_date, msg_labels, msg_references, msg_id, acc_id, thread_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, %2, ?)")
         .arg(m_storage->metaPrefix())
         .arg(m_storage->currentAccountId());
     return sql;
@@ -2097,7 +2110,7 @@ QString mail_cache::GMessagesStorage::insertSnippetSQL()const
 QString mail_cache::GMessagesStorage::insertBodySQL()const 
 {
     QString sql = QString("INSERT INTO %1gmail_msg(msg_state, msg_from, msg_to, msg_cc, msg_bcc, msg_subject, "
-        "msg_snippet, msg_plain, msg_html, internal_date, msg_labels, msg_id, acc_id, thread_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, %2, ?)")
+        "msg_snippet, msg_plain, msg_html, internal_date, msg_labels, msg_references, msg_id, acc_id, thread_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, %2, ?)")
         .arg(m_storage->metaPrefix())
         .arg(m_storage->currentAccountId());
     return sql;
@@ -2106,7 +2119,7 @@ QString mail_cache::GMessagesStorage::insertBodySQL()const
 QString mail_cache::GMessagesStorage::updateSnippetSQL()const 
 {
     QString sql = QString("UPDATE %1gmail_msg SET msg_state=?, msg_from=?, msg_to=?, "
-        "msg_cc=?, msg_bcc=?, msg_subject=?, msg_snippet=?, internal_date=?, msg_labels=? WHERE msg_id=? AND acc_id=%2 AND thread_id=?")
+        "msg_cc=?, msg_bcc=?, msg_subject=?, msg_snippet=?, internal_date=?, msg_labels=?, msg_references=? WHERE msg_id=? AND acc_id=%2 AND thread_id=?")
         .arg(m_storage->metaPrefix())
         .arg(m_storage->currentAccountId());
     return sql;
@@ -2115,7 +2128,7 @@ QString mail_cache::GMessagesStorage::updateSnippetSQL()const
 QString mail_cache::GMessagesStorage::updateBodySQL()const 
 {
     QString sql = QString("UPDATE %1gmail_msg SET msg_state=?, msg_from=?, msg_to=?, msg_cc=?, msg_bcc=?, "
-        "msg_subject=?, msg_snippet=?, msg_plain=?, msg_html=?, internal_date=?, msg_labels=? WHERE msg_id=? AND acc_id=%2 AND thread_id=?")
+        "msg_subject=?, msg_snippet=?, msg_plain=?, msg_html=?, internal_date=?, msg_labels=?, msg_references=? WHERE msg_id=? AND acc_id=%2 AND thread_id=?")
         .arg(m_storage->metaPrefix())
         .arg(m_storage->currentAccountId());
     return sql;
@@ -2124,7 +2137,7 @@ QString mail_cache::GMessagesStorage::updateBodySQL()const
 void mail_cache::GMessagesStorage::bindSQL(EDataState state, QSqlQuery* q, CACHE_LIST<MessageData>& r)
 {
     QVariantList aggState, from, to, cc, bcc, subject, snippet,
-        plain, html, internalDate, labelsBitMap, id, threadId;
+        plain, html, internalDate, labelsBitMap, references, id, threadId;
     for (auto& i : r)
     {
         aggState << i->aggState();
@@ -2140,8 +2153,8 @@ void mail_cache::GMessagesStorage::bindSQL(EDataState state, QSqlQuery* q, CACHE
         }
         internalDate << i->internalDate();
         labelsBitMap << static_cast<qint64>(i->labelsBitMap());
+		references << i->references();
         id << i->id();
-        //currentAccountId << m_storage->currentAccountId();
         threadId << i->threadId();
     }
 
@@ -2158,6 +2171,7 @@ void mail_cache::GMessagesStorage::bindSQL(EDataState state, QSqlQuery* q, CACHE
     }
     q->addBindValue(internalDate);
     q->addBindValue(labelsBitMap);
+	q->addBindValue(references);
     q->addBindValue(id);
     q->addBindValue(threadId);
 };
@@ -2177,6 +2191,7 @@ bool mail_cache::GMessagesStorage::execOutOfBatchSQL(EDataState state, QSqlQuery
     }
     q->addBindValue(m->internalDate());
     q->addBindValue(static_cast<qint64>(m->labelsBitMap()));
+	q->addBindValue(m->references());
     q->addBindValue(m->id());
     q->addBindValue(m->threadId());
     return q->exec();
@@ -2461,7 +2476,7 @@ bool mail_cache::GMessagesStorage::loadMessagesFromDb()
     thread_ptr thread_in_select = nullptr;
 
     QString sql = QString("SELECT msg_state, msg_id, thread_id, msg_from, msg_to, msg_cc, msg_bcc, "
-                          "msg_subject, msg_snippet, msg_plain, msg_html, internal_date, msg_labels FROM %1gmail_msg WHERE acc_id=%2 ORDER BY thread_id, internal_date DESC")
+                          "msg_subject, msg_snippet, msg_plain, msg_html, internal_date, msg_labels, msg_references FROM %1gmail_msg WHERE acc_id=%2 ORDER BY thread_id, internal_date DESC")
         .arg(m_storage->metaPrefix())
         .arg(m_storage->currentAccountId());
     QSqlQuery* q = m_storage->selectQuery(sql);
@@ -2540,6 +2555,7 @@ mail_cache::msg_ptr mail_cache::GMessagesStorage::loadMessageFromDb(thread_ptr t
         }
     qlonglong  msg_internalDate = q->value(11).toLongLong();
     qlonglong  msg_labels = q->value(12).toLongLong();
+	QString msg_references = q->value(13).toString();
 
     md = std::shared_ptr<MessageData>(new MessageData(m_storage->currentAccountId(),
         thread_id,
@@ -2554,7 +2570,8 @@ mail_cache::msg_ptr mail_cache::GMessagesStorage::loadMessageFromDb(thread_ptr t
         msg_plain, 
         msg_html, 
         msg_internalDate,
-        msg_labels));
+        msg_labels,
+		msg_references));
     md->markDbRecord();
     if (t1) {
         t1->add_msg(md);
