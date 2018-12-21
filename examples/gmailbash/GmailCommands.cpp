@@ -404,10 +404,10 @@ void GmailCommands::printSnippet(messages::MessageResource* r)
     }
 }
 
+static std::set<QString> headers_to_print = { "From", "To", "Subject", "CC", "BCC", "References" };
+
 void GmailCommands::printMessage(messages::MessageResource* r)
-{
-    std::set<QString> headers_to_print = {"From", "To", "Subject", "CC", "BCC"};
-    
+{    
     std::cout << "id="<< r->id() << std::endl
               << "tid=" << r->threadid() << std::endl
               << "snippet=" << r->snippet() << std::endl;
@@ -540,7 +540,11 @@ void GmailCommands::get(QString msg_id)
     
     try
         {
-            auto r = m_gm->getMessages()->get(gmail::IdArg(m_c.userId(), msg_id));
+			gmail::IdArg arg(m_c.userId(), msg_id);
+			for (auto& h : headers_to_print) {
+				arg.headers().push_back(h);
+			}
+            auto r = m_gm->getMessages()->get(arg);
             printMessage(r.get());
         }
     catch(GoogleException& e)
