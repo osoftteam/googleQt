@@ -350,7 +350,7 @@ namespace googleQt{
             void setBCC(QString bcc_val) { m_BCC = bcc_val; }
 
 			QString getThreadId()const { return m_threadId; }
-			void    setThreadId(QString thread_id) { m_threadId = m_threadId; }
+			void    setThreadId(QString thread_id) { m_threadId = thread_id; }
 
 			QString getInReplyToMsgId()const { return m_InReplyToMsgId; }
 			void	setInReplyToMsgId(QString msgId) { m_InReplyToMsgId = msgId; }
