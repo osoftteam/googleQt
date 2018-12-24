@@ -135,7 +135,6 @@ void mail_cache::GThreadCache::reorder_data_on_completed_fetch(const CACHE_LIST<
         ApiAutotest::INSTANCE() << QString("%1 %2 %3").arg(idx).arg(t->id()).arg(t->internalDate());
         idx++;
     }
-    //qDebug() << "tsort" << m_ord.size() << from_cloud.size();
 #else
     Q_UNUSED(from_cloud);
 #endif //API_QT_AUTOTEST
@@ -2965,8 +2964,6 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q)
         q->m_qmap[thread_id] = t;
         loaded_objects++;
     }
-
-	qDebug() << "ykh-loadQueryThreadsFromDb" << q->m_db_id << sql_res << "loaded=" << loaded_objects;
 
 #ifdef API_QT_AUTOTEST
     ApiAutotest::INSTANCE() << QString("query-threads/DB-loaded %1 records")

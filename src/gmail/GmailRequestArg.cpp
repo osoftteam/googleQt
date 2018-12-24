@@ -280,14 +280,19 @@ QByteArray SendMimeMessageArg::toRfc822()const
     rv =  QString("From: %1\r\n").arg(m_From).toStdString().c_str();
     rv += QString("To: %1\r\n").arg(m_To);
     rv += QString("Subject: %1\r\n").arg(m_Subject);
-	if (!m_references.isEmpty()) {
-		rv += QString("References: \r\n").arg(m_references);
-	}
+    QString ref_str = m_references;
 	if (!m_InReplyToMsgId.isEmpty()) {
 		rv += QString("In-Reply-To: <%1@mail.gmail.com>\r\n").arg(m_InReplyToMsgId);
+        ref_str += QString("<%1@mail.gmail.com>").arg(m_InReplyToMsgId);
+	}
+    
+	if (!ref_str.isEmpty()) {
+		rv += QString("References: %1\r\n").arg(ref_str);
 	}
     rv += QString("MIME-Version: 1.0\r\n");
     rv += QString("Content-Type: multipart/alternative; boundary=\"%1\"\r\n\r\n").arg(boundary);
+    //    qDebug() << "ykh-SendMimeMessageArg::toRfc822=" << rv;
+    //    qDebug() << "ykh-SendMimeMessageArg::m_threadId=" << m_threadId;
     for (auto& p : m_body_parts)
         {
             rv += QString("--%1\r\n").arg(boundary);
