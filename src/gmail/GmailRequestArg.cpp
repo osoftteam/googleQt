@@ -291,8 +291,6 @@ QByteArray SendMimeMessageArg::toRfc822()const
 	}
     rv += QString("MIME-Version: 1.0\r\n");
     rv += QString("Content-Type: multipart/alternative; boundary=\"%1\"\r\n\r\n").arg(boundary);
-    //    qDebug() << "ykh-SendMimeMessageArg::toRfc822=" << rv;
-    //    qDebug() << "ykh-SendMimeMessageArg::m_threadId=" << m_threadId;
     for (auto& p : m_body_parts)
         {
             rv += QString("--%1\r\n").arg(boundary);

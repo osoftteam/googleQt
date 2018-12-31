@@ -33,6 +33,7 @@ namespace googleQt{
         using thread_ptr        = std::shared_ptr<googleQt::mail_cache::ThreadData>;
         using query_ptr         = std::shared_ptr<googleQt::mail_cache::QueryData>;
         using msg_list          = std::list<msg_ptr>;
+		using msg_arr			= std::vector<msg_ptr>;
         using msg_map           = std::map<QString, msg_ptr>;
         using thread_list       = std::list<thread_ptr>;
 		using thread_arr		= std::vector<thread_ptr>;
@@ -303,8 +304,8 @@ namespace googleQt{
             QString snippet()const { return m_snippet; }
             void    merge(CacheData* other)override;
             msg_ptr findMessage(QString id);
-            const msg_list& messages()const{return m_messages;}
-            msg_list& messages(){return m_messages;}
+            const msg_arr& messages()const{return m_messages;}
+			msg_arr& messages(){return m_messages;}
             msg_ptr head() { return m_head; };
             qlonglong internalDate()const;
 
@@ -313,12 +314,13 @@ namespace googleQt{
 
             bool hasLabel(uint64_t data)const;
             bool hasAllLabels(uint64_t data)const;
+			void resortMessages();
         protected:          
             int         m_messages_count;
             QString     m_snippet;
             uint64_t    m_labels{0};
-            msg_list    m_messages;
-            msg_map     m_map;
+			msg_arr     m_messages;
+            msg_map     m_mmap;
             msg_ptr     m_head;
         private:
             ThreadData(

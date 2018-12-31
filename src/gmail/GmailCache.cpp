@@ -509,8 +509,15 @@ void mail_cache::ThreadData::merge(CacheData* )
 
 void mail_cache::ThreadData::add_msg(msg_ptr m) 
 {
+#ifdef _DEBUG
+	auto i = m_mmap.find(m->id());
+	if (i != m_mmap.end()) {
+		qWarning() << "duplicate message in thread" << m->id();
+	}
+#endif
+
     m_messages.push_back(m);
-    m_map[m->id()] = m;
+	m_mmap[m->id()] = m;
     m_labels |= m->labelsBitMap();
     
     if (m_head) {
@@ -526,13 +533,22 @@ void mail_cache::ThreadData::add_msg(msg_ptr m)
 mail_cache::msg_ptr mail_cache::ThreadData::findMessage(QString id)
 {
     mail_cache::msg_ptr r;
-    auto i = m_map.find(id);
-    if (i != m_map.end()) {
+    auto i = m_mmap.find(id);
+    if (i != m_mmap.end()) {
         r = i->second;
     }
     return r;
 };
 
+void mail_cache::ThreadData::resortMessages() 
+{
+	std::sort(m_messages.begin(), m_messages.end(), [&](mail_cache::msg_ptr m1, mail_cache::msg_ptr m2)
+	{
+		bool rv = (m1->internalDate() > m2->internalDate());
+		return rv;
+	});
+
+};
 
 qlonglong mail_cache::ThreadData::internalDate()const
 {
@@ -784,7 +800,10 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
     if(md){
         auto t = m_r.tcache()->mem_object(md->threadId());
         if(t){
-            t->add_msg(md);
+			auto m2 = t->findMessage(md->id());
+			if (!m2) {
+				t->add_msg(md);
+			}
         }
         else{
             qWarning() << "failed to locate thread for message"
@@ -871,7 +890,7 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const std::list<QSt
         }
         
         auto r = m_r.getCacheMessages_Async(EDataState::snippet, msg_list2resolve);
-        r->then([=](std::unique_ptr<googleQt::CacheDataResult<googleQt::mail_cache::MessageData>>)
+        r->then([=](std::unique_ptr<googleQt::CacheDataResult<googleQt::mail_cache::MessageData>> mr)
         {
             if (!m_updated_threads.empty()) {
                 m_cache->update_persistent_storage(EDataState::snippet, m_updated_threads);
@@ -892,6 +911,16 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const std::list<QSt
             if (!m_completed->from_cloud.empty()) {
                 m_cache->reorder_data_on_completed_fetch(m_completed->from_cloud);
             }
+
+			if (!mr->from_cloud.empty()) {
+				for (auto& m : mr->from_cloud) {
+					auto t = m_r.tcache()->mem_object(m->threadId());
+					if (t) {
+						t->resortMessages();
+					}
+				}
+			}
+
             notifyOnCompletedFromCache();
         },
             [=](std::unique_ptr<GoogleException> ex)
