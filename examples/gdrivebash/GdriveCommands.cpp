@@ -80,6 +80,10 @@ void GdriveCommands::ls(QString nextToken)
 
 void GdriveCommands::ls_folders(QString nextToken)
 {
+    std::string name_filter;
+    std::cout << "filter name? [string]" << std::endl;
+    getline(std::cin, name_filter);
+    
     try
         {
             FileListArg arg(nextToken);
@@ -88,6 +92,11 @@ void GdriveCommands::ls_folders(QString nextToken)
             const std::list <files::FileResource>& files = lst->files();
             int idx = 1;
             for(const files::FileResource& f : files){
+                if(!name_filter.empty()){
+                    auto p = f.name().indexOf(name_filter.c_str());
+                    if(p == -1)
+                        continue;
+                }
                 QString mimeType = f.mimetype();
                 QString ftype = "[f]";
                 if(mimeType == "application/vnd.google-apps.folder"){
@@ -98,8 +107,8 @@ void GdriveCommands::ls_folders(QString nextToken)
                 std::cout << QString("%1").arg(idx++).leftJustified(3, ' ')
                           << ftype << " "
                           << f.id() << " "
-                          << f.name()<< " "
-                          << mimeType << std::endl;
+                          << f.name();
+                std::cout << std::endl;
             }
             std::cout << "next token: " << lst->nextpagetoken() << std::endl;
         }
