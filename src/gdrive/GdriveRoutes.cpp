@@ -113,8 +113,8 @@ QString GdriveRoutes::folderExists(QString name, QString parentId)
 {
     QString rv = "";
 
-    gdrive::FileListArg arg;
-    QString q = QString("name contains '%1' and mimeType = 'application/vnd.google-apps.folder' and trashed = false")
+    gdrive::FileListArg arg;//contains
+    QString q = QString("name = '%1' and mimeType = 'application/vnd.google-apps.folder' and trashed = false")
         .arg(name);
     if (!parentId.isEmpty())
     {
@@ -325,7 +325,7 @@ std::pair<bool, int> GdriveRoutes::uploadFileUsingId(QString localFilePath,
     catch (GoogleException& e)
     {
         qWarning() << "Exception: " << e.what();
-        rv.first = true;
+        rv.first = false;
         rv.second = e.statusCode();
     }
     file_in.close();
