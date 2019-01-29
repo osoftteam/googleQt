@@ -1538,8 +1538,13 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::createAndInsertLabel(
     return lb.get();
 };
 
-bool mail_cache::GMailSQLiteStorage::updateDbLabel(const labels::LabelResource& lbl)
+bool mail_cache::GMailSQLiteStorage::updateDbLabel(const labels::LabelResource& lbl, LabelData* db_lbl)
 {
+	if (db_lbl->labelId() != lbl.id()) {
+		qWarning() << "Expected equal label IDs" << db_lbl->labelId() << lbl.id();
+		return false;
+	}
+
     QString name = lbl.name();
     if(lbl.type().compare("system", Qt::CaseInsensitive) == 0){
         auto i = syslabelID2Name.find(lbl.id());
@@ -1548,6 +1553,9 @@ bool mail_cache::GMailSQLiteStorage::updateDbLabel(const labels::LabelResource& 
         }        
     }
     
+	db_lbl->m_label_name = name;
+	db_lbl->m_unread_messages = lbl.messagesunread();
+
     QString sql_update;
     sql_update = QString("UPDATE %1gmail_label SET label_name='%2', label_unread_messages=%3 WHERE label_id='%4' AND acc_id=%5")
         .arg(m_metaPrefix)
@@ -1660,6 +1668,42 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::insertDbLabel(int accId,
     }
 
     return rv;
+};
+
+bool mail_cache::GMailSQLiteStorage::deleteDbLabel(QString labelId) 
+{
+	auto i = m_acc_labels.find(labelId);
+	if (i == m_acc_labels.end()) {
+		return true;
+	}
+	
+	auto lb = i->second;
+
+	uint64_t flags = lb->labelMask();
+
+	QString sql_update;
+	sql_update = QString("UPDATE %1gmail_msg SET msg_labels=(~(msg_labels&%2))&(msg_labels|%2) WHERE acc_id=%3 AND (msg_labels&%2 = %2)")
+		.arg(m_metaPrefix)
+		.arg(flags)
+		.arg(m_accId);
+	if (!execQuery(sql_update)) {
+		qWarning() << "SQL update failed" << sql_update;
+		return false;
+	};
+
+	QString sql_delete;
+	sql_delete = QString("DELETE FROM %1gmail_label WHERE acc_id = %2 AND label_id='%3'")
+		.arg(m_metaPrefix)
+		.arg(m_accId)
+		.arg(labelId);
+	if (!execQuery(sql_delete)) {
+		qWarning() << "SQL delete failed" << sql_delete;
+		return false;
+	};
+
+	m_acc_labels.erase(i);
+
+	return true;
 };
 
 bool mail_cache::GMailSQLiteStorage::deleteAttachmentsFromDb(QString msg_id)

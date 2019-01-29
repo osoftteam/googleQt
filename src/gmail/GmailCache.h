@@ -28,6 +28,8 @@ namespace googleQt{
         class GmailCacheRoutes;
         class ThreadData;
         class QueryData;
+		class LabelCreator;
+		class LabelDeleter;
 
         using msg_ptr           = std::shared_ptr<googleQt::mail_cache::MessageData>;
         using thread_ptr        = std::shared_ptr<googleQt::mail_cache::ThreadData>;
@@ -622,21 +624,20 @@ namespace googleQt{
             tcache_ptr lock_tcache();
 
             bool loadLabelsFromDb();
-            bool updateDbLabel(const labels::LabelResource& lbl);           
+            bool updateDbLabel(const labels::LabelResource& lbl, LabelData* db_lbl);
             LabelData* insertDbLabel(const labels::LabelResource& lbl);
             LabelData* insertDbLabel(int accId,
                                      QString label_id,
                                      QString name, 
                                      bool system_label,
-                                     int mask_base = -1
-                                     /*QString label_type*/);
+                                     int mask_base = -1);
             LabelData* createAndInsertLabel(
                                             QString label_id,
                                             QString label_name,
                                             bool label_is_system,
                                             uint64_t unread_messages,
-                                            int mask_base
-                                            );
+                                            int mask_base);
+			bool deleteDbLabel(QString labelId);
             
             void reloadDbAccounts();
             bool reloadDbConfig();
@@ -668,6 +669,8 @@ namespace googleQt{
             friend class googleQt::mail_cache::GMessagesStorage;
             friend class googleQt::mail_cache::GThreadsStorage;
             friend class googleQt::mail_cache::GQueryStorage;
+			friend class googleQt::mail_cache::LabelCreator;
+			friend class googleQt::mail_cache::LabelDeleter;
         };//GMailSQLiteStorage
 
 

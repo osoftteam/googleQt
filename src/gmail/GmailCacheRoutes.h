@@ -30,6 +30,7 @@ namespace googleQt
             mail_cache::tcache_ptr      tcache() { return m_GThreadCache; }
             mail_cache::storage_ptr     storage() {return m_lite_storage;};
             Endpoint&                   endpoint() { return m_endpoint; }
+			GmailRoutes&				mroutes() { return m_gmail_routes; }
 
             /// init local cache table using SQlite DB, tables will have 'dbprefix' prefix
             /// file path and DB-name should be specified
@@ -118,6 +119,12 @@ namespace googleQt
             bool setImportant(mail_cache::MessageData* d, bool set_it = true);
             GoogleTask<messages::MessageResource>* setImportant_Async(mail_cache::MessageData* d, bool set_it = true);
 
+			/// create list of labels and update local DB cache
+			GoogleVoidTask* createLabelList_Async(const std::list<QString>& names);
+			/// delete list of labels and update local DB cache
+			GoogleVoidTask* deleteLabelList_Async(const std::list<QString>& label_ids);
+			/// rename label
+			GoogleVoidTask* renameLabels_Async(QString labelId, QString newName);
 #ifdef API_QT_AUTOTEST
             void runAutotest();
             void autotestThreadDBLoad(const std::list<HistId>& id_list);
@@ -132,6 +139,8 @@ namespace googleQt
                 mail_cache::MessageData* d,
                 bool label_on,
                 bool system_label);
+
+			template <class PROCESSOR> GoogleVoidTask*      processLabelList_Async(const std::list<QString>& slist);
 
 
         protected:

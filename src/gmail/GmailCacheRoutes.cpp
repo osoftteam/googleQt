@@ -379,7 +379,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::refreshLabels_Async()
                 auto db_lbl = m_lite_storage->findLabel(label_id);
                 if (db_lbl)
                 {
-                    m_lite_storage->updateDbLabel(lbl);
+                    m_lite_storage->updateDbLabel(lbl, db_lbl);
                 }
                 else
                 {
@@ -611,6 +611,127 @@ bool mail_cache::GmailCacheRoutes::messageHasLabel(mail_cache::MessageData* d, Q
     }
     return rv;
 };
+
+///............
+namespace googleQt {
+	namespace mail_cache {
+		//we can create one label in asyn context
+		class LabelCreator
+		{
+		public:
+			LabelCreator(GmailCacheRoutes& r) :m_r(r) {};
+			GoogleVoidTask* routeRequest(QString label_name)
+			{
+				GoogleVoidTask* rv = m_r.endpoint().produceVoidTask();
+
+				labels::LabelResource arg;
+				arg.setName(label_name).setMessagelistvisibility("show").setLabellistvisibility("labelShow");
+				auto t = m_r.mroutes().getLabels()->create_Async(arg);
+				if (t) {
+					QObject::connect(t, &GoogleTask<labels::LabelResource>::finished, [=]()
+					{
+						if (t->isCompleted()) {
+							auto r = t->get();
+							if (r) {
+								m_r.storage()->insertDbLabel(*r);
+							}
+						};
+						rv->completed_callback();
+					});
+				}
+				return rv;
+			};
+		protected:
+			GmailCacheRoutes&     m_r;
+		};//LabelCreator
+		//we can delete one label in asyn context
+		class LabelDeleter
+		{
+		public:
+			LabelDeleter(GmailCacheRoutes& r) :m_r(r) {};
+			GoogleVoidTask* routeRequest(QString label_id)
+			{
+				GoogleVoidTask* rv = m_r.endpoint().produceVoidTask();
+
+				gmail::IdArg l_id(m_r.endpoint().client()->userId(), label_id);
+				auto t = m_r.mroutes().getLabels()->deleteOperation_Async(l_id);
+				if (t) {
+					QObject::connect(t, &GoogleTask<labels::LabelResource>::finished, [=]()
+					{
+						//if (t->isCompleted()) {
+							m_r.storage()->deleteDbLabel(label_id);
+						//};
+						rv->completed_callback();
+					});
+				}
+				return rv;
+			};
+		protected:
+			GmailCacheRoutes&     m_r;
+		};//LabelDeleter
+	}
+}
+
+template <class PROCESSOR> GoogleVoidTask* mail_cache::GmailCacheRoutes::processLabelList_Async(const std::list<QString>& slist) 
+{
+	GoogleVoidTask* t = m_endpoint.produceVoidTask();
+	if (!slist.empty()) {
+		std::unique_ptr<PROCESSOR> pr(new PROCESSOR(*this));
+		ConcurrentArgRunner<QString, PROCESSOR>* r = new ConcurrentArgRunner<QString, PROCESSOR>(slist, std::move(pr), m_endpoint);
+		r->run();
+		connect(r, &EndpointRunnable::finished, [=]()
+		{
+			t->completed_callback();
+			r->disposeLater();
+		});
+	}
+	else {
+		t->completed_callback();
+	}
+	return t;
+};
+
+GoogleVoidTask* mail_cache::GmailCacheRoutes::createLabelList_Async(const std::list<QString>& names) 
+{
+	return processLabelList_Async<mail_cache::LabelCreator>(names);
+};
+
+
+GoogleVoidTask* mail_cache::GmailCacheRoutes::deleteLabelList_Async(const std::list<QString>& label_ids)
+{
+	return processLabelList_Async < mail_cache::LabelDeleter > (label_ids);
+};
+
+GoogleVoidTask* mail_cache::GmailCacheRoutes::renameLabels_Async(QString labelId, QString newName)
+{
+	GoogleVoidTask* rv = m_endpoint.produceVoidTask();
+	gmail::IdArg l_id(m_endpoint.client()->userId(), labelId);
+	labels::LabelResource lbl;
+	lbl.setName(newName).setMessagelistvisibility("show").setLabellistvisibility("labelShow");
+	auto t = m_gmail_routes.getLabels()->update_Async(l_id, lbl);
+	t->then([=](std::unique_ptr<labels::LabelResource> lr)
+	{
+		if (m_lite_storage) {
+			auto db_lbl = m_lite_storage->findLabel(lr->id());
+			if (db_lbl)
+			{
+				m_lite_storage->updateDbLabel(*lr, db_lbl);
+			}
+			else
+			{
+				m_lite_storage->insertDbLabel(lbl);
+			}
+
+		}
+		rv->completed_callback();
+	},
+	[=](std::unique_ptr<GoogleException> ex) {
+		rv->failed_callback(std::move(ex));
+	});
+	return rv;
+};
+///............
+
 
 #ifdef API_QT_AUTOTEST
 void mail_cache::GmailCacheRoutes::autotestThreadDBLoad(const std::list<HistId>& id_list)
