@@ -655,18 +655,38 @@ void GmailCommands::ls_labels(QString )
 {
     try
         {
+			int idx = 1;
+			std::cout << "------ system labels ----" << std::endl;
             auto labels_list = m_gm->getLabels()->list();
-            for (auto lbl : labels_list->labels())
-                {
-                    std::cout << "id=" << lbl.id() 
-                              << " name=" << lbl.name() 
-                              << " type=" << lbl.type() 
-                              << " messagestotal=" << lbl.messagestotal()
-                              << " unread=" << lbl.messagesunread()
-                              << " threadstotal=" << lbl.threadstotal()
-                              << std::endl;
-                }
+            for (auto lbl : labels_list->labels()){
+				if (lbl.type() == "system") {
+					std::cout << idx << "."
+						<< "id=" << lbl.id()
+						<< " name=" << lbl.name()
+						<< " type=" << lbl.type()
+						<< " messagestotal=" << lbl.messagestotal()
+						<< " unread=" << lbl.messagesunread()
+						<< " threadstotal=" << lbl.threadstotal()
+						<< std::endl;
+					idx++;
+				}
+			}
 
+			std::cout << "--------------------" << std::endl;
+
+			for (auto lbl : labels_list->labels()) {
+				if (lbl.type() != "system") {
+					std::cout << idx << "."
+						<< "id=" << lbl.id()
+						<< " name=" << lbl.name()
+						<< " type=" << lbl.type()
+						<< " messagestotal=" << lbl.messagestotal()
+						<< " unread=" << lbl.messagesunread()
+						<< " threadstotal=" << lbl.threadstotal()
+						<< std::endl;
+					idx++;
+				}
+			}
         }
     catch (GoogleException& e)
         {
