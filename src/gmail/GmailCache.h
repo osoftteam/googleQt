@@ -467,6 +467,7 @@ namespace googleQt{
         {
         public:
             GMessagesStorage(GMailSQLiteStorage* s, mcache_ptr c);
+            virtual ~GMessagesStorage(){}
 
             bool isValid()const override;
             void update_db(EDataState state, CACHE_LIST<MessageData>& r)override;
@@ -496,6 +497,7 @@ namespace googleQt{
         {
         public:
             GThreadsStorage(GMailSQLiteStorage* s, tcache_ptr c);
+            virtual ~GThreadsStorage(){}
             void update_db(EDataState state, CACHE_LIST<ThreadData>& r)override;
             void remove_db(const std::set<QString>& ids2remove)override;
             void insert_db(EDataState state, CACHE_LIST<ThreadData>& r)override;

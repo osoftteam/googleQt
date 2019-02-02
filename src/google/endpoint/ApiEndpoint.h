@@ -44,7 +44,8 @@ namespace googleQt{
         {
         public:
             requester(ApiEndpoint& e);
-
+            virtual ~requester(){};
+            
             QNetworkReply * makeRequest(QNetworkRequest& r);
 
         protected:

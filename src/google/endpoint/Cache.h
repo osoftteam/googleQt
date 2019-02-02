@@ -32,6 +32,7 @@ namespace googleQt {
     {
     public:
         CacheData(EDataState state, QString id);
+        virtual ~CacheData(){}
 
         virtual bool    isLoaded(EDataState st)const;
         virtual void    merge(CacheData* other) = 0;
@@ -72,6 +73,7 @@ namespace googleQt {
     class GoogleCacheBase
     {
     public:
+        virtual ~GoogleCacheBase(){}
         virtual bool mem_has_object(QString id)const = 0;
         virtual std::shared_ptr<O> mem_object(QString id) = 0;
         virtual void mem_insert(QString id, std::shared_ptr<O>) = 0;
