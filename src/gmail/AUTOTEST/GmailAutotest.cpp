@@ -167,6 +167,29 @@ static void call_list_from_Threads(){
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
+static void call_modify_from_Threads(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Threads").arg("modify");
+    std::unique_ptr<gmail::ModifyMessageArg> arg = gmail::ModifyMessageArg::EXAMPLE(0, 0);
+    auto res = cl->getThreads()->modify(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "------ RESULT ------------------";
+    ApiAutotest::INSTANCE() << res->toString();
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
+static void call_trash_from_Threads(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Threads").arg("trash");
+    std::unique_ptr<gmail::TrashMessageArg> arg = gmail::TrashMessageArg::EXAMPLE(0, 0);
+    cl->getThreads()->trash(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
+static void call_untrash_from_Threads(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Threads").arg("untrash");
+    std::unique_ptr<gmail::UntrashMessageArg> arg = gmail::UntrashMessageArg::EXAMPLE(0, 0);
+    cl->getThreads()->untrash(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
 static void call_profile_from_Users(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Users").arg("profile");
     cl->getUsers()->profile();
@@ -208,6 +231,9 @@ static void test_call_MessagesRoutes(){
 static void test_call_ThreadsRoutes(){
     call_get_from_Threads();
     call_list_from_Threads();
+    call_modify_from_Threads();
+    call_trash_from_Threads();
+    call_untrash_from_Threads();
 }
 
 static void test_call_UsersRoutes(){
