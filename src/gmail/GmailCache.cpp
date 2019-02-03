@@ -276,9 +276,13 @@ void mail_cache::MessageData::updateSnippet(QString from,
 void mail_cache::MessageData::updateBody(QString plain, QString html)
 {
     m_flags.agg_state |= static_cast<int>(EDataState::body);
-    //m_state_agg |= static_cast<int>(EDataState::body);
     m_plain = plain;
     m_html = html;
+};
+
+void mail_cache::MessageData::updateLabels(qlonglong labels) 
+{
+	m_labels = labels;
 };
 
 bool mail_cache::MessageData::hasReservedSysLabel(SysLabel l)const 
@@ -351,7 +355,6 @@ void mail_cache::MessageData::merge(CacheData* other)
                     m_from = md->from();
                     m_subject = md->subject();
                     m_flags.agg_state |= static_cast<int>(EDataState::snippet);
-                    //m_state_agg |= static_cast<int>(EDataState::snippet);
                 }
         }
 
@@ -362,7 +365,6 @@ void mail_cache::MessageData::merge(CacheData* other)
                     m_plain = md->plain();
                     m_html = md->html();
                     m_flags.agg_state |= static_cast<int>(EDataState::body);
-                    //m_state_agg |= static_cast<int>(EDataState::body);
                 }
         }    
 };
@@ -528,6 +530,14 @@ void mail_cache::ThreadData::add_msg(msg_ptr m)
     else {
         m_head = m;
     }
+};
+
+void mail_cache::ThreadData::rebuildLabelsMap() 
+{
+	m_labels = 0;
+	for (auto& m : m_messages) {
+		m_labels |= m->labelsBitMap();
+	}
 };
 
 mail_cache::msg_ptr mail_cache::ThreadData::findMessage(QString id)
@@ -1911,17 +1921,16 @@ int mail_cache::GMailSQLiteStorage::addAccountDb(QString userId)
     return accId;
 };
 
-mail_cache::LabelData* mail_cache::GMailSQLiteStorage::findLabel(QString label_id)
+mail_cache::label_ptr mail_cache::GMailSQLiteStorage::findLabel(QString label_id)
 {
-    mail_cache::LabelData* rv = nullptr;
     auto i = m_acc_labels.find(label_id);
     if (i != m_acc_labels.end()) {
-        rv = i->second.get();
+        return i->second;
     }
-    return rv;
+    return nullptr;
 };
 
-mail_cache::LabelData* mail_cache::GMailSQLiteStorage::findLabel(SysLabel sys_label)
+mail_cache::label_ptr mail_cache::GMailSQLiteStorage::findLabel(SysLabel sys_label)
 {
     QString lable_id = sysLabelId(sys_label);
     return findLabel(lable_id);
@@ -2173,7 +2182,7 @@ mail_cache::GMessagesStorage::GMessagesStorage(GMailSQLiteStorage* s, mcache_ptr
 QString mail_cache::GMessagesStorage::insertSnippetSQL()const 
 {
     QString sql = QString("INSERT INTO %1gmail_msg(msg_state, msg_from, msg_to, msg_cc, msg_bcc, msg_subject, "
-        "msg_snippet, internal_date, msg_labels, msg_references, msg_id, acc_id, thread_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, %2, ?)")
+        "msg_snippet, internal_date, msg_references, msg_labels, msg_id, acc_id, thread_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, %2, ?)")
         .arg(m_storage->metaPrefix())
         .arg(m_storage->currentAccountId());
     return sql;
@@ -2182,7 +2191,7 @@ QString mail_cache::GMessagesStorage::insertSnippetSQL()const
 QString mail_cache::GMessagesStorage::insertBodySQL()const 
 {
     QString sql = QString("INSERT INTO %1gmail_msg(msg_state, msg_from, msg_to, msg_cc, msg_bcc, msg_subject, "
-        "msg_snippet, msg_plain, msg_html, internal_date, msg_labels, msg_references, msg_id, acc_id, thread_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, %2, ?)")
+        "msg_snippet, msg_plain, msg_html, internal_date, msg_references, msg_labels, msg_id, acc_id, thread_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, %2, ?)")
         .arg(m_storage->metaPrefix())
         .arg(m_storage->currentAccountId());
     return sql;
@@ -2191,7 +2200,7 @@ QString mail_cache::GMessagesStorage::insertBodySQL()const
 QString mail_cache::GMessagesStorage::updateSnippetSQL()const 
 {
     QString sql = QString("UPDATE %1gmail_msg SET msg_state=?, msg_from=?, msg_to=?, "
-        "msg_cc=?, msg_bcc=?, msg_subject=?, msg_snippet=?, internal_date=?, msg_labels=?, msg_references=? WHERE msg_id=? AND acc_id=%2 AND thread_id=?")
+        "msg_cc=?, msg_bcc=?, msg_subject=?, msg_snippet=?, internal_date=?, msg_references=?, msg_labels=? WHERE msg_id=? AND acc_id=%2 AND thread_id=?")
         .arg(m_storage->metaPrefix())
         .arg(m_storage->currentAccountId());
     return sql;
@@ -2200,10 +2209,27 @@ QString mail_cache::GMessagesStorage::updateSnippetSQL()const
 QString mail_cache::GMessagesStorage::updateBodySQL()const 
 {
     QString sql = QString("UPDATE %1gmail_msg SET msg_state=?, msg_from=?, msg_to=?, msg_cc=?, msg_bcc=?, "
-        "msg_subject=?, msg_snippet=?, msg_plain=?, msg_html=?, internal_date=?, msg_labels=?, msg_references=? WHERE msg_id=? AND acc_id=%2 AND thread_id=?")
+        "msg_subject=?, msg_snippet=?, msg_plain=?, msg_html=?, internal_date=?, msg_references=?, msg_labels=? WHERE msg_id=? AND acc_id=%2 AND thread_id=?")
         .arg(m_storage->metaPrefix())
         .arg(m_storage->currentAccountId());
     return sql;
+};
+
+QString mail_cache::GMessagesStorage::insertLabelsSQL()const
+{
+	QString sql = QString("INSERT INTO %1gmail_msg(msg_labels, msg_id, acc_id, thread_id) VALUES(?, ?, %2, ?)")
+		.arg(m_storage->metaPrefix())
+		.arg(m_storage->currentAccountId());
+	return sql;
+};
+
+
+QString mail_cache::GMessagesStorage::updateLabelsSQL()const 
+{
+	QString sql = QString("UPDATE %1gmail_msg SET msg_labels=? WHERE msg_id=? AND acc_id=%2 AND thread_id=?")
+		.arg(m_storage->metaPrefix())
+		.arg(m_storage->currentAccountId());
+	return sql;
 };
 
 void mail_cache::GMessagesStorage::bindSQL(EDataState state, QSqlQuery* q, CACHE_LIST<MessageData>& r)
@@ -2224,46 +2250,52 @@ void mail_cache::GMessagesStorage::bindSQL(EDataState state, QSqlQuery* q, CACHE
             html << i->html();
         }
         internalDate << i->internalDate();
-        labelsBitMap << static_cast<qint64>(i->labelsBitMap());
 		references << i->references();
+        labelsBitMap << static_cast<qint64>(i->labelsBitMap());		
         id << i->id();
         threadId << i->threadId();
     }
 
-    q->addBindValue(aggState);
-    q->addBindValue(from);
-    q->addBindValue(to);
-    q->addBindValue(cc);
-    q->addBindValue(bcc);
-    q->addBindValue(subject);
-    q->addBindValue(snippet);
-    if (state == EDataState::body) {
-        q->addBindValue(plain);
-        q->addBindValue(html);
-    }
-    q->addBindValue(internalDate);
-    q->addBindValue(labelsBitMap);
-	q->addBindValue(references);
+	if (state == EDataState::body || state == EDataState::snippet)
+	{
+		q->addBindValue(aggState);
+		q->addBindValue(from);
+		q->addBindValue(to);
+		q->addBindValue(cc);
+		q->addBindValue(bcc);
+		q->addBindValue(subject);
+		q->addBindValue(snippet);
+		if (state == EDataState::body) {
+			q->addBindValue(plain);
+			q->addBindValue(html);
+		}
+		q->addBindValue(internalDate);
+		q->addBindValue(references);
+	}
+	q->addBindValue(labelsBitMap);
     q->addBindValue(id);
     q->addBindValue(threadId);
 };
 
 bool mail_cache::GMessagesStorage::execOutOfBatchSQL(EDataState state, QSqlQuery* q, mail_cache::MessageData* m) 
 {
-    q->addBindValue(m->aggState());
-    q->addBindValue(m->from());
-    q->addBindValue(m->to());
-    q->addBindValue(m->cc());
-    q->addBindValue(m->bcc());
-    q->addBindValue(m->subject());
-    q->addBindValue(m->snippet());
-    if (state == EDataState::body) {
-        q->addBindValue(m->plain());
-        q->addBindValue(m->html());
-    }
-    q->addBindValue(m->internalDate());
-    q->addBindValue(static_cast<qint64>(m->labelsBitMap()));
-	q->addBindValue(m->references());
+	if (state == EDataState::body || state == EDataState::snippet)
+	{
+		q->addBindValue(m->aggState());
+		q->addBindValue(m->from());
+		q->addBindValue(m->to());
+		q->addBindValue(m->cc());
+		q->addBindValue(m->bcc());
+		q->addBindValue(m->subject());
+		q->addBindValue(m->snippet());
+		if (state == EDataState::body) {
+			q->addBindValue(m->plain());
+			q->addBindValue(m->html());
+		}
+		q->addBindValue(m->internalDate());
+		q->addBindValue(m->references());
+	}
+    q->addBindValue(static_cast<qint64>(m->labelsBitMap()));	
     q->addBindValue(m->id());
     q->addBindValue(m->threadId());
     return q->exec();
@@ -2274,6 +2306,10 @@ bool mail_cache::GMessagesStorage::insertDbInBatch(EDataState state, CACHE_LIST<
     QString sql_insert;
     switch (state)
     {
+	case EDataState::labels:
+	{
+		sql_insert = insertLabelsSQL();
+	}break;
     case EDataState::snippet:
     {
         sql_insert = insertSnippetSQL();
@@ -2318,6 +2354,10 @@ bool mail_cache::GMessagesStorage::updateDbInBatch(EDataState state, CACHE_LIST<
     QString sql;
     switch (state)
     {
+	case EDataState::labels:
+	{
+		sql = updateLabelsSQL();
+	}break;
     case EDataState::snippet:
     {
         sql = updateSnippetSQL();
@@ -2366,6 +2406,11 @@ void mail_cache::GMessagesStorage::update_db(
         QString sql_update, sql_insert;
         switch (state)
         {
+		case EDataState::labels:
+		{
+			sql_update = updateLabelsSQL();
+			sql_insert = insertLabelsSQL();
+		}break;
         case EDataState::snippet:
         {
             sql_update = updateSnippetSQL();
@@ -2417,6 +2462,11 @@ void mail_cache::GMessagesStorage::insert_db(EDataState state, CACHE_LIST<Messag
         QString sql_update, sql_insert;
         switch (state)
         {
+		case EDataState::labels:
+		{
+			sql_update = updateLabelsSQL();
+			sql_insert = insertLabelsSQL();
+		}break;
         case EDataState::snippet:
         {
             sql_update = updateSnippetSQL();
@@ -2592,7 +2642,7 @@ mail_cache::msg_ptr mail_cache::GMessagesStorage::loadMessageFromDb(thread_ptr t
     mail_cache::msg_ptr md;
 
     int agg_state = q->value(0).toInt();
-    if (agg_state < 1 || agg_state > 3)
+    if (agg_state < 0 || agg_state > 3)
         {
             qWarning() << "ERROR. Invalid DB state" << agg_state << q->value(1).toString();
             return nullptr;

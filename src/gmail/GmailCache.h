@@ -44,6 +44,7 @@ namespace googleQt{
         using query_db_map      = std::map<int, query_ptr>;
         using label_ptr         = std::shared_ptr<googleQt::mail_cache::LabelData>;
         using att_ptr           = std::shared_ptr<googleQt::mail_cache::AttachmentData>;
+		using label_list		= std::list<label_ptr>;
         using mdata_result      = std::unique_ptr<CacheDataResult<MessageData>>;
         using tdata_result      = std::unique_ptr<CacheDataResult<ThreadData>>;
         using ATTACHMENTS_LIST  = std::list<att_ptr>;
@@ -132,6 +133,7 @@ namespace googleQt{
                                qlonglong labels,
 							   QString references);
             void updateBody(QString plain, QString html);
+			void updateLabels(qlonglong labels);
         protected:
             int     m_accountId{-1};
             QString m_thread_id;
@@ -332,12 +334,14 @@ namespace googleQt{
                 QString snippet,
                 uint64_t lbmap);
             void add_msg(msg_ptr);
+			void rebuildLabelsMap();
 
             friend class GThreadCacheQueryTask;
             friend class GMailCacheQueryTask;
             friend class GThreadsStorage;
             friend class GMessagesStorage;
             friend class GMailSQLiteStorage;
+			friend class GmailCacheRoutes;
         };      
 
         /// query results - collection of threads
@@ -484,6 +488,8 @@ namespace googleQt{
             QString insertBodySQL()const;
             QString updateSnippetSQL()const;
             QString updateBodySQL()const;
+			QString insertLabelsSQL()const;
+			QString updateLabelsSQL()const;
             bool execOutOfBatchSQL(EDataState state, QSqlQuery* q, mail_cache::MessageData* t);
             void bindSQL(EDataState state, QSqlQuery* q, CACHE_LIST<MessageData>& r);
         protected:
@@ -570,8 +576,8 @@ namespace googleQt{
             QString findAttachmentFile(att_ptr att)const;
             void invalidateAttachmentLocalCacheFile(att_ptr att);
 
-            LabelData* findLabel(QString label_id);
-            LabelData* findLabel(SysLabel sys_label);
+			label_ptr findLabel(QString label_id);
+			label_ptr findLabel(SysLabel sys_label);
             LabelData* ensureLabel(int accId, QString label_id, bool system_label, int mask_base = -1);
             void update_message_labels_db(int accId, QString msg_id, uint64_t flags);
             void update_attachment_local_file_db(googleQt::mail_cache::msg_ptr m, 
