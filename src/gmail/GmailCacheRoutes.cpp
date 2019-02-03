@@ -184,16 +184,9 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheThr
     int threadsCount /*= 40*/,
     QString pageToken /*= ""*/,
     QStringList* labels /*= nullptr*/,
-    QString q_str /*= ""*/ /*,
-    bool save_query = false*/)
+    QString q_str /*= ""*/)
 {
     q_str = q_str.trimmed();
-    /*
-    query_ptr q;
-    if(save_query && !q_str.isEmpty()){
-        q = m_lite_storage->m_qstorage->ensure_q(q_str);
-    }
-    */
     auto rfetcher = newThreadResultFetcher();
     gmail::ListArg listArg;
     listArg.setMaxResults(threadsCount);
@@ -215,12 +208,6 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheThr
             h.id = m.id();
             h.hid = m.historyid();
             id_list.push_back(h);
-			/*
-			if (q) {
-				if (q->m_map.find(m.id()) == q->m_map.end()) {
-					q->m_new_threads.push_back(m.id());
-				}
-			}*/
         }
         rfetcher->m_nextPageToken = tlist->nextpagetoken();
 		getCacheThreadList_Async(id_list, rfetcher);
@@ -379,7 +366,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::refreshLabels_Async()
                 auto db_lbl = m_lite_storage->findLabel(label_id);
                 if (db_lbl)
                 {
-                    m_lite_storage->updateDbLabel(lbl, db_lbl);
+                    m_lite_storage->updateDbLabel(lbl, db_lbl.get());
                 }
                 else
                 {
@@ -604,7 +591,7 @@ bool mail_cache::GmailCacheRoutes::messageHasLabel(mail_cache::MessageData* d, Q
 {
     bool rv = false;
     if (m_lite_storage) {
-        mail_cache::LabelData* lb = m_lite_storage->findLabel(label_id);
+        auto lb = m_lite_storage->findLabel(label_id);
         if (lb) {
             rv = d->hasLabel(lb->labelMask());
         }
@@ -615,7 +602,7 @@ bool mail_cache::GmailCacheRoutes::messageHasLabel(mail_cache::MessageData* d, Q
 ///............
 namespace googleQt {
 	namespace mail_cache {
-		//we can create one label in asyn context
+		//we can create one label in async context
 		class LabelCreator
 		{
 		public:
@@ -715,7 +702,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::renameLabels_Async(QString labelId
 			auto db_lbl = m_lite_storage->findLabel(lr->id());
 			if (db_lbl)
 			{
-				m_lite_storage->updateDbLabel(*lr, db_lbl);
+				m_lite_storage->updateDbLabel(*lr, db_lbl.get());
 			}
 			else
 			{
@@ -730,6 +717,64 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::renameLabels_Async(QString labelId
 	});
 	return rv;
 };
+
+///............
+
+GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadLabels(thread_ptr t, label_list labels2add, label_list labels2remove) 
+{
+	GoogleVoidTask* rv = m_endpoint.produceVoidTask();
+	if (t->id().isEmpty() || labels2add.empty() && labels2remove.empty()) {
+		rv->completed_callback();
+		return rv;
+	}
+
+	googleQt::gmail::ModifyMessageArg arg(m_endpoint.client()->userId(), t->id());
+	for (const auto& lb : labels2add) {
+		arg.addAddLabel(lb->labelId());
+	}
+	for (const auto& lb : labels2remove) {
+		arg.addRemoveLabel(lb->labelId());
+	}
+
+	auto tt = m_gmail_routes.getThreads()->modify_Async(arg);
+	tt->then([=](std::unique_ptr<threads::ThreadResource> tr)
+	{
+		CACHE_LIST<mail_cache::MessageData> updated_messages;
+
+		for (auto& m : tr->messages()) {
+			auto m2 = t->findMessage(t->id());
+			if (!m2) {
+				//@todo... have to add new message here
+				//t->add_msg(md);
+			}
+			else {
+				const std::list <QString>& labels = m.labelids();
+				if (labels.size() > 0) {
+					uint64_t lbits = 0;
+					if (m_lite_storage) {
+						lbits = m_lite_storage->packLabels(labels);
+					}
+					m2->updateLabels(lbits);
+					updated_messages.push_back(m2);
+				}
+			}
+		}
+
+		if (m_lite_storage) {
+			if (!updated_messages.empty()) {
+				m_lite_storage->m_mstorage->update_db(EDataState::labels, updated_messages);
+			}
+		}
+
+		t->rebuildLabelsMap();
+	},
+		[=](std::unique_ptr<GoogleException> ex) {
+		rv->failed_callback(std::move(ex));
+	});
+
+	return rv;
+};
+
 ///............
 
 

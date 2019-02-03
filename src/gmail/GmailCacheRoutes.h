@@ -125,6 +125,9 @@ namespace googleQt
 			GoogleVoidTask* deleteLabelList_Async(const std::list<QString>& label_ids);
 			/// rename label
 			GoogleVoidTask* renameLabels_Async(QString labelId, QString newName);
+
+			GoogleVoidTask* modifyThreadLabels(thread_ptr t, label_list labels2add, label_list labels2remove);
+
 #ifdef API_QT_AUTOTEST
             void runAutotest();
             void autotestThreadDBLoad(const std::list<HistId>& id_list);
