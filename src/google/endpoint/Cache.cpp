@@ -4,7 +4,7 @@ using namespace googleQt;
 
 ///CacheData
 googleQt::CacheData::CacheData(googleQt::EDataState state, QString id)
-    :/*m_state_agg(static_cast<int>(state)),*/ m_id(id)
+    :m_id(id)
 {
     m_flags.flags = 0;
     m_flags.agg_state = static_cast<int>(state);
@@ -17,7 +17,6 @@ int googleQt::CacheData::aggState()const
 
 bool googleQt::CacheData::isLoaded(EDataState st)const
 {
-    //bool rv = (m_state_agg & static_cast<int>(st)) != 0;
     bool rv = (m_flags.agg_state & static_cast<int>(st)) != 0;
     return rv;
 };

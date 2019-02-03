@@ -18,8 +18,9 @@ namespace googleQt {
 
     enum class EDataState
     {
+		labels  = 0,
         snippet = 1,
-        body = 2
+        body    = 2
     };
 
     struct HistId 
@@ -54,7 +55,6 @@ namespace googleQt {
                 unsigned has_db_record : 1;
             };
         } m_flags;
-        //int            m_state_agg;
         QString        m_id;
         mutable void*  m_user_ptr{nullptr};
     };
