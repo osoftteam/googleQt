@@ -99,6 +99,8 @@ int main(int argc, char *argv[])
     t.addAction("ls_threads",       "List Threads", [&](QString arg) {cmd.ls_threads(arg); });
     t.addAction("get_thread",       "Get Thread Info", [&](QString arg) {cmd.get_thread(arg); });
     t.addAction("ls_drafts",        "List Drafts", [&](QString arg) {cmd.ls_drafts(arg); });
+	t.addAction("add_thread_label", "Add Thread Label", [&](QString arg) {cmd.add_thread_label(arg); });
+	t.addAction("remove_thread_label", "Remove Thread Label", [&](QString arg) {cmd.remove_thread_label(arg); });
     t.addAction("get_draft",        "Get Draft Info", [&](QString arg) {cmd.get_draft(arg); });
     t.addAction("history",          "Get Mailbox History", [&](QString arg) {cmd.history(arg); });
     t.addSeparator();

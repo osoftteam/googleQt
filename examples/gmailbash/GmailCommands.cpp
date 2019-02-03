@@ -773,6 +773,39 @@ void GmailCommands::update_label(QString labelid_space_name)
         }
 };
 
+void GmailCommands::printThread(threads::ThreadResource* t)
+{
+	std::cout << "tid=" << t->id()
+		<< " snipped=" << t->snipped()
+		<< " historyid=" << t->historyid()
+		<< " messagescount=" << t->messages().size()
+		<< std::endl;
+	for (auto& m : t->messages()) {
+		std::cout << "    id=" << m.id()
+			<< " ";
+		auto p = m.payload();
+		auto header_list = p.headers();
+		for (auto h : header_list)
+		{
+			if (headers_to_print.find(h.name())
+				!= headers_to_print.end())
+				std::cout << h.name() << ":"
+				<< h.value();
+		}
+		std::cout << " ";
+		std::cout << m.snippet();
+		std::cout << std::endl;
+
+		const std::list <QString>& labels = m.labelids();
+		if (labels.size() > 0) {
+			std::cout << "    labels=";
+			for (auto lb : labels) {
+				std::cout << lb << " ";
+			}
+			std::cout << std::endl;
+		}
+	}
+};
 
 void GmailCommands::ls_threads(QString nextToken)
 {
@@ -793,27 +826,7 @@ void GmailCommands::get_thread(QString id_list)
         {
             for(auto s : arg_list){
                 auto t = m_gm->getThreads()->get(gmail::IdArg(m_c.userId(), s));
-                std::cout << "tid=" << t->id()
-                          << " snipped=" << t->snipped()
-                          << " historyid=" << t->historyid()
-                          << " messagescount=" << t->messages().size()
-                          << std::endl;
-                for(auto& m : t->messages()){
-                    std::cout << "    id="<< m.id()
-                              << " ";
-                    auto p = m.payload();
-                    auto header_list = p.headers();
-                    for(auto h : header_list)
-                        {
-                            if(headers_to_print.find(h.name())
-                               != headers_to_print.end())
-                                std::cout << h.name() << ":"
-                                          << h.value();
-                        }
-                    std::cout << " ";
-                    std::cout << m.snippet();
-                    std::cout << std::endl;
-                }
+				printThread(t.get());
             }
         }
     catch (GoogleException& e)
@@ -821,6 +834,65 @@ void GmailCommands::get_thread(QString id_list)
             std::cout << "Exception: " << e.what() << std::endl;
         }
 };
+
+void GmailCommands::add_thread_label(QString threadid_labelids)
+{
+	std::list<QString> arg_list = split_string(threadid_labelids);
+	if (arg_list.size() < 2)
+	{
+		std::cout << "Space separated threadId label ID list required" << std::endl;
+		return;
+	}
+
+	auto it = arg_list.begin();
+	QString threadid = *it;
+	it++;
+
+	try
+	{
+		gmail::ModifyMessageArg arg(m_c.userId(), threadid);
+		for (; it != arg_list.end(); it++) {
+			arg.addAddLabel(*it);
+		}
+		std::unique_ptr<threads::ThreadResource> t = m_gm->getThreads()->modify(arg);
+		printThread(t.get());
+	}
+	catch (GoogleException& e)
+	{
+		std::cout << "Exception: " << e.what() << std::endl;
+	}
+};
+
+///..
+void GmailCommands::remove_thread_label(QString threadid_labelids)
+{
+	std::list<QString> arg_list = split_string(threadid_labelids);
+	if (arg_list.size() < 2)
+	{
+		std::cout << "Space separated threadId label ID list required" << std::endl;
+		return;
+	}
+
+	auto it = arg_list.begin();
+	QString threadid = *it;
+	it++;
+
+	try
+	{
+		gmail::ModifyMessageArg arg(m_c.userId(), threadid);
+		for (; it != arg_list.end(); it++) {
+			arg.addRemoveLabel(*it);
+		}
+		std::unique_ptr<threads::ThreadResource> t = m_gm->getThreads()->modify(arg);
+		printThread(t.get());
+	}
+	catch (GoogleException& e)
+	{
+		std::cout << "Exception: " << e.what() << std::endl;
+	}
+};
+
+///...
 
 void GmailCommands::history(QString startHistoryIdStr)
 {

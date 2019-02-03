@@ -17,6 +17,10 @@ namespace googleQt{
     {
         class GmailCacheRoutes;
     }
+	namespace threads 
+	{
+		class ThreadResource;
+	}
 }
 
 class GmailCommands
@@ -134,6 +138,16 @@ public:
     */
     void get_thread(QString thread_id);
 
+	/**
+		add_thread_label - modify thread, add labels
+	*/
+	void add_thread_label(QString threadid_labelids);
+
+	/**
+	remove_thread_label - modify thread, remove labels
+	*/
+	void remove_thread_label(QString threadid_labelids);
+
     /**
        ls_drafts - list drafts
     */
@@ -200,6 +214,7 @@ protected:
     void listDrafts(QString nextToken);
     void printSnippet(messages::MessageResource*);
     void printMessage(messages::MessageResource*);
+	void printThread(threads::ThreadResource*);
     void exportMessageBody(messages::MessageResource* r, QString fileName);
     void printLabel(labels::LabelResource*);
     bool loadMessageFile(QString fileName, messages::MessageResource*);
