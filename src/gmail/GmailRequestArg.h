@@ -349,14 +349,14 @@ namespace googleQt{
             QString getBCC()const { return m_BCC; }
             void setBCC(QString bcc_val) { m_BCC = bcc_val; }
 
-			QString getThreadId()const { return m_threadId; }
-			void    setThreadId(QString thread_id) { m_threadId = thread_id; }
+            QString getThreadId()const { return m_threadId; }
+            void    setThreadId(QString thread_id) { m_threadId = thread_id; }
 
-			QString getInReplyToMsgId()const { return m_InReplyToMsgId; }
-			void	setInReplyToMsgId(QString msgId) { m_InReplyToMsgId = msgId; }
+            QString getInReplyToMsgId()const { return m_InReplyToMsgId; }
+            void    setInReplyToMsgId(QString msgId) { m_InReplyToMsgId = msgId; }
 
-			QString	getReferences()const { return m_references; }
-			void	setReferences(QString sval) { m_references = sval; }
+            QString getReferences()const { return m_references; }
+            void    setReferences(QString sval) { m_references = sval; }
 
             void addBodyPart(const MimeBodyPart& pt) { m_body_parts.push_back(pt); };
             void addAttachments(const std::list<QString>& attachments);
@@ -385,9 +385,9 @@ namespace googleQt{
             QString m_CC;
             QString m_BCC;
             QString m_Subject;
-			QString m_threadId;
-			QString m_InReplyToMsgId;
-			QString m_references;
+            QString m_threadId;
+            QString m_InReplyToMsgId;
+            QString m_references;
             QString m_rawRfc822MessageFile;
             std::list<MimeBodyPart> m_body_parts;
         };

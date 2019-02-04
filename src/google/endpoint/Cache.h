@@ -18,7 +18,7 @@ namespace googleQt {
 
     enum class EDataState
     {
-		labels  = 0,
+        labels  = 0,
         snippet = 1,
         body    = 2
     };
@@ -324,15 +324,15 @@ namespace googleQt {
         std::unique_ptr<CacheDataResult<O>> waitForResultAndRelease() = delete;
 
         virtual void notifyOnCompletedFromCache() 
-		{ 
-			m_query_completed = true; 
-			CacheTaskParent<O>::notifyOnFinished(); 
-		};
+        { 
+            m_query_completed = true; 
+            CacheTaskParent<O>::notifyOnFinished(); 
+        };
 
         void notifyFetchCompletedWithMergeRequest(CACHE_LIST<O>& r)
         {
             m_cache->merge(CacheTaskParent<O>::m_completed->state, r);
-			notifyOnCompletedFromCache();
+            notifyOnCompletedFromCache();
         }
 
         bool isCompleted()const override { return m_query_completed; }
