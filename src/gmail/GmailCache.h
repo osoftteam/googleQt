@@ -180,6 +180,12 @@ namespace googleQt{
                 qlonglong labels,
                 QString references);
 
+			///constructor for smalles(labels only) object
+			MessageData(int accId,
+				QString id,
+				QString thread_id,
+				qlonglong labels);
+
             ///constructor for loading from DB
             MessageData(int accId,
                         QString thread_id,

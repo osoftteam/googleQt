@@ -720,59 +720,112 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::renameLabels_Async(QString labelId
 
 ///............
 
-GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadLabels(thread_ptr t, label_list labels2add, label_list labels2remove) 
+GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadLabels_Async(thread_ptr t,
+	const label_list& labels2add,
+	const label_list& labels2remove)
 {
-    GoogleVoidTask* rv = m_endpoint.produceVoidTask();
-    if (t->id().isEmpty() || labels2add.empty() && labels2remove.empty()) {
-        rv->completed_callback();
-        return rv;
-    }
+	GoogleVoidTask* rv = m_endpoint.produceVoidTask();
+	if (t->id().isEmpty() || labels2add.empty() && labels2remove.empty()) {
+		rv->completed_callback();
+		return rv;
+	}
 
-    googleQt::gmail::ModifyMessageArg arg(m_endpoint.client()->userId(), t->id());
-    for (const auto& lb : labels2add) {
-        arg.addAddLabel(lb->labelId());
-    }
-    for (const auto& lb : labels2remove) {
-        arg.addRemoveLabel(lb->labelId());
-    }
+	googleQt::gmail::ModifyMessageArg arg(m_endpoint.client()->userId(), t->id());
+	for (const auto& lb : labels2add) {
+		arg.addAddLabel(lb->labelId());
+	}
+	for (const auto& lb : labels2remove) {
+		arg.addRemoveLabel(lb->labelId());
+	}
 
-    auto tt = m_gmail_routes.getThreads()->modify_Async(arg);
-    tt->then([=](std::unique_ptr<threads::ThreadResource> tr)
-    {
-        CACHE_LIST<mail_cache::MessageData> updated_messages;
+	auto tt = m_gmail_routes.getThreads()->modify_Async(arg);
+	tt->then([=](std::unique_ptr<threads::ThreadResource> tr)
+	{
+		qDebug() << "--ykh on thread modify_Async" << tr->id();
 
-        for (auto& m : tr->messages()) {
-            auto m2 = t->findMessage(t->id());
-            if (!m2) {
-                //@todo... have to add new message here
-                //t->add_msg(md);
-            }
-            else {
-                const std::list <QString>& labels = m.labelids();
-                if (labels.size() > 0) {
-                    uint64_t lbits = 0;
-                    if (m_lite_storage) {
-                        lbits = m_lite_storage->packLabels(labels);
-                    }
-                    m2->updateLabels(lbits);
-                    updated_messages.push_back(m2);
-                }
-            }
-        }
+		CACHE_LIST<mail_cache::MessageData> new_messages;
+		CACHE_LIST<mail_cache::MessageData> updated_messages;
 
-        if (m_lite_storage) {
-            if (!updated_messages.empty()) {
-                m_lite_storage->m_mstorage->update_db(EDataState::labels, updated_messages);
-            }
-        }
+		for (auto& m : tr->messages()) {
+			auto m2 = t->findMessage(t->id());
+			if (!m2) {
+				qDebug() << "--ykh on thread modify_Async[new-message]" << tr->id();
+				uint64_t lbits = 0;
+				if (m_lite_storage) {
+					lbits = m_lite_storage->packLabels(m.labelids());
+				}
 
-        t->rebuildLabelsMap();
-    },
-        [=](std::unique_ptr<GoogleException> ex) {
-        rv->failed_callback(std::move(ex));
-    });
+				msg_ptr md(new MessageData(storage()->currentAccountId(),
+					m.id(),
+					t->id(), lbits));
+				t->add_msg(md);
+				new_messages.push_back(md);
+			}
+			else {
+				qDebug() << "--ykh on thread modify_Async[existing-message]" << tr->id();
+				const std::list <QString>& labels = m.labelids();
+				if (labels.size() > 0) {
+					uint64_t lbits = 0;
+					if (m_lite_storage) {
+						lbits = m_lite_storage->packLabels(labels);
+					}
+					m2->updateLabels(lbits);
+					updated_messages.push_back(m2);
+				}
+			}
+		}
 
-    return rv;
+		if (m_lite_storage) {
+			if (!new_messages.empty()) {
+				m_lite_storage->m_mstorage->insert_db(EDataState::labels, new_messages);
+			}
+			if (!updated_messages.empty()) {
+				m_lite_storage->m_mstorage->update_db(EDataState::labels, updated_messages);
+			}
+		}
+
+		t->rebuildLabelsMap();
+	},
+		[=](std::unique_ptr<GoogleException> ex) {
+		rv->failed_callback(std::move(ex));
+	});
+
+	return rv;
+};
+
+GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadListLabels_Async(const thread_list& tlist, const label_list& labels2add, const label_list& labels2remove)
+{
+	class ThreadModifier
+	{
+	public:
+		ThreadModifier(GmailCacheRoutes& r, const label_list& labels2add, const label_list& labels2remove)
+			:m_r(r), m_labels2add(labels2add), m_labels2remove(labels2remove) {};
+		GoogleVoidTask* routeRequest(thread_ptr t)
+		{
+			qDebug() << "--ykh ThreadModifier" << t->id();
+			return m_r.modifyThreadLabels_Async(t, m_labels2add, m_labels2remove);
+		};
+	protected:
+		GmailCacheRoutes&     m_r;
+		label_list            m_labels2add;
+		label_list            m_labels2remove;
+	};//LabelDeleter
+
+	GoogleVoidTask* t = m_endpoint.produceVoidTask();
+	if (!tlist.empty()) {
+		std::unique_ptr<ThreadModifier> pr(new ThreadModifier(*this, labels2add, labels2remove));
+		ConcurrentArgRunner<thread_ptr, ThreadModifier>* r = new ConcurrentArgRunner<thread_ptr, ThreadModifier>(tlist, std::move(pr), m_endpoint);
+		r->run();
+		connect(r, &EndpointRunnable::finished, [=]()
+		{
+			t->completed_callback();
+			r->disposeLater();
+		});
+	}
+	else {
+		t->completed_callback();
+	}
+	return t;
 };
 
 ///............

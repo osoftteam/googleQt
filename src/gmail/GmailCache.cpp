@@ -253,6 +253,19 @@ m_accountId(accId),
     m_labels = labels;
 };
 
+mail_cache::MessageData::MessageData(int accId,
+	QString id,
+	QString thread_id,
+	qlonglong labels)
+	: CacheData(EDataState::labels, id),
+	m_accountId(accId),
+	m_thread_id(thread_id)
+{
+	m_flags.agg_state = 0;
+	m_labels = labels;
+};
+
+
 void mail_cache::MessageData::updateSnippet(QString from,
                                             QString to,
                                             QString cc,
