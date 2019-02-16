@@ -296,6 +296,12 @@ QString ApiAutotest::getId(const char* class_name, int default_id_num)
                     .arg(QDateTime::currentMSecsSinceEpoch())
                     .arg(qrand());
             }
+			else if (strcmp(class_name, "labels::LabelResource") == 0) {
+				rv = QString("label_id_%1_%2_%3")
+					.arg(default_id_num)
+					.arg(QDateTime::currentMSecsSinceEpoch())
+					.arg(qrand());
+			}
             else
                 {
                     rv = QString("id_%1").arg(default_id_num);

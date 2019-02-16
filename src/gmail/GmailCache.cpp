@@ -1634,7 +1634,7 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::insertDbLabel(const label
                                       mask_base);
         }
     else {
-        qWarning() << "ERROR. Failed to store label" << sql_insert;
+        qWarning() << "ERROR. Failed to store label " << lbl.id() << sql_insert << q->lastError().text();
 
     }
 
