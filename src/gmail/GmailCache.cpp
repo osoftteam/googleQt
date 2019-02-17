@@ -254,15 +254,15 @@ m_accountId(accId),
 };
 
 mail_cache::MessageData::MessageData(int accId,
-	QString id,
-	QString thread_id,
-	qlonglong labels)
-	: CacheData(EDataState::labels, id),
-	m_accountId(accId),
-	m_thread_id(thread_id)
+    QString id,
+    QString thread_id,
+    qlonglong labels)
+    : CacheData(EDataState::labels, id),
+    m_accountId(accId),
+    m_thread_id(thread_id)
 {
-	m_flags.agg_state = 0;
-	m_labels = labels;
+    m_flags.agg_state = 0;
+    m_labels = labels;
 };
 
 
