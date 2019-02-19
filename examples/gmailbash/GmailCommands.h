@@ -154,6 +154,17 @@ public:
     void ls_drafts(QString);
 
     /**
+    ls_threads_by_labels - list threads that belong to labels provided
+    */
+    void ls_threads_by_labels(QString labelIds);
+
+    /**
+    q_threads - list threads using query parameter
+    */
+    void q_threads(QString qstr);
+
+
+    /**
        get_draft - get draft info
     */
     void get_draft(QString draft_id);
@@ -210,7 +221,7 @@ public:
     
 protected:
     void listMessages(QString nextToken, QString labelIds, QString query = "");
-    void listThreads(QString nextToken, QString labelIds);
+    void listThreads(QString nextToken, QString labelIds, QString qstr);
     void listDrafts(QString nextToken);
     void printSnippet(messages::MessageResource*);
     void printMessage(messages::MessageResource*);

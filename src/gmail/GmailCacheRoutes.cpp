@@ -230,6 +230,7 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
     listArg.setMaxResults(threadsCount);
     listArg.setPageToken(pageToken);
     listArg.setQ(q->qStr());
+    listArg.labels() = q->labelid().split(" ");
 
     ///this will return list of thread Ids with HistoryId
     m_gmail_routes.getThreads()->list_Async(listArg)->then([=](std::unique_ptr<threads::ThreadListRes> tlist)
@@ -244,7 +245,7 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
             id_list.push_back(h);
 
             if (q) {
-                if (q->m_qmap.find(m.id()) == q->m_qmap.end()) {
+                if (q->m_tmap.find(m.id()) == q->m_tmap.end()) {
                     q->m_qnew_thread_ids.push_back(m.id());
                 }
             }
@@ -607,67 +608,75 @@ namespace googleQt {
         {
         public:
             LabelCreator(GmailCacheRoutes& r) :m_r(r) {};
-            GoogleVoidTask* routeRequest(QString label_name)
+            GoogleTask<QString>* routeRequest(QString label_name)
             {
-                GoogleVoidTask* rv = m_r.endpoint().produceVoidTask();
-
+                GoogleTask<QString>* rv = m_r.endpoint().produceTask<QString>();
                 labels::LabelResource arg;
                 arg.setName(label_name).setMessagelistvisibility("show").setLabellistvisibility("labelShow");
                 auto t = m_r.mroutes().getLabels()->create_Async(arg);
                 if (t) {
                     QObject::connect(t, &GoogleTask<labels::LabelResource>::finished, [=]()
                     {
-                        if (t->isCompleted()) {
+                        std::unique_ptr<QString>label_id(new QString);
+                        if (t->isCompleted()) {                         
                             auto r = t->get();
                             if (r) {
+                                *label_id = r->id();
                                 m_r.storage()->insertDbLabel(*r);
                             }
                         };
-                        rv->completed_callback();
+                        rv->completed_callback(std::move(label_id));
                     });
                 }
                 return rv;
             };
         protected:
-            GmailCacheRoutes&     m_r;
+            GmailCacheRoutes&       m_r;
         };//LabelCreator
+
         //we can delete one label in asyn context
         class LabelDeleter
         {
         public:
             LabelDeleter(GmailCacheRoutes& r) :m_r(r) {};
-            GoogleVoidTask* routeRequest(QString label_id)
+            GoogleTask<QString>* routeRequest(QString label_id)
             {
-                GoogleVoidTask* rv = m_r.endpoint().produceVoidTask();
+                GoogleTask<QString>* rv = m_r.endpoint().produceTask<QString>();
 
                 gmail::IdArg l_id(m_r.endpoint().client()->userId(), label_id);
                 auto t = m_r.mroutes().getLabels()->deleteOperation_Async(l_id);
                 if (t) {
                     QObject::connect(t, &GoogleTask<labels::LabelResource>::finished, [=]()
                     {
-                        //if (t->isCompleted()) {
-                            m_r.storage()->deleteDbLabel(label_id);
-                        //};
-                        rv->completed_callback();
+                        std::unique_ptr<QString>label_id_res(new QString);
+                        if (t->isCompleted()) {
+                            *label_id_res = label_id;
+                        }
+                        m_r.storage()->deleteDbLabel(label_id);
+                        rv->completed_callback(std::move(label_id_res));
                     });
                 }
                 return rv;
             };
         protected:
-            GmailCacheRoutes&     m_r;
+            GmailCacheRoutes&       m_r;
         };//LabelDeleter
     }
 }
 
-template <class PROCESSOR> GoogleVoidTask* mail_cache::GmailCacheRoutes::processLabelList_Async(const std::list<QString>& slist) 
+template <class PROCESSOR> googleQt::mail_cache::LabelProcessorTask* mail_cache::GmailCacheRoutes::processLabelList_Async(const std::list<QString>& slist)
 {
-    GoogleVoidTask* t = m_endpoint.produceVoidTask();
+    LabelProcessorTask* t = new LabelProcessorTask(m_endpoint);
     if (!slist.empty()) {
         std::unique_ptr<PROCESSOR> pr(new PROCESSOR(*this));
-        ConcurrentArgRunner<QString, PROCESSOR>* r = new ConcurrentArgRunner<QString, PROCESSOR>(slist, std::move(pr), m_endpoint);
+        ConcurrentValueRunner<QString, PROCESSOR, QString>* r = new ConcurrentValueRunner<QString, PROCESSOR, QString>(slist, std::move(pr), m_endpoint);
         r->run();
         connect(r, &EndpointRunnable::finished, [=]()
         {
+            auto lres = r->detachResult();
+            for (const auto& ps : lres) {
+                t->m_completed_ids.push_back(*ps);
+            }           
             t->completed_callback();
             r->disposeLater();
         });
@@ -678,7 +687,7 @@ template <class PROCESSOR> GoogleVoidTask* mail_cache::GmailCacheRoutes::process
     return t;
 };
 
-GoogleVoidTask* mail_cache::GmailCacheRoutes::createLabelList_Async(const std::list<QString>& names) 
+googleQt::mail_cache::LabelProcessorTask* mail_cache::GmailCacheRoutes::createLabelList_Async(const std::list<QString>& names)
 {
     return processLabelList_Async<mail_cache::LabelCreator>(names);
 };
@@ -959,7 +968,7 @@ void mail_cache::GmailCacheRoutes::runAutotest()
         qfilters.push_back("from:mary@gmail.com");
 
         for (auto& q_str : qfilters) {
-            auto q1 = m_lite_storage->m_qstorage->ensure_q(q_str);
+            auto q1 = m_lite_storage->m_qstorage->ensure_q(q_str, "");
             if (q1) {
                 auto lst2 = getQCache(q1);
                 for (auto& i : lst2->result_list) {

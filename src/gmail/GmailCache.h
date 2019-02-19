@@ -350,27 +350,29 @@ namespace googleQt{
             friend class GmailCacheRoutes;
         };      
 
-        /// query results - collection of threads
+        /// query results - collection of threads       
         class QueryData
         {
         public:
             QString             qStr()const { return m_q; }
             void                setQStr(QString val) { m_q = val; }
+            QString             labelid()const { return m_labelid; }
+            void                setLabelid(QString val) { m_labelid = val; }
             bool                hasNewUnsavedThreads()const { return !m_qnew_thread_ids.empty(); }
-            const thread_arr&   qtarr()const { return m_qthreads; }
-            thread_arr&         qtarr(){ return m_qthreads; }
-            const thread_map&   qtmap()const { return m_qmap; }
+            const thread_arr&   threads_arr()const { return m_qthreads; }
+            thread_arr&         threads_arr(){ return m_qthreads; }
+            const thread_map&   threads_map()const { return m_tmap; }
 
         protected:          
             int                 m_db_id{ -1 };
-            QString             m_q;            
+            QString             m_q, m_labelid;
             thread_arr          m_qthreads;
-            thread_map          m_qmap;
+            thread_map          m_tmap;
             std::list<QString>  m_qnew_thread_ids;
             bool            m_threads_db_loaded{false};
         private:
-            QueryData(int dbid, QString qstr);
-
+            QueryData(int dbid, QString qstr, QString lbid);
+            static QString      format_qhash(QString qstr, QString lblid);
             friend class GQueryStorage;
             friend class GMailSQLiteStorage;
             friend class GmailCacheRoutes;
@@ -533,6 +535,17 @@ namespace googleQt{
             friend class GQueryStorage;
         };
 
+        class LabelProcessorTask : public GoogleVoidTask
+        {
+        public:
+            const std::list<QString>&   getCompletedIds()const { return m_completed_ids; }
+
+        protected:
+            LabelProcessorTask(ApiEndpoint& ept) :GoogleVoidTask(ept) {}
+            std::list<QString>      m_completed_ids;
+            friend class GmailCacheRoutes;
+        };
+
         /// GQueryStorage - we can store query results locally if needed
         /// this is for specific folder filters when we can store query 
         /// results offline, also improve GUI updates
@@ -540,8 +553,8 @@ namespace googleQt{
         {
         public:
             GQueryStorage(GThreadsStorage* s);                      
-            query_ptr ensure_q(QString q_str);
-            query_ptr lookup_q(QString q_str);
+            query_ptr ensure_q(QString q_str, QString labelid);
+            query_ptr lookup_q(QString q_str, QString labelid);
             bool remove_q(query_ptr q);
         protected:
             void insert_db_threads(query_ptr q);
@@ -584,6 +597,8 @@ namespace googleQt{
 
             label_ptr findLabel(QString label_id);
             label_ptr findLabel(SysLabel sys_label);
+            ///CaseInsensitive search for name
+            label_ptr findLabelByName(QString name);
             LabelData* ensureLabel(int accId, QString label_id, bool system_label, int mask_base = -1);
             void update_message_labels_db(int accId, QString msg_id, uint64_t flags);
             void update_attachment_local_file_db(googleQt::mail_cache::msg_ptr m, 
@@ -666,7 +681,7 @@ namespace googleQt{
             std::unique_ptr<GThreadsStorage>    m_tstorage;
             std::unique_ptr<GQueryStorage>      m_qstorage;
             std::weak_ptr<gcontact::GContactCache>    m_contact_cache;
-            std::map<QString, std::shared_ptr<LabelData>> m_acc_labels;
+            std::map<QString, std::shared_ptr<LabelData>, CaseInsensitiveLess> m_acc_labels;
             std::map<int, std::shared_ptr<LabelData>> m_acc_maskbase2labels;
             std::set<int> m_avail_label_base;
             std::map<int, mail_cache::acc_ptr> m_id2acc;

@@ -120,7 +120,7 @@ namespace googleQt
             GoogleTask<messages::MessageResource>* setImportant_Async(mail_cache::MessageData* d, bool set_it = true);
 
             /// create list of labels and update local DB cache
-            GoogleVoidTask* createLabelList_Async(const std::list<QString>& names);
+            LabelProcessorTask* createLabelList_Async(const std::list<QString>& names);
             /// delete list of labels and update local DB cache
             GoogleVoidTask* deleteLabelList_Async(const std::list<QString>& label_ids);
             /// rename label
@@ -144,7 +144,7 @@ namespace googleQt
                 bool label_on,
                 bool system_label);
 
-            template <class PROCESSOR> GoogleVoidTask*      processLabelList_Async(const std::list<QString>& slist);
+            template <class PROCESSOR> LabelProcessorTask*      processLabelList_Async(const std::list<QString>& slist);
 
 
         protected:

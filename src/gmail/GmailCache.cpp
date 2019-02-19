@@ -601,10 +601,15 @@ bool mail_cache::ThreadData::hasAllLabels(uint64_t data)const
 };
 
 ///QueryData
-mail_cache::QueryData::QueryData(int dbid, QString qstr):
-    m_db_id(dbid), m_q(qstr)
+mail_cache::QueryData::QueryData(int dbid, QString qstr, QString lbid):
+    m_db_id(dbid), m_q(qstr), m_labelid(lbid)
 {
 
+};
+
+QString mail_cache::QueryData::format_qhash(QString qstr, QString lblid) 
+{
+    return qstr + ":" + lblid;
 };
 
 ///GMailCacheQueryTask
@@ -1109,12 +1114,12 @@ bool mail_cache::GMailSQLiteStorage::ensureMailTables()
         return false;
 
     /// queries ///
-    QString sql_q = QString("CREATE TABLE IF NOT EXISTS %1gmail_q(q_id INTEGER PRIMARY KEY, acc_id INTEGER NOT NULL, q_query TEXT NOT NULL)")
+    QString sql_q = QString("CREATE TABLE IF NOT EXISTS %1gmail_q(q_id INTEGER PRIMARY KEY, acc_id INTEGER NOT NULL, q_query TEXT, labelid TEXT)")
         .arg(m_metaPrefix);
     if (!execQuery(sql_q))
         return false;
 
-    if (!execQuery(QString("CREATE UNIQUE INDEX IF NOT EXISTS %1gmail_q_query_idx ON %1gmail_q(acc_id, q_query)").arg(m_metaPrefix)))
+    if (!execQuery(QString("CREATE INDEX IF NOT EXISTS %1gmail_q_query_idx ON %1gmail_q(acc_id, q_query, labelid)").arg(m_metaPrefix)))
         return false;
 
     /// query-results ///
@@ -1949,6 +1954,16 @@ mail_cache::label_ptr mail_cache::GMailSQLiteStorage::findLabel(SysLabel sys_lab
     return findLabel(lable_id);
 };
 
+mail_cache::label_ptr mail_cache::GMailSQLiteStorage::findLabelByName(QString name)
+{
+    for (auto& i : m_acc_labels) {
+        auto lb = i.second;
+        if (lb->labelName().compare(name, Qt::CaseInsensitive) == 0) {
+            return lb;
+        }
+    }
+    return nullptr;
+};
 
 mail_cache::LabelData* mail_cache::GMailSQLiteStorage::ensureLabel(int accId, QString label_id, bool system_label, int mask_base)
 {
@@ -3044,7 +3059,7 @@ mail_cache::GQueryStorage::GQueryStorage(GThreadsStorage* s)
 
 bool mail_cache::GQueryStorage::loadQueriesFromDb()
 {
-    QString sql = QString("SELECT q_id, q_query FROM %1gmail_q "
+    QString sql = QString("SELECT q_id, q_query, labelid FROM %1gmail_q "
         "WHERE acc_id=%2")
         .arg(m_tstorage->m_storage->metaPrefix())
         .arg(m_tstorage->m_storage->currentAccountId());
@@ -3057,8 +3072,9 @@ bool mail_cache::GQueryStorage::loadQueriesFromDb()
     {
         int q_id = q->value(0).toInt();
         QString q_str = q->value(1).toString();
-        auto qd = std::shared_ptr<QueryData>(new QueryData(q_id, q_str));
-        m_qmap[q_str] = qd;
+        QString lbid = q->value(2).toString();
+        auto qd = std::shared_ptr<QueryData>(new QueryData(q_id, q_str, lbid));
+        m_qmap[QueryData::format_qhash(q_str, lbid)] = qd;
         m_q_dbmap[q_id] = qd;
         loaded_objects++;
     }
@@ -3097,7 +3113,7 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q)
         QString thread_id = qres->value(0).toString();
         auto t = tc->mem_object(thread_id);
         q->m_qthreads.push_back(t);
-        q->m_qmap[thread_id] = t;
+        q->m_tmap[thread_id] = t;
         loaded_objects++;
     }
 
@@ -3119,9 +3135,9 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q)
     return true;
 };
 
-mail_cache::query_ptr mail_cache::GQueryStorage::ensure_q(QString q_str)
+mail_cache::query_ptr mail_cache::GQueryStorage::ensure_q(QString q_str, QString labelid)
 {
-    auto i = m_qmap.find(q_str);
+    auto i = m_qmap.find(QueryData::format_qhash(q_str, labelid));
     if(i != m_qmap.end()){
         auto qd = i->second;
         if(!qd->m_threads_db_loaded){
@@ -3133,15 +3149,16 @@ mail_cache::query_ptr mail_cache::GQueryStorage::ensure_q(QString q_str)
         return qd;
     }
 
-    QString sql = QString("INSERT INTO %1gmail_q(acc_id, q_query) VALUES(%2,?)")
+    QString sql = QString("INSERT INTO %1gmail_q(acc_id, q_query, labelid) VALUES(%2,?,?)")
         .arg(m_tstorage->m_storage->m_metaPrefix)
         .arg(m_tstorage->m_storage->currentAccountId());
     QSqlQuery* q = m_tstorage->m_storage->prepareQuery(sql);
     if (!q)return nullptr;
     q->addBindValue(q_str);
+    q->addBindValue(labelid);
     if (q->exec()) {
         auto q_id = q->lastInsertId().toInt();
-        auto qd = std::shared_ptr<QueryData>(new QueryData(q_id, q_str));
+        auto qd = std::shared_ptr<QueryData>(new QueryData(q_id, q_str, labelid));
         m_qmap[q_str] = qd;
         m_q_dbmap[q_id] = qd;
         return qd;
@@ -3158,9 +3175,9 @@ mail_cache::query_ptr mail_cache::GQueryStorage::ensure_q(QString q_str)
     return nullptr;
 };
 
-mail_cache::query_ptr mail_cache::GQueryStorage::lookup_q(QString q_str)
+mail_cache::query_ptr mail_cache::GQueryStorage::lookup_q(QString q_str, QString labelid)
 {
-    auto i = m_qmap.find(q_str);
+    auto i = m_qmap.find(QueryData::format_qhash(q_str, labelid));
     if (i == m_qmap.end()) {
         return nullptr;
     }
@@ -3168,7 +3185,7 @@ mail_cache::query_ptr mail_cache::GQueryStorage::lookup_q(QString q_str)
     auto q = i->second;
     if (q->m_threads_db_loaded) {
         if (!loadQueryThreadsFromDb(q)) {
-            qWarning() << "Failed to load query from DB" << q_str;
+            qWarning() << "Failed to load query from DB" << q_str << labelid;
             return nullptr;
         };
     }
@@ -3205,12 +3222,12 @@ void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
 
     std::list<QString>  new_threads;
     for (auto& i : qd->m_qnew_thread_ids) {
-        if (qd->m_qmap.find(i) == qd->m_qmap.end()) {
+        if (qd->m_tmap.find(i) == qd->m_tmap.end()) {
             auto t = tc->mem_object(i);
             if (t) {
                 new_threads.push_back(i);
                 qd->m_qthreads.push_back(t);
-                qd->m_qmap[i] = t;
+                qd->m_tmap[i] = t;
             }
             else {
                 qWarning() << "failed to locate thread in cache" << i;

@@ -49,7 +49,7 @@ void GmailCommands::listMessages(QString nextToken, QString labelIds, QString qu
         }
 };
 
-void GmailCommands::listThreads(QString nextToken, QString labelIds)
+void GmailCommands::listThreads(QString nextToken, QString labelIds, QString qstr)
 {
     try
         {
@@ -59,15 +59,18 @@ void GmailCommands::listThreads(QString nextToken, QString labelIds)
             if (!labelIds.isEmpty()) {
                 listArg.labels() = labelIds.split(" ");
             }
+            if (!qstr.isEmpty()) {
+                listArg.setQ(qstr);
+            }
 
             int idx = 1;
             auto threads_list = m_gm->getThreads()->list(listArg);
             for (auto t1 : threads_list->threads())
                 {
                     std::cout << idx++ << ". "
-                              << "tid=" << t1.id()
-                              << " historyid=" << t1.historyid()
-                              << std::endl;                    
+                        << "tid=" << t1.id()
+                        << " historyid=" << t1.historyid();
+                    std::cout << std::endl;
                 }
 
             nextToken = threads_list->nextpagetoken();
@@ -809,7 +812,17 @@ void GmailCommands::printThread(threads::ThreadResource* t)
 
 void GmailCommands::ls_threads(QString nextToken)
 {
-    listThreads(nextToken, "");
+    listThreads(nextToken, "", "");
+};
+
+void GmailCommands::ls_threads_by_labels(QString labelIds) 
+{
+    listThreads("", labelIds, "");
+};
+
+void GmailCommands::q_threads(QString qstr) 
+{
+    listThreads("", "", qstr);
 };
 
 void GmailCommands::get_thread(QString id_list)
