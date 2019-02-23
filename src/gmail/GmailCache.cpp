@@ -3125,6 +3125,11 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q)
     if (!q->m_qthreads.empty()) {       
         std::sort(q->m_qthreads.begin(), q->m_qthreads.end(), [&](mail_cache::thread_ptr t1, mail_cache::thread_ptr t2)
         {
+            if (!t1)
+                return false;
+            if (!t2)
+                return false;
+
             bool rv = (t1->internalDate() > t2->internalDate());
             return rv;
         });     

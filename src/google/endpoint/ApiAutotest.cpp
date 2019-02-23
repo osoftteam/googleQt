@@ -350,10 +350,12 @@ QString ApiAutotest::getString(const char* class_name, const char* field_name, Q
                 .arg(QDateTime::currentMSecsSinceEpoch())
                 .arg(qrand());
         }
-    }
-    else if (strcmp(class_name, "messages::MessageResource") == 0)
+    }//ykh - todo should be generic
+    else if (strcmp(class_name, "messages::MessageResource") == 0 ||
+            strcmp(class_name, "labels::LabelResource") == 0)
     {
-        if (strcmp(field_name, "m_threadId") == 0)
+        if (strcmp(field_name, "m_threadId") == 0 ||
+            strcmp(field_name, "m_name") == 0)
         {
             auto i = m_availMemberValue.find(class_name);
             if (i != m_availMemberValue.end()) {

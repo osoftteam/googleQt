@@ -613,6 +613,9 @@ namespace googleQt {
                 GoogleTask<QString>* rv = m_r.endpoint().produceTask<QString>();
                 labels::LabelResource arg;
                 arg.setName(label_name).setMessagelistvisibility("show").setLabellistvisibility("labelShow");
+#ifdef API_QT_AUTOTEST
+                ApiAutotest::INSTANCE().addMemberValue("labels::LabelResource", "m_name", label_name);              //ApiAutotest::INSTANCE().addId("labels::LabelResource", thread_id);
+#endif
                 auto t = m_r.mroutes().getLabels()->create_Async(arg);
                 if (t) {
                     QObject::connect(t, &GoogleTask<labels::LabelResource>::finished, [=]()
