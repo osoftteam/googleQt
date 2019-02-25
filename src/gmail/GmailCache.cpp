@@ -3112,9 +3112,14 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q)
     {
         QString thread_id = qres->value(0).toString();
         auto t = tc->mem_object(thread_id);
-        q->m_qthreads.push_back(t);
-        q->m_tmap[thread_id] = t;
-        loaded_objects++;
+		if (t) {
+			q->m_qthreads.push_back(t);
+			q->m_tmap[thread_id] = t;
+			loaded_objects++;
+		}
+		else {
+			qWarning() << "failed to locate thread in cache for query" << thread_id;
+		}
     }
 
 #ifdef API_QT_AUTOTEST
