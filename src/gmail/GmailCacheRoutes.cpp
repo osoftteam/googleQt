@@ -153,7 +153,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::trashCacheMessage_Async(QString ms
     return rv;
 };
 
-
+/*
 ConcurrentValueRunner<QString, 
     mail_cache::ThreadsReceiver, 
     threads::ThreadResource>* mail_cache::GmailCacheRoutes::getUserBatchThreads_Async(const std::list<QString>& id_list)
@@ -164,7 +164,7 @@ ConcurrentValueRunner<QString,
                             threads::ThreadResource>(id_list, std::move(tr), m_endpoint);
     r->run();
     return r;
-};
+};*/
 
 mail_cache::tdata_result mail_cache::GmailCacheRoutes::getNextCacheThreads(
     int messagesCount /*= 40*/,

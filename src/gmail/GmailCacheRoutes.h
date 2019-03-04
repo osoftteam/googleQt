@@ -93,7 +93,7 @@ namespace googleQt
 
             GoogleVoidTask* trashCacheMessage_Async(QString msg_id);
 
-            ConcurrentValueRunner<QString, mail_cache::ThreadsReceiver, threads::ThreadResource>* getUserBatchThreads_Async(const std::list<QString>& id_list);
+//            ConcurrentValueRunner<QString, mail_cache::ThreadsReceiver, threads::ThreadResource>* getUserBatchThreads_Async(const std::list<QString>& id_list);
 
             /// async refresh labels DB table
             GoogleVoidTask* refreshLabels_Async();

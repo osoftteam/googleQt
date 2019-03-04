@@ -874,7 +874,14 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const std::list<QSt
     if (id_list.empty())
         return;
 
-    auto par_runner = m_r.getUserBatchThreads_Async(id_list);
+    //auto par_runner = m_r.getUserBatchThreads_Async(id_list);
+	//...
+	std::unique_ptr<mail_cache::ThreadsReceiver> tr(new mail_cache::ThreadsReceiver(m_r.mroutes()));
+	auto par_runner = new ConcurrentValueRunner<QString,
+		mail_cache::ThreadsReceiver,
+		threads::ThreadResource>(id_list, std::move(tr), m_endpoint);
+	par_runner->run();
+	//...
 
     connect(par_runner, &EndpointRunnable::finished, [=]()
     {
