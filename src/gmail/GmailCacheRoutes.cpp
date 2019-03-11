@@ -252,6 +252,7 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
         }
         rfetcher->m_nextPageToken = tlist->nextpagetoken();
         getCacheThreadList_Async(id_list, rfetcher);
+	q->m_nextPageToken = tlist->nextpagetoken();
     },
         [=](std::unique_ptr<GoogleException> ex)
     {

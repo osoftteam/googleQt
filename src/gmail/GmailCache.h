@@ -351,32 +351,33 @@ namespace googleQt{
         };      
 
         /// query results - collection of threads       
-        class QueryData
-        {
-        public:
-            QString             qStr()const { return m_q; }
-            void                setQStr(QString val) { m_q = val; }
-            QString             labelid()const { return m_labelid; }
-            void                setLabelid(QString val) { m_labelid = val; }
-            bool                hasNewUnsavedThreads()const { return !m_qnew_thread_ids.empty(); }
-            const thread_arr&   threads_arr()const { return m_qthreads; }
-            thread_arr&         threads_arr(){ return m_qthreads; }
-            const thread_map&   threads_map()const { return m_tmap; }
+      class QueryData
+      {
+      public:
+	QString             qStr()const { return m_q; }
+	void                setQStr(QString val) { m_q = val; }
+	QString             labelid()const { return m_labelid; }
+	void                setLabelid(QString val) { m_labelid = val; }
+	bool                hasNewUnsavedThreads()const { return !m_qnew_thread_ids.empty(); }
+	const thread_arr&   threads_arr()const { return m_qthreads; }
+	thread_arr&         threads_arr(){ return m_qthreads; }
+	const thread_map&   threads_map()const { return m_tmap; }
+	QString nextPageToken()const{return m_nextPageToken;}
 
-        protected:          
-            int                 m_db_id{ -1 };
-            QString             m_q, m_labelid;
-            thread_arr          m_qthreads;
-            thread_map          m_tmap;
-            std::list<QString>  m_qnew_thread_ids;
-            bool            m_threads_db_loaded{false};
-        private:
-            QueryData(int dbid, QString qstr, QString lbid);
-            static QString      format_qhash(QString qstr, QString lblid);
-            friend class GQueryStorage;
-            friend class GMailSQLiteStorage;
-            friend class GmailCacheRoutes;
-        };
+      protected:          
+	int                 m_db_id{ -1 };
+	QString             m_q, m_labelid,m_nextPageToken;
+	thread_arr          m_qthreads;
+	thread_map          m_tmap;
+	std::list<QString>  m_qnew_thread_ids;
+	bool            m_threads_db_loaded{false};
+      private:
+	QueryData(int dbid, QString qstr, QString lbid);
+	static QString      format_qhash(QString qstr, QString lblid);
+	friend class GQueryStorage;
+	friend class GMailSQLiteStorage;
+	friend class GmailCacheRoutes;
+      };
 
         class DiagnosticData 
         {

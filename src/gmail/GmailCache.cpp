@@ -609,7 +609,8 @@ mail_cache::QueryData::QueryData(int dbid, QString qstr, QString lbid):
 
 QString mail_cache::QueryData::format_qhash(QString qstr, QString lblid) 
 {
-    return qstr + ":" + lblid;
+  QString rv = qstr + ":" + lblid;
+  return rv;
 };
 
 ///GMailCacheQueryTask
@@ -3176,7 +3177,8 @@ mail_cache::query_ptr mail_cache::GQueryStorage::ensure_q(QString q_str, QString
     if (q->exec()) {
         auto q_id = q->lastInsertId().toInt();
         auto qd = std::shared_ptr<QueryData>(new QueryData(q_id, q_str, labelid));
-        m_qmap[q_str] = qd;
+        m_qmap[QueryData::format_qhash(q_str, labelid)] = qd;
+        //m_qmap[q_str] = qd;
         m_q_dbmap[q_id] = qd;
         return qd;
     }
@@ -3300,7 +3302,9 @@ bool mail_cache::GQueryStorage::remove_q(query_ptr q)
     if (!qq)return false;
     if (!qq->exec()) return false;
 
-    m_qmap.erase(q->qStr());
+    //        m_qmap[QueryData::format_qhash(q_str, labelid)] = qd;
+    //m_qmap.erase(q->qStr());
+    m_qmap.erase(QueryData::format_qhash(q->qStr(), q->labelid()));
     m_q_dbmap.erase(q->m_db_id);
     return true;
 };
