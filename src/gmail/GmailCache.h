@@ -55,8 +55,8 @@ namespace googleQt{
         using THREADS_LIST      = std::map<QString, thread_ptr>;
 
         /**
-            reserved syslabels, they are looked up faster
-            the order in enum is important since it goes to bitmask
+           reserved syslabels, they are looked up faster
+           the order in enum is important since it goes to bitmask
         */
         enum class SysLabel
         {
@@ -152,39 +152,39 @@ namespace googleQt{
         private:
             ///constructor for small(snippet) object
             MessageData(int accId,
-                QString id,
-                QString thread_id,
-                QString from,
-                QString to,
-                QString cc,
-                QString bcc,
-                QString subject,
-                QString snippet,
-                qlonglong internalDate,
-                qlonglong labels,
-                QString references);
+                        QString id,
+                        QString thread_id,
+                        QString from,
+                        QString to,
+                        QString cc,
+                        QString bcc,
+                        QString subject,
+                        QString snippet,
+                        qlonglong internalDate,
+                        qlonglong labels,
+                        QString references);
 
             ///constructor for big(snippet+context) object
             MessageData(int accId,
-                QString id,
-                QString thread_id,
-                QString from,
-                QString to,
-                QString cc,
-                QString bcc,
-                QString subject,
-                QString snippet,
-                QString plain,
-                QString html,
-                qlonglong internalDate,
-                qlonglong labels,
-                QString references);
+                        QString id,
+                        QString thread_id,
+                        QString from,
+                        QString to,
+                        QString cc,
+                        QString bcc,
+                        QString subject,
+                        QString snippet,
+                        QString plain,
+                        QString html,
+                        qlonglong internalDate,
+                        qlonglong labels,
+                        QString references);
 
             ///constructor for smalles(labels only) object
             MessageData(int accId,
-                QString id,
-                QString thread_id,
-                qlonglong labels);
+                        QString id,
+                        QString thread_id,
+                        qlonglong labels);
 
             ///constructor for loading from DB
             MessageData(int accId,
@@ -304,8 +304,8 @@ namespace googleQt{
         };
 
         /**
-            mail thread data - a way to group messages that
-            belongs to same conversation line
+           mail thread data - a way to group messages that
+           belongs to same conversation line
         */
         class ThreadData : public CacheDataWithHistory
         {
@@ -351,33 +351,33 @@ namespace googleQt{
         };      
 
         /// query results - collection of threads       
-      class QueryData
-      {
-      public:
-	QString             qStr()const { return m_q; }
-	void                setQStr(QString val) { m_q = val; }
-	QString             labelid()const { return m_labelid; }
-	void                setLabelid(QString val) { m_labelid = val; }
-	bool                hasNewUnsavedThreads()const { return !m_qnew_thread_ids.empty(); }
-	const thread_arr&   threads_arr()const { return m_qthreads; }
-	thread_arr&         threads_arr(){ return m_qthreads; }
-	const thread_map&   threads_map()const { return m_tmap; }
-	QString nextPageToken()const{return m_nextPageToken;}
+        class QueryData
+        {
+        public:
+            QString             qStr()const { return m_q; }
+            void                setQStr(QString val) { m_q = val; }
+            QString             labelid()const { return m_labelid; }
+            void                setLabelid(QString val) { m_labelid = val; }
+            bool                hasNewUnsavedThreads()const { return !m_qnew_thread_ids.empty(); }
+            const thread_arr&   threads_arr()const { return m_qthreads; }
+            thread_arr&         threads_arr(){ return m_qthreads; }
+            const thread_map&   threads_map()const { return m_tmap; }
+            QString nextPageToken()const{return m_nextPageToken;}
 
-      protected:          
-	int                 m_db_id{ -1 };
-	QString             m_q, m_labelid,m_nextPageToken;
-	thread_arr          m_qthreads;
-	thread_map          m_tmap;
-	std::list<QString>  m_qnew_thread_ids;
-	bool            m_threads_db_loaded{false};
-      private:
-	QueryData(int dbid, QString qstr, QString lbid);
-	static QString      format_qhash(QString qstr, QString lblid);
-	friend class GQueryStorage;
-	friend class GMailSQLiteStorage;
-	friend class GmailCacheRoutes;
-      };
+        protected:          
+            int                 m_db_id{ -1 };
+            QString             m_q, m_labelid,m_nextPageToken;
+            thread_arr          m_qthreads;
+            thread_map          m_tmap;
+            std::list<QString>  m_qnew_thread_ids;
+            bool            m_threads_db_loaded{false};
+        private:
+            QueryData(int dbid, QString qstr, QString lbid);
+            static QString      format_qhash(QString qstr, QString lblid);
+            friend class GQueryStorage;
+            friend class GMailSQLiteStorage;
+            friend class GmailCacheRoutes;
+        };
 
         class DiagnosticData 
         {
@@ -662,11 +662,11 @@ namespace googleQt{
                                      bool system_label,
                                      int mask_base = -1);
             LabelData* createAndInsertLabel(
-                                            QString label_id,
-                                            QString label_name,
-                                            bool label_is_system,
-                                            uint64_t unread_messages,
-                                            int mask_base);
+                QString label_id,
+                QString label_name,
+                bool label_is_system,
+                uint64_t unread_messages,
+                int mask_base);
             bool deleteDbLabel(QString labelId);
             
             void reloadDbAccounts();
@@ -705,8 +705,8 @@ namespace googleQt{
 
 
         /**
-            we know how to prepare argument and query for email message by ID
-            we work in context of current userId
+           we know how to prepare argument and query for email message by ID
+           we work in context of current userId
         */
         class MessagesReceiver
         {
@@ -719,7 +719,7 @@ namespace googleQt{
         };
       
         /**
-        we know how to prepare argument and query for email message by ID
+           we know how to prepare argument and query for email message by ID
         */
         class ThreadsReceiver
         {

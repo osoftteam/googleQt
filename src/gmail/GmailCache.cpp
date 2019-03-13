@@ -876,13 +876,13 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const std::list<QSt
         return;
 
     //auto par_runner = m_r.getUserBatchThreads_Async(id_list);
-	//...
-	std::unique_ptr<mail_cache::ThreadsReceiver> tr(new mail_cache::ThreadsReceiver(m_r.mroutes()));
-	auto par_runner = new ConcurrentValueRunner<QString,
-		mail_cache::ThreadsReceiver,
-		threads::ThreadResource>(id_list, std::move(tr), m_endpoint);
-	par_runner->run();
-	//...
+    //...
+    std::unique_ptr<mail_cache::ThreadsReceiver> tr(new mail_cache::ThreadsReceiver(m_r.mroutes()));
+    auto par_runner = new ConcurrentValueRunner<QString,
+        mail_cache::ThreadsReceiver,
+        threads::ThreadResource>(id_list, std::move(tr), m_endpoint);
+    par_runner->run();
+    //...
 
     connect(par_runner, &EndpointRunnable::finished, [=]()
     {
@@ -3120,14 +3120,14 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q)
     {
         QString thread_id = qres->value(0).toString();
         auto t = tc->mem_object(thread_id);
-		if (t) {
-			q->m_qthreads.push_back(t);
-			q->m_tmap[thread_id] = t;
-			loaded_objects++;
-		}
-		else {
-			qWarning() << "failed to locate thread in cache for query" << thread_id;
-		}
+        if (t) {
+            q->m_qthreads.push_back(t);
+            q->m_tmap[thread_id] = t;
+            loaded_objects++;
+        }
+        else {
+            qWarning() << "failed to locate thread in cache for query" << thread_id;
+        }
     }
 
 #ifdef API_QT_AUTOTEST

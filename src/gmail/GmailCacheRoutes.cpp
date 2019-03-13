@@ -252,7 +252,7 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
         }
         rfetcher->m_nextPageToken = tlist->nextpagetoken();
         getCacheThreadList_Async(id_list, rfetcher);
-	q->m_nextPageToken = tlist->nextpagetoken();
+    q->m_nextPageToken = tlist->nextpagetoken();
     },
         [=](std::unique_ptr<GoogleException> ex)
     {
@@ -555,6 +555,12 @@ GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setLabel_As
                 }
             }
         }
+
+        auto t = m_lite_storage->findThread(d->threadId());
+        if (t) {
+            t->rebuildLabelsMap();
+        }
+
     }
 
     QString userId = m_lite_storage->findUser(d->accountId());
@@ -575,7 +581,6 @@ GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setLabel_As
         arg.setRemovelabels(labels);
     }
 
-   // messages::MessagesRoutes* msg = getMessages();
     GoogleTask<messages::MessageResource>* t = m_gmail_routes.getMessages()->modify_Async(arg);
     QObject::connect(t, &EndpointRunnable::finished, [=]()
     {
