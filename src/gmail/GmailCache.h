@@ -323,12 +323,14 @@ namespace googleQt{
             uint64_t labelsBitMap()const{return m_labels;}
 
             bool hasLabel(uint64_t data)const;
+            bool hasLimboLabel(uint64_t data)const;
             bool hasAllLabels(uint64_t data)const;
             void resortMessages();
         protected:          
             int         m_messages_count;
             QString     m_snippet;
-            uint64_t    m_labels{0};
+            uint64_t    m_labels{0}, 
+                        m_limbo_labels{0};///labels not confirmed yet, we waiting for async call to complete but app might assume is succeded
             msg_arr     m_messages;
             msg_map     m_mmap;
             msg_ptr     m_head;
@@ -341,6 +343,7 @@ namespace googleQt{
                 uint64_t lbmap);
             void add_msg(msg_ptr);
             void rebuildLabelsMap();
+            void setupLimboLabels(const label_list& labels2add);
 
             friend class GThreadCacheQueryTask;
             friend class GMailCacheQueryTask;

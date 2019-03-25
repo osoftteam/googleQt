@@ -548,8 +548,17 @@ void mail_cache::ThreadData::add_msg(msg_ptr m)
 void mail_cache::ThreadData::rebuildLabelsMap() 
 {
     m_labels = 0;
+    m_limbo_labels = 0;
     for (auto& m : m_messages) {
         m_labels |= m->labelsBitMap();
+    }
+};
+
+void mail_cache::ThreadData::setupLimboLabels(const label_list& labels2add)
+{
+    m_limbo_labels = 0;
+    for (auto& lb : labels2add) {
+        m_limbo_labels |= lb->labelMask();
     }
 };
 
@@ -586,6 +595,18 @@ bool mail_cache::ThreadData::hasLabel(uint64_t data)const
     bool rv = true;
     if (data != 0) {
         rv = (data & m_labels) != 0;
+    }
+    return rv;
+};
+
+bool mail_cache::ThreadData::hasLimboLabel(uint64_t data)const 
+{
+    bool rv = false;
+    if (data != 0) {
+        rv = (data & m_limbo_labels) != 0;
+        if (rv) {
+            qDebug() << "ykh-llbl" << m_limbo_labels << data;
+        }
     }
     return rv;
 };

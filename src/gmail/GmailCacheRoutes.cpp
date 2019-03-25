@@ -736,8 +736,6 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::renameLabels_Async(QString labelId
     return rv;
 };
 
-///............
-
 GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadLabels_Async(thread_ptr t,
     const label_list& labels2add,
     const label_list& labels2remove)
@@ -751,6 +749,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadLabels_Async(thread_pt
     googleQt::gmail::ModifyMessageArg arg(m_endpoint.client()->userId(), t->id());
     for (const auto& lb : labels2add) {
         arg.addAddLabel(lb->labelId());
+        t->setupLimboLabels(labels2add);
     }
     for (const auto& lb : labels2remove) {
         arg.addRemoveLabel(lb->labelId());
@@ -759,15 +758,12 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadLabels_Async(thread_pt
     auto tt = m_gmail_routes.getThreads()->modify_Async(arg);
     tt->then([=](std::unique_ptr<threads::ThreadResource> tr)
     {
-        qDebug() << "--ykh on thread modify_Async" << tr->id();
-
         CACHE_LIST<mail_cache::MessageData> new_messages;
         CACHE_LIST<mail_cache::MessageData> updated_messages;
 
         for (auto& m : tr->messages()) {
             auto m2 = t->findMessage(t->id());
             if (!m2) {
-                qDebug() << "--ykh on thread modify_Async[new-message]" << tr->id();
                 uint64_t lbits = 0;
                 if (m_lite_storage) {
                     lbits = m_lite_storage->packLabels(m.labelids());
@@ -803,6 +799,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadLabels_Async(thread_pt
         }
 
         t->rebuildLabelsMap();
+        rv->completed_callback();
     },
         [=](std::unique_ptr<GoogleException> ex) {
         rv->failed_callback(std::move(ex));
@@ -820,7 +817,6 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadListLabels_Async(const
             :m_r(r), m_labels2add(labels2add), m_labels2remove(labels2remove) {};
         GoogleVoidTask* routeRequest(thread_ptr t)
         {
-            qDebug() << "--ykh ThreadModifier" << t->id();
             return m_r.modifyThreadLabels_Async(t, m_labels2add, m_labels2remove);
         };
     protected:
