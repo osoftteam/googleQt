@@ -286,6 +286,9 @@ namespace googleQt{
             bool        isSocialCategory()const;
             bool        isPersonalCategory()const;
             
+        /// userPtr - custom user data pointer
+      void*         userPtr()const {return m_user_ptr;}
+      void          setUserPtr(void* p)const { m_user_ptr = p; }
         protected:
             QString     m_label_id;
             QString     m_label_name;
@@ -293,6 +296,7 @@ namespace googleQt{
             uint64_t    m_label_mask;
             bool        m_is_system_label;
             uint64_t    m_unread_messages;
+        mutable void*  m_user_ptr{nullptr};
         private:
             LabelData(QString id,
                       QString name,
@@ -609,10 +613,10 @@ namespace googleQt{
                                                  googleQt::mail_cache::att_ptr a, 
                                                  QString file_name);
             /// load label info by set of label IDs, if null return all available labels
-            std::list<mail_cache::LabelData*> getLabelsInSet(std::set<QString>* in_optional_idset = nullptr);
+            std::list<mail_cache::label_ptr> getLabelsInSet(std::set<QString>* in_optional_idset = nullptr);
 
             uint64_t packLabels(const std::list <QString>& labels);
-            std::list<mail_cache::LabelData*> unpackLabels(const uint64_t& data)const;
+            std::list<mail_cache::label_ptr> unpackLabels(const uint64_t& data)const;
 
             bool loadAttachmentsFromDb(MessageData& m);
             bool deleteAttachmentsFromDb(QString msg_id);
@@ -686,7 +690,7 @@ namespace googleQt{
             std::unique_ptr<GQueryStorage>      m_qstorage;
             std::weak_ptr<gcontact::GContactCache>    m_contact_cache;
             std::map<QString, std::shared_ptr<LabelData>, CaseInsensitiveLess> m_acc_labels;
-            std::map<int, std::shared_ptr<LabelData>> m_acc_maskbase2labels;
+            std::vector<std::shared_ptr<LabelData>> m_maskbase2label;
             std::set<int> m_avail_label_base;
             std::map<int, mail_cache::acc_ptr> m_id2acc;
             std::map<QString, mail_cache::acc_ptr, CaseInsensitiveLess> m_user2acc;

@@ -1258,10 +1258,13 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
         }
     
     m_acc_labels.clear();
-    m_acc_maskbase2labels.clear();
-    
-    for (int i = 0; i < 64; i++)
+    m_maskbase2label.clear();
+    m_maskbase2label.reserve(64);       
+
+    for (int i = 0; i < 64; i++) {
         m_avail_label_base.insert(i);
+        m_maskbase2label.push_back(nullptr);
+    }
 
     if (!loadLabelsFromDb()){
         qWarning() << "ERROR. Failed to load labels from DB";
@@ -1591,7 +1594,12 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::createAndInsertLabel(
 
     m_avail_label_base.erase(mask_base);
     m_acc_labels[lb->labelId()] = lb;
-    m_acc_maskbase2labels[mask_base] = lb;
+#ifdef _DEBUG
+    if (mask_base > 64) {
+        qWarning() << "ERROR. Too big label mask" << mask_base << m_maskbase2label.size();
+    }
+#endif
+    m_maskbase2label[mask_base] = lb;
     return lb.get();
 };
 
@@ -2018,16 +2026,16 @@ mail_cache::LabelData* mail_cache::GMailSQLiteStorage::ensureLabel(int accId, QS
 };
 
 
-std::list<mail_cache::LabelData*> mail_cache::GMailSQLiteStorage::getLabelsInSet(std::set<QString>* in_optional_idset /*= nullptr*/)
+std::list<mail_cache::label_ptr> mail_cache::GMailSQLiteStorage::getLabelsInSet(std::set<QString>* in_optional_idset /*= nullptr*/)
 {
-    std::list<mail_cache::LabelData*> rv;
+    std::list<mail_cache::label_ptr> rv;
     for (auto& i : m_acc_labels) {
         bool add_label = true;
         if (in_optional_idset) {
             add_label = (in_optional_idset->find(i.first) != in_optional_idset->end());
         }
         if (add_label) {
-            rv.push_back(i.second.get());
+            rv.push_back(i.second);
         }
     }
     return rv;
@@ -2058,9 +2066,9 @@ uint64_t mail_cache::GMailSQLiteStorage::packLabels(const std::list <QString>& l
     return f;
 };
 
-std::list<mail_cache::LabelData*> mail_cache::GMailSQLiteStorage::unpackLabels(const uint64_t& data)const
+std::list<mail_cache::label_ptr> mail_cache::GMailSQLiteStorage::unpackLabels(const uint64_t& data)const
 {
-    std::list<mail_cache::LabelData*> labels;
+    std::list<mail_cache::label_ptr> labels;
 
     uint64_t theone = 1;
     for (int b = 0; b < 64; b++)
@@ -2069,19 +2077,32 @@ std::list<mail_cache::LabelData*> mail_cache::GMailSQLiteStorage::unpackLabels(c
             if (m > data)
                 break;
             if (m & data) {
-                auto i = m_acc_maskbase2labels.find(b);
-                if (i != m_acc_maskbase2labels.end()){
-                    labels.push_back(i->second.get());
+                auto lbl = m_maskbase2label[b];
+                if (lbl) {
+                    labels.push_back(lbl);
+                }
+                else {
+                    static int warning_count = 0;
+                    if (warning_count < 100)
+                    {
+                        qWarning() << "ERROR. Lost label (unpack)" << b << m_maskbase2label.size();
+                        warning_count++;
+                    }
+                }
+                /*
+                auto i = m_maskbase2label.find(b);
+                if (i != m_maskbase2label.end()){
+                    labels.push_back(i->second);
                 }
                 else {
                     static int warning_count = 0;
                     if (warning_count < 100)
                         {
-                            qWarning() << "ERROR. Lost label (unpack)" << b << m_acc_maskbase2labels.size();
+                            qWarning() << "ERROR. Lost label (unpack)" << b << m_maskbase2label.size();
                             warning_count++;
                         }
                 }
-
+                */
             }
         }
 

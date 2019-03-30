@@ -101,9 +101,9 @@ namespace googleQt
                 googleQt::mail_cache::att_ptr a,
                 QString destinationFolder);
             void refreshLabels();
-            std::list<mail_cache::LabelData*> getLoadedLabels(std::set<QString>* in_optional_idset = nullptr);
-            std::list<mail_cache::LabelData*> getMessageLabels(mail_cache::MessageData* d);
-            std::list<mail_cache::LabelData*> getThreadLabels(mail_cache::ThreadData* d);
+            std::list<mail_cache::label_ptr> getLoadedLabels(std::set<QString>* in_optional_idset = nullptr);
+            std::list<mail_cache::label_ptr> getMessageLabels(mail_cache::MessageData* d);
+            std::list<mail_cache::label_ptr> getThreadLabels(mail_cache::ThreadData* d);
             bool messageHasLabel(mail_cache::MessageData* d, QString label_id)const;
 
 

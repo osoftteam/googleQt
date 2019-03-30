@@ -458,28 +458,28 @@ void mail_cache::GmailCacheRoutes::refreshLabels()
     refreshLabels_Async()->waitForResultAndRelease();
 };
 
-std::list<mail_cache::LabelData*> mail_cache::GmailCacheRoutes::getLoadedLabels(std::set<QString>* in_optional_idset)
+std::list<mail_cache::label_ptr> mail_cache::GmailCacheRoutes::getLoadedLabels(std::set<QString>* in_optional_idset)
 {
     if (!m_lite_storage) {
-        std::list<mail_cache::LabelData*> on_error;
+        std::list<mail_cache::label_ptr> on_error;
         return on_error;
     }
     return m_lite_storage->getLabelsInSet(in_optional_idset);
 };
 
-std::list<mail_cache::LabelData*> mail_cache::GmailCacheRoutes::getMessageLabels(mail_cache::MessageData* d)
+std::list<mail_cache::label_ptr> mail_cache::GmailCacheRoutes::getMessageLabels(mail_cache::MessageData* d)
 {
     if (!m_lite_storage) {
-        std::list<mail_cache::LabelData*> on_error;
+        std::list<mail_cache::label_ptr> on_error;
         return on_error;
     }
     return m_lite_storage->unpackLabels(d->labelsBitMap());
 };
 
-std::list<mail_cache::LabelData*> mail_cache::GmailCacheRoutes::getThreadLabels(mail_cache::ThreadData* d)
+std::list<mail_cache::label_ptr> mail_cache::GmailCacheRoutes::getThreadLabels(mail_cache::ThreadData* d)
 {
     if (!m_lite_storage) {
-        std::list<mail_cache::LabelData*> on_error;
+        std::list<mail_cache::label_ptr> on_error;
         return on_error;
     }
     return m_lite_storage->unpackLabels(d->labelsBitMap());
@@ -997,7 +997,7 @@ void mail_cache::GmailCacheRoutes::runAutotest()
     bool randomize_labels = true;
     if (randomize_labels)
     {
-        std::list<mail_cache::LabelData*> labels = getLoadedLabels();
+        auto labels = getLoadedLabels();
 
         if (labels.size() > 0)
         {
@@ -1008,7 +1008,7 @@ void mail_cache::GmailCacheRoutes::runAutotest()
             setG.insert("IMPORTANT");
             setG.insert("DRAFT");
             setG.insert("TRASH");
-            std::list<mail_cache::LabelData*> imperative_groups = getLoadedLabels(&setG);
+            auto imperative_groups = getLoadedLabels(&setG);
 
 
             auto l_iterator = labels.begin();
