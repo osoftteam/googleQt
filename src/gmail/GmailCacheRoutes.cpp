@@ -243,7 +243,6 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
             h.id = m.id();
             h.hid = m.historyid();
             id_list.push_back(h);
-
             if (q) {
                 if (q->m_tmap.find(m.id()) == q->m_tmap.end()) {
                     q->m_qnew_thread_ids.push_back(m.id());

@@ -645,6 +645,8 @@ namespace googleQt{
             GQueryStorage*   qstorage() { return  m_qstorage.get(); }
 
             thread_ptr findThread(QString thread_id);
+
+			uint64_t lastHistoryId()const { return m_lastHistoryId; }
         protected:
             QString metaPrefix()const { return m_metaPrefix; }
             bool execQuery(QString sql);
@@ -701,6 +703,7 @@ namespace googleQt{
             QString m_dbName;
             QString m_metaPrefix;
             int     m_accId{-1};
+			uint64_t    m_lastHistoryId;///last valid history id
             friend class googleQt::mail_cache::GmailCacheRoutes;
             friend class googleQt::gcontact::GContactCache;
             friend class googleQt::mail_cache::GMessagesStorage;

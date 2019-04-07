@@ -107,9 +107,9 @@ void ListArg::build(const QString& link_path, QUrl& url)const
 
 
 HistoryListArg::HistoryListArg(QString userId, int startHistoryId):
+	m_startHistoryId(startHistoryId),
     m_userId(userId),
-    m_maxResults(50),
-    m_startHistoryId(startHistoryId)
+    m_maxResults(50)    
 {
 
 };
@@ -118,13 +118,18 @@ void HistoryListArg::build(const QString& link_path, QUrl& url)const
 {
     UrlBuilder b(link_path, url);
     b.add("startHistoryId", m_startHistoryId)
-        .add("pageToken", m_pageToken);
+        .add("pageToken", m_pageToken)
+		.add("historyTypes", m_historyTypes)
+		.add("labelId", m_labelId)
+		.add("maxResults", m_maxResults);
+	/*
     if (m_labelIds.size() > 0) {
         for (QStringList::const_iterator i = m_labelIds.cbegin(); i != m_labelIds.cend(); i++)
             {
                 b.add("labelIds", *i);
             }
     }
+	*/
 }
 
 
@@ -415,7 +420,10 @@ std::unique_ptr<HistoryListArg> HistoryListArg::EXAMPLE(int, int)
     std::unique_ptr<HistoryListArg> rv(new HistoryListArg(ApiAutotest::INSTANCE().userId()));
     rv->setMaxResults(10);
     rv->setPageToken("nextToken");
-    rv->labels() = QString("hlabel1 hlabel2 hlabel3").split(" ");
+	rv->setLabelId("hlabel1");
+	rv->setMaxResults(100);
+	rv->setHistoryTypes("messageAdded");
+    //rv->labels() = QString("hlabel1 hlabel2 hlabel3").split(" ");
     return rv; 
 };
 

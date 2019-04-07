@@ -76,9 +76,10 @@ namespace googleQt{
             void    setUserId(QString id) { m_userId = id; };
 
             /**
-            *   Only return messages with labels that match all of the specified label IDs.
+            *   Only return messages with a label matching the ID.
             */
-            QStringList&  labels() { return m_labelIds; }
+            QString  labelId() { return m_labelId; }
+			void	 setLabelId(QString sval) { m_labelId = sval; }
 
             /**
             *  The maximum number of history records to return. 
@@ -106,17 +107,29 @@ namespace googleQt{
             int           getStartHistoryId()const { return m_startHistoryId; }
             void          setStartHistoryId(int v) { m_startHistoryId = v; }
 
+			/**
+			*	historyTypes optional. History types to be returned by the function 
+			*	Acceptable values are:
+			*	"labelAdded"
+			*	"labelRemoved"
+			*	"messageAdded"
+			*	"messageDeleted"
+			*/
+			QString			historyTypes()const { return m_historyTypes; }
+			void			setHistoryTypes(QString sval) { m_historyTypes = sval; }
+
             void build(const QString& link_path, QUrl& url)const override;
 #ifdef API_QT_AUTOTEST
             static std::unique_ptr<HistoryListArg> EXAMPLE(int context_index, int parent_content_index);
 #endif //API_QT_AUTOTEST
 
         protected:
+			uint64_t    m_startHistoryId;
             QString     m_userId;
-            QStringList m_labelIds;
-            int         m_maxResults;
-            QString     m_pageToken;
-            uint16_t    m_startHistoryId;
+            QString		m_labelId;
+			int         m_maxResults{60};
+            QString     m_pageToken;            
+			QString     m_historyTypes;
         };
         
         class DraftListArg : public QParamArg 

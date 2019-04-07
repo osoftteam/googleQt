@@ -604,9 +604,6 @@ bool mail_cache::ThreadData::hasLimboLabel(uint64_t data)const
     bool rv = false;
     if (data != 0) {
         rv = (data & m_limbo_labels) != 0;
-        if (rv) {
-            qDebug() << "ykh-llbl" << m_limbo_labels << data;
-        }
     }
     return rv;
 };
@@ -2842,6 +2839,10 @@ mail_cache::thread_ptr mail_cache::GThreadsStorage::loadThread(QSqlQuery* q)
                                                     messages_count,
                                                     snippet,
                                                     t_labels));
+	if (m_storage->m_lastHistoryId < history_id) {
+		m_storage->m_lastHistoryId = history_id;
+	}
+
     return td;
 };
 
@@ -2895,7 +2896,11 @@ void mail_cache::GThreadsStorage::bindSQL(QSqlQuery* q, CACHE_LIST<ThreadData>& 
         snippet << t->m_snippet;
         labelsBitMap << t->labelsBitMap();
         internalDate << t->internalDate();
-        id << t->m_id;      
+        id << t->m_id;
+
+		if (m_storage->m_lastHistoryId < t->m_history_id) {
+			m_storage->m_lastHistoryId = t->m_history_id;
+		}
     }
 
     q->addBindValue(history_id);

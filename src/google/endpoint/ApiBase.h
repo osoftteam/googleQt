@@ -291,7 +291,7 @@ namespace googleQt {
         UrlBuilder& add(QString name, bool value);
         UrlBuilder& add(QString name, int value);
         UrlBuilder& add(QString name, const QDateTime& value);
-
+		UrlBuilder& add(QString name, uint64_t value);
     protected:
         QUrlQuery m_q;
         QUrl&     m_url;
