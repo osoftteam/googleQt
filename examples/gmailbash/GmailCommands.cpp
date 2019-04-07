@@ -932,7 +932,7 @@ void GmailCommands::history(QString startHistoryIdStr)
                               << std::endl;
                 }
 
-            std::cout << "historyid=" << history->historyid() << "nextpagetoken=" << history->nextpagetoken()
+            std::cout << "historyid=" << history->historyid() << " nextpagetoken=" << history->nextpagetoken()
                       << std::endl;
         }
     catch (GoogleException& e)
