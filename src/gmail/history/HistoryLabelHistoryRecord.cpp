@@ -71,6 +71,8 @@ std::unique_ptr<LabelHistoryRecord> LabelHistoryRecord::EXAMPLE(int context_inde
     for(int i = 0; i < 5; i++){
         rv->m_labelIds.push_back(QString("id_%1").arg(i+1));
     }
+    QString tmp_m_labelIds = ApiAutotest::INSTANCE().getString4List("history::LabelHistoryRecord", "m_labelIds");
+    if(!tmp_m_labelIds.isEmpty())rv->m_labelIds.push_back(tmp_m_labelIds);
     return rv;
 }
 #endif //API_QT_AUTOTEST

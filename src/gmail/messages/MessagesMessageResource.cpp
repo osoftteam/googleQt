@@ -89,6 +89,8 @@ std::unique_ptr<MessageResource> MessageResource::EXAMPLE(int context_index, int
     for(int i = 0; i < 5; i++){
         rv->m_labelIds.push_back(QString("id_%1").arg(i+1));
     }
+    QString tmp_m_labelIds = ApiAutotest::INSTANCE().getString4List("messages::MessageResource", "m_labelIds");
+    if(!tmp_m_labelIds.isEmpty())rv->m_labelIds.push_back(tmp_m_labelIds);
     rv->m_snippet = ApiAutotest::INSTANCE().getString("messages::MessageResource", "m_snippet", QString("snippet_%1").arg(example_idx));
     rv->m_historyId = ApiAutotest::INSTANCE().getInt("messages::MessageResource", "m_historyId", 5 + example_idx);
     rv->m_internalDate = ApiAutotest::INSTANCE().getInt("messages::MessageResource", "m_internalDate", 6 + example_idx);

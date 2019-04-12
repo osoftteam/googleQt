@@ -76,6 +76,8 @@ std::unique_ptr<GeneratedIdsCollection> GeneratedIdsCollection::EXAMPLE(int cont
     for(int i = 0; i < 5; i++){
         rv->m_ids.push_back(QString("id_%1").arg(i+1));
     }
+    QString tmp_m_ids = ApiAutotest::INSTANCE().getString4List("files::GeneratedIdsCollection", "m_ids");
+    if(!tmp_m_ids.isEmpty())rv->m_ids.push_back(tmp_m_ids);
     return rv;
 }
 #endif //API_QT_AUTOTEST

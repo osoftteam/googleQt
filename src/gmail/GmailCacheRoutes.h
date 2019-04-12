@@ -61,6 +61,12 @@ namespace googleQt
                 query_ptr q,
                 int resultsCount = 40,
                 QString pageToken = "");
+			/**
+			* getQCache_Async
+			* o-> getCacheThreadList_Async/GThreadCacheQueryTask::fetchFromCloud_Async
+			*     o-> getCacheMessages_Async/GMailCacheQueryTask::fetchFromCloud_Async
+			*
+			*/
             mail_cache::GThreadCacheQueryTask* getQCache_Async(
                 query_ptr q,
                 int resultsCount = 40,

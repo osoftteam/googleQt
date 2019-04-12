@@ -171,10 +171,14 @@ std::unique_ptr<FileResource> FileResource::EXAMPLE(int context_index, int paren
     for(int i = 0; i < 5; i++){
         rv->m_parents.push_back(QString("id_%1").arg(i+1));
     }
+    QString tmp_m_parents = ApiAutotest::INSTANCE().getString4List("files::FileResource", "m_parents");
+    if(!tmp_m_parents.isEmpty())rv->m_parents.push_back(tmp_m_parents);
     std::list<QString> list_of_spaces;
     for(int i = 0; i < 5; i++){
         rv->m_spaces.push_back(QString("id_%1").arg(i+1));
     }
+    QString tmp_m_spaces = ApiAutotest::INSTANCE().getString4List("files::FileResource", "m_spaces");
+    if(!tmp_m_spaces.isEmpty())rv->m_spaces.push_back(tmp_m_spaces);
     rv->m_version = ApiAutotest::INSTANCE().getInt("files::FileResource", "m_version", 11 + example_idx);
     rv->m_webContentLink = ApiAutotest::INSTANCE().getString("files::FileResource", "m_webContentLink", QString("webContentLink_%1").arg(example_idx));
     rv->m_webViewLink = ApiAutotest::INSTANCE().getString("files::FileResource", "m_webViewLink", QString("webViewLink_%1").arg(example_idx));

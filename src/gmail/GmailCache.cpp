@@ -659,8 +659,9 @@ void mail_cache::GMailCacheQueryTask::fetchFromCloud_Async(const std::list<QStri
                 if (s) {
                     s->updateMessagesDiagnostic(1, m_completed->result_list.size());
                 }
+				qDebug() << "ykh-end-gmail-par-run" << m_completed->result_list.size();
                 par_runner->disposeLater();
-                notifyFetchCompletedWithMergeRequest(m_completed->result_list);
+                notifyFetchCompletedWithMergeRequest(m_completed->result_list);				
             }); 
 };
 
@@ -893,14 +894,11 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const std::list<QSt
     if (id_list.empty())
         return;
 
-    //auto par_runner = m_r.getUserBatchThreads_Async(id_list);
-    //...
     std::unique_ptr<mail_cache::ThreadsReceiver> tr(new mail_cache::ThreadsReceiver(m_r.mroutes()));
     auto par_runner = new ConcurrentValueRunner<QString,
         mail_cache::ThreadsReceiver,
         threads::ThreadResource>(id_list, std::move(tr), m_endpoint);
     par_runner->run();
-    //...
 
     connect(par_runner, &EndpointRunnable::finished, [=]()
     {
@@ -1546,6 +1544,28 @@ void mail_cache::GMailSQLiteStorage::updateMessagesDiagnostic(int inc_batch, int
             };
         }
     }
+};
+
+int mail_cache::GMailSQLiteStorage::getCacheMessagesCount(mail_cache::label_ptr lbl)
+{
+	int rv = 0;
+
+	QString sql;
+	sql = QString("SELECT COUNT(*) FROM %1gmail_msg WHERE acc_id=%2 AND (msg_labels&%3 = %3)")
+		.arg(m_metaPrefix)
+		.arg(m_accId)
+		.arg(lbl->labelMask());
+
+	QSqlQuery* q = selectQuery(sql);
+	if (!q) {
+		qWarning() << "failed to select msg count for label" << lbl->labelId();
+		return 0;
+	}
+	if (q->next())
+	{
+		rv = q->value(0).toInt();
+	}
+	return rv;
 };
 
 QString mail_cache::GMailSQLiteStorage::findAttachmentFile(att_ptr att)const 

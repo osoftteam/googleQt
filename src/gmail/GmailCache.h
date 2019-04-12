@@ -271,6 +271,7 @@ namespace googleQt{
             QString     labelId()const { return m_label_id; }
             QString     labelName()const { return m_label_name; }
             uint64_t    labelMask()const { return m_label_mask; }
+			int         labelMaskBase()const {return m_mask_base; }
             bool        isSystem()const { return m_is_system_label; }
             uint64_t    unreadMessages()const { return m_unread_messages; }
 
@@ -622,6 +623,7 @@ namespace googleQt{
             bool deleteAttachmentsFromDb(QString msg_id);
             bool markMailAsTrashedInDb(MessageData& m);
             void updateMessagesDiagnostic(int inc_batch, int inc_msg);
+			int getCacheMessagesCount(mail_cache::label_ptr);
             //bool updateMailGuiZoomInDb(MessageData& m, qreal zoom);
 
             /// find account by ID

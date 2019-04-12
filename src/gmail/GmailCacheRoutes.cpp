@@ -55,7 +55,9 @@ ConcurrentValueRunner<QString,
                                                                                          const std::list<QString>& id_list)
 {
     std::unique_ptr<mail_cache::MessagesReceiver> mr(new mail_cache::MessagesReceiver(m_gmail_routes, f));
-    
+  
+    qDebug() << "ykh-start-gmail-par-run" << id_list.size();
+  
     ConcurrentValueRunner<QString,
                     mail_cache::MessagesReceiver,
                     messages::MessageResource>* r = new ConcurrentValueRunner<QString,
@@ -249,6 +251,20 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
                 }
             }
         }
+
+#ifdef API_QT_AUTOTEST
+		if (!q->labelid().isEmpty()) {
+			auto lst = q->labelid().split(" ");
+			if (!lst.empty()) {
+				auto label_id = lst.first();
+				auto mcount = q->m_qnew_thread_ids.size();
+				if (mcount > 0) {
+					ApiAutotest::INSTANCE().setString4List("messages::MessageResource", "m_labelIds", label_id);
+				}
+			}
+		}
+#endif//API_QT_AUTOTEST
+
         rfetcher->m_nextPageToken = tlist->nextpagetoken();
         getCacheThreadList_Async(id_list, rfetcher);
     q->m_nextPageToken = tlist->nextpagetoken();
