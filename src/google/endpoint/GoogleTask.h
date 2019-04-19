@@ -8,6 +8,7 @@
 namespace googleQt{
     class ApiEndpoint;
     class Endpoint;
+	class TaskProgress;
 
     /**
         EndpointRunnable - abstruct class for object-based async task classes.
@@ -18,7 +19,8 @@ namespace googleQt{
     {
         Q_OBJECT;
     public:
-        EndpointRunnable(ApiEndpoint& ept) :m_endpoint(ept) {}
+		EndpointRunnable(ApiEndpoint& ept);
+		virtual ~EndpointRunnable();
         bool isFinished()const { return m_finished; }
         virtual bool isCompleted()const = 0;
         virtual bool isFailed()const { return (m_failed != nullptr); };        
@@ -31,6 +33,15 @@ namespace googleQt{
 
         void addFinishedDelegate(std::function<void()> finished_callback);
         void addDisposeDelegate(std::function<void()> dispose_callback);
+
+		TaskProgress* progressNotifier() { return m_progress; }
+		///task will become owner of the progress
+		TaskProgress* createProgressNotifier();
+		///task will not own progress, but will be able to update it
+		void delegateProgressNotifier(TaskProgress*);
+		/// detach progress and if we own it, send message to delete
+		void detachProgress();
+
     signals:
         void finished();
 
@@ -42,9 +53,11 @@ namespace googleQt{
         ApiEndpoint& m_endpoint;
         bool m_finished{ false };
         mutable bool m_in_wait_loop{ false };
+		mutable bool m_progress_notifier_owner{ false };
         std::unique_ptr<GoogleException> m_failed;
         std::list<std::function<void()>> m_dispose_delegates;
         std::list<std::function<void()>> m_finished_delegates;
+		TaskProgress*				 m_progress{nullptr};
     };
 
     /**
@@ -224,4 +237,29 @@ namespace googleQt{
         RUNNABLES m_runnables;
     };
 
+	class TaskProgress : public QObject
+	{
+		Q_OBJECT;
+		/**
+			TaskProgress - for processing list of objects
+			usualy in async context by GoogleTask derived, can be
+			delegated from one task to another
+		*/
+	public:
+		int value()const;
+		int	maximum()const;
+		QString	statusText()const;
+	public slots:
+		void	setValue(int value);
+		void	setMaximum(int maxv, QString statusText);
+	signals:
+		void	valueChanged(int value);
+	protected:
+		int		m_value{0}, m_max{ 0 };
+		QString	m_status_text;
+	private:
+		TaskProgress();
+
+		friend class EndpointRunnable;
+	};
 };

@@ -350,7 +350,7 @@ QString ApiAutotest::getString(const char* class_name, const char* field_name, Q
                 .arg(QDateTime::currentMSecsSinceEpoch())
                 .arg(qrand());
         }
-    }//ykh - todo should be generic
+    }//ykh - todo could be generic
     else if (strcmp(class_name, "messages::MessageResource") == 0 ||
             strcmp(class_name, "labels::LabelResource") == 0)
     {

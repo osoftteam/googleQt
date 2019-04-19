@@ -4,6 +4,17 @@
 using namespace googleQt;
 
 ///EndpointRunnable
+EndpointRunnable::EndpointRunnable(ApiEndpoint& ept) :m_endpoint(ept) 
+{
+
+};
+
+EndpointRunnable::~EndpointRunnable() 
+{
+	detachProgress();
+};
+
+
 void EndpointRunnable::notifyOnFinished()
 {
     if (!m_finished_delegates.empty()) {
@@ -72,6 +83,44 @@ void EndpointRunnable::addDisposeDelegate(std::function<void()> dispose_callback
 void EndpointRunnable::addFinishedDelegate(std::function<void()> finished_callback)
 {
     m_finished_delegates.push_back(finished_callback);
+};
+
+void EndpointRunnable::detachProgress() 
+{
+	if (m_progress_notifier_owner) {
+		if (m_progress) {
+			m_progress->deleteLater();			
+		}		
+	}
+
+	m_progress = nullptr;
+	m_progress_notifier_owner = false;
+};
+
+TaskProgress* EndpointRunnable::createProgressNotifier()
+{
+	if (m_progress) {
+		if (m_progress_notifier_owner) {
+			qWarning() << "task already is an owner of ProgressNotifier, don't create twice";
+			return m_progress;
+		}
+		else {
+			qWarning() << "task already has ProgressNotifier, don't create twice";
+			return m_progress;
+		}
+	}
+
+	detachProgress();
+	m_progress = new TaskProgress();
+	m_progress_notifier_owner = true;
+	return m_progress;
+};
+
+void EndpointRunnable::delegateProgressNotifier(TaskProgress* p) 
+{
+	detachProgress();
+	m_progress_notifier_owner = false;
+	m_progress = p;
 };
 
 /**
@@ -255,3 +304,38 @@ void TaskAggregator::then(std::function<void()> after_completed_processing /*= n
     }
 };
 
+/**
+	TaskProgress
+*/
+TaskProgress::TaskProgress() 
+{
+
+};
+
+int TaskProgress::value()const 
+{
+	return m_value;
+};
+
+int	TaskProgress::maximum()const 
+{
+	return m_max;
+};
+
+QString	TaskProgress::statusText()const 
+{
+	return m_status_text;
+};
+
+void TaskProgress::setValue(int value) 
+{
+	m_value = value;
+	emit valueChanged(m_value);
+};
+
+void TaskProgress::setMaximum(int maxv, QString statusText)
+{
+	m_max = maxv;
+	m_status_text = statusText;
+	emit valueChanged(m_value);
+};

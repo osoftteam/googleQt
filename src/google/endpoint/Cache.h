@@ -337,7 +337,15 @@ namespace googleQt {
 
         bool isCompleted()const override { return m_query_completed; }
 
-        void add_result(std::shared_ptr<O> obj, bool from_cloud) { CacheTaskParent<O>::m_completed->result_map[obj->id()] = obj; CacheTaskParent<O>::m_completed->result_list.push_back(obj); if (from_cloud)CacheTaskParent<O>::m_completed->from_cloud.push_back(obj);};
+        void add_result(std::shared_ptr<O> obj, bool from_cloud) { 
+			CacheTaskParent<O>::m_completed->result_map[obj->id()] = obj; 
+			CacheTaskParent<O>::m_completed->result_list.push_back(obj); 
+			if (from_cloud)CacheTaskParent<O>::m_completed->from_cloud.push_back(obj);
+			auto p = progressNotifier();
+			if (p) {
+				p->setValue(CacheTaskParent<O>::m_completed->result_list.size());
+			}
+		};
         void inc_mem_cache_hit_count() { m_cache_hit_count++; }
         void set_db_cache_hit_count(size_t val) { m_db_cache_hit_count = val; }
         size_t mem_cache_hit_count()const { return m_cache_hit_count; }

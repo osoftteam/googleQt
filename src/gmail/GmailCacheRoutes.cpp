@@ -55,9 +55,7 @@ ConcurrentValueRunner<QString,
                                                                                          const std::list<QString>& id_list)
 {
     std::unique_ptr<mail_cache::MessagesReceiver> mr(new mail_cache::MessagesReceiver(m_gmail_routes, f));
-  
-    qDebug() << "ykh-start-gmail-par-run" << id_list.size();
-  
+    
     ConcurrentValueRunner<QString,
                     mail_cache::MessagesReceiver,
                     messages::MessageResource>* r = new ConcurrentValueRunner<QString,
@@ -225,7 +223,8 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheThr
 mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async(
     query_ptr q,
     int threadsCount /*= 40*/,
-    QString pageToken /*= ""*/) 
+    QString pageToken /*= ""*/,
+	bool monitorProgress /*= false*/)
 {
     auto rfetcher = newThreadResultFetcher(q);
     gmail::ListArg listArg;
@@ -234,11 +233,17 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
     listArg.setQ(q->qStr());
     listArg.labels() = q->labelid().split(" ");
 
+	if (monitorProgress) {
+		auto p = rfetcher->createProgressNotifier();
+		if (p) {
+			p->setMaximum(0, QString("query gmail q='%1' l='%2'").arg(q->qStr()).arg(q->labelid()));
+		}
+	}
+
     ///this will return list of thread Ids with HistoryId
     m_gmail_routes.getThreads()->list_Async(listArg)->then([=](std::unique_ptr<threads::ThreadListRes> tlist)
     {
         std::list<HistId> id_list;
-
         for (auto& m : tlist->threads())
         {
             HistId h;
@@ -791,7 +796,6 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadLabels_Async(thread_pt
                 new_messages.push_back(md);
             }
             else {
-                qDebug() << "--ykh on thread modify_Async[existing-message]" << tr->id();
                 const std::list <QString>& labels = m.labelids();
                 if (labels.size() > 0) {
                     uint64_t lbits = 0;

@@ -646,6 +646,11 @@ void mail_cache::GMailCacheQueryTask::fetchFromCloud_Async(const std::list<QStri
     if (id_list.empty())
         return;
     
+	auto p = progressNotifier();
+	if (p) {
+		p->setMaximum(id_list.size(), "requested [msg-id]->G->[messages]");
+	}
+
     auto par_runner = m_r.getUserBatchMessages_Async(m_completed->state, id_list);
     
     connect(par_runner, &EndpointRunnable::finished, [=]()
@@ -659,7 +664,6 @@ void mail_cache::GMailCacheQueryTask::fetchFromCloud_Async(const std::list<QStri
                 if (s) {
                     s->updateMessagesDiagnostic(1, m_completed->result_list.size());
                 }
-				qDebug() << "ykh-end-gmail-par-run" << m_completed->result_list.size();
                 par_runner->disposeLater();
                 notifyFetchCompletedWithMergeRequest(m_completed->result_list);				
             }); 
@@ -894,6 +898,11 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const std::list<QSt
     if (id_list.empty())
         return;
 
+	auto p = progressNotifier();
+	if (p) {
+		p->setMaximum(id_list.size(), "requested [thread-id]->G->[threads]");
+	}
+
     std::unique_ptr<mail_cache::ThreadsReceiver> tr(new mail_cache::ThreadsReceiver(m_r.mroutes()));
     auto par_runner = new ConcurrentValueRunner<QString,
         mail_cache::ThreadsReceiver,
@@ -941,7 +950,11 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const std::list<QSt
             }
         }
         
-        auto r = m_r.getCacheMessages_Async(EDataState::snippet, msg_list2resolve);
+		auto mfetcher = m_r.newMessageResultFetcher(EDataState::snippet);
+		if (p) {
+			mfetcher->delegateProgressNotifier(p);
+		}
+        auto r = m_r.getCacheMessages_Async(EDataState::snippet, msg_list2resolve, mfetcher);
         r->then([=](std::unique_ptr<googleQt::CacheDataResult<googleQt::mail_cache::MessageData>> mr)
         {
             if (!m_updated_threads.empty()) {

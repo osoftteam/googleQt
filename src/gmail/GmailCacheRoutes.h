@@ -67,10 +67,11 @@ namespace googleQt
 			*     o-> getCacheMessages_Async/GMailCacheQueryTask::fetchFromCloud_Async
 			*
 			*/
-            mail_cache::GThreadCacheQueryTask* getQCache_Async(
-                query_ptr q,
-                int resultsCount = 40,
-                QString pageToken = "");
+			mail_cache::GThreadCacheQueryTask* getQCache_Async(
+				query_ptr q,
+				int resultsCount = 40,
+				QString pageToken = "",
+				bool monitorProgress = false);
 
 
             /// load threads by ID-list while updating local cache
@@ -159,6 +160,8 @@ namespace googleQt
             mutable mail_cache::storage_ptr m_lite_storage;
             mutable mail_cache::mcache_ptr m_GMsgCache;
             mutable mail_cache::tcache_ptr m_GThreadCache;
+
+			friend class GThreadCacheQueryTask;
         };
     };
 };
