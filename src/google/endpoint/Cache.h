@@ -341,7 +341,7 @@ namespace googleQt {
 			CacheTaskParent<O>::m_completed->result_map[obj->id()] = obj; 
 			CacheTaskParent<O>::m_completed->result_list.push_back(obj); 
 			if (from_cloud)CacheTaskParent<O>::m_completed->from_cloud.push_back(obj);
-			auto p = progressNotifier();
+			auto p = CacheTaskParent<O>::progressNotifier();
 			if (p) {
 				p->setValue(CacheTaskParent<O>::m_completed->result_list.size());
 			}
