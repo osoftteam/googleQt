@@ -172,7 +172,7 @@ mail_cache::MessageData::MessageData(int accId,
                                      QString subject,
                                      QString snippet,
                                      qlonglong internalDate,
-                                     qlonglong labels,
+                                     uint64_t labels,
                                      QString references)
     :CacheData(EDataState::snippet, id),
     m_accountId(accId),
@@ -201,7 +201,7 @@ mail_cache::MessageData::MessageData(int accId,
                                      QString plain,
                                      QString html,
                                      qlonglong internalDate,
-                                     qlonglong labels,
+                                     uint64_t labels,
                                      QString references)
 :CacheData(EDataState::body, id),
     m_accountId(accId),
@@ -233,7 +233,7 @@ mail_cache::MessageData::MessageData(int accId,
                                      QString plain,
                                      QString html,
                                      qlonglong internalDate,
-                                     qlonglong labels,
+                                     uint64_t labels,
                                      QString references)
 :CacheData(EDataState::body, id),
 m_accountId(accId),
@@ -249,14 +249,14 @@ m_accountId(accId),
     m_internalDate(internalDate),
     m_references(references)
 {
-    m_flags.agg_state = agg_state;
+    m_flags.agg_state = static_cast<unsigned int>(agg_state);
     m_labels = labels;
 };
 
 mail_cache::MessageData::MessageData(int accId,
     QString id,
     QString thread_id,
-    qlonglong labels)
+    uint64_t labels)
     : CacheData(EDataState::labels, id),
     m_accountId(accId),
     m_thread_id(thread_id)
@@ -272,7 +272,7 @@ void mail_cache::MessageData::updateSnippet(QString from,
                                             QString bcc,
                                             QString subject,
                                             QString snippet,
-                                            qlonglong labels,
+                                            uint64_t labels,
                                             QString references)
 {
     m_flags.agg_state |= static_cast<int>(EDataState::snippet);
@@ -293,7 +293,7 @@ void mail_cache::MessageData::updateBody(QString plain, QString html)
     m_html = html;
 };
 
-void mail_cache::MessageData::updateLabels(qlonglong labels) 
+void mail_cache::MessageData::updateLabels(uint64_t labels) 
 {
     m_labels = labels;
 };
@@ -322,20 +322,6 @@ bool mail_cache::MessageData::hasAllLabels(uint64_t data)const
     }
     return rv;
 };
-
-/*
-bool mail_cache::MessageData::inLabelFilter(const std::set<uint64_t>& ANDfilter)const 
-{
-    for (auto i = ANDfilter.begin(); i != ANDfilter.end(); i++) {
-        if (*i != 0) {
-            bool in_filter = (*i & m_labels) != 0;
-            if (!in_filter) {
-                return false;
-            }
-        }
-    }
-    return true;
-    };*/
 
 const mail_cache::ATTACHMENTS_LIST& mail_cache::MessageData::getAttachments(GMailSQLiteStorage* storage)
 {
@@ -742,6 +728,9 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
     
     switch (m_completed->state)
         {
+        case googleQt::EDataState::labels:
+            qWarning() << "Unexpected snippet state in message fetch";
+        break;
         case googleQt::EDataState::snippet:
             {
                 uint64_t labels;
@@ -1351,7 +1340,7 @@ uint64_t mail_cache::reservedSysLabelMask(SysLabel l)
 {
     std::vector<QString>& labels_arr = getSysLabels();
     int idx = (int)l;
-    if (idx < 0 || idx >= (int)labels_arr.size()) {
+    if (idx < 0 || idx >= static_cast<int>(labels_arr.size())) {
         qWarning() << "ERROR. Invalid SysLabel index" << idx << labels_arr.size();
         return 0;
     }
@@ -1364,7 +1353,7 @@ QString mail_cache::sysLabelId(SysLabel l)
 {
     std::vector<QString>& labels_arr = getSysLabels();
     int idx = (int)l;
-    if(idx < 0 || idx >= (int)labels_arr.size()){
+    if(idx < 0 || idx >= static_cast<int>(labels_arr.size())){
         qWarning() << "ERROR. Invalid SysLabel index" << idx << labels_arr.size();
         return "";
     }
@@ -1381,7 +1370,7 @@ QString mail_cache::sysLabelName(SysLabel l)
 
     auto idx = syslabel2Name.find(l);
     if (idx == syslabel2Name.end()) {
-        qWarning() << "ERROR. Invalid SysLabel" << (int)l << syslabel2Name.size();
+        qWarning() << "ERROR. Invalid SysLabel" << static_cast<int>(l) << syslabel2Name.size();
         return "";
     }
 
@@ -1432,7 +1421,7 @@ bool mail_cache::GMailSQLiteStorage::loadLabelsFromDb()
             QString label_id = q->value(0).toString();
             QString label_name = q->value(1).toString();
             bool label_is_system = (q->value(2).toInt() == 1);
-            uint64_t unread_messages = q->value(3).toLongLong();
+            uint64_t unread_messages = q->value(3).toULongLong();
             int mask_base = q->value(4).toInt();
 
             auto lbl = createAndInsertLabel(label_id,
@@ -2865,7 +2854,7 @@ mail_cache::thread_ptr mail_cache::GThreadsStorage::loadThread(QSqlQuery* q)
     quint64 history_id = q->value(1).toULongLong();
     int messages_count = q->value(2).toInt();
     QString snippet = q->value(3).toString();
-    qlonglong t_labels = q->value(4).toLongLong();
+    auto t_labels = q->value(4).toULongLong();
     
     td = std::shared_ptr<ThreadData>(new ThreadData(thread_id,
                                                     history_id,
@@ -3267,8 +3256,7 @@ mail_cache::query_ptr mail_cache::GQueryStorage::ensure_q(QString q_str, QString
             << "err-type:" << q->lastError().type()
             << "native-code:" << q->lastError().nativeErrorCode()
             << "errtext:" << q->lastError().text()
-            << "q_query=" << q_str;
-        return nullptr;
+            << "q_query=" << q_str;        
     }
 
     return nullptr;

@@ -130,10 +130,10 @@ namespace googleQt{
                                QString bcc,
                                QString subject,
                                QString snippet,
-                               qlonglong labels,
+                               uint64_t labels,
                                QString references);
             void updateBody(QString plain, QString html);
-            void updateLabels(qlonglong labels);
+            void updateLabels(uint64_t labels);
         protected:
             int     m_accountId{-1};
             QString m_thread_id;
@@ -161,7 +161,7 @@ namespace googleQt{
                         QString subject,
                         QString snippet,
                         qlonglong internalDate,
-                        qlonglong labels,
+                        uint64_t labels,
                         QString references);
 
             ///constructor for big(snippet+context) object
@@ -177,14 +177,14 @@ namespace googleQt{
                         QString plain,
                         QString html,
                         qlonglong internalDate,
-                        qlonglong labels,
+                        uint64_t labels,
                         QString references);
 
             ///constructor for smalles(labels only) object
             MessageData(int accId,
                         QString id,
                         QString thread_id,
-                        qlonglong labels);
+                        uint64_t labels);
 
             ///constructor for loading from DB
             MessageData(int accId,
@@ -200,7 +200,7 @@ namespace googleQt{
                         QString plain,
                         QString html,
                         qlonglong internalDate,
-                        qlonglong labels,
+                        uint64_t labels,
                         QString references);
 
             friend class GMailCacheQueryTask;
@@ -321,7 +321,7 @@ namespace googleQt{
             msg_ptr findMessage(QString id);
             const msg_arr& messages()const{return m_messages;}
             msg_arr& messages(){return m_messages;}
-            msg_ptr head() { return m_head; };
+            msg_ptr head() { return m_head; }
             qlonglong internalDate()const;
 
             /// each label is a bit in int64
@@ -470,7 +470,7 @@ namespace googleQt{
         public:
             GMailCache(ApiEndpoint& ept);
             mail_cache::mdata_result topCacheData(int number2load, uint64_t labelFilter);
-            void reorder_data_on_completed_fetch(const CACHE_LIST<MessageData>& )override {};
+            void reorder_data_on_completed_fetch(const CACHE_LIST<MessageData>& )override {}
         };
 
 
@@ -596,7 +596,7 @@ namespace googleQt{
                          QString db_meta_prefix);
             void close_db();
             
-            bool isValid()const {return m_initialized;};
+            bool isValid()const {return m_initialized;}
             ///directory for attachments
             QString downloadDir()const { return m_downloadDir; }
             ///directory for contacts photos & thumbnails

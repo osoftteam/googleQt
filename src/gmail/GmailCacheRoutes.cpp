@@ -633,7 +633,7 @@ namespace googleQt {
         class LabelCreator
         {
         public:
-            LabelCreator(GmailCacheRoutes& r) :m_r(r) {};
+            LabelCreator(GmailCacheRoutes& r) :m_r(r) {}
             GoogleTask<QString>* routeRequest(QString label_name)
             {
                 GoogleTask<QString>* rv = m_r.endpoint().produceTask<QString>();
@@ -667,7 +667,7 @@ namespace googleQt {
         class LabelDeleter
         {
         public:
-            LabelDeleter(GmailCacheRoutes& r) :m_r(r) {};
+            LabelDeleter(GmailCacheRoutes& r) :m_r(r) {}
             GoogleTask<QString>* routeRequest(QString label_id)
             {
                 GoogleTask<QString>* rv = m_r.endpoint().produceTask<QString>();
@@ -761,7 +761,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadLabels_Async(thread_pt
     const label_list& labels2remove)
 {
     GoogleVoidTask* rv = m_endpoint.produceVoidTask();
-    if (t->id().isEmpty() || labels2add.empty() && labels2remove.empty()) {
+    if (t->id().isEmpty() || (labels2add.empty() && labels2remove.empty())) {
         rv->completed_callback();
         return rv;
     }
@@ -833,11 +833,11 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadListLabels_Async(const
     {
     public:
         ThreadModifier(GmailCacheRoutes& r, const label_list& labels2add, const label_list& labels2remove)
-            :m_r(r), m_labels2add(labels2add), m_labels2remove(labels2remove) {};
+            :m_r(r), m_labels2add(labels2add), m_labels2remove(labels2remove) {}
         GoogleVoidTask* routeRequest(thread_ptr t)
         {
             return m_r.modifyThreadLabels_Async(t, m_labels2add, m_labels2remove);
-        };
+        }
     protected:
         GmailCacheRoutes&     m_r;
         label_list            m_labels2add;
