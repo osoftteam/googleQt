@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
             }
             else
                 {
-                    std::list<QString> scopes;
+                    STRING_LIST scopes;
                     scopes.push_back(GoogleWebAuth::authScope_gmail_modify());
                     scopes.push_back(GoogleWebAuth::authScope_tasks());
                     scopes.push_back(GoogleWebAuth::authScope_gdrive());

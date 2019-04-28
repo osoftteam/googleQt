@@ -1558,13 +1558,13 @@ void GcontactCommands::sync_cache_photos()
     
     auto r = m_gt->cacheRoutes(); 
     auto cache = r->cache();
-    std::list<QString> lst_unresolved = cache->contacts().buildUnresolvedPhotoIdList();
+    STRING_LIST lst_unresolved = cache->contacts().buildUnresolvedPhotoIdList();
     std::cout << "===unresolved photos===" << std::endl;
     for(auto s : lst_unresolved){
         std::cout << s << std::endl;
     }
 
-    std::list<QString> lst_modified = cache->contacts().buildModifiedPhotoIdList();
+    STRING_LIST lst_modified = cache->contacts().buildModifiedPhotoIdList();
     std::cout << "===modified photos===" << std::endl;
     for(auto s : lst_modified){
         std::cout << s << std::endl;

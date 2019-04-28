@@ -386,7 +386,7 @@ void GtaskCommands::reload_cache(QString tlistids)
         return;
     }
 
-    std::list<QString> lst;
+    STRING_LIST lst;
     foreach (const QString &s, arg_list) {
         lst.push_back(s);
     }

@@ -260,7 +260,7 @@ void GmailCommands::send_att(QString to_subject_text)
         return;
     }
 
-    std::list<QString> attachments;
+    STRING_LIST attachments;
     for (auto& fi : flist) {
         attachments.push_back(fi.absoluteFilePath());
     }
@@ -828,7 +828,7 @@ void GmailCommands::q_threads(QString qstr)
 void GmailCommands::get_thread(QString id_list)
 {
     static std::set<QString> headers_to_print = {"From", "To"};
-    std::list<QString> arg_list = split_string(id_list);
+    STRING_LIST arg_list = split_string(id_list);
     if (arg_list.empty()) 
         {
             std::cout << "Space separated thread ID list required" << std::endl;
@@ -850,7 +850,7 @@ void GmailCommands::get_thread(QString id_list)
 
 void GmailCommands::add_thread_label(QString threadid_labelids)
 {
-    std::list<QString> arg_list = split_string(threadid_labelids);
+    STRING_LIST arg_list = split_string(threadid_labelids);
     if (arg_list.size() < 2)
     {
         std::cout << "Space separated threadId label ID list required" << std::endl;
@@ -879,7 +879,7 @@ void GmailCommands::add_thread_label(QString threadid_labelids)
 ///..
 void GmailCommands::remove_thread_label(QString threadid_labelids)
 {
-    std::list<QString> arg_list = split_string(threadid_labelids);
+    STRING_LIST arg_list = split_string(threadid_labelids);
     if (arg_list.size() < 2)
     {
         std::cout << "Space separated threadId label ID list required" << std::endl;
@@ -1088,7 +1088,7 @@ void GmailCommands::print_user_id(QString )
 
 void GmailCommands::get_batch_snippets(QString id_list) 
 {
-    std::list<QString> arg_list = split_string(id_list);
+    STRING_LIST arg_list = split_string(id_list);
     if (arg_list.empty()) 
         {
             std::cout << "Space separated messages ID list required" << std::endl;
@@ -1118,7 +1118,7 @@ void GmailCommands::get_batch_snippets(QString id_list)
 
 void GmailCommands::get_batch_details(QString id_list) 
 {
-    std::list<QString> arg_list = split_string(id_list);
+    STRING_LIST arg_list = split_string(id_list);
     if (arg_list.empty())
         {
             std::cout << "Space separated messages ID list required" << std::endl;
@@ -1166,7 +1166,7 @@ void GmailCommands::get_batch_details(QString id_list)
 
 void GmailCommands::get_cache_snippets(QString id_list)
 {    
-    std::list<QString> arg_list = split_string(id_list);
+    STRING_LIST arg_list = split_string(id_list);
     if (arg_list.empty())
         {
             std::cout << "Space separated messages ID list required" << std::endl;
@@ -1190,7 +1190,7 @@ void GmailCommands::get_cache_snippets(QString id_list)
 
 void GmailCommands::get_cache_details(QString id_list) 
 {    
-    std::list<QString> arg_list = split_string(id_list);
+    STRING_LIST arg_list = split_string(id_list);
     if (arg_list.empty())
         {
             std::cout << "Space separated messages ID list required" << std::endl;
