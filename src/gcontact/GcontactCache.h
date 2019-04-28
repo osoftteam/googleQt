@@ -100,7 +100,7 @@ namespace googleQt {
             /**
             replace groups with new ids
             */
-            ContactInfo& setGroups(QString userId, const std::list<QString>& groupIdlist);
+            ContactInfo& setGroups(QString userId, const STRING_LIST& groupIdlist);
 
             /**
                 delete old address list and put a new one
@@ -255,8 +255,8 @@ namespace googleQt {
             /// to server and server assigned cloudID - we have to link cloudID to the contact and update local cache
             ContactInfo::ptr findNewCreated(std::shared_ptr<BatchResultContactInfo> b);
             
-            std::list<QString> buildUnresolvedPhotoIdList();
-            std::list<QString> buildModifiedPhotoIdList();
+            STRING_LIST buildUnresolvedPhotoIdList();
+            STRING_LIST buildModifiedPhotoIdList();
 
             class factory {
             public:
@@ -386,12 +386,12 @@ namespace googleQt {
         class PhotoSyncTask : public GoogleVoidTask
         {
         public:
-            const std::list<QString>& downloaded()const { return m_downloaded_ids; }
-            const std::list<QString>& uploaded()const { return m_uploaded_ids; }
+            const STRING_LIST& downloaded()const { return m_downloaded_ids; }
+            const STRING_LIST& uploaded()const { return m_uploaded_ids; }
         private:
             PhotoSyncTask(ApiEndpoint& ept) :GoogleVoidTask(ept) {}
-            std::list<QString> m_downloaded_ids;
-            std::list<QString> m_uploaded_ids;
+            STRING_LIST m_downloaded_ids;
+            STRING_LIST m_uploaded_ids;
             friend class GcontactCacheRoutes;
         };
 
@@ -424,15 +424,15 @@ namespace googleQt {
             class PhotoListTask : public GoogleVoidTask
             {
             public:
-                const std::list<QString>& completed()const { return m_completed_ids; }
+                const STRING_LIST& completed()const { return m_completed_ids; }
             private:
                 PhotoListTask(ApiEndpoint& ept) :GoogleVoidTask(ept) {}
-                std::list<QString> m_completed_ids;
+                STRING_LIST m_completed_ids;
                 friend class GcontactCacheRoutes;
             };
 
             template <class PROCESSOR>
-            PhotoListTask*      transferPhotos_Async(const std::list<QString>& id_list);
+            PhotoListTask*      transferPhotos_Async(const STRING_LIST& id_list);
             PhotoListTask*      downloadPhotos_Async();
             PhotoListTask*      uploadPhotos_Async();
         };

@@ -178,14 +178,14 @@ namespace googleQt {
             /**
                A list of parent IDs to add.
              */
-            const std::list<QString>& getAddParents()const{return m_addParents;}
-            void setAddParents(const std::list<QString>& newParents);
+            const STRING_LIST& getAddParents()const{return m_addParents;}
+            void setAddParents(const STRING_LIST& newParents);
 
             /**
                A list of parent IDs to remove.
              */            
-            const std::list<QString>& getRemoveParents()const{return m_removeParents;}
-            void setRemoveParents(const std::list<QString>& Parents2Remove);
+            const STRING_LIST& getRemoveParents()const{return m_removeParents;}
+            void setRemoveParents(const STRING_LIST& Parents2Remove);
             
 #ifdef API_QT_AUTOTEST
             static std::unique_ptr<MoveFileArg> EXAMPLE(int context_index, int parent_context_index);
@@ -194,7 +194,7 @@ namespace googleQt {
         protected:
             QString m_fileId;
             QString m_name;
-            std::list<QString> m_addParents, m_removeParents;
+            STRING_LIST m_addParents, m_removeParents;
         };
 
         class DownloadFileArg : public QParamArg

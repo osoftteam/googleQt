@@ -414,12 +414,12 @@ void MoveFileArg::toJson(QJsonObject& js)const
         js["name"] = QString(m_name);
 };
 
-void MoveFileArg::setAddParents(const std::list<QString>& newParents)
+void MoveFileArg::setAddParents(const STRING_LIST& newParents)
 {
     m_addParents = newParents;
 };
 
-void MoveFileArg::setRemoveParents(const std::list<QString>& Parents2Remove)
+void MoveFileArg::setRemoveParents(const STRING_LIST& Parents2Remove)
 {
     m_removeParents = Parents2Remove;
 };
@@ -662,7 +662,7 @@ std::unique_ptr<MoveFileArg> MoveFileArg::EXAMPLE(int, int)
     std::unique_ptr<MoveFileArg> rv(new MoveFileArg);
     rv->setFileId("file1");
     rv->setName("myFile");
-    std::list<QString> lstFrom, lstTo;
+    STRING_LIST lstFrom, lstTo;
     for(int i = 0; i < 5;i++)
         {
             lstFrom.push_back(QString("from%1").arg(i));
@@ -678,7 +678,7 @@ std::unique_ptr<CreateFolderArg> CreateFolderArg::EXAMPLE(int, int)
     std::unique_ptr<CreateFolderArg> rv(new CreateFolderArg);
     rv->setName("myNewFolder");
     rv->setDescription("description of myNewFolder");
-    std::list<QString> lstParents;
+    STRING_LIST lstParents;
     for (int i = 0; i < 5; i++)
     {
         lstParents.push_back(QString("parent%1").arg(i));

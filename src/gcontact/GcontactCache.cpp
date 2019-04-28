@@ -129,7 +129,7 @@ ContactInfo& ContactInfo::addGroup(const GroupMembershipInfo& p)
     return *this;
 };
 
-ContactInfo& ContactInfo::setGroups(QString userId, const std::list<QString>& groupIdlist)
+ContactInfo& ContactInfo::setGroups(QString userId, const STRING_LIST& groupIdlist)
 {
     m_mgroups.items().clear();
     for (auto gid : groupIdlist) {
@@ -1416,7 +1416,7 @@ GoogleVoidTask* PhotoUploader::routeRequest(QString contact_id)
 }
 
 template <class PROCESSOR>
-GcontactCacheRoutes::PhotoListTask* GcontactCacheRoutes::transferPhotos_Async(const std::list<QString>& id_list)
+GcontactCacheRoutes::PhotoListTask* GcontactCacheRoutes::transferPhotos_Async(const STRING_LIST& id_list)
 {
     GcontactCacheRoutes::PhotoListTask* rv = new GcontactCacheRoutes::PhotoListTask(m_endpoint);
     if (!id_list.empty()) {
@@ -1425,7 +1425,7 @@ GcontactCacheRoutes::PhotoListTask* GcontactCacheRoutes::transferPhotos_Async(co
         r->run();
         connect(r, &EndpointRunnable::finished, [=]()
         {
-            //std::list<QString> completed_ids = r->completedArgList();
+            //STRING_LIST completed_ids = r->completedArgList();
             rv->m_completed_ids = r->completedArgList();
             //progress_status = completed_ids.size();
             for (auto c_id : rv->m_completed_ids) {
@@ -1452,13 +1452,13 @@ GcontactCacheRoutes::PhotoListTask* GcontactCacheRoutes::transferPhotos_Async(co
 
 GcontactCacheRoutes::PhotoListTask* GcontactCacheRoutes::downloadPhotos_Async()
 {
-    std::list<QString> id_list = m_GContactsCache->contacts().buildUnresolvedPhotoIdList();
+    STRING_LIST id_list = m_GContactsCache->contacts().buildUnresolvedPhotoIdList();
     return transferPhotos_Async<gcontact::PhotoReceiver>(id_list);
 };
 
 GcontactCacheRoutes::PhotoListTask* GcontactCacheRoutes::uploadPhotos_Async()
 {
-    std::list<QString> id_list = m_GContactsCache->contacts().buildModifiedPhotoIdList();
+    STRING_LIST id_list = m_GContactsCache->contacts().buildModifiedPhotoIdList();
     return transferPhotos_Async<gcontact::PhotoUploader>(id_list);
 };
 
@@ -1824,9 +1824,9 @@ std::shared_ptr<ContactInfo> ContactList::findNewCreated(std::shared_ptr<BatchRe
 
 
 
-std::list<QString> ContactList::buildUnresolvedPhotoIdList()
+STRING_LIST ContactList::buildUnresolvedPhotoIdList()
 {
-    std::list<QString> lst;
+    STRING_LIST lst;
     for (auto& c : items()) {
         if (!c->id().isEmpty() && 
             !c->photo().etag().isEmpty() &&
@@ -1839,9 +1839,9 @@ std::list<QString> ContactList::buildUnresolvedPhotoIdList()
     return lst;
 };
 
-std::list<QString> ContactList::buildModifiedPhotoIdList()
+STRING_LIST ContactList::buildModifiedPhotoIdList()
 {
-    std::list<QString> lst;
+    STRING_LIST lst;
     for (auto& c : items()) {
         if (!c->id().isEmpty() &&
             //!c->photo().etag().isEmpty() &&

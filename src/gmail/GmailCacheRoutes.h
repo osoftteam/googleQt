@@ -78,12 +78,12 @@ namespace googleQt
             mail_cache::GThreadCacheQueryTask* getCacheThreadList_Async(const std::list<HistId>& id_list,
                 mail_cache::GThreadCacheQueryTask* rfetcher = nullptr);
 
-            RESULT_LIST<messages::MessageResource>&&    getUserBatchMessages(EDataState, const std::list<QString>& id_list);
-            ConcurrentValueRunner<QString, mail_cache::MessagesReceiver, messages::MessageResource>* getUserBatchMessages_Async(EDataState, const std::list<QString>& id_list);
+            RESULT_LIST<messages::MessageResource>&&    getUserBatchMessages(EDataState, const STRING_LIST& id_list);
+            ConcurrentValueRunner<QString, mail_cache::MessagesReceiver, messages::MessageResource>* getUserBatchMessages_Async(EDataState, const STRING_LIST& id_list);
             
             /// load emails by ID-list while updating local cache
-            mail_cache::mdata_result getCacheMessages(EDataState, const std::list<QString>& id_list);
-            mail_cache::GMailCacheQueryTask* getCacheMessages_Async(EDataState, const std::list<QString>& id_list,
+            mail_cache::mdata_result getCacheMessages(EDataState, const STRING_LIST& id_list);
+            mail_cache::GMailCacheQueryTask* getCacheMessages_Async(EDataState, const STRING_LIST& id_list,
                 mail_cache::GMailCacheQueryTask* rfetcher = nullptr);
 
             /// check for new emails - get top messagesCount messages and update cache
@@ -100,7 +100,7 @@ namespace googleQt
 
             GoogleVoidTask* trashCacheMessage_Async(QString msg_id);
 
-//            ConcurrentValueRunner<QString, mail_cache::ThreadsReceiver, threads::ThreadResource>* getUserBatchThreads_Async(const std::list<QString>& id_list);
+//            ConcurrentValueRunner<QString, mail_cache::ThreadsReceiver, threads::ThreadResource>* getUserBatchThreads_Async(const STRING_LIST& id_list);
 
             /// async refresh labels DB table
             GoogleVoidTask* refreshLabels_Async();
@@ -127,9 +127,9 @@ namespace googleQt
             GoogleTask<messages::MessageResource>* setImportant_Async(mail_cache::MessageData* d, bool set_it = true);
 
             /// create list of labels and update local DB cache
-            LabelProcessorTask* createLabelList_Async(const std::list<QString>& names);
+            LabelProcessorTask* createLabelList_Async(const STRING_LIST& names);
             /// delete list of labels and update local DB cache
-            GoogleVoidTask* deleteLabelList_Async(const std::list<QString>& label_ids);
+            GoogleVoidTask* deleteLabelList_Async(const STRING_LIST& label_ids);
             /// rename label
             GoogleVoidTask* renameLabels_Async(QString labelId, QString newName);
 
@@ -151,7 +151,7 @@ namespace googleQt
                 bool label_on,
                 bool system_label);
 
-            template <class PROCESSOR> LabelProcessorTask*      processLabelList_Async(const std::list<QString>& slist);
+            template <class PROCESSOR> LabelProcessorTask*      processLabelList_Async(const STRING_LIST& slist);
 
 
         protected:

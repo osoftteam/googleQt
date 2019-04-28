@@ -243,8 +243,8 @@ bool GdriveRoutes::renameFile(QString fileID, QString newName)
     return rv;
 };
 
-bool GdriveRoutes::moveFile(QString fileID, const std::list<QString>& removeParentFolderIDs,
-    const std::list<QString>& addParentFolderIDs) 
+bool GdriveRoutes::moveFile(QString fileID, const STRING_LIST& removeParentFolderIDs,
+    const STRING_LIST& addParentFolderIDs) 
 {
     bool rv = false;
     try
@@ -264,8 +264,8 @@ bool GdriveRoutes::moveFile(QString fileID, const std::list<QString>& removePare
 
 bool GdriveRoutes::moveFile(QString fileID, QString removeParentFolderID, QString addParentFolderID) 
 {
-    std::list<QString> removeParentFolderIDs;
-    std::list<QString> addParentFolderIDs;
+    STRING_LIST removeParentFolderIDs;
+    STRING_LIST addParentFolderIDs;
     removeParentFolderIDs.push_back(removeParentFolderID);
     addParentFolderIDs.push_back(addParentFolderID);
     return moveFile(fileID, removeParentFolderIDs, addParentFolderIDs);

@@ -377,8 +377,8 @@ namespace googleQt{
             QString             m_q, m_labelid,m_nextPageToken;
             thread_arr          m_qthreads;
             thread_map          m_tmap;
-            std::list<QString>  m_qnew_thread_ids;
-            bool            m_threads_db_loaded{false};
+            STRING_LIST			m_qnew_thread_ids;
+            bool				m_threads_db_loaded{false};
         private:
             QueryData(int dbid, QString qstr, QString lbid);
             static QString      format_qhash(QString qstr, QString lblid);
@@ -424,7 +424,7 @@ namespace googleQt{
                                 ApiEndpoint& ept,
                                 googleQt::mail_cache::GmailCacheRoutes& r,
                                 std::shared_ptr<GMailCache> c);
-            void fetchFromCloud_Async(const std::list<QString>& id_list)override;
+            void fetchFromCloud_Async(const STRING_LIST& id_list)override;
 
             mdata_result waitForResultAndRelease();
             QString nextPageToken()const{return m_nextPageToken;}
@@ -452,7 +452,7 @@ namespace googleQt{
             GThreadCacheQueryTask(googleQt::mail_cache::GmailCacheRoutes& r,
                                   std::shared_ptr<GThreadCache> c,
                                   query_ptr q = nullptr);
-            void fetchFromCloud_Async(const std::list<QString>& id_list)override;
+            void fetchFromCloud_Async(const STRING_LIST& id_list)override;
             void notifyOnCompletedFromCache()override;
             QString nextPageToken()const{return m_nextPageToken;}
             tdata_result waitForResultAndRelease();
@@ -547,11 +547,11 @@ namespace googleQt{
         class LabelProcessorTask : public GoogleVoidTask
         {
         public:
-            const std::list<QString>&   getCompletedIds()const { return m_completed_ids; }
+            const STRING_LIST&   getCompletedIds()const { return m_completed_ids; }
 
         protected:
             LabelProcessorTask(ApiEndpoint& ept) :GoogleVoidTask(ept) {}
-            std::list<QString>      m_completed_ids;
+            STRING_LIST      m_completed_ids;
             friend class GmailCacheRoutes;
         };
 
@@ -570,7 +570,7 @@ namespace googleQt{
             bool loadQueriesFromDb();
             bool loadQueryThreadsFromDb(query_ptr d);
             QString insertSQLthreads(query_ptr q)const;
-            void bindSQL(QSqlQuery* q, std::list<QString>& r);
+            void bindSQL(QSqlQuery* q, STRING_LIST& r);
         protected:
             GThreadsStorage*        m_tstorage;
             query_map               m_qmap;

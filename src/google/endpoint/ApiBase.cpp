@@ -125,11 +125,11 @@ void QParamArg::ResponseFields2Builder(UrlBuilder& b)const
     }
 };
 
-QString googleQt::slist2commalist(const std::list<QString>& lst)
+QString googleQt::slist2commalist(const STRING_LIST& lst)
 {
     QString rv = "";
     if (!lst.empty()) {
-        for (std::list<QString>::const_iterator i = lst.begin();
+        for (STRING_LIST::const_iterator i = lst.begin();
             i != lst.end();
             i++)
         {
@@ -141,12 +141,12 @@ QString googleQt::slist2commalist(const std::list<QString>& lst)
     return rv;
 };
 
-QString googleQt::slist2commalist_decorated(const std::list<QString>& lst, char deco)
+QString googleQt::slist2commalist_decorated(const STRING_LIST& lst, char deco)
 {
     QString rv = "";
     if (!lst.empty())
     {
-        for (std::list<QString>::const_iterator i = lst.begin();
+        for (STRING_LIST::const_iterator i = lst.begin();
             i != lst.end();
             i++)
         {
@@ -159,10 +159,10 @@ QString googleQt::slist2commalist_decorated(const std::list<QString>& lst, char 
 };
 
 
-std::list<QString> googleQt::split_string(QString s)
+STRING_LIST googleQt::split_string(QString s)
 {
     QStringList s_list = s.split(" ", QString::SkipEmptyParts);
-    std::list<QString> rv;
+    STRING_LIST rv;
     for (QStringList::iterator i = s_list.begin(); i != s_list.end(); i++)
     {
         rv.push_back(*i);

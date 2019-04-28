@@ -627,7 +627,7 @@ mail_cache::GMailCacheQueryTask::GMailCacheQueryTask(EDataState state,
 
 };
 
-void mail_cache::GMailCacheQueryTask::fetchFromCloud_Async(const std::list<QString>& id_list)
+void mail_cache::GMailCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& id_list)
 {
     if (id_list.empty())
         return;
@@ -882,7 +882,7 @@ mail_cache::GThreadCacheQueryTask::GThreadCacheQueryTask(
 
 };
 
-void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const std::list<QString>& id_list)
+void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& id_list)
 {
     if (id_list.empty())
         return;
@@ -900,7 +900,7 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const std::list<QSt
 
     connect(par_runner, &EndpointRunnable::finished, [=]()
     {
-        std::list<QString> msg_list2resolve;
+        STRING_LIST msg_list2resolve;
 
         RESULT_LIST<threads::ThreadResource>&& res = par_runner->detachResult();
         for (auto& t : res)
@@ -2652,13 +2652,13 @@ void mail_cache::GMessagesStorage::insertDbAttachmentData(const mail_cache::Mess
 
 void mail_cache::GMessagesStorage::remove_db(const std::set<QString>& set_of_ids2remove)
 {
-    std::list<QString> ids2remove;
+    STRING_LIST ids2remove;
     for (auto& i : set_of_ids2remove)
     {
         ids2remove.push_back(i);
     }
 
-    std::function<bool(const std::list<QString>& lst)> removeSublist = [&](const std::list<QString>& lst) -> bool
+    std::function<bool(const STRING_LIST& lst)> removeSublist = [&](const STRING_LIST& lst) -> bool
     {
         QString comma_ids = slist2commalist_decorated(lst);
         QString sql = QString("DELETE FROM %1gmail_msg WHERE msg_id IN(%2) AND acc_id=%3")
@@ -3095,13 +3095,13 @@ void mail_cache::GThreadsStorage::insert_db(EDataState, CACHE_LIST<ThreadData>& 
 
 void mail_cache::GThreadsStorage::remove_db(const std::set<QString>& set_of_ids2remove)
 {
-    std::list<QString> ids2remove;
+    STRING_LIST ids2remove;
     for (auto& i : set_of_ids2remove)
     {
         ids2remove.push_back(i);
     }
 
-    std::function<bool(const std::list<QString>& lst)> removeSublist = [&](const std::list<QString>& lst) -> bool
+    std::function<bool(const STRING_LIST& lst)> removeSublist = [&](const STRING_LIST& lst) -> bool
     {
         QString comma_ids = slist2commalist_decorated(lst);
         QString sql = QString("DELETE FROM %1gmail_thread WHERE thread_id IN(%2) AND acc_id=%3")
@@ -3289,7 +3289,7 @@ QString mail_cache::GQueryStorage::insertSQLthreads(query_ptr q)const
     return sql_insert;
 };
 
-void mail_cache::GQueryStorage::bindSQL(QSqlQuery* q, std::list<QString>& r)
+void mail_cache::GQueryStorage::bindSQL(QSqlQuery* q, STRING_LIST& r)
 {
     QVariantList threadId;
     for (auto& i : r)
@@ -3307,7 +3307,7 @@ void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
         return;
     }
 
-    std::list<QString>  new_threads;
+    STRING_LIST  new_threads;
     for (auto& i : qd->m_qnew_thread_ids) {
         if (qd->m_tmap.find(i) == qd->m_tmap.end()) {
             auto t = tc->mem_object(i);

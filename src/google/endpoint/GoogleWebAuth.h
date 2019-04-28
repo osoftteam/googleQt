@@ -3,6 +3,7 @@
 #include <QString>
 #include "ApiAuthInfo.h"
 #include "ApiAppInfo.h"
+#include "ApiBase.h"
 
 namespace googleQt{
     class GoogleAppInfo;
@@ -17,7 +18,7 @@ namespace googleQt{
         */
         static QUrl getCodeAuthorizeUrl(const ApiAppInfo* appInfo, QString scope);
 
-        static QUrl getCodeAuthorizeUrl(const ApiAppInfo* appInfo, const std::list<QString>& scopes);
+        static QUrl getCodeAuthorizeUrl(const ApiAppInfo* appInfo, const STRING_LIST& scopes);
 
         /**
            getTokenFromCode - makes http call to Dropbox to retrive

@@ -251,7 +251,7 @@ SendMimeMessageArg::SendMimeMessageArg(QString from,
     addBodyPart(pt_html);
 };
 
-void SendMimeMessageArg::addAttachments(const std::list<QString>& attachments) 
+void SendMimeMessageArg::addAttachments(const STRING_LIST& attachments) 
 {
     for (auto& i : attachments) {
         if (QFile::exists(i)) {

@@ -28,6 +28,8 @@ namespace googleQt {
     bool storeJsonToFile(QString path, const QJsonObject js);
     bool isConnectedToNetwork();
 
+	using STRING_LIST = std::list<QString>;
+
     template<class T>
     QJsonArray struct_list2jsonarray(const std::list<T>& lst)
     {
@@ -177,10 +179,10 @@ namespace googleQt {
     }
 
     /// converts std::list of strings -> comma separated list
-    QString slist2commalist(const std::list<QString>& lst);
-    QString slist2commalist_decorated(const std::list<QString>& lst, char deco = '\'');
+    QString slist2commalist(const STRING_LIST& lst);
+    QString slist2commalist_decorated(const STRING_LIST& lst, char deco = '\'');
     /// converts space separated strings -> std::list of strings
-    std::list<QString> split_string(QString s);
+    STRING_LIST split_string(QString s);
     /// converts size to string with KB, MB or GB suffix
     QString size_human(qreal num);
     /// trims string to alpha-num characters, makes is lowercase for typeLabels in GContacts

@@ -89,7 +89,7 @@ std::unique_ptr<CreateFileDetails> CreateFileDetails::EXAMPLE(int context_index,
     rv->m_contentHints = *(files::ContentHints::EXAMPLE(0, context_index).get());
     rv->m_name = ApiAutotest::INSTANCE().getString("files::CreateFileDetails", "m_name", QString("name_%1").arg(example_idx));
     rv->m_originalFilename = ApiAutotest::INSTANCE().getString("files::CreateFileDetails", "m_originalFilename", QString("originalFilename_%1").arg(example_idx));
-    std::list<QString> list_of_parents;
+    STRING_LIST list_of_parents;
     for(int i = 0; i < 5; i++){
         rv->m_parents.push_back(QString("id_%1").arg(i+1));
     }

@@ -169,7 +169,7 @@ GtaskCacheRoutes::GtaskCacheRoutes(GtaskRoutes& gtask_routes):m_t_routes(gtask_r
     m_cache.reset(new TaskCache(*(m_t_routes.endpoint())));
 };
 
-GoogleVoidTask* GtaskCacheRoutes::loadTaskLists(const TIDLIST& idlist)
+GoogleVoidTask* GtaskCacheRoutes::loadTaskLists(const STRING_LIST& idlist)
 {
     GoogleVoidTask* rv = m_t_routes.endpoint()->produceVoidTask();
 
@@ -199,7 +199,7 @@ GoogleVoidTask* GtaskCacheRoutes::loadTaskLists(const TIDLIST& idlist)
     return rv;
 };
 
-ConcurrentValueRunner<QString, TaskListReceiver, tasklists::TaskListResource>* GtaskCacheRoutes::getTaskList_Async(const TIDLIST& idlist) 
+ConcurrentValueRunner<QString, TaskListReceiver, tasklists::TaskListResource>* GtaskCacheRoutes::getTaskList_Async(const STRING_LIST& idlist)
 {
     if(idlist.empty()){
         return nullptr;
@@ -216,7 +216,7 @@ ConcurrentValueRunner<QString, TaskListReceiver, tasklists::TaskListResource>* G
     return r;
 };
 
-ConcurrentValueRunner<QString, TaskReceiver, tasks::TaskCollectionRes>* GtaskCacheRoutes::getTasks_Async(const TIDLIST& idlist)
+ConcurrentValueRunner<QString, TaskReceiver, tasks::TaskCollectionRes>* GtaskCacheRoutes::getTasks_Async(const STRING_LIST& idlist)
 {
     if(idlist.empty()){
         return nullptr;

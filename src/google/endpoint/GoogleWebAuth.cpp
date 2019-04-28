@@ -24,11 +24,11 @@ QUrl GoogleWebAuth::getCodeAuthorizeUrl(const ApiAppInfo* appInfo, QString scope
     return url;
 };
 
-QUrl GoogleWebAuth::getCodeAuthorizeUrl(const ApiAppInfo* appInfo, const std::list<QString>& scopes)
+QUrl GoogleWebAuth::getCodeAuthorizeUrl(const ApiAppInfo* appInfo, const STRING_LIST& scopes)
 {
     QString scope_summary;
 
-    for(std::list<QString>::const_iterator i = scopes.begin(); i != scopes.end();i++)
+    for(STRING_LIST::const_iterator i = scopes.begin(); i != scopes.end();i++)
         {
             scope_summary += *i;
             scope_summary += "+";

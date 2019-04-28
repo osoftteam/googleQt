@@ -372,7 +372,7 @@ namespace googleQt{
             void    setReferences(QString sval) { m_references = sval; }
 
             void addBodyPart(const MimeBodyPart& pt) { m_body_parts.push_back(pt); };
-            void addAttachments(const std::list<QString>& attachments);
+            void addAttachments(const STRING_LIST& attachments);
 
             /**
                 if rawRfc822MessageFile is set the file content as whole will be loaded

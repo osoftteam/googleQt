@@ -132,18 +132,16 @@ namespace googleQt
         {
             Q_OBJECT
         public:
-            using TIDLIST = std::list<QString>;
-
             GtaskCacheRoutes(GtaskRoutes& gtask_routes);
 
             GtaskRoutes&   task_routes(){return m_t_routes;};
             TaskCache::ptr cache(){return m_cache;}
             
-            GoogleVoidTask* loadTaskLists(const TIDLIST& idlist);
+            GoogleVoidTask* loadTaskLists(const STRING_LIST& idlist);
 
         protected:
-            ConcurrentValueRunner<QString, TaskListReceiver, tasklists::TaskListResource>* getTaskList_Async(const TIDLIST& idlist);
-            ConcurrentValueRunner<QString, TaskReceiver, tasks::TaskCollectionRes>* getTasks_Async(const TIDLIST& idlist);
+            ConcurrentValueRunner<QString, TaskListReceiver, tasklists::TaskListResource>* getTaskList_Async(const STRING_LIST& idlist);
+            ConcurrentValueRunner<QString, TaskReceiver, tasks::TaskCollectionRes>* getTasks_Async(const STRING_LIST& idlist);
 
         protected:
             GtaskRoutes&    m_t_routes;

@@ -224,10 +224,10 @@ namespace googleQt {
         }
 
 
-        void query_Async(EDataState load, const std::list<QString>& id_list, R* rfetcher)
+        void query_Async(EDataState load, const STRING_LIST& id_list, R* rfetcher)
         {
-            std::list<QString> missed_cache;
-            for (std::list<QString>::const_iterator i = id_list.begin(); i != id_list.end(); i++)
+            STRING_LIST missed_cache;
+            for (STRING_LIST::const_iterator i = id_list.begin(); i != id_list.end(); i++)
                 {
                     QString id = *i;
                     std::shared_ptr<O> obj = mem_object(id);
@@ -254,7 +254,7 @@ namespace googleQt {
 
         void queryWithHistory_Async(const std::list<HistId>& id_list, R* rfetcher)
         {
-            std::list<QString> missed_cache;
+            STRING_LIST missed_cache;
             for (std::list<HistId>::const_iterator i = id_list.begin(); i != id_list.end(); i++)
             {
                 QString id = i->id;
@@ -320,7 +320,7 @@ namespace googleQt {
             CacheTaskParent<O>::m_completed.reset(new CacheDataResult<O>); CacheTaskParent<O>::m_completed->state = load;
         };
 
-        virtual void fetchFromCloud_Async(const std::list<QString>& id_list) = 0;
+        virtual void fetchFromCloud_Async(const STRING_LIST& id_list) = 0;
         std::unique_ptr<CacheDataResult<O>> waitForResultAndRelease() = delete;
 
         virtual void notifyOnCompletedFromCache() 

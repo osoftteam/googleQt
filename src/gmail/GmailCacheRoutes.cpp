@@ -23,7 +23,7 @@ mail_cache::GmailCacheRoutes::GmailCacheRoutes(Endpoint& endpoint,
 };
 
 RESULT_LIST<messages::MessageResource>&& mail_cache::GmailCacheRoutes::getUserBatchMessages(EDataState f,
-                                                                                            const std::list<QString>& id_list)
+                                                                                            const STRING_LIST& id_list)
 {
     return getUserBatchMessages_Async(f, id_list)->waitForResultAndRelease();
 };
@@ -52,7 +52,7 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::newThreadResult
 ConcurrentValueRunner<QString,
                 mail_cache::MessagesReceiver,
                 messages::MessageResource>* mail_cache::GmailCacheRoutes::getUserBatchMessages_Async(EDataState f, 
-                                                                                         const std::list<QString>& id_list)
+                                                                                         const STRING_LIST& id_list)
 {
     std::unique_ptr<mail_cache::MessagesReceiver> mr(new mail_cache::MessagesReceiver(m_gmail_routes, f));
     
@@ -65,14 +65,14 @@ ConcurrentValueRunner<QString,
     return r;
 };
 
-mail_cache::mdata_result mail_cache::GmailCacheRoutes::getCacheMessages(EDataState state, const std::list<QString>& id_list)
+mail_cache::mdata_result mail_cache::GmailCacheRoutes::getCacheMessages(EDataState state, const STRING_LIST& id_list)
 {
     return getCacheMessages_Async(state, id_list)->waitForResultAndRelease();
 };
 
 
 mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheMessages_Async(EDataState state,
-    const std::list<QString>& id_list,
+    const STRING_LIST& id_list,
     mail_cache::GMailCacheQueryTask* rfetcher /*= nullptr*/)
 {
     if (!rfetcher)
@@ -102,7 +102,7 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheMessa
 
     m_gmail_routes.getMessages()->list_Async(listArg)->then([=](std::unique_ptr<messages::MessageListRes> mlist)
     {
-        std::list<QString> id_list;
+        STRING_LIST id_list;
         for (auto& m : mlist->messages())
         {
             id_list.push_back(m.id());
@@ -156,7 +156,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::trashCacheMessage_Async(QString ms
 /*
 ConcurrentValueRunner<QString, 
     mail_cache::ThreadsReceiver, 
-    threads::ThreadResource>* mail_cache::GmailCacheRoutes::getUserBatchThreads_Async(const std::list<QString>& id_list)
+    threads::ThreadResource>* mail_cache::GmailCacheRoutes::getUserBatchThreads_Async(const STRING_LIST& id_list)
 {
     std::unique_ptr<mail_cache::ThreadsReceiver> tr(new mail_cache::ThreadsReceiver(m_gmail_routes));
     auto r = new ConcurrentValueRunner<QString,
@@ -693,7 +693,7 @@ namespace googleQt {
     }
 }
 
-template <class PROCESSOR> googleQt::mail_cache::LabelProcessorTask* mail_cache::GmailCacheRoutes::processLabelList_Async(const std::list<QString>& slist)
+template <class PROCESSOR> googleQt::mail_cache::LabelProcessorTask* mail_cache::GmailCacheRoutes::processLabelList_Async(const STRING_LIST& slist)
 {
     LabelProcessorTask* t = new LabelProcessorTask(m_endpoint);
     if (!slist.empty()) {
@@ -716,13 +716,13 @@ template <class PROCESSOR> googleQt::mail_cache::LabelProcessorTask* mail_cache:
     return t;
 };
 
-googleQt::mail_cache::LabelProcessorTask* mail_cache::GmailCacheRoutes::createLabelList_Async(const std::list<QString>& names)
+googleQt::mail_cache::LabelProcessorTask* mail_cache::GmailCacheRoutes::createLabelList_Async(const STRING_LIST& names)
 {
     return processLabelList_Async<mail_cache::LabelCreator>(names);
 };
 
 
-GoogleVoidTask* mail_cache::GmailCacheRoutes::deleteLabelList_Async(const std::list<QString>& label_ids)
+GoogleVoidTask* mail_cache::GmailCacheRoutes::deleteLabelList_Async(const STRING_LIST& label_ids)
 {
     return processLabelList_Async < mail_cache::LabelDeleter > (label_ids);
 };
@@ -985,7 +985,7 @@ void mail_cache::GmailCacheRoutes::runAutotest()
     {
         idx = 1;
 
-        std::list<QString> qfilters;
+        STRING_LIST qfilters;
         qfilters.push_back("from:mike@gmail.com");
         qfilters.push_back("from:judy@gmail.com");
         qfilters.push_back("from:john@gmail.com");

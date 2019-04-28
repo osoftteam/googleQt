@@ -54,7 +54,7 @@ namespace googleQt
         /// rename existing file
         bool renameFile(QString fileID, QString newName);
         /// move file by ID from list of parent to new parents
-        bool moveFile(QString fileID, const std::list<QString>& removeParentFolderIDs, const std::list<QString>& addParentFolderIDs);
+        bool moveFile(QString fileID, const STRING_LIST& removeParentFolderIDs, const STRING_LIST& addParentFolderIDs);
         /// move file by ID from one parent to another
         bool moveFile(QString fileID, QString removeParentFolderID, QString addParentFolderID);
         /// upload file using file ID obtained before, return true if succeded
