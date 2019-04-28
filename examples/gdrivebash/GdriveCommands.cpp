@@ -552,12 +552,12 @@ void GdriveCommands::move_file(QString fileId)
     std::cout << "Enter parents ID(space separated) from which object will be removed (or SPACE to none)" << std::endl;
     std::cout << "from>";
     getline(std::cin, tmp);
-    std::list<QString> remove_list = split_string(QString(tmp.c_str()));
+    STRING_LIST remove_list = split_string(QString(tmp.c_str()));
 
     std::cout << "Enter parents ID(space separated) of destination folders (or SPACE to none)" << std::endl;
     std::cout << "to>";
     getline(std::cin, tmp);
-    std::list<QString> add_list = split_string(QString(tmp.c_str()));
+    STRING_LIST add_list = split_string(QString(tmp.c_str()));
     
     try
         {
