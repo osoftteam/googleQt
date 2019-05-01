@@ -49,8 +49,8 @@ namespace files{
                 The IDs generated for the requesting user in the specified
                 space.
             */
-        const std::list <QString>& ids()const{return m_ids;};
-        GeneratedIdsCollection& setIds(const std::list <QString>& arg){m_ids=arg;return *this;};
+        const std::vector<QString>& ids()const{return m_ids;};
+        GeneratedIdsCollection& setIds(const std::vector<QString>& arg){m_ids=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -87,7 +87,7 @@ namespace files{
                 The IDs generated for the requesting user in the specified
                 space.
             */
-        std::list <QString> m_ids;
+        std::vector<QString> m_ids;
 
     };//GeneratedIdsCollection
 

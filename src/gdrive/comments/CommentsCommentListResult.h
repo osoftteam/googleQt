@@ -43,7 +43,7 @@ namespace comments{
             */
         QString kind()const{return m_kind;};
 
-        const std::list <Comment>& comments()const{return m_comments;};
+        const std::vector<Comment>& comments()const{return m_comments;};
 
     public:
         operator QJsonObject ()const;
@@ -76,7 +76,7 @@ namespace comments{
             */
         QString m_kind;
 
-        std::list <Comment> m_comments;
+        std::vector<Comment> m_comments;
 
     };//CommentListResult
 

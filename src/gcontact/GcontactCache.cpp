@@ -90,7 +90,7 @@ ContactInfo& ContactInfo::addPhone(const PhoneInfo& p)
     return *this;
 };
 
-ContactInfo& ContactInfo::replaceEmails(const std::list<EmailInfo>& lst)
+ContactInfo& ContactInfo::replaceEmails(const std::vector<EmailInfo>& lst)
 {
     m_emails.m_parts.clear();
     markAsModified();
@@ -101,7 +101,7 @@ ContactInfo& ContactInfo::replaceEmails(const std::list<EmailInfo>& lst)
     return *this;
 };
 
-ContactInfo& ContactInfo::replacePhones(const std::list<PhoneInfo>& lst)
+ContactInfo& ContactInfo::replacePhones(const std::vector<PhoneInfo>& lst)
 {
     m_phones.m_parts.clear();
     markAsModified();
@@ -140,7 +140,7 @@ ContactInfo& ContactInfo::setGroups(QString userId, const STRING_LIST& groupIdli
     return *this;
 };
 
-ContactInfo& ContactInfo::replaceAddressList(const std::list<PostalAddress>& lst)
+ContactInfo& ContactInfo::replaceAddressList(const std::vector<PostalAddress>& lst)
 {
     m_address_list.m_parts.clear();
     markAsModified();
@@ -718,7 +718,7 @@ bool GContactCache::ensureContactTables()
 
 bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& contact_list)
 {    
-    using CLIST = std::list<ContactInfo::ptr>;
+    using CLIST = std::vector<ContactInfo::ptr>;
     MAKE_DB_UPDATE_LISTS;
 
     if (cloud_created_contacts.size() > 0) {
@@ -838,7 +838,7 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
 
 bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& contact_list)
 {
-    using CLIST = std::list<GroupInfo::ptr>;
+    using CLIST = std::vector<GroupInfo::ptr>;
     MAKE_DB_UPDATE_LISTS;
 
     if (cloud_created_contacts.size() > 0) {
@@ -2002,7 +2002,7 @@ std::unique_ptr<ContactInfo> createMergeContactParty(QString xmlOrigin)
     c->setName(n);
 
     PhoneInfo p1, p2;
-    std::list<PhoneInfo> lst;
+    std::vector<PhoneInfo> lst;
     p1.setNumber("=NEW-1-111-1111=");
     p1.setPrimary(true);
     p2.setNumber("=NEW-2-222-2222=");
@@ -2020,7 +2020,7 @@ std::unique_ptr<ContactInfo> createMergeContactParty(QString xmlOrigin)
     e2.setDisplayName("=NEW-second-first-last=");
     e2.setPrimary(false);
     e2.setTypeLabel("work");
-    std::list<EmailInfo> e_lst;
+    std::vector<EmailInfo> e_lst;
     e_lst.push_back(e1);
     e_lst.push_back(e2);
     c->replaceEmails(e_lst);
@@ -2038,7 +2038,7 @@ std::unique_ptr<ContactInfo> createMergeContactParty(QString xmlOrigin)
     a2.setPostcode("=NEW-ZIP2="); 
     a2.setCountry("=NEW-COUNTRY2="); 
     a2.setPrimary(false);
-    std::list<PostalAddress> a_lst;
+    std::vector<PostalAddress> a_lst;
     a_lst.push_back(a1);
     a_lst.push_back(a2);
     c->replaceAddressList(a_lst);

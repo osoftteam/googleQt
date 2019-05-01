@@ -57,8 +57,8 @@ namespace revisions{
                 list may be incomplete and an additional page of results should
                 be fetched.
             */
-        const std::list <RevisionResource>& files()const{return m_files;};
-        RevisionResourceCollection& setFiles(const std::list <RevisionResource>& arg){m_files=arg;return *this;};
+        const std::vector<RevisionResource>& files()const{return m_files;};
+        RevisionResourceCollection& setFiles(const std::vector<RevisionResource>& arg){m_files=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -98,7 +98,7 @@ namespace revisions{
                 list may be incomplete and an additional page of results should
                 be fetched.
             */
-        std::list <RevisionResource> m_files;
+        std::vector<RevisionResource> m_files;
 
     };//RevisionResourceCollection
 

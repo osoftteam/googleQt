@@ -12,7 +12,7 @@ namespace googleQt {
     template<class O>
     using CACHE_MAP = std::map<QString, std::shared_ptr<O>>;
     template<class O>
-    using CACHE_LIST = std::list<std::shared_ptr<O>>;
+    using CACHE_LIST = std::vector<std::shared_ptr<O>>;
     template<class O>
     using CACHE_ARR = std::vector<std::shared_ptr<O>>;
 
@@ -252,10 +252,10 @@ namespace googleQt {
                 }            
         };
 
-        void queryWithHistory_Async(const std::list<HistId>& id_list, R* rfetcher)
+        void queryWithHistory_Async(const std::vector<HistId>& id_list, R* rfetcher)
         {
             STRING_LIST missed_cache;
-            for (std::list<HistId>::const_iterator i = id_list.begin(); i != id_list.end(); i++)
+            for (std::vector<HistId>::const_iterator i = id_list.begin(); i != id_list.end(); i++)
             {
                 QString id = i->id;
                 quint64 hid = i->hid;
@@ -338,14 +338,14 @@ namespace googleQt {
         bool isCompleted()const override { return m_query_completed; }
 
         void add_result(std::shared_ptr<O> obj, bool from_cloud) { 
-			CacheTaskParent<O>::m_completed->result_map[obj->id()] = obj; 
-			CacheTaskParent<O>::m_completed->result_list.push_back(obj); 
-			if (from_cloud)CacheTaskParent<O>::m_completed->from_cloud.push_back(obj);
-			auto p = CacheTaskParent<O>::progressNotifier();
-			if (p) {
-				p->setValue(CacheTaskParent<O>::m_completed->result_list.size());
-			}
-		};
+            CacheTaskParent<O>::m_completed->result_map[obj->id()] = obj; 
+            CacheTaskParent<O>::m_completed->result_list.push_back(obj); 
+            if (from_cloud)CacheTaskParent<O>::m_completed->from_cloud.push_back(obj);
+            auto p = CacheTaskParent<O>::progressNotifier();
+            if (p) {
+                p->setValue(CacheTaskParent<O>::m_completed->result_list.size());
+            }
+        };
         void inc_mem_cache_hit_count() { m_cache_hit_count++; }
         void set_db_cache_hit_count(size_t val) { m_db_cache_hit_count = val; }
         size_t mem_cache_hit_count()const { return m_cache_hit_count; }

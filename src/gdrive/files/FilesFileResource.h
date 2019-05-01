@@ -185,15 +185,15 @@ namespace files{
                 directly in the My Drive folder. Update requests must use the
                 addParents and removeParents parameters to modify the values.
             */
-        const std::list <QString>& parents()const{return m_parents;};
-        FileResource& setParents(const std::list <QString>& arg){m_parents=arg;return *this;};
+        const std::vector<QString>& parents()const{return m_parents;};
+        FileResource& setParents(const std::vector<QString>& arg){m_parents=arg;return *this;};
 
             /**
                 The list of spaces which contain the file. The currently
                 supported values are 'drive', 'appDataFolder' and 'photos'.
             */
-        const std::list <QString>& spaces()const{return m_spaces;};
-        FileResource& setSpaces(const std::list <QString>& arg){m_spaces=arg;return *this;};
+        const std::vector<QString>& spaces()const{return m_spaces;};
+        FileResource& setSpaces(const std::vector<QString>& arg){m_spaces=arg;return *this;};
 
             /**
                 A monotonically increasing version number for the file. This
@@ -282,8 +282,8 @@ namespace files{
                 The owners of the file. Currently, only certain legacy files may
                 have more than one owner.
             */
-        const std::list <about::UserInfo>& owners()const{return m_owners;};
-        FileResource& setOwners(const std::list <about::UserInfo>& arg){m_owners=arg;return *this;};
+        const std::vector<about::UserInfo>& owners()const{return m_owners;};
+        FileResource& setOwners(const std::vector<about::UserInfo>& arg){m_owners=arg;return *this;};
 
             /**
                 The last user to modify the file.
@@ -315,8 +315,8 @@ namespace files{
                 The full list of permissions for the file. This is only
                 available if the requesting user can share the file.
             */
-        const std::list <permissions::ResourcePermission>& permissions()const{return m_permissions;};
-        FileResource& setPermissions(const std::list <permissions::ResourcePermission>& arg){m_permissions=arg;return *this;};
+        const std::vector<permissions::ResourcePermission>& permissions()const{return m_permissions;};
+        FileResource& setPermissions(const std::vector<permissions::ResourcePermission>& arg){m_permissions=arg;return *this;};
 
             /**
                 The color for a folder as an RGB hex string. The supported
@@ -481,13 +481,13 @@ namespace files{
                 directly in the My Drive folder. Update requests must use the
                 addParents and removeParents parameters to modify the values.
             */
-        std::list <QString> m_parents;
+        std::vector<QString> m_parents;
 
             /**
                 The list of spaces which contain the file. The currently
                 supported values are 'drive', 'appDataFolder' and 'photos'.
             */
-        std::list <QString> m_spaces;
+        std::vector<QString> m_spaces;
 
             /**
                 A monotonically increasing version number for the file. This
@@ -564,7 +564,7 @@ namespace files{
                 The owners of the file. Currently, only certain legacy files may
                 have more than one owner.
             */
-        std::list <about::UserInfo> m_owners;
+        std::vector<about::UserInfo> m_owners;
 
             /**
                 The last user to modify the file.
@@ -592,7 +592,7 @@ namespace files{
                 The full list of permissions for the file. This is only
                 available if the requesting user can share the file.
             */
-        std::list <permissions::ResourcePermission> m_permissions;
+        std::vector<permissions::ResourcePermission> m_permissions;
 
             /**
                 The color for a folder as an RGB hex string. The supported

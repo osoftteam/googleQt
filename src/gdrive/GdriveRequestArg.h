@@ -371,8 +371,8 @@ namespace googleQt {
             /**
                A list of parent IDs to remove.
              */
-            const std::list <QString>& removeParents()const { return m_removeParents; };
-            UpdateFileArg& setRemoveParents(const std::list <QString>& arg) { m_removeParents = arg; return *this; };
+            const std::vector<QString>& removeParents()const { return m_removeParents; };
+            UpdateFileArg& setRemoveParents(const std::vector<QString>& arg) { m_removeParents = arg; return *this; };
             
 #ifdef API_QT_AUTOTEST
             static std::unique_ptr<UpdateFileArg> EXAMPLE(int context_index, int parent_context_index);
@@ -381,7 +381,7 @@ namespace googleQt {
         protected:
             QString m_fileId;
             QString m_ocrLanguage;
-            std::list <QString> m_removeParents;
+            std::vector<QString> m_removeParents;
             std::unique_ptr<files::UpdateFileDetails> m_update_file;
         };
         
@@ -410,8 +410,8 @@ namespace googleQt {
             directly in the My Drive folder. Update requests must use the
             addParents and removeParents parameters to modify the values.
             */
-            const std::list <QString>& parents()const { return m_parents; };
-            CreateFolderArg& setParents(const std::list <QString>& arg) { m_parents = arg; return *this; };
+            const std::vector<QString>& parents()const { return m_parents; };
+            CreateFolderArg& setParents(const std::vector<QString>& arg) { m_parents = arg; return *this; };
 
 #ifdef API_QT_AUTOTEST
             static std::unique_ptr<CreateFolderArg> EXAMPLE(int context_index, int parent_context_index);
@@ -420,7 +420,7 @@ namespace googleQt {
         protected:
             QString m_name;
             QString m_description;
-            std::list <QString> m_parents;            
+            std::vector<QString> m_parents;
         };
         
         class EmptyTrashArg: public PathArg<path_trash, EmptyTrashArg>

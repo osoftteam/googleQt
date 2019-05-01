@@ -96,8 +96,8 @@ namespace files{
                 directly in the My Drive folder. Update requests must use the
                 addParents and removeParents parameters to modify the values.
             */
-        const std::list <QString>& parents()const{return m_parents;};
-        CreateFileDetails& setParents(const std::list <QString>& arg){m_parents=arg;return *this;};
+        const std::vector<QString>& parents()const{return m_parents;};
+        CreateFileDetails& setParents(const std::vector<QString>& arg){m_parents=arg;return *this;};
 
             /**
                 Whether the user has starred the file.
@@ -167,7 +167,7 @@ namespace files{
                 directly in the My Drive folder. Update requests must use the
                 addParents and removeParents parameters to modify the values.
             */
-        std::list <QString> m_parents;
+        std::vector<QString> m_parents;
 
             /**
                 Whether the user has starred the file.

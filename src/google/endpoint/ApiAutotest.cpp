@@ -388,16 +388,16 @@ QString ApiAutotest::getString(const char* class_name, const char* field_name, Q
 
 void ApiAutotest::setString4List(const char* class_name, const char* field_name, QString value) 
 {
-	QString key = class_name;
-	key += field_name;
-	m_str4list[key] = value;
+    QString key = class_name;
+    key += field_name;
+    m_str4list[key] = value;
 };
 
 void ApiAutotest::clearString4List(const char* class_name, const char* field_name) 
 {
-	QString key = class_name;
-	key += field_name;
-	m_str4list.erase(key);
+    QString key = class_name;
+    key += field_name;
+    m_str4list.erase(key);
 };
 
 
@@ -407,14 +407,14 @@ QString ApiAutotest::getString4List(const char* class_name, const char* field_na
     if (strcmp(class_name, "messages::MessageResource") == 0){
         if (strcmp(field_name, "m_labelIds") == 0)
         {
-			QString key = class_name;
-			key += field_name;
+            QString key = class_name;
+            key += field_name;
 
-			auto it = m_str4list.find(key);
-			if (it != m_str4list.end()) {
-				rv = it->second;
-			}
-	}      
+            auto it = m_str4list.find(key);
+            if (it != m_str4list.end()) {
+                rv = it->second;
+            }
+    }      
     }
     return rv;
 }

@@ -70,7 +70,7 @@ namespace googleQt {
             /**
                 delete old emails and add new
             */
-            ContactInfo& replaceEmails(const std::list<EmailInfo>& lst);
+            ContactInfo& replaceEmails(const std::vector<EmailInfo>& lst);
 
             /**
                 add new phone info
@@ -80,7 +80,7 @@ namespace googleQt {
             /**
                 delete old phone and add new
             */
-            ContactInfo& replacePhones(const std::list<PhoneInfo>& lst);
+            ContactInfo& replacePhones(const std::vector<PhoneInfo>& lst);
 
             /**
                 set organization information
@@ -105,7 +105,7 @@ namespace googleQt {
             /**
                 delete old address list and put a new one
             */
-            ContactInfo& replaceAddressList(const std::list<PostalAddress>& lst);
+            ContactInfo& replaceAddressList(const std::vector<PostalAddress>& lst);
 
             //..
             /**

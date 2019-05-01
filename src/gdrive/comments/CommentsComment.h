@@ -134,8 +134,8 @@ namespace comments{
             /**
                 The full list of replies to the comment in chronological order.
             */
-        const std::list <Reply>& replies()const{return m_replies;};
-        Comment& setReplies(const std::list <Reply>& arg){m_replies=arg;return *this;};
+        const std::vector<Reply>& replies()const{return m_replies;};
+        Comment& setReplies(const std::vector<Reply>& arg){m_replies=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -222,7 +222,7 @@ namespace comments{
             /**
                 The full list of replies to the comment in chronological order.
             */
-        std::list <Reply> m_replies;
+        std::vector<Reply> m_replies;
 
     };//Comment
 

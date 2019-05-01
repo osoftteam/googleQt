@@ -49,8 +49,8 @@ namespace files{
             /**
                 The page of files.
             */
-        const std::list <FileResource>& files()const{return m_files;};
-        FileResourcesCollection& setFiles(const std::list <FileResource>& arg){m_files=arg;return *this;};
+        const std::vector<FileResource>& files()const{return m_files;};
+        FileResourcesCollection& setFiles(const std::vector<FileResource>& arg){m_files=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -86,7 +86,7 @@ namespace files{
             /**
                 The page of files.
             */
-        std::list <FileResource> m_files;
+        std::vector<FileResource> m_files;
 
     };//FileResourcesCollection
 

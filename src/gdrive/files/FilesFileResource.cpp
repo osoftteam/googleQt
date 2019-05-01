@@ -167,13 +167,13 @@ std::unique_ptr<FileResource> FileResource::EXAMPLE(int context_index, int paren
     rv->m_name = ApiAutotest::INSTANCE().getString("files::FileResource", "m_name", QString("name_%1").arg(example_idx));
     rv->m_mimeType = ApiAutotest::INSTANCE().getString("files::FileResource", "m_mimeType", QString("mimeType_%1").arg(example_idx));
     rv->m_description = ApiAutotest::INSTANCE().getString("files::FileResource", "m_description", QString("description_%1").arg(example_idx));
-    std::list<QString> list_of_parents;
+    std::vector<QString> list_of_parents;
     for(int i = 0; i < 5; i++){
         rv->m_parents.push_back(QString("id_%1").arg(i+1));
     }
     QString tmp_m_parents = ApiAutotest::INSTANCE().getString4List("files::FileResource", "m_parents");
     if(!tmp_m_parents.isEmpty())rv->m_parents.push_back(tmp_m_parents);
-    std::list<QString> list_of_spaces;
+    std::vector<QString> list_of_spaces;
     for(int i = 0; i < 5; i++){
         rv->m_spaces.push_back(QString("id_%1").arg(i+1));
     }
@@ -190,14 +190,14 @@ std::unique_ptr<FileResource> FileResource::EXAMPLE(int context_index, int paren
     rv->m_modifiedByMeTime = QDateTime::currentDateTime();
     rv->m_sharedWithMeTime = QDateTime::currentDateTime();
     rv->m_sharingUser = *(about::UserInfo::EXAMPLE(0, context_index).get());
-    std::list<about::UserInfo> list_of_owners;
+    std::vector<about::UserInfo> list_of_owners;
     for(int i = 0; i < 5; i++){
         about::UserInfo p = *(about::UserInfo::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("files::FileResource", "about::UserInfo", &p, i, context_index);
         rv->m_owners.push_back(p);
     }
     rv->m_lastModifyingUser = *(about::UserInfo::EXAMPLE(0, context_index).get());
-    std::list<permissions::ResourcePermission> list_of_permissions;
+    std::vector<permissions::ResourcePermission> list_of_permissions;
     for(int i = 0; i < 5; i++){
         permissions::ResourcePermission p = *(permissions::ResourcePermission::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("files::FileResource", "permissions::ResourcePermission", &p, i, context_index);

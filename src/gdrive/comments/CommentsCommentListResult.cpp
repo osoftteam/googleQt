@@ -72,7 +72,7 @@ std::unique_ptr<CommentListResult> CommentListResult::EXAMPLE(int context_index,
     std::unique_ptr<CommentListResult> rv(new CommentListResult);
     rv->m_nextPageToken = ApiAutotest::INSTANCE().getString("comments::CommentListResult", "m_nextPageToken", QString("nextPageToken_%1").arg(example_idx));
     rv->m_kind = ApiAutotest::INSTANCE().getString("comments::CommentListResult", "m_kind", QString("kind_%1").arg(example_idx));
-    std::list<comments::Comment> list_of_comments;
+    std::vector<comments::Comment> list_of_comments;
     for(int i = 0; i < 5; i++){
         comments::Comment p = *(comments::Comment::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("comments::CommentListResult", "comments::Comment", &p, i, context_index);

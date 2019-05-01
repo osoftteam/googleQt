@@ -72,7 +72,7 @@ std::unique_ptr<RevisionResourceCollection> RevisionResourceCollection::EXAMPLE(
     std::unique_ptr<RevisionResourceCollection> rv(new RevisionResourceCollection);
     rv->m_nextPageToken = ApiAutotest::INSTANCE().getString("revisions::RevisionResourceCollection", "m_nextPageToken", QString("nextPageToken_%1").arg(example_idx));
     rv->m_kind = ApiAutotest::INSTANCE().getString("revisions::RevisionResourceCollection", "m_kind", QString("kind_%1").arg(example_idx));
-    std::list<revisions::RevisionResource> list_of_files;
+    std::vector<revisions::RevisionResource> list_of_files;
     for(int i = 0; i < 5; i++){
         revisions::RevisionResource p = *(revisions::RevisionResource::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("revisions::RevisionResourceCollection", "revisions::RevisionResource", &p, i, context_index);

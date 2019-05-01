@@ -72,7 +72,7 @@ std::unique_ptr<GeneratedIdsCollection> GeneratedIdsCollection::EXAMPLE(int cont
     std::unique_ptr<GeneratedIdsCollection> rv(new GeneratedIdsCollection);
     rv->m_kind = ApiAutotest::INSTANCE().getString("files::GeneratedIdsCollection", "m_kind", QString("kind_%1").arg(example_idx));
     rv->m_space = ApiAutotest::INSTANCE().getString("files::GeneratedIdsCollection", "m_space", QString("space_%1").arg(example_idx));
-    STRING_LIST list_of_ids;
+    std::vector<QString> list_of_ids;
     for(int i = 0; i < 5; i++){
         rv->m_ids.push_back(QString("id_%1").arg(i+1));
     }

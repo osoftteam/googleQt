@@ -114,8 +114,8 @@ UrlBuilder& UrlBuilder::add(QString name, const QDateTime& value)
 
 UrlBuilder& UrlBuilder::add(QString name, uint64_t value) 
 {
-	m_q.addQueryItem(name, QString("%1").arg(value));
-	return *this;
+    m_q.addQueryItem(name, QString("%1").arg(value));
+    return *this;
 };
 
 void QParamArg::ResponseFields2Builder(UrlBuilder& b)const

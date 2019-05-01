@@ -102,7 +102,7 @@ std::unique_ptr<Comment> Comment::EXAMPLE(int context_index, int parent_context_
     rv->m_content = ApiAutotest::INSTANCE().getString("comments::Comment", "m_content", QString("content_%1").arg(example_idx));
     rv->m_quotedFileContent = *(comments::QuotedFileContent::EXAMPLE(0, context_index).get());
     rv->m_anchor = ApiAutotest::INSTANCE().getString("comments::Comment", "m_anchor", QString("anchor_%1").arg(example_idx));
-    std::list<comments::Reply> list_of_replies;
+    std::vector<comments::Reply> list_of_replies;
     for(int i = 0; i < 5; i++){
         comments::Reply p = *(comments::Reply::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("comments::Comment", "comments::Reply", &p, i, context_index);

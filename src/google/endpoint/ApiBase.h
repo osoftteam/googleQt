@@ -28,13 +28,13 @@ namespace googleQt {
     bool storeJsonToFile(QString path, const QJsonObject js);
     bool isConnectedToNetwork();
 
-	using STRING_LIST = std::list<QString>;
+    using STRING_LIST = std::vector<QString>;
 
     template<class T>
-    QJsonArray struct_list2jsonarray(const std::list<T>& lst)
+    QJsonArray struct_list2jsonarray(const std::vector<T>& lst)
     {
         QJsonArray rv;
-        for (typename std::list<T>::const_iterator i = lst.cbegin(); i != lst.end(); i++) {
+        for (typename std::vector<T>::const_iterator i = lst.cbegin(); i != lst.end(); i++) {
             T o = *i;
             QJsonObject js(o);
             rv.append(js);
@@ -43,10 +43,10 @@ namespace googleQt {
     };
 
     template<class T>
-    QJsonArray struct_list2jsonarray_uptr(const std::list<std::unique_ptr<T>>& lst)
+    QJsonArray struct_list2jsonarray_uptr(const std::vector<std::unique_ptr<T>>& lst)
     {
         QJsonArray rv;
-        for (typename std::list<std::unique_ptr<T>>::const_iterator i = lst.cbegin(); i != lst.end(); i++) {
+        for (typename std::vector<std::unique_ptr<T>>::const_iterator i = lst.cbegin(); i != lst.end(); i++) {
             const std::unique_ptr<T>& o = *i;
             QJsonObject js;
             o->toJson(js);
@@ -57,11 +57,11 @@ namespace googleQt {
 
 
     template<class T>
-    QJsonArray list_of_struct_list2jsonarray(const std::list <std::list<T>> & lst)
+    QJsonArray list_of_struct_list2jsonarray(const std::vector<std::vector<T>> & lst)
     {
         QJsonArray rv;
-        for (typename std::list <std::list<T> >::const_iterator i = lst.cbegin(); i != lst.end(); i++) {
-            const std::list<T>& IL = *i;
+        for (typename std::vector<std::vector<T> >::const_iterator i = lst.cbegin(); i != lst.end(); i++) {
+            const std::vector<T>& IL = *i;
             QJsonArray arr2 = struct_list2jsonarray(IL);
             rv.append(arr2);
         }
@@ -69,10 +69,10 @@ namespace googleQt {
     };
 
     template<class T>
-    QJsonArray ingrl_list2jsonarray(const std::list<T>& lst)
+    QJsonArray ingrl_list2jsonarray(const std::vector<T>& lst)
     {
         QJsonArray rv;
-        for (typename std::list<T>::const_iterator i = lst.cbegin(); i != lst.end(); i++) {
+        for (typename std::vector<T>::const_iterator i = lst.cbegin(); i != lst.end(); i++) {
             const T o = *i;
             rv.append(o);
         }
@@ -80,7 +80,7 @@ namespace googleQt {
     };
 
     template<class T>
-    void jsonarray2struct_list(QJsonArray ar, std::list<T>& lst)
+    void jsonarray2struct_list(QJsonArray ar, std::vector<T>& lst)
     {
         int Max = ar.size();
         for (int i = 0; i < Max; ++i) {
@@ -92,7 +92,7 @@ namespace googleQt {
     };
 
     template<class T>
-    void jsonarray2struct_list_uptr(QJsonArray ar, std::list<std::unique_ptr<T>>& lst)
+    void jsonarray2struct_list_uptr(QJsonArray ar, std::vector<std::unique_ptr<T>>& lst)
     {
         int Max = ar.size();
         for (int i = 0; i < Max; ++i) {
@@ -105,7 +105,7 @@ namespace googleQt {
 
 
     template<class T>
-    void jsonarray2list(QJsonArray arr, std::list<T>& lst, std::true_type)
+    void jsonarray2list(QJsonArray arr, std::vector<T>& lst, std::true_type)
     {
 # if QT_VERSION > QT_VERSION_CHECK(5, 6, 0)
         int Max = arr.size();
@@ -124,7 +124,7 @@ namespace googleQt {
     }
 
     template<class T>
-    void jsonarray2list(const QJsonArray& arr, std::list<T>& lst, std::false_type)
+    void jsonarray2list(const QJsonArray& arr, std::vector<T>& lst, std::false_type)
     {
         int Max = arr.size();
         for (int i = 0; i < Max; ++i) {
@@ -134,31 +134,31 @@ namespace googleQt {
     }
 
     template<class T>
-    void jsonarray2ingrl_list(const QJsonArray& arr, std::list<T >& lst)
+    void jsonarray2ingrl_list(const QJsonArray& arr, std::vector<T >& lst)
     {
         jsonarray2list(arr, lst, std::is_integral<T>());
     };
 
 
     template<class T>
-    void jsonarray2list_of_struct_list(QJsonArray arr, std::list <std::list<T>>& lst)
+    void jsonarray2list_of_struct_list(QJsonArray arr, std::vector<std::vector<T>>& lst)
     {
         int Max = arr.size();
         for (int i = 0; i < Max; ++i) {
             QJsonArray arr2 = arr[i].toArray();
-            std::list<T> lst2;
+            std::vector<T> lst2;
             jsonarray2struct_list(arr2, lst2);
             lst.push_back(lst2);
         }
     };
 
     template<class T>
-    bool chunk_list_execution(const std::list<T>& inputList,
-        std::function<bool(const std::list<T>&)> chunk_processor,
+    bool chunk_list_execution(const std::vector<T>& inputList,
+        std::function<bool(const std::vector<T>&)> chunk_processor,
         size_t chunk_size = 40)
     {
-        typedef typename std::list<T>::const_iterator ITR;
-        std::list<T> subList;
+        typedef typename std::vector<T>::const_iterator ITR;
+        std::vector<T> subList;
         for (ITR i = inputList.cbegin(); i != inputList.cend(); i++)
         {
             T o = *i;
@@ -178,10 +178,10 @@ namespace googleQt {
         return true;
     }
 
-    /// converts std::list of strings -> comma separated list
+    /// converts list of strings -> comma separated list
     QString slist2commalist(const STRING_LIST& lst);
     QString slist2commalist_decorated(const STRING_LIST& lst, char deco = '\'');
-    /// converts space separated strings -> std::list of strings
+    /// converts space separated strings -> list of strings
     STRING_LIST split_string(QString s);
     /// converts size to string with KB, MB or GB suffix
     QString size_human(qreal num);
@@ -293,7 +293,7 @@ namespace googleQt {
         UrlBuilder& add(QString name, bool value);
         UrlBuilder& add(QString name, int value);
         UrlBuilder& add(QString name, const QDateTime& value);
-		UrlBuilder& add(QString name, uint64_t value);
+        UrlBuilder& add(QString name, uint64_t value);
     protected:
         QUrlQuery m_q;
         QUrl&     m_url;

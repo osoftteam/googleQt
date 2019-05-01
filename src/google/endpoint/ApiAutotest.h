@@ -52,8 +52,8 @@ namespace googleQt{
         quint64 getInt(const char* class_name, const char* field_name, int default_id_num);
         QString getString(const char* class_name, const char* field_name, QString default_value);
         QString getString4List(const char* class_name, const char* field_name);
-		void setString4List(const char* class_name, const char* field_name, QString value);
-		void clearString4List(const char* class_name, const char* field_name);
+        void setString4List(const char* class_name, const char* field_name, QString value);
+        void clearString4List(const char* class_name, const char* field_name);
         void addMemberValue(const char* class_name, const char* field_name, QString val);
 
         bool isAttachmentDataGenerationEnabled()const{return m_attachmentDataGenerationOn;}
@@ -70,7 +70,7 @@ namespace googleQt{
         CLASS_ID_MAP        m_availID;
         CLASS2BATCH_LIST    m_availBatchID;
         CLASS_MEMBER_VAL    m_availMemberValue;
-		std::map<QString, QString> m_str4list;
+        std::map<QString, QString> m_str4list;
         bool m_attachmentDataGenerationOn{true};
         mutable bool m_cancelRequest{false};
         #endif //API_QT_AUTOTEST
