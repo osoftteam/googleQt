@@ -51,7 +51,7 @@ void GdriveCommands::ls(QString nextToken)
         {
             FileListArg arg(nextToken);
             auto lst = m_gd->getFiles()->list(arg);
-            const std::list <files::FileResource>& files = lst->files();
+            auto& files = lst->files();
             int idx = 1;
             for(const files::FileResource& f : files){
                 QString mimeType = f.mimetype();
@@ -89,7 +89,7 @@ void GdriveCommands::ls_folders(QString nextToken)
             FileListArg arg(nextToken);
             arg.setQ("mimeType = 'application/vnd.google-apps.folder'");
             auto lst = m_gd->getFiles()->list(arg);
-            const std::list <files::FileResource>& files = lst->files();
+            auto& files = lst->files();
             int idx = 1;
             for(const files::FileResource& f : files){
                 if(!name_filter.empty()){
@@ -131,7 +131,7 @@ void GdriveCommands::ls_dir_content(QString folderId)
             FileListArg arg;
             arg.setQ(QString("'%1' in parents").arg(folderId));
             auto lst = m_gd->getFiles()->list(arg);
-            const std::list <files::FileResource>& files = lst->files();
+            auto& files = lst->files();
             int idx = 1;
             for(const files::FileResource& f : files){
                 QString mimeType = f.mimetype();
@@ -173,7 +173,7 @@ void GdriveCommands::clean_dir_content(QString folderId)
             FileListArg arg;
             arg.setQ(QString("'%1' in parents").arg(folderId));
             auto lst = m_gd->getFiles()->list(arg);
-            const std::list <files::FileResource>& files = lst->files();
+            auto& files = lst->files();
             int idx = 1;
             for(const files::FileResource& f : files){
                 std::string tmp;
@@ -237,7 +237,7 @@ void GdriveCommands::ls_space_content(QString spaceName)
             FileListArg arg;
             arg.setSpaces(spaceName);
             auto lst = m_gd->getFiles()->list(arg);
-            const std::list <files::FileResource>& files = lst->files();
+            auto& files = lst->files();
             if(files.size() == 0)
                 {
                     std::cout << "Empty space " << spaceName << std::endl;
@@ -278,7 +278,7 @@ void GdriveCommands::clean_space_content(QString spaceName)
             FileListArg arg;
             arg.setSpaces(spaceName);
             auto lst = m_gd->getFiles()->list(arg);
-            const std::list <files::FileResource>& files = lst->files();
+            auto& files = lst->files();
             int idx = 1;
             for(const files::FileResource& f : files)
                 {
@@ -393,7 +393,7 @@ void GdriveCommands::find_by_name(QString name_space_parentId)
                 }            
             arg.setQ(q);
             auto lst = m_gd->getFiles()->list(arg);
-            const std::list <files::FileResource>& files = lst->files();
+            auto& files = lst->files();
             int idx = 1;
             for(const files::FileResource& f : files){
                 QString mimeType = f.mimetype();
@@ -724,7 +724,7 @@ void GdriveCommands::create_in_appdata(QString fileName)
         {
             gdrive::CreateFileArg arg(fi.fileName());
             files::CreateFileDetails& file_details = arg.fileDetailes();
-            std::list <QString> parent_folders;
+            std::vector<QString> parent_folders;
             parent_folders.push_back("appDataFolder");
             file_details.setParents(parent_folders);
             file_details.setDescription("file created from googleQt API");
@@ -907,7 +907,7 @@ void GdriveCommands::ls_comments(QString fileId)
             CommentListArg arg(fileId);
             arg.setFields("comments(content,id)");
             auto col = m_gd->getComments()->list(arg);
-            std::list <comments::Comment> com_list = col->comments();
+            std::vector<comments::Comment> com_list = col->comments();
             int idx = 1;
             for(const comments::Comment& c : com_list){
                 std::cout << idx++ << ". " << c.id() << " " << c.content() << std::endl;
@@ -1006,7 +1006,7 @@ void GdriveCommands::ls_permissions(QString fileId)
         {
             PermissionListArg arg(fileId);
             auto col = m_gd->getPermissions()->list(arg);
-            std::list <permissions::ResourcePermission> p_list = col->permissions();
+            std::vector<permissions::ResourcePermission> p_list = col->permissions();
             int idx = 1;
             for(const permissions::ResourcePermission& p : p_list){
                 std::cout << idx++ << ". " << p.id() << " " << p.role() << " " << p.type() << std::endl;
@@ -1103,7 +1103,7 @@ void GdriveCommands::ls_revisions(QString fileId)
     {
         ListRevisionArg arg(fileId);
         auto col = m_gd->getRevisions()->list(arg);
-        std::list <revisions::RevisionResource> r_list = col->files();
+        std::vector<revisions::RevisionResource> r_list = col->files();
         int idx = 1;
         for (const revisions::RevisionResource& r : r_list) {
             std::cout << idx++ << ". " << r.id() << 

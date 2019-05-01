@@ -397,7 +397,7 @@ void GmailCommands::printSnippet(messages::MessageResource* r)
     std::cout << "id="<< r->id() << std::endl
               << "tid=" << r->threadid() << std::endl
               << "snippet=" << r->snippet() << std::endl;
-    const std::list <QString>& labels = r->labelids();
+    auto& labels = r->labelids();
     if(labels.size() > 0){
         std::cout << "labels=";
         for (auto lb : labels) {
@@ -414,7 +414,7 @@ void GmailCommands::printMessage(messages::MessageResource* r)
     std::cout << "id="<< r->id() << std::endl
               << "tid=" << r->threadid() << std::endl
               << "snippet=" << r->snippet() << std::endl;
-    const std::list <QString>& labels = r->labelids();
+    auto& labels = r->labelids();
     if(labels.size() > 0){
         std::cout << "labels=";
         for (auto lb : labels) {
@@ -799,7 +799,7 @@ void GmailCommands::printThread(threads::ThreadResource* t)
         std::cout << m.snippet();
         std::cout << std::endl;
 
-        const std::list <QString>& labels = m.labelids();
+        auto& labels = m.labelids();
         if (labels.size() > 0) {
             std::cout << "    labels=";
             for (auto lb : labels) {
@@ -1095,7 +1095,8 @@ void GmailCommands::get_batch_snippets(QString id_list)
             return;
         }
     RESULT_LIST<messages::MessageResource> res = m_gm->cacheRoutes()->getUserBatchMessages(EDataState::snippet, arg_list);
-    res.sort([](std::unique_ptr<messages::MessageResource>& f, std::unique_ptr<messages::MessageResource>& s) {return (f->internaldate() > s->internaldate()); });
+    std::sort(res.begin(), res.end(), [](std::unique_ptr<messages::MessageResource>& f, std::unique_ptr<messages::MessageResource>& s) {return (f->internaldate() > s->internaldate()); });
+    //res.sort([](std::unique_ptr<messages::MessageResource>& f, std::unique_ptr<messages::MessageResource>& s) {return (f->internaldate() > s->internaldate()); });
     std::cout << "batch size: " << res.size() << std::endl;
     
     int n = 1;

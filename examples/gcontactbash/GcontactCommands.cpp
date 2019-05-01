@@ -443,7 +443,7 @@ void GcontactCommands::test_merge(QString xmlFileName)
     c.setName(n);
 
     PhoneInfo p1, p2;
-    std::list<PhoneInfo> lst;
+    std::vector<PhoneInfo> lst;
     p1.setNumber("=NEW-1-111-1111=");
     p1.setPrimary(true);
     p2.setNumber("=NEW-2-222-2222=");
@@ -461,7 +461,7 @@ void GcontactCommands::test_merge(QString xmlFileName)
     e2.setDisplayName("=NEW-second-first-last=");
     e2.setPrimary(false);
     e2.setTypeLabel("work");
-    std::list<EmailInfo> e_lst;
+    std::vector<EmailInfo> e_lst;
     e_lst.push_back(e1);
     e_lst.push_back(e2);
     c.replaceEmails(e_lst);
@@ -479,7 +479,7 @@ void GcontactCommands::test_merge(QString xmlFileName)
     a2.setPostcode("=NEW-ZIP2="); 
     a2.setCountry("=NEW-COUNTRY2="); 
     a2.setPrimary(false);
-    std::list<PostalAddress> a_lst;
+    std::vector<PostalAddress> a_lst;
     a_lst.push_back(a1);
     a_lst.push_back(a2);
     c.replaceAddressList(a_lst);
