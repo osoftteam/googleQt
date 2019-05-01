@@ -200,7 +200,7 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheThr
     ///this will return list of thread Ids with HistoryId
     m_gmail_routes.getThreads()->list_Async(listArg)->then([=](std::unique_ptr<threads::ThreadListRes> tlist)
     {
-        std::list<HistId> id_list;
+        std::vector<HistId> id_list;
         
         for (auto& m : tlist->threads())
         {
@@ -224,7 +224,7 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
     query_ptr q,
     int threadsCount /*= 40*/,
     QString pageToken /*= ""*/,
-	bool monitorProgress /*= false*/)
+    bool monitorProgress /*= false*/)
 {
     auto rfetcher = newThreadResultFetcher(q);
     gmail::ListArg listArg;
@@ -233,17 +233,17 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
     listArg.setQ(q->qStr());
     listArg.labels() = q->labelid().split(" ");
 
-	if (monitorProgress) {
-		auto p = rfetcher->createProgressNotifier();
-		if (p) {
-			p->setMaximum(0, QString("query gmail q='%1' l='%2'").arg(q->qStr()).arg(q->labelid()));
-		}
-	}
+    if (monitorProgress) {
+        auto p = rfetcher->createProgressNotifier();
+        if (p) {
+            p->setMaximum(0, QString("query gmail q='%1' l='%2'").arg(q->qStr()).arg(q->labelid()));
+        }
+    }
 
     ///this will return list of thread Ids with HistoryId
     m_gmail_routes.getThreads()->list_Async(listArg)->then([=](std::unique_ptr<threads::ThreadListRes> tlist)
     {
-        std::list<HistId> id_list;
+        std::vector<HistId> id_list;
         for (auto& m : tlist->threads())
         {
             HistId h;
@@ -258,16 +258,16 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
         }
 
 #ifdef API_QT_AUTOTEST
-		if (!q->labelid().isEmpty()) {
-			auto lst = q->labelid().split(" ");
-			if (!lst.empty()) {
-				auto label_id = lst.first();
-				auto mcount = q->m_qnew_thread_ids.size();
-				if (mcount > 0) {
-					ApiAutotest::INSTANCE().setString4List("messages::MessageResource", "m_labelIds", label_id);
-				}
-			}
-		}
+        if (!q->labelid().isEmpty()) {
+            auto lst = q->labelid().split(" ");
+            if (!lst.empty()) {
+                auto label_id = lst.first();
+                auto mcount = q->m_qnew_thread_ids.size();
+                if (mcount > 0) {
+                    ApiAutotest::INSTANCE().setString4List("messages::MessageResource", "m_labelIds", label_id);
+                }
+            }
+        }
 #endif//API_QT_AUTOTEST
 
         rfetcher->m_nextPageToken = tlist->nextpagetoken();
@@ -296,7 +296,7 @@ mail_cache::tdata_result mail_cache::GmailCacheRoutes::getQCache(
 
 
 mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheThreadList_Async(
-    const std::list<HistId>& id_list,
+    const std::vector<HistId>& id_list,
     mail_cache::GThreadCacheQueryTask* rfetcher /*= nullptr*/)
 {
     if (!rfetcher)
@@ -478,28 +478,28 @@ void mail_cache::GmailCacheRoutes::refreshLabels()
     refreshLabels_Async()->waitForResultAndRelease();
 };
 
-std::list<mail_cache::label_ptr> mail_cache::GmailCacheRoutes::getLoadedLabels(std::set<QString>* in_optional_idset)
+std::vector<mail_cache::label_ptr> mail_cache::GmailCacheRoutes::getLoadedLabels(std::set<QString>* in_optional_idset)
 {
     if (!m_lite_storage) {
-        std::list<mail_cache::label_ptr> on_error;
+        std::vector<mail_cache::label_ptr> on_error;
         return on_error;
     }
     return m_lite_storage->getLabelsInSet(in_optional_idset);
 };
 
-std::list<mail_cache::label_ptr> mail_cache::GmailCacheRoutes::getMessageLabels(mail_cache::MessageData* d)
+std::vector<mail_cache::label_ptr> mail_cache::GmailCacheRoutes::getMessageLabels(mail_cache::MessageData* d)
 {
     if (!m_lite_storage) {
-        std::list<mail_cache::label_ptr> on_error;
+        std::vector<mail_cache::label_ptr> on_error;
         return on_error;
     }
     return m_lite_storage->unpackLabels(d->labelsBitMap());
 };
 
-std::list<mail_cache::label_ptr> mail_cache::GmailCacheRoutes::getThreadLabels(mail_cache::ThreadData* d)
+std::vector<mail_cache::label_ptr> mail_cache::GmailCacheRoutes::getThreadLabels(mail_cache::ThreadData* d)
 {
     if (!m_lite_storage) {
-        std::list<mail_cache::label_ptr> on_error;
+        std::vector<mail_cache::label_ptr> on_error;
         return on_error;
     }
     return m_lite_storage->unpackLabels(d->labelsBitMap());
@@ -590,7 +590,7 @@ GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setLabel_As
 
     QString msg_id = d->id();
     gmail::ModifyMessageArg arg(userId, msg_id);
-    std::list <QString> labels;
+    std::vector <QString> labels;
     labels.push_back(label_id);
     if (label_on)
     {
@@ -796,7 +796,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadLabels_Async(thread_pt
                 new_messages.push_back(md);
             }
             else {
-                const std::list <QString>& labels = m.labelids();
+                const std::vector <QString>& labels = m.labelids();
                 if (labels.size() > 0) {
                     uint64_t lbits = 0;
                     if (m_lite_storage) {
@@ -865,7 +865,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadListLabels_Async(const
 
 
 #ifdef API_QT_AUTOTEST
-void mail_cache::GmailCacheRoutes::autotestThreadDBLoad(const std::list<HistId>& id_list)
+void mail_cache::GmailCacheRoutes::autotestThreadDBLoad(const std::vector<HistId>& id_list)
 {
     auto* r = getCacheThreadList_Async(id_list);
     auto res = r->waitForResultAndRelease();
@@ -896,7 +896,7 @@ void mail_cache::GmailCacheRoutes::runAutotest()
     ApiAutotest::INSTANCE() << js["raw"].toString();
     ApiAutotest::INSTANCE() << "";
 
-    std::list<HistId> id_list;
+    std::vector<HistId> id_list;
     for (int i = 1; i <= AUTOTEST_SIZE; i++)
     {
         HistId hid;
@@ -938,7 +938,7 @@ void mail_cache::GmailCacheRoutes::runAutotest()
     bool print_cache = true;
     if (print_cache)
     {
-        using MSG_LIST = std::list<std::shared_ptr<mail_cache::MessageData>>;
+        using MSG_LIST = std::vector<std::shared_ptr<mail_cache::MessageData>>;
         mail_cache::mdata_result lst = mcache()->topCacheData(-1, 0);
         for (auto& i : lst->result_list)
         {

@@ -51,8 +51,8 @@ namespace messages{
             /**
                 list of headers in the part
             */
-        const std::list <MessagePayloadHeader>& headers()const{return m_headers;};
-        MessagePart& setHeaders(const std::list <MessagePayloadHeader>& arg){m_headers=arg;return *this;};
+        const std::vector<MessagePayloadHeader>& headers()const{return m_headers;};
+        MessagePart& setHeaders(const std::vector<MessagePayloadHeader>& arg){m_headers=arg;return *this;};
 
             /**
                 body of the message
@@ -98,7 +98,7 @@ namespace messages{
             /**
                 list of headers in the part
             */
-        std::list <MessagePayloadHeader> m_headers;
+        std::vector<MessagePayloadHeader> m_headers;
 
             /**
                 body of the message

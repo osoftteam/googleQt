@@ -61,21 +61,21 @@ namespace googleQt
                 query_ptr q,
                 int resultsCount = 40,
                 QString pageToken = "");
-			/**
-			* getQCache_Async
-			* o-> getCacheThreadList_Async/GThreadCacheQueryTask::fetchFromCloud_Async
-			*     o-> getCacheMessages_Async/GMailCacheQueryTask::fetchFromCloud_Async
-			*
-			*/
-			mail_cache::GThreadCacheQueryTask* getQCache_Async(
-				query_ptr q,
-				int resultsCount = 40,
-				QString pageToken = "",
-				bool monitorProgress = false);
+            /**
+            * getQCache_Async
+            * o-> getCacheThreadList_Async/GThreadCacheQueryTask::fetchFromCloud_Async
+            *     o-> getCacheMessages_Async/GMailCacheQueryTask::fetchFromCloud_Async
+            *
+            */
+            mail_cache::GThreadCacheQueryTask* getQCache_Async(
+                query_ptr q,
+                int resultsCount = 40,
+                QString pageToken = "",
+                bool monitorProgress = false);
 
 
             /// load threads by ID-list while updating local cache
-            mail_cache::GThreadCacheQueryTask* getCacheThreadList_Async(const std::list<HistId>& id_list,
+            mail_cache::GThreadCacheQueryTask* getCacheThreadList_Async(const std::vector<HistId>& id_list,
                 mail_cache::GThreadCacheQueryTask* rfetcher = nullptr);
 
             RESULT_LIST<messages::MessageResource>&&    getUserBatchMessages(EDataState, const STRING_LIST& id_list);
@@ -108,9 +108,9 @@ namespace googleQt
                 googleQt::mail_cache::att_ptr a,
                 QString destinationFolder);
             void refreshLabels();
-            std::list<mail_cache::label_ptr> getLoadedLabels(std::set<QString>* in_optional_idset = nullptr);
-            std::list<mail_cache::label_ptr> getMessageLabels(mail_cache::MessageData* d);
-            std::list<mail_cache::label_ptr> getThreadLabels(mail_cache::ThreadData* d);
+            std::vector<mail_cache::label_ptr> getLoadedLabels(std::set<QString>* in_optional_idset = nullptr);
+            std::vector<mail_cache::label_ptr> getMessageLabels(mail_cache::MessageData* d);
+            std::vector<mail_cache::label_ptr> getThreadLabels(mail_cache::ThreadData* d);
             bool messageHasLabel(mail_cache::MessageData* d, QString label_id)const;
 
 
@@ -138,7 +138,7 @@ namespace googleQt
 
 #ifdef API_QT_AUTOTEST
             void runAutotest();
-            void autotestThreadDBLoad(const std::list<HistId>& id_list);
+            void autotestThreadDBLoad(const std::vector<HistId>& id_list);
 #endif
         signals:
             void attachmentsDownloaded(googleQt::mail_cache::msg_ptr, googleQt::mail_cache::att_ptr);
@@ -161,7 +161,7 @@ namespace googleQt
             mutable mail_cache::mcache_ptr m_GMsgCache;
             mutable mail_cache::tcache_ptr m_GThreadCache;
 
-			friend class GThreadCacheQueryTask;
+            friend class GThreadCacheQueryTask;
         };
     };
 };

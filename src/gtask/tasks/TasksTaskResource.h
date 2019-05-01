@@ -162,8 +162,8 @@ namespace tasks{
         bool hidden()const{return m_hidden;};
         TaskResource& setHidden(const bool& arg){m_hidden=arg;return *this;};
 
-        const std::list <TaskLink>& links()const{return m_links;};
-        TaskResource& setLinks(const std::list <TaskLink>& arg){m_links=arg;return *this;};
+        const std::vector<TaskLink>& links()const{return m_links;};
+        TaskResource& setLinks(const std::vector<TaskLink>& arg){m_links=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -268,7 +268,7 @@ namespace tasks{
             */
         bool m_hidden;
 
-        std::list <TaskLink> m_links;
+        std::vector<TaskLink> m_links;
 
     };//TaskResource
 

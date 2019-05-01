@@ -56,8 +56,8 @@ namespace messages{
             /**
                 List of IDs of labels applied to this message.
             */
-        const std::list <QString>& labelids()const{return m_labelIds;};
-        MessageResource& setLabelids(const std::list <QString>& arg){m_labelIds=arg;return *this;};
+        const std::vector<QString>& labelids()const{return m_labelIds;};
+        MessageResource& setLabelids(const std::vector<QString>& arg){m_labelIds=arg;return *this;};
 
             /**
                 A short part of the message text.
@@ -135,7 +135,7 @@ namespace messages{
             /**
                 List of IDs of labels applied to this message.
             */
-        std::list <QString> m_labelIds;
+        std::vector<QString> m_labelIds;
 
             /**
                 A short part of the message text.

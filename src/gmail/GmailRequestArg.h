@@ -79,7 +79,7 @@ namespace googleQt{
             *   Only return messages with a label matching the ID.
             */
             QString  labelId() { return m_labelId; }
-			void	 setLabelId(QString sval) { m_labelId = sval; }
+            void     setLabelId(QString sval) { m_labelId = sval; }
 
             /**
             *  The maximum number of history records to return. 
@@ -107,16 +107,16 @@ namespace googleQt{
             int           getStartHistoryId()const { return m_startHistoryId; }
             void          setStartHistoryId(int v) { m_startHistoryId = v; }
 
-			/**
-			*	historyTypes optional. History types to be returned by the function 
-			*	Acceptable values are:
-			*	"labelAdded"
-			*	"labelRemoved"
-			*	"messageAdded"
-			*	"messageDeleted"
-			*/
-			QString			historyTypes()const { return m_historyTypes; }
-			void			setHistoryTypes(QString sval) { m_historyTypes = sval; }
+            /**
+            *   historyTypes optional. History types to be returned by the function 
+            *   Acceptable values are:
+            *   "labelAdded"
+            *   "labelRemoved"
+            *   "messageAdded"
+            *   "messageDeleted"
+            */
+            QString         historyTypes()const { return m_historyTypes; }
+            void            setHistoryTypes(QString sval) { m_historyTypes = sval; }
 
             void build(const QString& link_path, QUrl& url)const override;
 #ifdef API_QT_AUTOTEST
@@ -124,12 +124,12 @@ namespace googleQt{
 #endif //API_QT_AUTOTEST
 
         protected:
-			uint64_t    m_startHistoryId;
+            uint64_t    m_startHistoryId;
             QString     m_userId;
-            QString		m_labelId;
-			int         m_maxResults{60};
+            QString     m_labelId;
+            int         m_maxResults{60};
             QString     m_pageToken;            
-			QString     m_historyTypes;
+            QString     m_historyTypes;
         };
         
         class DraftListArg : public QParamArg 
@@ -277,10 +277,10 @@ namespace googleQt{
             QString messageId()const { return m_message_id; }
             void setMessageId(QString mid) { m_message_id = mid; }
 
-            const std::list <QString>& getAddlabels()const { return m_addLabels; };
-            void setAddlabels(const std::list <QString>& arg) { m_addLabels = arg;};
-            const std::list <QString>& getRemovelabels()const { return m_removeLabels; };
-            void setRemovelabels(const std::list <QString>& arg) { m_removeLabels = arg;};
+            const std::vector<QString>& getAddlabels()const { return m_addLabels; };
+            void setAddlabels(const std::vector<QString>& arg) { m_addLabels = arg;};
+            const std::vector<QString>& getRemovelabels()const { return m_removeLabels; };
+            void setRemovelabels(const std::vector<QString>& arg) { m_removeLabels = arg;};
 
             void addAddLabel(QString name);
             void addRemoveLabel(QString name);
@@ -296,8 +296,8 @@ namespace googleQt{
         protected:
             QString m_userId;
             QString m_message_id;
-            std::list <QString> m_addLabels;
-            std::list <QString> m_removeLabels;
+            std::vector<QString> m_addLabels;
+            std::vector<QString> m_removeLabels;
 
         };
     
@@ -402,7 +402,7 @@ namespace googleQt{
             QString m_InReplyToMsgId;
             QString m_references;
             QString m_rawRfc822MessageFile;
-            std::list<MimeBodyPart> m_body_parts;
+            std::vector<MimeBodyPart> m_body_parts;
         };
 
         class InsertMessageArg : public PathArg<path_insert, InsertMessageArg>

@@ -26,7 +26,7 @@ namespace history{
     public:
         HistoryRecordList(){};
 
-        HistoryRecordList(const std::list <HistoryRecord>& arg){ m_history = arg; };
+        HistoryRecordList(const std::vector<HistoryRecord>& arg){ m_history = arg; };
         virtual ~HistoryRecordList(){};
 
     public:
@@ -34,8 +34,8 @@ namespace history{
                 List of history records. Any messages contained in the response
                 will typically only have id and threadId fields populated.
             */
-        const std::list <HistoryRecord>& history()const{return m_history;};
-        HistoryRecordList& setHistory(const std::list <HistoryRecord>& arg){m_history=arg;return *this;};
+        const std::vector<HistoryRecord>& history()const{return m_history;};
+        HistoryRecordList& setHistory(const std::vector<HistoryRecord>& arg){m_history=arg;return *this;};
 
             /**
                 Page token to retrieve the next page of results in the list.
@@ -73,7 +73,7 @@ namespace history{
                 List of history records. Any messages contained in the response
                 will typically only have id and threadId fields populated.
             */
-        std::list <HistoryRecord> m_history;
+        std::vector<HistoryRecord> m_history;
 
             /**
                 Page token to retrieve the next page of results in the list.

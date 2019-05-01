@@ -76,31 +76,31 @@ std::unique_ptr<HistoryRecord> HistoryRecord::EXAMPLE(int context_index, int par
     example_idx++;
     std::unique_ptr<HistoryRecord> rv(new HistoryRecord);
     rv->m_id = ApiAutotest::INSTANCE().getId("history::HistoryRecord", example_idx);
-    std::list<messages::MessageResource> list_of_messages;
+    std::vector<messages::MessageResource> list_of_messages;
     for(int i = 0; i < 5; i++){
         messages::MessageResource p = *(messages::MessageResource::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("history::HistoryRecord", "messages::MessageResource", &p, i, context_index);
         rv->m_messages.push_back(p);
     }
-    std::list<messages::MessageResource> list_of_messagesAdded;
+    std::vector<messages::MessageResource> list_of_messagesAdded;
     for(int i = 0; i < 5; i++){
         messages::MessageResource p = *(messages::MessageResource::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("history::HistoryRecord", "messages::MessageResource", &p, i, context_index);
         rv->m_messagesAdded.push_back(p);
     }
-    std::list<messages::MessageResource> list_of_messagesDeleted;
+    std::vector<messages::MessageResource> list_of_messagesDeleted;
     for(int i = 0; i < 5; i++){
         messages::MessageResource p = *(messages::MessageResource::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("history::HistoryRecord", "messages::MessageResource", &p, i, context_index);
         rv->m_messagesDeleted.push_back(p);
     }
-    std::list<history::LabelHistoryRecord> list_of_labelsAdded;
+    std::vector<history::LabelHistoryRecord> list_of_labelsAdded;
     for(int i = 0; i < 5; i++){
         history::LabelHistoryRecord p = *(history::LabelHistoryRecord::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("history::HistoryRecord", "history::LabelHistoryRecord", &p, i, context_index);
         rv->m_labelsAdded.push_back(p);
     }
-    std::list<history::LabelHistoryRecord> list_of_labelsRemoved;
+    std::vector<history::LabelHistoryRecord> list_of_labelsRemoved;
     for(int i = 0; i < 5; i++){
         history::LabelHistoryRecord p = *(history::LabelHistoryRecord::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("history::HistoryRecord", "history::LabelHistoryRecord", &p, i, context_index);

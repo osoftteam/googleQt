@@ -18,11 +18,11 @@ namespace labels{
     public:
         LabelsResultList(){};
 
-        LabelsResultList(const std::list <LabelResource>& arg){ m_labels = arg; };
+        LabelsResultList(const std::vector<LabelResource>& arg){ m_labels = arg; };
         virtual ~LabelsResultList(){};
 
     public:
-        const std::list <LabelResource>& labels()const{return m_labels;};
+        const std::vector<LabelResource>& labels()const{return m_labels;};
 
     public:
         operator QJsonObject ()const;
@@ -44,7 +44,7 @@ namespace labels{
 
 
     protected:
-        std::list <LabelResource> m_labels;
+        std::vector<LabelResource> m_labels;
 
     };//LabelsResultList
 

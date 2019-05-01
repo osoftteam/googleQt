@@ -78,7 +78,7 @@ std::unique_ptr<MessagePart> MessagePart::EXAMPLE(int context_index, int parent_
     rv->m_partId = ApiAutotest::INSTANCE().getString("messages::MessagePart", "m_partId", QString("partId_%1").arg(example_idx));
     rv->m_mimeType = ApiAutotest::INSTANCE().getString("messages::MessagePart", "m_mimeType", QString("mimeType_%1").arg(example_idx));
     rv->m_filename = ApiAutotest::INSTANCE().getString("messages::MessagePart", "m_filename", QString("filename_%1").arg(example_idx));
-    std::list<messages::MessagePayloadHeader> list_of_headers;
+    std::vector<messages::MessagePayloadHeader> list_of_headers;
     for(int i = 0; i < 5; i++){
         messages::MessagePayloadHeader p = *(messages::MessagePayloadHeader::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("messages::MessagePart", "messages::MessagePayloadHeader", &p, i, context_index);

@@ -34,20 +34,20 @@ namespace googleQt{
         using msg_ptr           = std::shared_ptr<googleQt::mail_cache::MessageData>;
         using thread_ptr        = std::shared_ptr<googleQt::mail_cache::ThreadData>;
         using query_ptr         = std::shared_ptr<googleQt::mail_cache::QueryData>;
-        using msg_list          = std::list<msg_ptr>;
+        using msg_list          = std::vector<msg_ptr>;
         using msg_arr           = std::vector<msg_ptr>;
         using msg_map           = std::map<QString, msg_ptr>;
-        using thread_list       = std::list<thread_ptr>;
+        using thread_list       = std::vector<thread_ptr>;
         using thread_arr        = std::vector<thread_ptr>;
         using thread_map        = std::map<QString, thread_ptr>;
         using query_map         = std::map<QString, query_ptr>;
         using query_db_map      = std::map<int, query_ptr>;
         using label_ptr         = std::shared_ptr<googleQt::mail_cache::LabelData>;
         using att_ptr           = std::shared_ptr<googleQt::mail_cache::AttachmentData>;
-        using label_list        = std::list<label_ptr>;
+        using label_list        = std::vector<label_ptr>;
         using mdata_result      = std::unique_ptr<CacheDataResult<MessageData>>;
         using tdata_result      = std::unique_ptr<CacheDataResult<ThreadData>>;
-        using ATTACHMENTS_LIST  = std::list<att_ptr>;
+        using ATTACHMENTS_LIST  = std::vector<att_ptr>;
         using acc_ptr           = std::shared_ptr<googleQt::mail_cache::AccountData>;
         using mcache_ptr         = std::shared_ptr<mail_cache::GMailCache>;
         using tcache_ptr        = std::shared_ptr<mail_cache::GThreadCache>;        
@@ -271,7 +271,7 @@ namespace googleQt{
             QString     labelId()const { return m_label_id; }
             QString     labelName()const { return m_label_name; }
             uint64_t    labelMask()const { return m_label_mask; }
-			int         labelMaskBase()const {return m_mask_base; }
+            int         labelMaskBase()const {return m_mask_base; }
             bool        isSystem()const { return m_is_system_label; }
             uint64_t    unreadMessages()const { return m_unread_messages; }
 
@@ -377,8 +377,8 @@ namespace googleQt{
             QString             m_q, m_labelid,m_nextPageToken;
             thread_arr          m_qthreads;
             thread_map          m_tmap;
-            STRING_LIST			m_qnew_thread_ids;
-            bool				m_threads_db_loaded{false};
+            STRING_LIST         m_qnew_thread_ids;
+            bool                m_threads_db_loaded{false};
         private:
             QueryData(int dbid, QString qstr, QString lbid);
             static QString      format_qhash(QString qstr, QString lblid);
@@ -614,16 +614,16 @@ namespace googleQt{
                                                  googleQt::mail_cache::att_ptr a, 
                                                  QString file_name);
             /// load label info by set of label IDs, if null return all available labels
-            std::list<mail_cache::label_ptr> getLabelsInSet(std::set<QString>* in_optional_idset = nullptr);
+            std::vector<mail_cache::label_ptr> getLabelsInSet(std::set<QString>* in_optional_idset = nullptr);
 
-            uint64_t packLabels(const std::list <QString>& labels);
-            std::list<mail_cache::label_ptr> unpackLabels(const uint64_t& data)const;
+            uint64_t packLabels(const std::vector<QString>& labels);
+            std::vector<mail_cache::label_ptr> unpackLabels(const uint64_t& data)const;
 
             bool loadAttachmentsFromDb(MessageData& m);
             bool deleteAttachmentsFromDb(QString msg_id);
             bool markMailAsTrashedInDb(MessageData& m);
             void updateMessagesDiagnostic(int inc_batch, int inc_msg);
-			int getCacheMessagesCount(mail_cache::label_ptr);
+            int getCacheMessagesCount(mail_cache::label_ptr);
             //bool updateMailGuiZoomInDb(MessageData& m, qreal zoom);
 
             /// find account by ID
@@ -634,7 +634,7 @@ namespace googleQt{
             acc_ptr currentAccount();
             int     currentAccountId()const {return m_accId;}
             /// returns accounts list, all in unique pointers and enforces move-semantics
-            std::list<acc_ptr> getAccounts();
+            std::vector<acc_ptr> getAccounts();
             /// remove account
             bool deleteAccountFromDb(int accId);
             /// update userId in DB
@@ -648,7 +648,7 @@ namespace googleQt{
 
             thread_ptr findThread(QString thread_id);
 
-			uint64_t lastHistoryId()const { return m_lastHistoryId; }
+            uint64_t lastHistoryId()const { return m_lastHistoryId; }
         protected:
             QString metaPrefix()const { return m_metaPrefix; }
             bool execQuery(QString sql);
@@ -705,7 +705,7 @@ namespace googleQt{
             QString m_dbName;
             QString m_metaPrefix;
             int     m_accId{-1};
-			uint64_t    m_lastHistoryId;///last valid history id
+            uint64_t    m_lastHistoryId;///last valid history id
             friend class googleQt::mail_cache::GmailCacheRoutes;
             friend class googleQt::gcontact::GContactCache;
             friend class googleQt::mail_cache::GMessagesStorage;

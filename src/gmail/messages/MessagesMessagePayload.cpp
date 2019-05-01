@@ -80,14 +80,14 @@ std::unique_ptr<MessagePayload> MessagePayload::EXAMPLE(int context_index, int p
     rv->m_partId = ApiAutotest::INSTANCE().getString("messages::MessagePayload", "m_partId", QString("partId_%1").arg(example_idx));
     rv->m_mimeType = ApiAutotest::INSTANCE().getString("messages::MessagePayload", "m_mimeType", QString("mimeType_%1").arg(example_idx));
     rv->m_filename = ApiAutotest::INSTANCE().getString("messages::MessagePayload", "m_filename", QString("filename_%1").arg(example_idx));
-    std::list<messages::MessagePayloadHeader> list_of_headers;
+    std::vector<messages::MessagePayloadHeader> list_of_headers;
     for(int i = 0; i < 5; i++){
         messages::MessagePayloadHeader p = *(messages::MessagePayloadHeader::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("messages::MessagePayload", "messages::MessagePayloadHeader", &p, i, context_index);
         rv->m_headers.push_back(p);
     }
     rv->m_body = *(messages::MessageMimeBody::EXAMPLE(0, context_index).get());
-    std::list<messages::MessagePart> list_of_parts;
+    std::vector<messages::MessagePart> list_of_parts;
     for(int i = 0; i < 5; i++){
         messages::MessagePart p = *(messages::MessagePart::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("messages::MessagePayload", "messages::MessagePart", &p, i, context_index);

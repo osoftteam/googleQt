@@ -54,8 +54,8 @@ namespace tasklists{
             /**
                 Collection of task lists.
             */
-        const std::list <TaskListResource>& items()const{return m_items;};
-        TaskListCollectionRes& setItems(const std::list <TaskListResource>& arg){m_items=arg;return *this;};
+        const std::vector<TaskListResource>& items()const{return m_items;};
+        TaskListCollectionRes& setItems(const std::vector<TaskListResource>& arg){m_items=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -95,7 +95,7 @@ namespace tasklists{
             /**
                 Collection of task lists.
             */
-        std::list <TaskListResource> m_items;
+        std::vector<TaskListResource> m_items;
 
     };//TaskListCollectionRes
 

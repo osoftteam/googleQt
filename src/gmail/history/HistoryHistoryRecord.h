@@ -50,33 +50,33 @@ namespace history{
                 messages in this field. We recommend using the specific
                 change-type fields instead of this.
             */
-        const std::list <messages::MessageResource>& messages()const{return m_messages;};
-        HistoryRecord& setMessages(const std::list <messages::MessageResource>& arg){m_messages=arg;return *this;};
+        const std::vector<messages::MessageResource>& messages()const{return m_messages;};
+        HistoryRecord& setMessages(const std::vector<messages::MessageResource>& arg){m_messages=arg;return *this;};
 
             /**
                 Messages added to the mailbox in this history record.
             */
-        const std::list <messages::MessageResource>& messagesadded()const{return m_messagesAdded;};
-        HistoryRecord& setMessagesadded(const std::list <messages::MessageResource>& arg){m_messagesAdded=arg;return *this;};
+        const std::vector<messages::MessageResource>& messagesadded()const{return m_messagesAdded;};
+        HistoryRecord& setMessagesadded(const std::vector<messages::MessageResource>& arg){m_messagesAdded=arg;return *this;};
 
             /**
                 Messages deleted (not Trashed) from the mailbox in this history
                 record.
             */
-        const std::list <messages::MessageResource>& messagesdeleted()const{return m_messagesDeleted;};
-        HistoryRecord& setMessagesdeleted(const std::list <messages::MessageResource>& arg){m_messagesDeleted=arg;return *this;};
+        const std::vector<messages::MessageResource>& messagesdeleted()const{return m_messagesDeleted;};
+        HistoryRecord& setMessagesdeleted(const std::vector<messages::MessageResource>& arg){m_messagesDeleted=arg;return *this;};
 
             /**
                 Labels added to messages in this history record.
             */
-        const std::list <LabelHistoryRecord>& labelsadded()const{return m_labelsAdded;};
-        HistoryRecord& setLabelsadded(const std::list <LabelHistoryRecord>& arg){m_labelsAdded=arg;return *this;};
+        const std::vector<LabelHistoryRecord>& labelsadded()const{return m_labelsAdded;};
+        HistoryRecord& setLabelsadded(const std::vector<LabelHistoryRecord>& arg){m_labelsAdded=arg;return *this;};
 
             /**
                 Labels removed from messages in this history record.
             */
-        const std::list <LabelHistoryRecord>& labelsremoved()const{return m_labelsRemoved;};
-        HistoryRecord& setLabelsremoved(const std::list <LabelHistoryRecord>& arg){m_labelsRemoved=arg;return *this;};
+        const std::vector<LabelHistoryRecord>& labelsremoved()const{return m_labelsRemoved;};
+        HistoryRecord& setLabelsremoved(const std::vector<LabelHistoryRecord>& arg){m_labelsRemoved=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -109,28 +109,28 @@ namespace history{
                 messages in this field. We recommend using the specific
                 change-type fields instead of this.
             */
-        std::list <messages::MessageResource> m_messages;
+        std::vector<messages::MessageResource> m_messages;
 
             /**
                 Messages added to the mailbox in this history record.
             */
-        std::list <messages::MessageResource> m_messagesAdded;
+        std::vector<messages::MessageResource> m_messagesAdded;
 
             /**
                 Messages deleted (not Trashed) from the mailbox in this history
                 record.
             */
-        std::list <messages::MessageResource> m_messagesDeleted;
+        std::vector<messages::MessageResource> m_messagesDeleted;
 
             /**
                 Labels added to messages in this history record.
             */
-        std::list <LabelHistoryRecord> m_labelsAdded;
+        std::vector<LabelHistoryRecord> m_labelsAdded;
 
             /**
                 Labels removed from messages in this history record.
             */
-        std::list <LabelHistoryRecord> m_labelsRemoved;
+        std::vector<LabelHistoryRecord> m_labelsRemoved;
 
     };//HistoryRecord
 

@@ -64,7 +64,7 @@ std::unique_ptr<LabelsResultList> LabelsResultList::EXAMPLE(int context_index, i
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<LabelsResultList> rv(new LabelsResultList);
-    std::list<labels::LabelResource> list_of_labels;
+    std::vector<labels::LabelResource> list_of_labels;
     for(int i = 0; i < 5; i++){
         labels::LabelResource p = *(labels::LabelResource::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("labels::LabelsResultList", "labels::LabelResource", &p, i, context_index);

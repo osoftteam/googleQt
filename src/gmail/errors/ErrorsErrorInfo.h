@@ -23,15 +23,15 @@ namespace errors{
     public:
         ErrorInfo(){};
 
-        ErrorInfo(const std::list <ErrorPart>& arg){ m_errors = arg; };
+        ErrorInfo(const std::vector<ErrorPart>& arg){ m_errors = arg; };
         virtual ~ErrorInfo(){};
 
     public:
             /**
                 groups of error details
             */
-        const std::list <ErrorPart>& errors()const{return m_errors;};
-        ErrorInfo& setErrors(const std::list <ErrorPart>& arg){m_errors=arg;return *this;};
+        const std::vector<ErrorPart>& errors()const{return m_errors;};
+        ErrorInfo& setErrors(const std::vector<ErrorPart>& arg){m_errors=arg;return *this;};
 
             /**
                 HTTP response code
@@ -68,7 +68,7 @@ namespace errors{
             /**
                 groups of error details
             */
-        std::list <ErrorPart> m_errors;
+        std::vector<ErrorPart> m_errors;
 
             /**
                 HTTP response code

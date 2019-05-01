@@ -64,7 +64,7 @@ std::unique_ptr<BatchDeleteBodyArg> BatchDeleteBodyArg::EXAMPLE(int context_inde
     static int example_idx = 0;
     example_idx++;
     std::unique_ptr<BatchDeleteBodyArg> rv(new BatchDeleteBodyArg);
-    std::list<QString> list_of_ids;
+    std::vector<QString> list_of_ids;
     for(int i = 0; i < 5; i++){
         rv->m_ids.push_back(QString("id_%1").arg(i+1));
     }

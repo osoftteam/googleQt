@@ -24,15 +24,15 @@ namespace messages{
     public:
         MessageListRes(){};
 
-        MessageListRes(const std::list <MessageResource>& arg){ m_messages = arg; };
+        MessageListRes(const std::vector<MessageResource>& arg){ m_messages = arg; };
         virtual ~MessageListRes(){};
 
     public:
             /**
                 List of messages.
             */
-        const std::list <MessageResource>& messages()const{return m_messages;};
-        MessageListRes& setMessages(const std::list <MessageResource>& arg){m_messages=arg;return *this;};
+        const std::vector<MessageResource>& messages()const{return m_messages;};
+        MessageListRes& setMessages(const std::vector<MessageResource>& arg){m_messages=arg;return *this;};
 
             /**
                 Token to retrieve the next page of results in the list.
@@ -69,7 +69,7 @@ namespace messages{
             /**
                 List of messages.
             */
-        std::list <MessageResource> m_messages;
+        std::vector<MessageResource> m_messages;
 
             /**
                 Token to retrieve the next page of results in the list.
