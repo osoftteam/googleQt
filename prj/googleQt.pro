@@ -82,7 +82,7 @@ if(!isEmpty( ARD_DEBUG )){
 	  CONFIG += debug
 	  CONFIG -= release
       unix {
-           QMAKE_CXXFLAGS += -O0
+           QMAKE_CXXFLAGS += -O0 -std=c++14
            }
       !build_pass:message("+debug")
 }
