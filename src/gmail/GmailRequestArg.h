@@ -104,8 +104,8 @@ namespace googleQt{
             * If you receive no nextPageToken in the response, there are no updates to retrieve and you 
             * can store the returned historyId for a future request. 
             */
-            int           getStartHistoryId()const { return m_startHistoryId; }
-            void          setStartHistoryId(int v) { m_startHistoryId = v; }
+            uint64_t      getStartHistoryId()const { return m_startHistoryId; }
+            void          setStartHistoryId(uint64_t v) { m_startHistoryId = v; }
 
             /**
             *   historyTypes optional. History types to be returned by the function 
