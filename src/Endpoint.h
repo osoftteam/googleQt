@@ -701,7 +701,13 @@ namespace googleQt{
                 {                    
                     ApiAutotest::INSTANCE().emulateAutotestDownloadProgress(m_client);
                     QTimer::singleShot(10, [=]() {
-                        completed_callback(RES::EXAMPLE(0, 0));
+						if (ApiAutotest::INSTANCE().isCancelRequested()) {
+							qDebug() << "CancelRequested/endpoint";
+						}
+						else
+						{
+							completed_callback(RES::EXAMPLE(0, 0));
+						}
                     });
                 }
 #else

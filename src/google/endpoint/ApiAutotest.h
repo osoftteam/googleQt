@@ -61,7 +61,7 @@ namespace googleQt{
 
         bool isProgressEmulationEnabled()const { return m_progress_emul_enabled; }
         void enableProgressEmulation(bool val) { m_progress_emul_enabled = val; m_cancelRequest = false;}
-
+		bool isCancelRequested() { return m_cancelRequest; }
         void emulateAutotestDownloadProgress(googleQt::ApiClient* cl);
         void sleep(int millisecondsToWait);
         void cancellAll()const;

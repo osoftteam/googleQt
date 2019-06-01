@@ -226,6 +226,12 @@ namespace googleQt {
 
         void query_Async(EDataState load, const STRING_LIST& id_list, R* rfetcher)
         {
+			if (!isValid()) {
+				std::unique_ptr<GoogleException> ex(new GoogleException("Can't lookup on invalid DB cache."));
+				rfetcher->failed_callback(std::move(ex));
+				return;
+			}
+
             STRING_LIST missed_cache;
             for (STRING_LIST::const_iterator i = id_list.begin(); i != id_list.end(); i++)
                 {
@@ -254,6 +260,12 @@ namespace googleQt {
 
         void queryWithHistory_Async(const std::vector<HistId>& id_list, R* rfetcher)
         {
+			if (!isValid()) {
+				std::unique_ptr<GoogleException> ex(new GoogleException("Can't lookup on invalid DB cache."));
+				rfetcher->failed_callback(std::move(ex));
+				return;
+			}
+
             STRING_LIST missed_cache;
             for (std::vector<HistId>::const_iterator i = id_list.begin(); i != id_list.end(); i++)
             {
