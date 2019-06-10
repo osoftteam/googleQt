@@ -23,6 +23,7 @@ namespace googleQt{
         void          cancelAll();
         void          runEventsLoop()const;
         void          exitEventsLoop()const;
+        bool	      isQueryInProgress()const;
 
         QString       lastRequestInfo()const { return m_last_req_info; }
         QByteArray    lastResponse()const { return m_last_response; };

@@ -25,6 +25,11 @@ void GoogleClient::cancelAllRequests()
     m_endpoint->cancelAll();
 };
 
+bool GoogleClient::isQueryInProgress()const
+{
+  return m_endpoint->isQueryInProgress();
+};
+
 QString GoogleClient::lastApiCall()
 {
     return m_endpoint->lastRequestInfo();

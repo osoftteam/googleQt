@@ -39,9 +39,12 @@ public:
     GcontactRoutes* gcontact();
 
     /**
-    * cancell all requests and exit blocking call is any
+    * cancell all requests and exit blocking call if any
     */
     void          cancelAllRequests();
+
+   /// return true when running query
+   bool	      isQueryInProgress()const;
     
     /**
     * event loop functions, not needed in event-driven application,

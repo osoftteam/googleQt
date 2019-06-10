@@ -50,6 +50,11 @@ void ApiEndpoint::setProxy(const QNetworkProxy& proxy)
     m_con_mgr.setProxy(proxy);
 };
 
+bool ApiEndpoint::isQueryInProgress()const 
+{
+	return !m_replies_in_progress.empty();
+};
+
 void ApiEndpoint::cancelAll()
 {
 #ifdef API_QT_AUTOTEST
