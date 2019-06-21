@@ -15,9 +15,6 @@ namespace googleQt {
         class BatchRequestContactInfo;
         class BatchRequestGroupInfo;
 
-        using contact_cache_ptr = std::shared_ptr<GContactCache>;
-
-
         /**
             single contact entry
         */
@@ -329,7 +326,7 @@ namespace googleQt {
 
             const QDateTime& lastSyncTime()const { return m_sync_time; }
 
-            void attachSQLStorage(std::shared_ptr<mail_cache::GMailSQLiteStorage> ss);
+            void attachSQLStorage(mail_cache::GMailSQLiteStorage* ss);
 
             bool storeContactsToDb();
             bool loadContactsFromDb();
@@ -352,7 +349,7 @@ namespace googleQt {
             bool storeContactList(std::vector<std::shared_ptr<ContactInfo>>& contact_list);
             bool storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& group_list);            
         protected:
-            std::shared_ptr<mail_cache::GMailSQLiteStorage> m_sql_storage;
+			mail_cache::GMailSQLiteStorage* m_sql_storage{nullptr};
             ContactList m_contacts;
             GroupList m_groups;
             std::map<QString, QString> m_configs;
@@ -366,15 +363,13 @@ namespace googleQt {
         class GcontactCacheSyncTask : public GoogleVoidTask 
         {
         public:
-            contact_cache_ptr       cache() { return m_cache; }
             const ContactList*      loadedContacts()const{return m_loaded_contacts.get();}
             const GroupList*        loadedGroups()const{return m_loaded_groups.get();}
             const BatchContactList* updatedContacts()const{return m_updated_contacts.get();}
             const BatchGroupList*   updatedGroups()const{return m_updated_groups.get();}
             const std::map<QString, std::shared_ptr<BatchRequestGroupInfo>>& deleted_groups()const{return m_deleted_groups;}
         protected:
-            GcontactCacheSyncTask(ApiEndpoint& ept, contact_cache_ptr c) :GoogleVoidTask(ept), m_cache(c) {}
-            contact_cache_ptr                 m_cache;
+            GcontactCacheSyncTask(ApiEndpoint& ept) :GoogleVoidTask(ept){}
             std::unique_ptr<ContactList>      m_loaded_contacts;
             std::unique_ptr<GroupList>        m_loaded_groups;
             std::unique_ptr<BatchContactList> m_updated_contacts;
@@ -402,7 +397,7 @@ namespace googleQt {
         public:
             GcontactCacheRoutes(googleQt::Endpoint& endpoint, GcontactRoutes& gcontact_routes);
 
-            contact_cache_ptr       cache() { return m_GContactsCache; }
+			GContactCache*			cache() { return m_GContactsCache.get(); }
 
             GcontactCacheSyncTask*  synchronizeContacts_Async();
             PhotoSyncTask*          synchronizePhotos_Async();
@@ -416,9 +411,9 @@ namespace googleQt {
             void applyLocalContacEntriesModifications_Async(GcontactCacheSyncTask* rv);
             // void applyLocalGroupModifications_Async(GcontactCacheSyncTask* rv);
         protected:
-            Endpoint&           m_endpoint;
-            GcontactRoutes&     m_c_routes;
-            contact_cache_ptr   m_GContactsCache;
+            Endpoint&						m_endpoint;
+            GcontactRoutes&					m_c_routes;
+			std::unique_ptr<GContactCache>  m_GContactsCache;
 
         private:
             class PhotoListTask : public GoogleVoidTask

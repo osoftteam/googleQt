@@ -666,7 +666,7 @@ GContactCache::GContactCache(ApiEndpoint& a):m_endpoint(a)
 
 };
 
-void GContactCache::attachSQLStorage(std::shared_ptr<mail_cache::GMailSQLiteStorage> ss) 
+void GContactCache::attachSQLStorage(mail_cache::GMailSQLiteStorage* ss) 
 {
     m_sql_storage = ss;
 };
@@ -1565,7 +1565,7 @@ void applyBatchStep(std::shared_ptr<B> b, L& lst)
 
 GcontactCacheSyncTask* GcontactCacheRoutes::synchronizeContacts_Async()
 {
-    GcontactCacheSyncTask* rv = new GcontactCacheSyncTask(m_endpoint, m_GContactsCache);
+    GcontactCacheSyncTask* rv = new GcontactCacheSyncTask(m_endpoint);
 
     if (!m_GContactsCache->m_sql_storage) {
         std::unique_ptr<GoogleException> ex(new GoogleException("Local cache DB is not setup. Call setupCache first"));
@@ -2069,7 +2069,7 @@ static bool autoTestCheckGroupMerge(GroupInfo* ci)
     return autoTestCheckImportExport<GroupInfo>(c.get());
 }
 
-static void autoTestStoreAndCheckIdentityOnLoad(gcontact::contact_cache_ptr ccache)
+static void autoTestStoreAndCheckIdentityOnLoad(gcontact::GContactCache* ccache)
 {
     ContactList contact_list_copy = ccache->contacts();
     GroupList group_list_copy = ccache->groups();
@@ -2090,7 +2090,7 @@ static void autoTestStoreAndCheckIdentityOnLoad(gcontact::contact_cache_ptr ccac
     }
 }
 
-static void autoTestModifyRandomly(gcontact::contact_cache_ptr ccache)
+static void autoTestModifyRandomly(gcontact::GContactCache* ccache)
 {
     ContactList& contact_list_copy = ccache->contacts();
     GroupList& group_list_copy = ccache->groups();
@@ -2168,10 +2168,10 @@ void GcontactCacheRoutes::runAutotest()
     }
 
     ApiAutotest::INSTANCE() << "test persistance identity";
-    autoTestStoreAndCheckIdentityOnLoad(m_GContactsCache);
-    autoTestModifyRandomly(m_GContactsCache);
+    autoTestStoreAndCheckIdentityOnLoad(m_GContactsCache.get());
+    autoTestModifyRandomly(m_GContactsCache.get());
     ApiAutotest::INSTANCE() << "test persistance after modification identity";
-    autoTestStoreAndCheckIdentityOnLoad(m_GContactsCache);
+    autoTestStoreAndCheckIdentityOnLoad(m_GContactsCache.get());
 
     m_GContactsCache->clearDbCache();
 

@@ -7,7 +7,7 @@
 using namespace googleQt;
 
 #ifdef API_QT_AUTOTEST
-GoogleAutotest::GoogleAutotest(std::shared_ptr<GoogleClient> cl):m_cl(cl)
+GoogleAutotest::GoogleAutotest(GoogleClient* cl):m_cl(cl)
 {
 
 };
@@ -21,7 +21,7 @@ void GoogleAutotest::generateCalls()
 {
     if (m_cl)
     {
-#define AUTOTEST_GENERATE_CALLS(T){T a(*(m_cl.get()));a.generateCalls();}
+#define AUTOTEST_GENERATE_CALLS(T){T a(*m_cl);a.generateCalls();}
         AUTOTEST_GENERATE_CALLS(GmailAutotest);
         AUTOTEST_GENERATE_CALLS(GtaskAutotest);
         AUTOTEST_GENERATE_CALLS(GdriveAutotest);
@@ -40,7 +40,7 @@ QString GoogleAutotest::userId()const
     return rv;
 }
 
-void GoogleAutotest::setClient(std::shared_ptr<GoogleClient> cl) 
+void GoogleAutotest::setClient(GoogleClient* cl) 
 {
     m_cl = cl;
 };
