@@ -9,15 +9,25 @@
 
 using namespace googleQt;
 
+#ifdef API_QT_AUTOTEST
+int g__gclient_alloc_counter = 0;
+#endif
+
 GoogleClient::GoogleClient(ApiAppInfo* appInfo,
                          ApiAuthInfo* authInfo)
     :ApiClient(appInfo, authInfo)
 {
     m_endpoint.reset(new Endpoint(this));
+#ifdef API_QT_AUTOTEST
+	g__gclient_alloc_counter++;
+#endif
 };
 
-GoogleClient::~GoogleClient(){
-
+GoogleClient::~GoogleClient()
+{
+#ifdef API_QT_AUTOTEST
+	g__gclient_alloc_counter--;
+#endif
 };
 
 void GoogleClient::cancelAllRequests() 

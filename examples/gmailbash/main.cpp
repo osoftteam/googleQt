@@ -59,9 +59,9 @@ int main(int argc, char *argv[])
     authInfo->setEmail(argEmail);
 
     demo::ApiListener lsn;
-    std::shared_ptr<GoogleClient > c(new GoogleClient(appInfo.release(), authInfo.release()));
-    QObject::connect(c.get(), &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);
-
+    //std::unique_ptr<GoogleClient > c(new GoogleClient(appInfo.release(), authInfo.release()));
+	GoogleClient* c = new GoogleClient(appInfo.release(), authInfo.release());
+    QObject::connect(c, &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);	
     DECLARE_AUTOTEST_INSTANCE(c, "autotest-res.txt");
 
     /// setup DB-cache ///
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
         return 0;
     };
     
-    GmailCommands cmd(*(c.get()));
+    GmailCommands cmd(*c);
     demo::Terminal t("gmail");
     t.addAction("ls",               "List Messages", [&](QString arg) {cmd.ls(arg);} );
     t.addAction("ls_by_labels",     "List Messages by label ID", [&](QString arg) {cmd.ls_by_labels(arg);} );
@@ -125,5 +125,8 @@ int main(int argc, char *argv[])
     t.addAction("base64url_decode",   "Base64Url decode data", [&](QString arg) {cmd.base64url_decode(arg); });
     
     t.start();
+	delete c;
+	std::cout << "press ENTER to exit" << std::endl;
+	std::cin.ignore();
     return 0;
 }

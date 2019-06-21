@@ -60,9 +60,8 @@ int main(int argc, char *argv[])
     std::cout << "GContacts" << std::endl;
     
     demo::ApiListener lsn;
-    std::shared_ptr<GoogleClient > c(new GoogleClient(appInfo.release(), authInfo.release()));
-    //QObject::connect(c.get(), &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);
-
+    //std::unique_ptr<GoogleClient > c(new GoogleClient(appInfo.release(), authInfo.release()));
+	GoogleClient* c = new GoogleClient(appInfo.release(), authInfo.release());
     DECLARE_AUTOTEST_INSTANCE(c, "autotest-res.txt");
 
     /// setup DB-cache ///
@@ -73,7 +72,7 @@ int main(int argc, char *argv[])
         return 0;
     };
 
-    GcontactCommands cmd(*(c.get()));
+    GcontactCommands cmd(*c);
     demo::Terminal t("gcontact");
     t.addAction("ls_contacts",      "List Contacts", [&](QString ) {cmd.ls_contacts(); });
     t.addAction("get_contact",      "get single contact entry", [&](QString arg) {cmd.get_contact(arg); });
@@ -127,5 +126,6 @@ int main(int argc, char *argv[])
     t.addAction("test_merge", "Read xml contacts file, merge with custom data, print result", [&](QString arg) {cmd.test_merge(arg); });
     t.addAction("test_concurrent_req", "Test concurrent (time-sharing) execution more that 1 task", [&](QString) {cmd.test_concurrent_req(); });
     t.start();
+	delete c;
     return 0;
 };
