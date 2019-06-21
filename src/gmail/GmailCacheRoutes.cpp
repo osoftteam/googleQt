@@ -22,6 +22,32 @@ mail_cache::GmailCacheRoutes::GmailCacheRoutes(Endpoint& endpoint,
     m_GThreadCache.reset(new mail_cache::GThreadCache(endpoint));
 };
 
+mail_cache::GmailCacheRoutes::~GmailCacheRoutes()
+{
+	clearCache();
+};
+
+mail_cache::GMailCache* mail_cache::GmailCacheRoutes::mcache() 
+{ 
+	if (!m_GMsgCache)
+		return nullptr;
+	return m_GMsgCache.get(); 
+}
+
+mail_cache::GThreadCache* mail_cache::GmailCacheRoutes::tcache() 
+{
+	if (!m_GThreadCache)
+		return nullptr;
+	return m_GThreadCache.get();
+};
+
+mail_cache::GMailSQLiteStorage* mail_cache::GmailCacheRoutes::storage() 
+{
+	if (!m_lite_storage)
+		return nullptr;
+	return m_lite_storage.get();
+};
+
 RESULT_LIST<messages::MessageResource>&& mail_cache::GmailCacheRoutes::getUserBatchMessages(EDataState f,
                                                                                             const STRING_LIST& id_list)
 {
@@ -34,7 +60,7 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::newMessageResultF
         state,
         m_endpoint,
         *this,
-        m_GMsgCache);
+        m_GMsgCache.get());
     return rfetcher;
 };
 
@@ -42,7 +68,7 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::newThreadResult
 {
     auto rfetcher = new mail_cache::GThreadCacheQueryTask(
                                                           *this,
-                                                          m_GThreadCache,
+                                                          m_GThreadCache.get(),
                                                           q);
     return rfetcher;
 };
@@ -321,20 +347,41 @@ bool mail_cache::GmailCacheRoutes::setupSQLiteCache(QString dbPath,
     EXPECT_STRING_VAL(dbName, "DB name");
     EXPECT_STRING_VAL(dbprefix, "DB prefix");
 
-    gcontact::contact_cache_ptr cc = m_endpoint.client()->gcontact()->cacheRoutes()->cache();
+    auto cc = m_endpoint.client()->gcontact()->cacheRoutes()->cache();
 
-    m_lite_storage.reset(new mail_cache::GMailSQLiteStorage(m_GMsgCache, m_GThreadCache, cc));
-    cc->attachSQLStorage(m_lite_storage);
+    m_lite_storage.reset(new mail_cache::GMailSQLiteStorage(m_GMsgCache.get(), m_GThreadCache.get(), cc));
+    cc->attachSQLStorage(m_lite_storage.get());
 
     if (!m_lite_storage->init_db(dbPath, downloadPath, contactCachePath, dbName, dbprefix))
     {
-        m_lite_storage->close_db();
-        m_GMsgCache->invalidate();
+		clearCache();
+        //m_lite_storage->close_db();
+        //m_GMsgCache->invalidate();
         qWarning() << "Failed to initialize SQLite storage" << dbPath << dbName << dbprefix;
         return false;
     }
 
     return true;
+};
+
+void mail_cache::GmailCacheRoutes::clearCache() 
+{
+#ifdef API_QT_AUTOTEST
+	extern int g__msg_alloc_counter;
+	extern int g__thread_alloc_counter;
+
+	m_GMsgCache.reset();
+	m_GThreadCache.reset();
+
+	qDebug() << "ykh/clearCache"
+		<< "threads" << g__msg_alloc_counter
+		<< "msg" << g__thread_alloc_counter;
+#endif //API_QT_AUTOTEST
+
+	if (m_lite_storage) {
+		m_lite_storage->close_db();
+		m_lite_storage.reset();
+	}
 };
 
 bool mail_cache::GmailCacheRoutes::resetSQLiteCache()
@@ -366,10 +413,11 @@ bool mail_cache::GmailCacheRoutes::resetSQLiteCache()
         m_lite_storage->close_db();
     }
 
-    if (m_GMsgCache) {
+    /*if (m_GMsgCache) {
         m_GMsgCache->invalidate();
-    }
+    }*/
     m_GMsgCache.reset(new mail_cache::GMailCache(m_endpoint));
+	m_GThreadCache.reset(new mail_cache::GThreadCache(m_endpoint));
 
     return setupSQLiteCache(dbPath, downloadPath, contactCacheDir, dbName, dbprefix);
 };

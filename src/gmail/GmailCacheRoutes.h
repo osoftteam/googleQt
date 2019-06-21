@@ -25,21 +25,22 @@ namespace googleQt
             Q_OBJECT
         public:
             GmailCacheRoutes(Endpoint& endpoint, GmailRoutes& gmail_routes);
+            virtual ~GmailCacheRoutes();
 
-            mail_cache::mcache_ptr      mcache() { return m_GMsgCache; }
-            mail_cache::tcache_ptr      tcache() { return m_GThreadCache; }
-            mail_cache::storage_ptr     storage() {return m_lite_storage;};
-            Endpoint&                   endpoint() { return m_endpoint; }
-            GmailRoutes&                mroutes() { return m_gmail_routes; }
+			mail_cache::GMailCache*				mcache();
+			mail_cache::GThreadCache*			tcache();
+			mail_cache::GMailSQLiteStorage*     storage();
+            Endpoint&							endpoint() { return m_endpoint; }
+            GmailRoutes&						mroutes() { return m_gmail_routes; }
 
             /// init local cache table using SQlite DB, tables will have 'dbprefix' prefix
             /// file path and DB-name should be specified
             /// downloadPath - directory for attachment download
             bool setupSQLiteCache(QString dbPath,
-                QString downloadPath,
-                QString contactCachePath,
-                QString dbName = "googleqt",
-                QString dbprefix = "api");
+                                  QString downloadPath,
+                                  QString contactCachePath,
+                                  QString dbName = "googleqt",
+                                  QString dbprefix = "api");
 
             /// if setupSQLiteCache was called before
             /// used to switch to a new user
@@ -62,11 +63,11 @@ namespace googleQt
                 int resultsCount = 40,
                 QString pageToken = "");
             /**
-            * getQCache_Async
-            * o-> getCacheThreadList_Async/GThreadCacheQueryTask::fetchFromCloud_Async
-            *     o-> getCacheMessages_Async/GMailCacheQueryTask::fetchFromCloud_Async
-            *
-            */
+             * getQCache_Async
+             * o-> getCacheThreadList_Async/GThreadCacheQueryTask::fetchFromCloud_Async
+             *     o-> getCacheMessages_Async/GMailCacheQueryTask::fetchFromCloud_Async
+             *
+             */
             mail_cache::GThreadCacheQueryTask* getQCache_Async(
                 query_ptr q,
                 int resultsCount = 40,
@@ -76,7 +77,7 @@ namespace googleQt
 
             /// load threads by ID-list while updating local cache
             mail_cache::GThreadCacheQueryTask* getCacheThreadList_Async(const std::vector<HistId>& id_list,
-                mail_cache::GThreadCacheQueryTask* rfetcher = nullptr);
+                                                                        mail_cache::GThreadCacheQueryTask* rfetcher = nullptr);
 
             RESULT_LIST<messages::MessageResource>&&    getUserBatchMessages(EDataState, const STRING_LIST& id_list);
             ConcurrentValueRunner<QString, mail_cache::MessagesReceiver, messages::MessageResource>* getUserBatchMessages_Async(EDataState, const STRING_LIST& id_list);
@@ -84,7 +85,7 @@ namespace googleQt
             /// load emails by ID-list while updating local cache
             mail_cache::mdata_result getCacheMessages(EDataState, const STRING_LIST& id_list);
             mail_cache::GMailCacheQueryTask* getCacheMessages_Async(EDataState, const STRING_LIST& id_list,
-                mail_cache::GMailCacheQueryTask* rfetcher = nullptr);
+                                                                    mail_cache::GMailCacheQueryTask* rfetcher = nullptr);
 
             /// check for new emails - get top messagesCount messages and update cache
             mail_cache::mdata_result getNextCacheMessages(
@@ -100,13 +101,13 @@ namespace googleQt
 
             GoogleVoidTask* trashCacheMessage_Async(QString msg_id);
 
-//            ConcurrentValueRunner<QString, mail_cache::ThreadsReceiver, threads::ThreadResource>* getUserBatchThreads_Async(const STRING_LIST& id_list);
+            //            ConcurrentValueRunner<QString, mail_cache::ThreadsReceiver, threads::ThreadResource>* getUserBatchThreads_Async(const STRING_LIST& id_list);
 
             /// async refresh labels DB table
             GoogleVoidTask* refreshLabels_Async();
             GoogleVoidTask* downloadAttachment_Async(googleQt::mail_cache::msg_ptr m,
-                googleQt::mail_cache::att_ptr a,
-                QString destinationFolder);
+                                                     googleQt::mail_cache::att_ptr a,
+                                                     QString destinationFolder);
             void refreshLabels();
             std::vector<mail_cache::label_ptr> getLoadedLabels(std::set<QString>* in_optional_idset = nullptr);
             std::vector<mail_cache::label_ptr> getMessageLabels(mail_cache::MessageData* d);
@@ -136,6 +137,7 @@ namespace googleQt
             GoogleVoidTask* modifyThreadLabels_Async(thread_ptr t, const label_list& labels2add, const label_list& labels2remove);
             GoogleVoidTask* modifyThreadListLabels_Async(const thread_list& listt, const label_list& labels2add, const label_list& labels2remove);
 
+			void	clearCache();
 #ifdef API_QT_AUTOTEST
             void runAutotest();
             void autotestThreadDBLoad(const std::vector<HistId>& id_list);
@@ -147,9 +149,9 @@ namespace googleQt
             mail_cache::GMailCacheQueryTask* newMessageResultFetcher(EDataState state);
             mail_cache::GThreadCacheQueryTask* newThreadResultFetcher(query_ptr q=nullptr);
             GoogleTask<messages::MessageResource>* setLabel_Async(QString label_id,
-                mail_cache::MessageData* d,
-                bool label_on,
-                bool system_label);
+                                                                  mail_cache::MessageData* d,
+                                                                  bool label_on,
+                                                                  bool system_label);
 
             template <class PROCESSOR> LabelProcessorTask*      processLabelList_Async(const STRING_LIST& slist);
 
@@ -157,9 +159,9 @@ namespace googleQt
         protected:
             Endpoint&    m_endpoint;
             GmailRoutes& m_gmail_routes;
-            mutable mail_cache::storage_ptr m_lite_storage;
-            mutable mail_cache::mcache_ptr m_GMsgCache;
-            mutable mail_cache::tcache_ptr m_GThreadCache;
+			std::unique_ptr<mail_cache::GMailSQLiteStorage> m_lite_storage;
+			std::unique_ptr<mail_cache::GMailCache> m_GMsgCache;
+			std::unique_ptr<mail_cache::GThreadCache> m_GThreadCache;
 
             friend class GThreadCacheQueryTask;
         };

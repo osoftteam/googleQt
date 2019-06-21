@@ -160,6 +160,10 @@ void mail_cache::GThreadCache::verifyData()
     }
 };
 
+#ifdef API_QT_AUTOTEST
+int g__msg_alloc_counter = 0;
+int g__thread_alloc_counter = 0;
+#endif
 
 ///MessageData
 mail_cache::MessageData::MessageData(int accId,
@@ -187,6 +191,9 @@ mail_cache::MessageData::MessageData(int accId,
     m_references(references)
 {
     m_labels = labels;
+#ifdef API_QT_AUTOTEST
+	g__msg_alloc_counter++;
+#endif
 };
 
 mail_cache::MessageData::MessageData(int accId,
@@ -218,6 +225,9 @@ mail_cache::MessageData::MessageData(int accId,
     m_references(references)
 {
     m_labels = labels;
+#ifdef API_QT_AUTOTEST
+	g__msg_alloc_counter++;
+#endif
 };
 
 mail_cache::MessageData::MessageData(int accId,
@@ -251,6 +261,9 @@ m_accountId(accId),
 {
     m_flags.agg_state = static_cast<unsigned int>(agg_state);
     m_labels = labels;
+#ifdef API_QT_AUTOTEST
+	g__msg_alloc_counter++;
+#endif
 };
 
 mail_cache::MessageData::MessageData(int accId,
@@ -263,8 +276,17 @@ mail_cache::MessageData::MessageData(int accId,
 {
     m_flags.agg_state = 0;
     m_labels = labels;
+#ifdef API_QT_AUTOTEST
+	g__msg_alloc_counter++;
+#endif
 };
 
+mail_cache::MessageData::~MessageData()
+{
+#ifdef API_QT_AUTOTEST
+	g__msg_alloc_counter--;
+#endif
+};
 
 void mail_cache::MessageData::updateSnippet(QString from,
                                             QString to,
@@ -500,7 +522,16 @@ mail_cache::ThreadData::ThreadData(QString id,
     m_snippet(snippet),
     m_labels(lbmap)
 {
+#ifdef API_QT_AUTOTEST	
+	g__thread_alloc_counter++;
+#endif
+};
 
+mail_cache::ThreadData::~ThreadData() 
+{
+#ifdef API_QT_AUTOTEST
+	g__thread_alloc_counter--;
+#endif
 };
 
 void mail_cache::ThreadData::merge(CacheData* ) 
@@ -621,7 +652,7 @@ QString mail_cache::QueryData::format_qhash(QString qstr, QString lblid)
 mail_cache::GMailCacheQueryTask::GMailCacheQueryTask(EDataState state, 
                                                      ApiEndpoint& ept, 
                                                      googleQt::mail_cache::GmailCacheRoutes& r,
-                                                     std::shared_ptr<GMailCache> c)
+                                                     GMailCache* c)
     :CacheQueryTask<MessageData>(state, ept, c), m_r(r)
 {
 
@@ -875,7 +906,7 @@ mail_cache::mdata_result mail_cache::GMailCacheQueryTask::waitForResultAndReleas
 ///GThreadCacheSyncTask
 mail_cache::GThreadCacheQueryTask::GThreadCacheQueryTask(
                                                          googleQt::mail_cache::GmailCacheRoutes& r,
-                                                         std::shared_ptr<GThreadCache> c,
+                                                         GThreadCache* c,
                                                          query_ptr q)
     :CacheQueryTask<ThreadData>(EDataState::snippet, r.endpoint(), c),
     m_r(r), m_q(q)
@@ -1007,44 +1038,15 @@ void mail_cache::GThreadCacheQueryTask::notifyOnCompletedFromCache()
 };
 
 ///GMailSQLiteStorage
-mail_cache::GMailSQLiteStorage::GMailSQLiteStorage(mcache_ptr mc,
-                                                   tcache_ptr tc,
-                                                   std::shared_ptr<gcontact::GContactCache> cc)
+mail_cache::GMailSQLiteStorage::GMailSQLiteStorage(GMailCache* mc,
+	GThreadCache* tc,
+	gcontact::GContactCache* cc)
 {
     m_msg_cache = mc;
     m_thread_cache = tc;
     m_contact_cache = cc;
 };
 
-mail_cache::mcache_ptr mail_cache::GMailSQLiteStorage::lock_mcache()
-{
-    mail_cache::mcache_ptr c = m_msg_cache.lock();
-    if (!c) {
-        return c;
-    }
-    if (!c->isValid()) {
-        qWarning() << "ERROR. Invalid cache state. Possible user/context switched." 
-                   << c->endpoint().apiClient()->userId();
-        c.reset();
-        return c;
-    }
-    return c;
-};
-
-mail_cache::tcache_ptr mail_cache::GMailSQLiteStorage::lock_tcache()
-{
-    mail_cache::tcache_ptr c = m_thread_cache.lock();
-    if (!c) {
-        return c;
-    }
-    if (!c->isValid()) {
-        qWarning() << "ERROR. Invalid cache state. Possible user/context switched." 
-                   << c->endpoint().apiClient()->userId();
-        c.reset();
-        return c;
-    }
-    return c;
-};
 
 
 int mail_cache::GMailSQLiteStorage::findAccount(QString userId) 
@@ -1171,21 +1173,19 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
                                              QString db_meta_prefix)
 {
     m_accId = -1;
-    mcache_ptr mc = lock_mcache();
-    if (!mc) {
-        return false;
-    }
+	if (!m_msg_cache) {
+		return false;
+	}	
 
-    tcache_ptr tc = lock_tcache();
-    if (!tc) {
+    if (!m_thread_cache) {
         return false;
     }    
     
-    m_mstorage.reset(new GMessagesStorage(this, mc));
-    m_tstorage.reset(new GThreadsStorage(this, tc));
+    m_mstorage.reset(new GMessagesStorage(this));
+    m_tstorage.reset(new GThreadsStorage(this));
     m_qstorage.reset(new GQueryStorage(m_tstorage.get()));
 
-    QString userId = mc->endpoint().apiClient()->userId();
+    QString userId = m_msg_cache->endpoint().apiClient()->userId();
     if (userId.isEmpty()) {
         qWarning() << "ERROR. Expected userid (email) for gmail cache";
         return false;
@@ -1228,14 +1228,14 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
         return false;
     }
 
-    auto cc = m_contact_cache.lock();
-    if (!cc) {
+    //auto cc = m_contact_cache.lock();
+    if (!m_contact_cache) {
         qWarning() << "ERROR. Expected GContact cache. Failed to init Gcontact cache tables" << dbName << dbPath;
         return false;
     }
 
 
-    if (!cc->ensureContactTables()) {
+    if (!m_contact_cache->ensureContactTables()) {
         qWarning() << "ERROR. Failed to create GContacts cache tables" << dbName << dbPath;
         return false;
     }
@@ -1284,13 +1284,13 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
         return false;
     }
 
-    if(!cc->loadContactsFromDb()){
+    if(!m_contact_cache->loadContactsFromDb()){
         qWarning() << "ERROR. Failed to load contacts from DB";
         return false;
     };
 
-    mc->setupLocalStorage(m_mstorage.get());
-    tc->setupLocalStorage(m_tstorage.get());
+	m_msg_cache->setupLocalStorage(m_mstorage.get());
+	m_thread_cache->setupLocalStorage(m_tstorage.get());
     
     m_tstorage->verifyThreads();
 
@@ -1301,7 +1301,9 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
 void mail_cache::GMailSQLiteStorage::close_db() 
 {
     if (m_db.isOpen()) {
+		auto name = m_db.connectionName();
         m_db.close();
+		QSqlDatabase::removeDatabase(name);
     }
     m_initialized = false;
 };
@@ -2258,23 +2260,19 @@ QString mail_cache::GMailSQLiteStorage::lastSqlError()const
 mail_cache::thread_ptr mail_cache::GMailSQLiteStorage::findThread(QString thread_id)
 {
     mail_cache::thread_ptr rv;
-
-    tcache_ptr tc = lock_tcache();
-    if (!tc) {
+    if (!m_thread_cache) {
         return nullptr;
     }
-
-    rv = tc->mem_object(thread_id);
+    rv = m_thread_cache->mem_object(thread_id);
     return rv;
 };
 
 /**
     GMessagesStorage
 */
-mail_cache::GMessagesStorage::GMessagesStorage(GMailSQLiteStorage* s, mcache_ptr c)
+mail_cache::GMessagesStorage::GMessagesStorage(GMailSQLiteStorage* s)
 {
     m_storage = s;
-    m_cache = c;
 };
 
 QString mail_cache::GMessagesStorage::insertSnippetSQL()const 
@@ -2688,7 +2686,7 @@ bool mail_cache::GMessagesStorage::isValid()const
 
 bool mail_cache::GMessagesStorage::loadMessagesFromDb()
 {
-    auto cache = m_cache.lock();
+	auto cache = m_storage->mcache();
     if (!cache) {
         return false;
     }
@@ -2802,15 +2800,14 @@ mail_cache::msg_ptr mail_cache::GMessagesStorage::loadMessageFromDb(thread_ptr t
 /**
     GThreadsStorage
 */
-mail_cache::GThreadsStorage::GThreadsStorage(GMailSQLiteStorage* s, tcache_ptr c)
+mail_cache::GThreadsStorage::GThreadsStorage(GMailSQLiteStorage* s)
 {
     m_storage = s;
-    m_cache = c;
 };
 
 bool mail_cache::GThreadsStorage::loadThreadsFromDb()
 {
-    auto cache = m_cache.lock();
+  auto cache = m_storage->tcache();
     if (!cache) {
         return false;
     }
@@ -2871,7 +2868,7 @@ mail_cache::thread_ptr mail_cache::GThreadsStorage::loadThread(QSqlQuery* q)
 
 void mail_cache::GThreadsStorage::verifyThreads() 
 {
-    auto cache = m_cache.lock();
+    auto cache = m_storage->tcache();
     if (!cache) {
         qWarning() << "cache lock failed";
         return;
@@ -3171,7 +3168,7 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q)
         return true;
     }
     
-    tcache_ptr tc = m_tstorage->m_storage->lock_tcache();
+    auto tc = m_tstorage->m_storage->tcache();
     if (!tc) {
         return false;
     }
@@ -3302,7 +3299,7 @@ void mail_cache::GQueryStorage::bindSQL(QSqlQuery* q, STRING_LIST& r)
 
 void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
 {
-    auto tc = m_tstorage->m_storage->lock_tcache();
+    auto tc = m_tstorage->m_storage->tcache();
     if (!tc) {
         qWarning() << "expected thread storage cache ptr";
         return;

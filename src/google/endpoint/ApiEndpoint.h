@@ -348,8 +348,8 @@ namespace googleQt{
     ///END contacts
 
     protected:
-        void                  updateLastRequestInfo(QString s);
-        
+        void					updateLastRequestInfo(QString s);
+		void					abortRequests();
     protected:
         QNetworkAccessManager m_con_mgr;
         mutable QEventLoop    m_loop;
