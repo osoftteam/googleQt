@@ -2694,9 +2694,12 @@ bool mail_cache::GMessagesStorage::loadMessagesFromDb()
     thread_ptr thread_in_select = nullptr;
 
     QString sql = QString("SELECT msg_state, msg_id, thread_id, msg_from, msg_to, msg_cc, msg_bcc, "
-                          "msg_subject, msg_snippet, msg_plain, msg_html, internal_date, msg_labels, msg_references FROM %1gmail_msg WHERE acc_id=%2 ORDER BY thread_id, internal_date DESC")
+        "msg_subject, msg_snippet, msg_plain, msg_html, internal_date, msg_labels, msg_references FROM %1gmail_msg WHERE acc_id=%2 AND "
+		"thread_id IN(SELECT thread_id FROM %1gmail_thread WHERE acc_id=%2 AND thread_id IN(SELECT thread_id FROM %1gmail_msg WHERE acc_id=%2) ORDER BY internal_date DESC LIMIT %3) "
+		"ORDER BY thread_id, internal_date DESC")
         .arg(m_storage->metaPrefix())
-        .arg(m_storage->currentAccountId());
+        .arg(m_storage->currentAccountId())
+		.arg(m_storage->autoloadLimit());
     QSqlQuery* q = m_storage->selectQuery(sql);
     if (!q)
         return false;
@@ -2723,9 +2726,10 @@ bool mail_cache::GMessagesStorage::loadMessagesFromDb()
                     qWarning() << "lost thread in DB" << thread_id << "for message" << q->value(1).toString();
                 }
             }//thread_id
-        }
-    
+        }	
+
 #ifdef API_QT_AUTOTEST
+	qDebug() << QString("loadMessagesFromDb/DB-loaded %1 records, mem-cache-size: %2").arg(loaded_objects).arg(cache->mem_size());
     ApiAutotest::INSTANCE() << QString("messages/DB-loaded %1 records, mem-cache-size: %2")
         .arg(loaded_objects).arg(cache->mem_size());
 #endif
@@ -2813,9 +2817,10 @@ bool mail_cache::GThreadsStorage::loadThreadsFromDb()
     }
 
     QString sql = QString("SELECT thread_id, history_id, messages_count, snippet, t_labels FROM %1gmail_thread " 
-        "WHERE acc_id=%2 AND thread_id IN(SELECT thread_id FROM %1gmail_msg WHERE acc_id=%2) ORDER BY internal_date DESC")
+        "WHERE acc_id=%2 AND thread_id IN(SELECT thread_id FROM %1gmail_msg WHERE acc_id=%2) ORDER BY internal_date DESC LIMIT %3")
         .arg(m_storage->metaPrefix())
-        .arg(m_storage->currentAccountId());
+        .arg(m_storage->currentAccountId())
+		.arg(m_storage->autoloadLimit());
     QSqlQuery* q = m_storage->selectQuery(sql);
     if (!q)
         return false;
@@ -2828,9 +2833,10 @@ bool mail_cache::GThreadsStorage::loadThreadsFromDb()
             continue;
         cache->mem_insert(td->id(), td);
         loaded_objects++;
-    }
+    }	
 
 #ifdef API_QT_AUTOTEST
+	qDebug() << QString("loadThreadsFromDb/DB-loaded %1 records, mem-cache-size: %2").arg(loaded_objects).arg(cache->mem_size());
     ApiAutotest::INSTANCE() << QString("threads/DB-loaded %1 records, mem-cache-size: %2")
         .arg(loaded_objects).arg(cache->mem_size());
 #endif
@@ -3193,7 +3199,7 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q)
             loaded_objects++;
         }
         else {
-            qWarning() << "failed to locate thread in cache for query" << thread_id;
+            qWarning() << "loadQueryThreadsFromDb/failed to locate thread in cache for query" << thread_id;
         }
     }
 
@@ -3315,7 +3321,7 @@ void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
                 qd->m_tmap[i] = t;
             }
             else {
-                qWarning() << "failed to locate thread in cache" << i;
+                qWarning() << "insert_db_threads/failed to locate thread in cache" << i;
             }
         }
     }

@@ -338,7 +338,8 @@ bool mail_cache::GmailCacheRoutes::setupSQLiteCache(QString dbPath,
     QString downloadPath,
     QString contactCachePath,
     QString dbName /*= "googleqt"*/,
-    QString dbprefix /*= "api"*/)
+    QString dbprefix /*= "api"*/,
+	int cache_autoload_limit /*= 400*/)
 {
     EXPECT_STRING_VAL(m_endpoint.client()->userId(), "UserId");
     EXPECT_STRING_VAL(dbPath, "DB path");
@@ -351,12 +352,10 @@ bool mail_cache::GmailCacheRoutes::setupSQLiteCache(QString dbPath,
 
     m_lite_storage.reset(new mail_cache::GMailSQLiteStorage(m_GMsgCache.get(), m_GThreadCache.get(), cc));
     cc->attachSQLStorage(m_lite_storage.get());
-
+	m_lite_storage->m_cache_autoload_limit = cache_autoload_limit;
     if (!m_lite_storage->init_db(dbPath, downloadPath, contactCachePath, dbName, dbprefix))
     {
 		clearCache();
-        //m_lite_storage->close_db();
-        //m_GMsgCache->invalidate();
         qWarning() << "Failed to initialize SQLite storage" << dbPath << dbName << dbprefix;
         return false;
     }

@@ -650,6 +650,7 @@ namespace googleQt{
             thread_ptr findThread(QString thread_id);
 
             uint64_t lastHistoryId()const { return m_lastHistoryId; }
+			int		autoloadLimit()const {return m_cache_autoload_limit;}
 
         protected:
             QString metaPrefix()const { return m_metaPrefix; }
@@ -704,6 +705,7 @@ namespace googleQt{
             QString m_dbName;
             QString m_metaPrefix;
             int     m_accId{-1};
+			int		m_cache_autoload_limit{1000};
             uint64_t    m_lastHistoryId;///last valid history id
             friend class googleQt::mail_cache::GmailCacheRoutes;
             friend class googleQt::gcontact::GContactCache;

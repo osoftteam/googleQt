@@ -40,7 +40,8 @@ namespace googleQt
                                   QString downloadPath,
                                   QString contactCachePath,
                                   QString dbName = "googleqt",
-                                  QString dbprefix = "api");
+                                  QString dbprefix = "api",
+								  int cache_autoload_limit = 400);
 
             /// if setupSQLiteCache was called before
             /// used to switch to a new user
