@@ -1222,6 +1222,7 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
     }
 
     m_query.reset(new QSqlQuery(m_db));
+	m_contact_query.reset(new QSqlQuery(m_db));
 
     if (!ensureMailTables()) {
         qWarning() << "ERROR. Failed to create GMail cache tables" << dbName << dbPath;
@@ -2166,30 +2167,39 @@ void mail_cache::GMailSQLiteStorage::update_attachment_local_file_db(googleQt::m
     }
 };
 
+bool mail_cache::GMailSQLiteStorage::doExecQuery(std::unique_ptr<QSqlQuery>& q, QString sql) 
+{
+	if (!q) {
+		qWarning() << "ERROR. Expected internal query";
+		return false;
+	}
+
+	if (!q->prepare(sql)) {
+		QString error = q->lastError().text();
+		qWarning() << "ERROR. Failed to prepare sql query"
+			<< error
+			<< sql;
+		return false;
+	};
+	if (!q->exec(sql)) {
+		QString error = q->lastError().text();
+		qWarning() << "ERROR. Failed to execute query"
+			<< error
+			<< sql;
+		return false;
+	}
+	return true;
+};
+
 bool mail_cache::GMailSQLiteStorage::execQuery(QString sql)
 {
-    if(!m_query){
-            qWarning() << "ERROR. Expected internal query";
-            return false;
-        }
-    
-    if(!m_query->prepare(sql)){
-            QString error = m_query->lastError().text();
-            qWarning() << "ERROR. Failed to prepare sql query" 
-                       << error 
-                       << sql;
-            return false;
-        };    
-    if(!m_query->exec(sql)){
-            QString error = m_query->lastError().text();
-            qWarning() << "ERROR. Failed to execute query" 
-                       << error 
-                       << sql;
-            return false;
-        }
-
-    return true;
+	return doExecQuery(m_query, sql);
 };
+
+bool mail_cache::GMailSQLiteStorage::execContactQuery(QString sql)
+{
+	return doExecQuery(m_contact_query, sql);
+}
 
 QSqlQuery* mail_cache::GMailSQLiteStorage::startTransaction(QString sql) 
 {
@@ -2218,21 +2228,30 @@ bool mail_cache::GMailSQLiteStorage::commitTransaction()
     return m_db.commit();
 };
 
+QSqlQuery* mail_cache::GMailSQLiteStorage::doPrepareQuery(std::unique_ptr<QSqlQuery>& q, QString sql)
+{
+	if (!q)
+	{
+		qWarning() << "ERROR. Expected internal query";
+		return nullptr;
+	}
+	if (!q->prepare(sql))
+	{
+		QString error = q->lastError().text();
+		qWarning() << "ERROR. Failed to prepare sql query" << error << sql;
+		return nullptr;
+	};
+	return q.get();
+};
 
 QSqlQuery* mail_cache::GMailSQLiteStorage::prepareQuery(QString sql)
 {
-    if (!m_query)
-        {
-            qWarning() << "ERROR. Expected internal query";
-            return nullptr;
-        }
-    if (!m_query->prepare(sql))
-        {
-            QString error = m_query->lastError().text();
-            qWarning() << "ERROR. Failed to prepare sql query" << error << sql;
-            return nullptr;
-        };
-    return m_query.get();
+    return doPrepareQuery(m_query, sql);
+};
+
+QSqlQuery* mail_cache::GMailSQLiteStorage::prepareContactQuery(QString sql)
+{
+	return doPrepareQuery(m_contact_query, sql);
 };
 
 QSqlQuery* mail_cache::GMailSQLiteStorage::selectQuery(QString sql)
@@ -2246,6 +2265,19 @@ QSqlQuery* mail_cache::GMailSQLiteStorage::selectQuery(QString sql)
             return nullptr;
         };
     return q;
+};
+
+QSqlQuery* mail_cache::GMailSQLiteStorage::selectContactQuery(QString sql)
+{
+	QSqlQuery* q = prepareContactQuery(sql);
+	if (!q)return nullptr;
+	if (!q->exec(sql))
+	{
+		QString error = q->lastError().text();
+		qWarning() << "ERROR. Failed to execute contact query" << error << sql;
+		return nullptr;
+	};
+	return q;
 };
 
 QString mail_cache::GMailSQLiteStorage::lastSqlError()const 

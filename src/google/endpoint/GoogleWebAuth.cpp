@@ -127,6 +127,7 @@ bool GoogleWebAuth::refreshToken(const ApiAppInfo* appInfo, ApiAuthInfo* auth)
 
 #define DEFINE_SCOPE(N, L) QString GoogleWebAuth::N(){return L;};
 
+DEFINE_SCOPE(authScope_gmail_labels,	"https://www.googleapis.com/auth/gmail.labels");
 DEFINE_SCOPE(authScope_gmail_readonly,  "https://www.googleapis.com/auth/gmail.readonly");
 DEFINE_SCOPE(authScope_gmail_compose,   "https://www.googleapis.com/auth/gmail.compose");
 DEFINE_SCOPE(authScope_gmail_send,      "https://www.googleapis.com/auth/gmail.send");
@@ -139,6 +140,5 @@ DEFINE_SCOPE(authScope_gdrive_readonly, "https://www.googleapis.com/auth/drive.r
 DEFINE_SCOPE(authScope_gdrive_appdata,  "https://www.googleapis.com/auth/drive.appdata");
 DEFINE_SCOPE(authScope_contacts_modify,  "https://www.google.com/m8/feeds");
 DEFINE_SCOPE(authScope_contacts_read_only,  "https://www.googleapis.com/auth/contacts.readonly");
-//DEFINE_SCOPE(authScope_contacts,  "https://www.googleapis.com/auth/contacts");
 
 #undef DEFINE_SCOPE

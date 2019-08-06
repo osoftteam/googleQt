@@ -655,9 +655,17 @@ namespace googleQt{
         protected:
             QString metaPrefix()const { return m_metaPrefix; }
             bool execQuery(QString sql);
-            QSqlQuery* prepareQuery(QString sql);
+			bool execContactQuery(QString sql);
+			            
             QSqlQuery* selectQuery(QString sql);
+			QSqlQuery* selectContactQuery(QString sql);
+			QSqlQuery* prepareQuery(QString sql);
+			QSqlQuery* prepareContactQuery(QString sql);
+			
             QString lastSqlError()const;
+
+			QSqlQuery* doPrepareQuery(std::unique_ptr<QSqlQuery>& q, QString sql);
+			bool doExecQuery(std::unique_ptr<QSqlQuery>& q, QString sql);
 
             QSqlQuery* startTransaction(QString sql);
             bool startTransaction();
@@ -686,7 +694,7 @@ namespace googleQt{
         protected:
             bool m_initialized {false};
             QSqlDatabase     m_db;
-            std::unique_ptr<QSqlQuery>          m_query{nullptr};
+			std::unique_ptr<QSqlQuery>          m_query{ nullptr }, m_contact_query{nullptr};
             GMailCache*							m_msg_cache{ nullptr };
 			GThreadCache*						m_thread_cache{ nullptr };
             std::unique_ptr<GMessagesStorage>   m_mstorage;

@@ -677,16 +677,16 @@ bool GContactCache::ensureContactTables()
     QString sql_entries = QString("CREATE TABLE IF NOT EXISTS %1gcontact_entry(contact_db_id INTEGER PRIMARY KEY, acc_id INTEGER NOT NULL, entry_id TEXT, etag TEXT, title TEXT, "
                                   "full_name TEXT, xml_original TEXT, xml_current TEXT, updated INTEGER, status INTEGER, "
                                   "photo_href TEXT, photo_etag TEXT, photo_status INTEGER)").arg(m_sql_storage->m_metaPrefix);
-    if (!m_sql_storage->execQuery(sql_entries))
+    if (!m_sql_storage->execContactQuery(sql_entries))
         return false;
 
     QString sql_groups = QString("CREATE TABLE IF NOT EXISTS %1gcontact_group(group_db_id INTEGER PRIMARY KEY, acc_id INTEGER NOT NULL, group_id TEXT, etag TEXT, title TEXT, content TEXT,"
         "xml_original TEXT, updated INTEGER, status INTEGER)").arg(m_sql_storage->m_metaPrefix);
-    if (!m_sql_storage->execQuery(sql_groups))
+    if (!m_sql_storage->execContactQuery(sql_groups))
         return false;
 
     QString sql_config = QString("CREATE TABLE IF NOT EXISTS %1gcontact_config(acc_id INTEGER NOT NULL, config_name TEXT, config_value TEXT)").arg(m_sql_storage->m_metaPrefix);
-    if (!m_sql_storage->execQuery(sql_config))
+    if (!m_sql_storage->execContactQuery(sql_config))
         return false;
     
 
@@ -729,7 +729,7 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
             " VALUES(%2, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
             .arg(m_sql_storage->m_metaPrefix)
             .arg(m_sql_storage->m_accId);
-        QSqlQuery* q = m_sql_storage->prepareQuery(sql_insert);
+        QSqlQuery* q = m_sql_storage->prepareContactQuery(sql_insert);
         if (!q) {
             qWarning() << "Failed to prepare contact insert-SQL" << sql_insert;
             return false;
@@ -768,7 +768,7 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
                              "xml_original=?, xml_current=?, updated=?, status=?, photo_href=?, photo_etag=?, photo_status=? WHERE contact_db_id=? AND acc_id = %2")
             .arg(m_sql_storage->m_metaPrefix)
             .arg(m_sql_storage->m_accId);
-        QSqlQuery* q = m_sql_storage->prepareQuery(sql_update);
+        QSqlQuery* q = m_sql_storage->prepareContactQuery(sql_update);
         if (!q) {
             qWarning() << "Failed to prepare contact update-SQL" << sql_update;
             return false;
@@ -805,7 +805,7 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
                              "xml_original=?, xml_current=?, updated=?, status=?, entry_id=?, etag=?, photo_href=?, photo_etag=?, photo_status=? WHERE contact_db_id=? AND acc_id = %2")
             .arg(m_sql_storage->m_metaPrefix)
             .arg(m_sql_storage->m_accId);
-        QSqlQuery* q = m_sql_storage->prepareQuery(sql_update);
+        QSqlQuery* q = m_sql_storage->prepareContactQuery(sql_update);
         if (!q) {
             qWarning() << "Failed to prepare contact update-SQL" << sql_update;
             return false;
@@ -849,7 +849,7 @@ bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& cont
             .arg(m_sql_storage->m_metaPrefix)
             .arg(m_sql_storage->m_accId);
 
-        QSqlQuery* q = m_sql_storage->prepareQuery(sql_insert);
+        QSqlQuery* q = m_sql_storage->prepareContactQuery(sql_insert);
         if (!q) {
             qWarning() << "Failed to prepare contact group insert-SQL" << sql_insert;
             return false;
@@ -883,7 +883,7 @@ bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& cont
             .arg(m_sql_storage->m_metaPrefix)
             .arg(m_sql_storage->m_accId);
 
-        QSqlQuery* q = m_sql_storage->prepareQuery(sql_update);
+        QSqlQuery* q = m_sql_storage->prepareContactQuery(sql_update);
         if (!q) {
             qWarning() << "Failed to prepare contact group update-SQL" << sql_update;
             return false;
@@ -913,7 +913,7 @@ bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& cont
             .arg(m_sql_storage->m_metaPrefix)
             .arg(m_sql_storage->m_accId);
 
-        QSqlQuery* q = m_sql_storage->prepareQuery(sql_update);
+        QSqlQuery* q = m_sql_storage->prepareContactQuery(sql_update);
         if (!q) {
             qWarning() << "Failed to prepare contact group update-SQL" << sql_update;
             return false;
@@ -976,7 +976,7 @@ bool GContactCache::storeConfig()
             .arg(m_sql_storage->m_accId)
             .arg(CONFIG_SYNC_TIME);
 
-        if (!m_sql_storage->execQuery(sql_del_old)) {
+        if (!m_sql_storage->execContactQuery(sql_del_old)) {
             qWarning() << "Failed to delete old contact config del-SQL" << sql_del_old;
             return false;
         };
@@ -988,7 +988,7 @@ bool GContactCache::storeConfig()
             .arg(m_sql_storage->m_metaPrefix)
             .arg(m_sql_storage->m_accId);
 
-        QSqlQuery* q = m_sql_storage->prepareQuery(sql_insert);
+        QSqlQuery* q = m_sql_storage->prepareContactQuery(sql_insert);
         if (!q) {
             qWarning() << "Failed to prepare contact config insert-SQL" << sql_insert;
             return false;
@@ -1058,7 +1058,7 @@ bool GContactCache::clearDbCache()
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
 
-    if (!m_sql_storage->execQuery(sql)) {
+    if (!m_sql_storage->execContactQuery(sql)) {
         return false;
     };
 
@@ -1066,7 +1066,7 @@ bool GContactCache::clearDbCache()
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
 
-    if (!m_sql_storage->execQuery(sql)) {
+    if (!m_sql_storage->execContactQuery(sql)) {
         return false;
     };
 
@@ -1091,7 +1091,7 @@ bool GContactCache::loadContactGroupsFromDb()
     QString sql = QString("SELECT status, xml_original, updated, group_db_id, title, content, group_id FROM %1gcontact_group WHERE acc_id=%2 AND status IN(1,2,3) ORDER BY updated DESC")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
-    QSqlQuery* q = m_sql_storage->selectQuery(sql);
+    QSqlQuery* q = m_sql_storage->selectContactQuery(sql);
     if (!q)
         return false;
 
@@ -1114,7 +1114,7 @@ bool GContactCache::loadContactEntriesFromDb()
         "photo_href, photo_etag, photo_status, entry_id FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2,3) ORDER BY updated DESC")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
-    QSqlQuery* q = m_sql_storage->selectQuery(sql);
+    QSqlQuery* q = m_sql_storage->selectContactQuery(sql);
     if (!q)
         return false;
 
@@ -1139,7 +1139,7 @@ bool GContactCache::loadContactConfigFromDb()
     QString sql = QString("SELECT MAX(updated) FROM %1gcontact_group WHERE acc_id=%2 AND status IN(1,2,3)")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
-    QSqlQuery* q = m_sql_storage->selectQuery(sql);
+    QSqlQuery* q = m_sql_storage->selectContactQuery(sql);
     if (!q){
         qWarning() << "failed to load group MAX(updated)";
         return false;
@@ -1153,7 +1153,7 @@ bool GContactCache::loadContactConfigFromDb()
     sql = QString("SELECT MAX(updated) FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2,3)")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
-    q = m_sql_storage->selectQuery(sql);
+    q = m_sql_storage->selectContactQuery(sql);
     if (!q){
         qWarning() << "failed to load contacts MAX(updated)";
         return false;
@@ -1169,7 +1169,7 @@ bool GContactCache::loadContactConfigFromDb()
     sql = QString("SELECT config_name, config_value FROM %1gcontact_config WHERE acc_id=%2")
         .arg(m_sql_storage->m_metaPrefix)
         .arg(m_sql_storage->m_accId);
-    q = m_sql_storage->selectQuery(sql);
+    q = m_sql_storage->selectContactQuery(sql);
     if (!q)
         return false;
 
