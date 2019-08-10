@@ -313,10 +313,17 @@ namespace googleQt {
         /**
             contacts DB storage
         */
-        class GContactCache
+        class GContactCacheBase
         {
         public:
-            GContactCache(ApiEndpoint& ept);
+            GContactCacheBase(QString userid);
+
+			virtual QString		metaPrefix()const = 0;
+			virtual int			accountId()const = 0;
+			virtual QSqlQuery*	prepareContactQuery(QString sql) = 0;
+			virtual bool		execContactQuery(QString sql) = 0;
+			virtual QSqlQuery*	selectContactQuery(QString sql) = 0;
+			virtual QString		contactCacheDir()const = 0;
 
             ContactList& contacts() { return m_contacts; }
             const ContactList& contacts()const { return m_contacts; }
@@ -326,8 +333,6 @@ namespace googleQt {
 
             const QDateTime& lastSyncTime()const { return m_sync_time; }
 
-            void attachSQLStorage(mail_cache::GMailSQLiteStorage* ss);
-
             bool storeContactsToDb();
             bool loadContactsFromDb();
             bool clearDbCache();
@@ -336,9 +341,10 @@ namespace googleQt {
             QString getPhotoMediaPath(QString contactId, bool ensurePath = false)const;
             bool addPhoto(ContactInfo::ptr c, QString photoFileName);
 
+			void setEnableContactsConfigTable(bool val) { m_enable_contacts_config_table = val;}
+			bool ensureContactTables();
 
         protected:
-            bool ensureContactTables();
             bool storeContactGroups();
             bool storeContactEntries();
             bool storeConfig();
@@ -349,16 +355,30 @@ namespace googleQt {
             bool storeContactList(std::vector<std::shared_ptr<ContactInfo>>& contact_list);
             bool storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& group_list);            
         protected:
-			mail_cache::GMailSQLiteStorage* m_sql_storage{nullptr};
             ContactList m_contacts;
             GroupList m_groups;
             std::map<QString, QString> m_configs;
-            QDateTime m_sync_time;
-            ApiEndpoint& m_endpoint;
-
-            friend class mail_cache::GMailSQLiteStorage;
-            friend class GcontactCacheRoutes;
+            QDateTime		m_sync_time;
+			QString			m_userid;
+			bool			m_enable_contacts_config_table{true};
         };
+
+		class GContactCache: public GContactCacheBase
+		{
+		public:
+			GContactCache(QString userid);
+			virtual QString metaPrefix()const override;
+			virtual int		accountId()const override;
+			QSqlQuery*	prepareContactQuery(QString sql) override;
+			bool		execContactQuery(QString sql)override;
+			QSqlQuery*	selectContactQuery(QString sql)override;
+			QString		contactCacheDir()const override;
+
+			void attachSQLStorage(mail_cache::GMailSQLiteStorage* ss);
+		protected:
+			mail_cache::GMailSQLiteStorage* m_sql_storage{ nullptr };
+			friend class GcontactCacheRoutes;
+		};
 
         class GcontactCacheSyncTask : public GoogleVoidTask 
         {

@@ -1214,15 +1214,15 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
 
     m_initialized = false;  
 
-    m_db = QSqlDatabase::addDatabase("QSQLITE", dbName);
-    m_db.setDatabaseName(dbPath);
-    if (!m_db.open()) {
+	m_gmail_db = QSqlDatabase::addDatabase("QSQLITE", dbName);
+	m_gmail_db.setDatabaseName(dbPath);
+    if (!m_gmail_db.open()) {
         qWarning() << "ERROR. Failed to connect" << dbName << dbPath;
         return false;
     }
 
-    m_query.reset(new QSqlQuery(m_db));
-	m_contact_query.reset(new QSqlQuery(m_db));
+    m_query.reset(new QSqlQuery(m_gmail_db));
+	m_contact_query.reset(new QSqlQuery(m_external_contacts_db ? *m_external_contacts_db : m_gmail_db));
 
     if (!ensureMailTables()) {
         qWarning() << "ERROR. Failed to create GMail cache tables" << dbName << dbPath;
@@ -1301,9 +1301,9 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
 
 void mail_cache::GMailSQLiteStorage::close_db() 
 {
-    if (m_db.isOpen()) {
-		auto name = m_db.connectionName();
-        m_db.close();
+    if (m_gmail_db.isOpen()) {
+		auto name = m_gmail_db.connectionName();
+		m_gmail_db.close();
 		QSqlDatabase::removeDatabase(name);
     }
     m_initialized = false;
@@ -2215,17 +2215,17 @@ QSqlQuery* mail_cache::GMailSQLiteStorage::startTransaction(QString sql)
 
 bool mail_cache::GMailSQLiteStorage::startTransaction()
 {
-    return m_db.transaction();
+    return m_gmail_db.transaction();
 };
 
 bool mail_cache::GMailSQLiteStorage::rollbackTransaction()
 {
-    return m_db.rollback();
+    return m_gmail_db.rollback();
 };
 
 bool mail_cache::GMailSQLiteStorage::commitTransaction()
 {
-    return m_db.commit();
+    return m_gmail_db.commit();
 };
 
 QSqlQuery* mail_cache::GMailSQLiteStorage::doPrepareQuery(std::unique_ptr<QSqlQuery>& q, QString sql)

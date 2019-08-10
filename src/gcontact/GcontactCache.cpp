@@ -659,36 +659,74 @@ QString BatchRequestGroupInfo::toXmlBegin()const
 };
 
 /**
+	GContactCache
+*/
+GContactCache::GContactCache(QString userid):GContactCacheBase(userid)
+{
+};
+
+void GContactCache::attachSQLStorage(mail_cache::GMailSQLiteStorage* ss)
+{
+	m_sql_storage = ss;
+};
+
+QString GContactCache::metaPrefix()const 
+{
+	return m_sql_storage->m_metaPrefix;
+};
+
+int GContactCache::accountId()const 
+{
+	return m_sql_storage->m_accId;
+};
+
+QSqlQuery* GContactCache::prepareContactQuery(QString sql)
+{
+	return m_sql_storage->prepareContactQuery(sql);
+};
+
+bool GContactCache::execContactQuery(QString sql) 
+{
+	return m_sql_storage->execContactQuery(sql);
+};
+
+QSqlQuery* GContactCache::selectContactQuery(QString sql)
+{
+	return m_sql_storage->selectContactQuery(sql);
+};
+
+QString GContactCache::contactCacheDir()const
+{
+	return m_sql_storage->contactCacheDir();
+};
+
+/**
     GContactCache
 */
-GContactCache::GContactCache(ApiEndpoint& a):m_endpoint(a)
+GContactCacheBase::GContactCacheBase(QString userid):m_userid(userid)
 {
 
 };
 
-void GContactCache::attachSQLStorage(mail_cache::GMailSQLiteStorage* ss) 
-{
-    m_sql_storage = ss;
-};
-
-bool GContactCache::ensureContactTables()
+bool GContactCacheBase::ensureContactTables()
 {
     /// contacts ///
     QString sql_entries = QString("CREATE TABLE IF NOT EXISTS %1gcontact_entry(contact_db_id INTEGER PRIMARY KEY, acc_id INTEGER NOT NULL, entry_id TEXT, etag TEXT, title TEXT, "
                                   "full_name TEXT, xml_original TEXT, xml_current TEXT, updated INTEGER, status INTEGER, "
-                                  "photo_href TEXT, photo_etag TEXT, photo_status INTEGER)").arg(m_sql_storage->m_metaPrefix);
-    if (!m_sql_storage->execContactQuery(sql_entries))
+                                  "photo_href TEXT, photo_etag TEXT, photo_status INTEGER)").arg(metaPrefix());
+    if (!execContactQuery(sql_entries))
         return false;
 
     QString sql_groups = QString("CREATE TABLE IF NOT EXISTS %1gcontact_group(group_db_id INTEGER PRIMARY KEY, acc_id INTEGER NOT NULL, group_id TEXT, etag TEXT, title TEXT, content TEXT,"
-        "xml_original TEXT, updated INTEGER, status INTEGER)").arg(m_sql_storage->m_metaPrefix);
-    if (!m_sql_storage->execContactQuery(sql_groups))
+        "xml_original TEXT, updated INTEGER, status INTEGER)").arg(metaPrefix());
+    if (!execContactQuery(sql_groups))
         return false;
 
-    QString sql_config = QString("CREATE TABLE IF NOT EXISTS %1gcontact_config(acc_id INTEGER NOT NULL, config_name TEXT, config_value TEXT)").arg(m_sql_storage->m_metaPrefix);
-    if (!m_sql_storage->execContactQuery(sql_config))
-        return false;
-    
+	if (m_enable_contacts_config_table) {
+		QString sql_config = QString("CREATE TABLE IF NOT EXISTS %1gcontact_config(acc_id INTEGER NOT NULL, config_name TEXT, config_value TEXT)").arg(metaPrefix());
+		if (!execContactQuery(sql_config))
+			return false;
+	}
 
     return true;
 };
@@ -716,7 +754,7 @@ bool GContactCache::ensureContactTables()
     }                                               \
 
 
-bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& contact_list)
+bool GContactCacheBase::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& contact_list)
 {    
     using CLIST = std::vector<ContactInfo::ptr>;
     MAKE_DB_UPDATE_LISTS;
@@ -727,9 +765,9 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
         sql_insert = QString("INSERT INTO  %1gcontact_entry(acc_id, title, full_name, "
                              "xml_original, xml_current, updated, status, entry_id, etag, photo_href, photo_etag, photo_status)"
             " VALUES(%2, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-            .arg(m_sql_storage->m_metaPrefix)
-            .arg(m_sql_storage->m_accId);
-        QSqlQuery* q = m_sql_storage->prepareContactQuery(sql_insert);
+            .arg(metaPrefix())
+            .arg(accountId());
+        QSqlQuery* q = prepareContactQuery(sql_insert);
         if (!q) {
             qWarning() << "Failed to prepare contact insert-SQL" << sql_insert;
             return false;
@@ -739,7 +777,7 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
             q->addBindValue(c->title());
             q->addBindValue(c->name().fullName());
             q->addBindValue(c->parsedXml());
-            q->addBindValue(c->toXml(m_endpoint.apiClient()->userId()));
+            q->addBindValue(c->toXml(m_userid));
             qlonglong upd_time = c->updated().toMSecsSinceEpoch();
             q->addBindValue(upd_time);
             q->addBindValue(c->status());
@@ -766,16 +804,16 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
         QString sql_update;
         sql_update = QString("UPDATE  %1gcontact_entry SET title=?, full_name=?, "
                              "xml_original=?, xml_current=?, updated=?, status=?, photo_href=?, photo_etag=?, photo_status=? WHERE contact_db_id=? AND acc_id = %2")
-            .arg(m_sql_storage->m_metaPrefix)
-            .arg(m_sql_storage->m_accId);
-        QSqlQuery* q = m_sql_storage->prepareContactQuery(sql_update);
+            .arg(metaPrefix())
+            .arg(accountId());
+        QSqlQuery* q = prepareContactQuery(sql_update);
         if (!q) {
             qWarning() << "Failed to prepare contact update-SQL" << sql_update;
             return false;
         }
 
         for (auto c : updated_contacts) {
-            QString xml_current = c->toXml(m_endpoint.apiClient()->userId());
+            QString xml_current = c->toXml(m_userid);
             //qDebug() << "sql-updated dbid=" << c->dbID() << "title=" << c->title() << "fullname=" << c->name().fullName();
             //qDebug() << xml_current;
             //qDebug() << "================================";
@@ -803,9 +841,9 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
         QString sql_update;
         sql_update = QString("UPDATE  %1gcontact_entry SET title=?, full_name=?, "
                              "xml_original=?, xml_current=?, updated=?, status=?, entry_id=?, etag=?, photo_href=?, photo_etag=?, photo_status=? WHERE contact_db_id=? AND acc_id = %2")
-            .arg(m_sql_storage->m_metaPrefix)
-            .arg(m_sql_storage->m_accId);
-        QSqlQuery* q = m_sql_storage->prepareContactQuery(sql_update);
+            .arg(metaPrefix())
+            .arg(accountId());
+        QSqlQuery* q = prepareContactQuery(sql_update);
         if (!q) {
             qWarning() << "Failed to prepare contact update-SQL" << sql_update;
             return false;
@@ -815,7 +853,7 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
             q->addBindValue(c->title());
             q->addBindValue(c->name().fullName());
             q->addBindValue(c->parsedXml());
-            q->addBindValue(c->toXml(m_endpoint.apiClient()->userId()));
+            q->addBindValue(c->toXml(m_userid));
             qlonglong upd_time = c->updated().toMSecsSinceEpoch();
             q->addBindValue(upd_time);
             q->addBindValue(c->status());
@@ -836,7 +874,7 @@ bool GContactCache::storeContactList(std::vector<std::shared_ptr<ContactInfo>>& 
     return true;
 };
 
-bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& contact_list)
+bool GContactCacheBase::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& contact_list)
 {
     using CLIST = std::vector<GroupInfo::ptr>;
     MAKE_DB_UPDATE_LISTS;
@@ -846,10 +884,10 @@ bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& cont
         QString sql_insert;
         sql_insert = QString("INSERT INTO  %1gcontact_group(acc_id, title, content, xml_original, updated, status, group_id, etag)"
             " VALUES(%2, ?, ?, ?, ?, ?, ?, ?)")
-            .arg(m_sql_storage->m_metaPrefix)
-            .arg(m_sql_storage->m_accId);
+            .arg(metaPrefix())
+            .arg(accountId());
 
-        QSqlQuery* q = m_sql_storage->prepareContactQuery(sql_insert);
+        QSqlQuery* q = prepareContactQuery(sql_insert);
         if (!q) {
             qWarning() << "Failed to prepare contact group insert-SQL" << sql_insert;
             return false;
@@ -880,10 +918,10 @@ bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& cont
         qDebug() << "sql-groups-store-updated" << updated_contacts.size() << (*updated_contacts.begin())->id();
         QString sql_update;
         sql_update = QString("UPDATE  %1gcontact_group SET title=?, content=?, xml_original=?, updated=?, status=? WHERE group_db_id=? AND acc_id = %2")
-            .arg(m_sql_storage->m_metaPrefix)
-            .arg(m_sql_storage->m_accId);
+            .arg(metaPrefix())
+            .arg(accountId());
 
-        QSqlQuery* q = m_sql_storage->prepareContactQuery(sql_update);
+        QSqlQuery* q = prepareContactQuery(sql_update);
         if (!q) {
             qWarning() << "Failed to prepare contact group update-SQL" << sql_update;
             return false;
@@ -910,10 +948,10 @@ bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& cont
         QString sql_update;
 
         sql_update = QString("UPDATE  %1gcontact_group SET title=?, content=?, xml_original=?, updated=?, status=?, group_id=?, etag=? WHERE group_db_id=? AND acc_id = %2")
-            .arg(m_sql_storage->m_metaPrefix)
-            .arg(m_sql_storage->m_accId);
+            .arg(metaPrefix())
+            .arg(accountId());
 
-        QSqlQuery* q = m_sql_storage->prepareContactQuery(sql_update);
+        QSqlQuery* q = prepareContactQuery(sql_update);
         if (!q) {
             qWarning() << "Failed to prepare contact group update-SQL" << sql_update;
             return false;
@@ -940,7 +978,7 @@ bool GContactCache::storeGroupList(std::vector<std::shared_ptr<GroupInfo>>& cont
     return true;
 };
 
-bool GContactCache::storeContactEntries() 
+bool GContactCacheBase::storeContactEntries()
 {
     if(!storeContactList(m_contacts.items())){
         return false;
@@ -953,7 +991,7 @@ bool GContactCache::storeContactEntries()
     return true;
 };
 
-bool GContactCache::storeContactGroups()
+bool GContactCacheBase::storeContactGroups()
 {
     if(!storeGroupList(m_groups.items())){
         return false;
@@ -966,17 +1004,21 @@ bool GContactCache::storeContactGroups()
     return true;
 };
 
-bool GContactCache::storeConfig()
+bool GContactCacheBase::storeConfig()
 {
-    if (m_sync_time.isValid()) {
+	if (!m_enable_contacts_config_table) {
+		qWarning() << "config table not supported for external DB";
+		return false;
+	}
 
+    if (m_sync_time.isValid()) {
         QString sql_del_old;
         sql_del_old = QString("DELETE FROM  %1gcontact_config WHERE acc_id=%2 AND config_name='%3'")
-            .arg(m_sql_storage->m_metaPrefix)
-            .arg(m_sql_storage->m_accId)
+            .arg(metaPrefix())
+            .arg(accountId())
             .arg(CONFIG_SYNC_TIME);
 
-        if (!m_sql_storage->execContactQuery(sql_del_old)) {
+        if (!execContactQuery(sql_del_old)) {
             qWarning() << "Failed to delete old contact config del-SQL" << sql_del_old;
             return false;
         };
@@ -985,10 +1027,10 @@ bool GContactCache::storeConfig()
         QString sql_insert;
         sql_insert = QString("INSERT INTO %1gcontact_config(acc_id, config_name, config_value)"
             " VALUES(%2, ?, ?)")
-            .arg(m_sql_storage->m_metaPrefix)
-            .arg(m_sql_storage->m_accId);
+            .arg(metaPrefix())
+            .arg(accountId());
 
-        QSqlQuery* q = m_sql_storage->prepareContactQuery(sql_insert);
+        QSqlQuery* q = prepareContactQuery(sql_insert);
         if (!q) {
             qWarning() << "Failed to prepare contact config insert-SQL" << sql_insert;
             return false;
@@ -1007,7 +1049,7 @@ bool GContactCache::storeConfig()
 };
 
 
-bool GContactCache::storeContactsToDb() 
+bool GContactCacheBase::storeContactsToDb()
 {
     if (!storeContactEntries()) {
         return false;
@@ -1017,14 +1059,16 @@ bool GContactCache::storeContactsToDb()
         return false;
     }
 
-    if (!storeConfig()) {
-        return false;
-    }
+	if (m_enable_contacts_config_table) {
+		if (!storeConfig()) {
+			return false;
+		}
+	}
     
     return true;
 };
 
-bool GContactCache::loadContactsFromDb() 
+bool GContactCacheBase::loadContactsFromDb()
 {
     if (!loadContactEntriesFromDb()) {
         return false;
@@ -1034,20 +1078,17 @@ bool GContactCache::loadContactsFromDb()
         return false;
     }
 
-    if (!loadContactConfigFromDb()) {
-        return false;
-    }
+	if (m_enable_contacts_config_table) {
+		if (!loadContactConfigFromDb()) {
+			return false;
+		}
+	}
     
     return true;
 };
 
-bool GContactCache::clearDbCache() 
+bool GContactCacheBase::clearDbCache()
 {
-    if (!m_sql_storage) {
-        qWarning() << "Sql cache is not setup";
-        return false;
-    }
-
     m_contacts.clear();
     m_groups.clear();
 
@@ -1055,25 +1096,25 @@ bool GContactCache::clearDbCache()
     m_sync_time.swap(invalid_time);
 
     QString sql = QString("DELETE FROM %1gcontact_group WHERE acc_id=%2")
-        .arg(m_sql_storage->m_metaPrefix)
-        .arg(m_sql_storage->m_accId);
+        .arg(metaPrefix())
+        .arg(accountId());
 
-    if (!m_sql_storage->execContactQuery(sql)) {
+    if (!execContactQuery(sql)) {
         return false;
     };
 
     sql = QString("DELETE FROM %1gcontact_entry WHERE acc_id=%2")
-        .arg(m_sql_storage->m_metaPrefix)
-        .arg(m_sql_storage->m_accId);
+        .arg(metaPrefix())
+        .arg(accountId());
 
-    if (!m_sql_storage->execContactQuery(sql)) {
+    if (!execContactQuery(sql)) {
         return false;
     };
 
     return true;
 };
 
-bool GContactCache::mergeServerModifications(GroupList& server_glist, ContactList& server_clist)
+bool GContactCacheBase::mergeServerModifications(GroupList& server_glist, ContactList& server_clist)
 {
     m_contacts.mergeList(server_clist);
     m_groups.mergeList(server_glist);
@@ -1084,14 +1125,14 @@ bool GContactCache::mergeServerModifications(GroupList& server_glist, ContactLis
     return rv;
 };
 
-bool GContactCache::loadContactGroupsFromDb()
+bool GContactCacheBase::loadContactGroupsFromDb()
 {
     m_groups.clear();
 
     QString sql = QString("SELECT status, xml_original, updated, group_db_id, title, content, group_id FROM %1gcontact_group WHERE acc_id=%2 AND status IN(1,2,3) ORDER BY updated DESC")
-        .arg(m_sql_storage->m_metaPrefix)
-        .arg(m_sql_storage->m_accId);
-    QSqlQuery* q = m_sql_storage->selectContactQuery(sql);
+        .arg(metaPrefix())
+        .arg(accountId());
+    QSqlQuery* q = selectContactQuery(sql);
     if (!q)
         return false;
 
@@ -1106,15 +1147,15 @@ bool GContactCache::loadContactGroupsFromDb()
     return true;
 };
 
-bool GContactCache::loadContactEntriesFromDb()
+bool GContactCacheBase::loadContactEntriesFromDb()
 {
     m_contacts.clear();
 
     QString sql = QString("SELECT status, xml_original, xml_current, updated, contact_db_id, title, "
         "photo_href, photo_etag, photo_status, entry_id FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2,3) ORDER BY updated DESC")
-        .arg(m_sql_storage->m_metaPrefix)
-        .arg(m_sql_storage->m_accId);
-    QSqlQuery* q = m_sql_storage->selectContactQuery(sql);
+        .arg(metaPrefix())
+        .arg(accountId());
+    QSqlQuery* q = selectContactQuery(sql);
     if (!q)
         return false;
 
@@ -1129,17 +1170,22 @@ bool GContactCache::loadContactEntriesFromDb()
     return true;
 };
 
-bool GContactCache::loadContactConfigFromDb() 
+bool GContactCacheBase::loadContactConfigFromDb()
 {
+	if (!m_enable_contacts_config_table) {
+		qWarning() << "config table not supported for external DB";
+		return false;
+	}
+
     m_configs.clear();
     
     QDateTime invalid_time;
     m_sync_time.swap(invalid_time);
     
     QString sql = QString("SELECT MAX(updated) FROM %1gcontact_group WHERE acc_id=%2 AND status IN(1,2,3)")
-        .arg(m_sql_storage->m_metaPrefix)
-        .arg(m_sql_storage->m_accId);
-    QSqlQuery* q = m_sql_storage->selectContactQuery(sql);
+        .arg(metaPrefix())
+        .arg(accountId());
+    QSqlQuery* q = selectContactQuery(sql);
     if (!q){
         qWarning() << "failed to load group MAX(updated)";
         return false;
@@ -1151,9 +1197,9 @@ bool GContactCache::loadContactConfigFromDb()
 
     
     sql = QString("SELECT MAX(updated) FROM %1gcontact_entry WHERE acc_id=%2 AND status IN(1,2,3)")
-        .arg(m_sql_storage->m_metaPrefix)
-        .arg(m_sql_storage->m_accId);
-    q = m_sql_storage->selectContactQuery(sql);
+        .arg(metaPrefix())
+        .arg(accountId());
+    q = selectContactQuery(sql);
     if (!q){
         qWarning() << "failed to load contacts MAX(updated)";
         return false;
@@ -1167,9 +1213,9 @@ bool GContactCache::loadContactConfigFromDb()
 
 
     sql = QString("SELECT config_name, config_value FROM %1gcontact_config WHERE acc_id=%2")
-        .arg(m_sql_storage->m_metaPrefix)
-        .arg(m_sql_storage->m_accId);
-    q = m_sql_storage->selectContactQuery(sql);
+        .arg(metaPrefix())
+        .arg(accountId());
+    q = selectContactQuery(sql);
     if (!q)
         return false;
 
@@ -1191,11 +1237,11 @@ bool GContactCache::loadContactConfigFromDb()
 };
 
 
-QString GContactCache::getPhotoMediaPath(QString contactId, bool ensurePath)const
+QString GContactCacheBase::getPhotoMediaPath(QString contactId, bool ensurePath)const
 {
-    QString cache_dir = m_sql_storage->contactCacheDir();
+    QString cache_dir = contactCacheDir();
     cache_dir += "/contact-photos/";
-    cache_dir += m_endpoint.apiClient()->userId();
+    cache_dir += m_userid;
     cache_dir += "/";
     QString img_file = cache_dir + QString("%1.jpg").arg(contactId);
 
@@ -1217,19 +1263,10 @@ QString GContactCache::getPhotoMediaPath(QString contactId, bool ensurePath)cons
         }
     }
 
-    return img_file;
-            
-    //    QString rv;
-    //    const PhotoInfo& p = c->photo();
-    //    if(p.status() == PhotoInfo::resolved && !p.etag().isEmpty())
-  //      {
-            //        cache_dir += QString("/%1.jpg").arg(c->id());
-        //}
-    
-    return "";
+    return img_file;    
 };
 
-bool GContactCache::addPhoto(ContactInfo::ptr c, QString photoFileName)
+bool GContactCacheBase::addPhoto(ContactInfo::ptr c, QString photoFileName)
 {
     if (!QFile::exists(photoFileName)) {
         qWarning() << "Photo file not found " << photoFileName;
@@ -1498,7 +1535,7 @@ PhotoSyncTask* GcontactCacheRoutes::synchronizePhotos_Async()
 
 GcontactCacheRoutes::GcontactCacheRoutes(googleQt::Endpoint& endpoint, GcontactRoutes& r):m_endpoint(endpoint), m_c_routes(r)
 {
-    m_GContactsCache.reset(new GContactCache(endpoint));
+    m_GContactsCache.reset(new GContactCache(endpoint.apiClient()->userId()));
 };
 
 template<class B, class L>

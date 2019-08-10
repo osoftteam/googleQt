@@ -41,9 +41,12 @@ namespace googleQt{
         Endpoint* endpoint() { return m_endpoint; }        
 
         /// call setupCache before access any cache functions
+		/// if contacts_db is provided, contacts tables will be used/allocated inside
+		/// contacts_db, otherwise DB will be created/attached in dbPath
         googleQt::mail_cache::GmailCacheRoutes* setupCache(QString dbPath,
                             QString downloadPath,
                             QString contactCachePath,
+							QSqlDatabase* contacts_db = nullptr,
                             QString dbName = "googleqt",
                             QString dbprefix = "api");
 
