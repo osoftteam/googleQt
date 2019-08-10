@@ -317,7 +317,8 @@ namespace googleQt {
         {
         public:
             GContactCacheBase(QString userid);
-
+            virtual ~GContactCacheBase(){}
+            
 			virtual QString		metaPrefix()const = 0;
 			virtual int			accountId()const = 0;
 			virtual QSqlQuery*	prepareContactQuery(QString sql) = 0;

@@ -46,7 +46,6 @@ namespace googleQt{
         googleQt::mail_cache::GmailCacheRoutes* setupCache(QString dbPath,
                             QString downloadPath,
                             QString contactCachePath,
-							QSqlDatabase* contacts_db = nullptr,
                             QString dbName = "googleqt",
                             QString dbprefix = "api");
 

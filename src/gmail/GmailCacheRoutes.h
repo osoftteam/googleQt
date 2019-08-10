@@ -19,7 +19,7 @@
 namespace googleQt
 {
     namespace mail_cache
-    {
+    {        
         class GmailCacheRoutes : public QObject
         {
             Q_OBJECT
@@ -163,7 +163,6 @@ namespace googleQt
 			std::unique_ptr<mail_cache::GMailSQLiteStorage> m_lite_storage;
 			std::unique_ptr<mail_cache::GMailCache> m_GMsgCache;
 			std::unique_ptr<mail_cache::GThreadCache> m_GThreadCache;
-			QSqlDatabase* m_external_contacts_db{ nullptr };
             friend class GThreadCacheQueryTask;
 			friend class GmailRoutes;
         };

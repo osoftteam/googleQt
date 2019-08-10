@@ -1222,7 +1222,7 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
     }
 
     m_query.reset(new QSqlQuery(m_gmail_db));
-	m_contact_query.reset(new QSqlQuery(m_external_contacts_db ? *m_external_contacts_db : m_gmail_db));
+	m_contact_query.reset(new QSqlQuery(m_gmail_db));
 
     if (!ensureMailTables()) {
         qWarning() << "ERROR. Failed to create GMail cache tables" << dbName << dbPath;

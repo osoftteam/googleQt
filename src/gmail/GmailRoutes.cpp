@@ -67,7 +67,6 @@ drafts::DraftsRoutes* GmailRoutes::getDrafts()
 googleQt::mail_cache::GmailCacheRoutes* GmailRoutes::setupCache(QString dbPath,
     QString downloadPath, 
     QString contactCachePath,
-	QSqlDatabase* contacts_db,
     QString dbName,
     QString dbprefix) 
 {
@@ -77,7 +76,6 @@ googleQt::mail_cache::GmailCacheRoutes* GmailRoutes::setupCache(QString dbPath,
     }
 
     m_CacheRoutes.reset(new googleQt::mail_cache::GmailCacheRoutes(*m_endpoint, *this));
-	m_CacheRoutes->m_external_contacts_db = contacts_db;
     if (!m_CacheRoutes->setupSQLiteCache(dbPath, 
                         downloadPath,
                         contactCachePath,

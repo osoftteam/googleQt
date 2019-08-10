@@ -694,7 +694,6 @@ namespace googleQt{
         protected:
             bool m_initialized {false};
             QSqlDatabase		m_gmail_db;
-			QSqlDatabase*		m_external_contacts_db{nullptr};
 			std::unique_ptr<QSqlQuery>          m_query{ nullptr }, m_contact_query{nullptr};
             GMailCache*							m_msg_cache{ nullptr };
 			GThreadCache*						m_thread_cache{ nullptr };

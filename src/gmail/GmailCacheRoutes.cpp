@@ -349,13 +349,8 @@ bool mail_cache::GmailCacheRoutes::setupSQLiteCache(QString dbPath,
     EXPECT_STRING_VAL(dbprefix, "DB prefix");
 
     auto cc = m_endpoint.client()->gcontact()->cacheRoutes()->cache();
-	if (m_external_contacts_db) {
-		/// in case of extarnal contacts DB we don't sync data
-		cc->setEnableContactsConfigTable(false);
-	}
 
     m_lite_storage.reset(new mail_cache::GMailSQLiteStorage(m_GMsgCache.get(), m_GThreadCache.get(), cc));
-	m_lite_storage->m_external_contacts_db = m_external_contacts_db;
     cc->attachSQLStorage(m_lite_storage.get());
 	m_lite_storage->m_cache_autoload_limit = cache_autoload_limit;
     if (!m_lite_storage->init_db(dbPath, downloadPath, contactCachePath, dbName, dbprefix))
