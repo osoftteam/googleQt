@@ -11,10 +11,15 @@ namespace googleQt{
     class GdriveRoutes;
     class GcontactRoutes;
 
+    namespace gcontact {
+        class GContactCacheBase;
+    };
+
+
 class GoogleClient: public googleQt::ApiClient{
     Q_OBJECT
 public:
-    GoogleClient(googleQt::ApiAppInfo* appInfo, googleQt::ApiAuthInfo* authInfo);
+    GoogleClient(googleQt::ApiAppInfo* appInfo, googleQt::ApiAuthInfo* authInfo, gcontact::GContactCacheBase* custom_contacts_cache = nullptr);
     ~GoogleClient();
 
     /**
@@ -44,7 +49,7 @@ public:
     void          cancelAllRequests();
 
    /// return true when running query
-   bool	      isQueryInProgress()const;
+   bool       isQueryInProgress()const;
     
     /**
     * event loop functions, not needed in event-driven application,
@@ -79,12 +84,16 @@ public:
     ///methods must be used. But for debugging purpose it's ok
     Endpoint* endpoint();
     
+    gcontact::GContactCacheBase*            contacts_cache() {return m_contacts_cache;}
+
 protected:
-    std::unique_ptr<GmailRoutes>           m_gmail_routes;
-    std::unique_ptr<GtaskRoutes>           m_gtask_routes;
-    std::unique_ptr<GdriveRoutes>          m_gdrive_routes;
-    std::unique_ptr<GcontactRoutes>        m_contact_routes;
-    std::unique_ptr<Endpoint>              m_endpoint;
+    std::unique_ptr<GmailRoutes>            m_gmail_routes;
+    std::unique_ptr<GtaskRoutes>            m_gtask_routes;
+    std::unique_ptr<GdriveRoutes>           m_gdrive_routes;
+    std::unique_ptr<GcontactRoutes>         m_contact_routes;
+    std::unique_ptr<Endpoint>               m_endpoint;
+    gcontact::GContactCacheBase*            m_contacts_cache{nullptr};
+    bool                                    m_own_contacts_cache{ false };
 };
 
 };

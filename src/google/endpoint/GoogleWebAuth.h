@@ -32,10 +32,10 @@ namespace googleQt{
          */
         static bool refreshToken(const ApiAppInfo* appInfo, ApiAuthInfo* auth);
         
-		/**
-		* Create, read, update, and delete labels only.
-		*/
-		static QString authScope_gmail_labels();
+        /**
+        * Create, read, update, and delete labels only.
+        */
+        static QString authScope_gmail_labels();
         
         /**
          *  Read all resources and their metadata—no write operations.

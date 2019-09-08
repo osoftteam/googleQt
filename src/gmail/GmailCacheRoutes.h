@@ -27,11 +27,11 @@ namespace googleQt
             GmailCacheRoutes(Endpoint& endpoint, GmailRoutes& gmail_routes);
             virtual ~GmailCacheRoutes();
 
-			mail_cache::GMailCache*				mcache();
-			mail_cache::GThreadCache*			tcache();
-			mail_cache::GMailSQLiteStorage*     storage();
-            Endpoint&							endpoint() { return m_endpoint; }
-            GmailRoutes&						mroutes() { return m_gmail_routes; }
+            mail_cache::GMailCache*             mcache();
+            mail_cache::GThreadCache*           tcache();
+            mail_cache::GMailSQLiteStorage*     storage();
+            Endpoint&                           endpoint() { return m_endpoint; }
+            GmailRoutes&                        mroutes() { return m_gmail_routes; }
 
             /// init local cache table using SQlite DB, tables will have 'dbprefix' prefix
             /// file path and DB-name should be specified
@@ -41,7 +41,7 @@ namespace googleQt
                                   QString contactCachePath,
                                   QString dbName = "googleqt",
                                   QString dbprefix = "api",
-								  int cache_autoload_limit = 400);
+                                  int cache_autoload_limit = 400);
 
             /// if setupSQLiteCache was called before
             /// used to switch to a new user
@@ -138,7 +138,7 @@ namespace googleQt
             GoogleVoidTask* modifyThreadLabels_Async(thread_ptr t, const label_list& labels2add, const label_list& labels2remove);
             GoogleVoidTask* modifyThreadListLabels_Async(const thread_list& listt, const label_list& labels2add, const label_list& labels2remove);
 
-			void	clearCache();
+            void    clearCache();
 #ifdef API_QT_AUTOTEST
             void runAutotest();
             void autotestThreadDBLoad(const std::vector<HistId>& id_list);
@@ -160,11 +160,11 @@ namespace googleQt
         protected:
             Endpoint&    m_endpoint;
             GmailRoutes& m_gmail_routes;
-			std::unique_ptr<mail_cache::GMailSQLiteStorage> m_lite_storage;
-			std::unique_ptr<mail_cache::GMailCache> m_GMsgCache;
-			std::unique_ptr<mail_cache::GThreadCache> m_GThreadCache;
+            std::unique_ptr<mail_cache::GMailSQLiteStorage> m_lite_storage;
+            std::unique_ptr<mail_cache::GMailCache> m_GMsgCache;
+            std::unique_ptr<mail_cache::GThreadCache> m_GThreadCache;
             friend class GThreadCacheQueryTask;
-			friend class GmailRoutes;
+            friend class GmailRoutes;
         };
     };
 };

@@ -53,18 +53,18 @@ void ApiEndpoint::setProxy(const QNetworkProxy& proxy)
 
 bool ApiEndpoint::isQueryInProgress()const 
 {
-	return !m_replies_in_progress.empty();
+    return !m_replies_in_progress.empty();
 };
 
 void ApiEndpoint::abortRequests()
 {
-	if (!m_replies_in_progress.empty()) {
-		NET_REPLIES_IN_PROGRESS copy_of_replies = m_replies_in_progress;
-		std::for_each(copy_of_replies.begin(), copy_of_replies.end(), [](std::pair<QNetworkReply*, std::shared_ptr<FINISHED_REQ>> p)
-		{
-			p.first->abort();
-		});
-	}
+    if (!m_replies_in_progress.empty()) {
+        NET_REPLIES_IN_PROGRESS copy_of_replies = m_replies_in_progress;
+        std::for_each(copy_of_replies.begin(), copy_of_replies.end(), [](std::pair<QNetworkReply*, std::shared_ptr<FINISHED_REQ>> p)
+        {
+            p.first->abort();
+        });
+    }
 };
 
 void ApiEndpoint::cancelAll()
@@ -72,31 +72,31 @@ void ApiEndpoint::cancelAll()
 #ifdef API_QT_AUTOTEST
     ApiAutotest::INSTANCE().cancellAll();
 #endif
-	if (!m_replies_in_progress.empty()) {
-		int i = 1;
-		abortRequests();
-		for (; i < 5; i++) {
-			QEventLoop* loop = new QEventLoop;
-			QTimer::singleShot(200, [=]() {
-				loop->exit();
-			});
-			loop->exec();
-			delete loop; 
-			loop = nullptr;
-			if (m_replies_in_progress.empty())
-				break;
+    if (!m_replies_in_progress.empty()) {
+        int i = 1;
+        abortRequests();
+        for (; i < 5; i++) {
+            QEventLoop* loop = new QEventLoop;
+            QTimer::singleShot(200, [=]() {
+                loop->exit();
+            });
+            loop->exec();
+            delete loop; 
+            loop = nullptr;
+            if (m_replies_in_progress.empty())
+                break;
 
-			qWarning() << "googleQt/trying to abort network request" 
-				<< "size=" << m_replies_in_progress.size() 
-				<< "attempt=" << i;
-			abortRequests();
-		}
-	}
+            qWarning() << "googleQt/trying to abort network request" 
+                << "size=" << m_replies_in_progress.size() 
+                << "attempt=" << i;
+            abortRequests();
+        }
+    }
 
-	if (!m_replies_in_progress.empty()) {
-		qWarning() << "Warning googleQt/failed to abort network request"
-			<< "size=" << m_replies_in_progress.size();
-	}
+    if (!m_replies_in_progress.empty()) {
+        qWarning() << "Warning googleQt/failed to abort network request"
+            << "size=" << m_replies_in_progress.size();
+    }
 };
 
 void ApiEndpoint::registerReply(std::shared_ptr<requester>& rb, QNetworkReply* r, std::shared_ptr<FINISHED_REQ> finishedLambda)

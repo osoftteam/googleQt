@@ -6,6 +6,7 @@
 #include "gtask/GtaskRoutes.h"
 #include "gdrive/GdriveRoutes.h"
 #include "gcontact/GcontactRoutes.h"
+#include "gcontact/GcontactCache.h"
 
 using namespace googleQt;
 
@@ -14,20 +15,32 @@ int g__gclient_alloc_counter = 0;
 #endif
 
 GoogleClient::GoogleClient(ApiAppInfo* appInfo,
-                         ApiAuthInfo* authInfo)
+                         ApiAuthInfo* authInfo, 
+                         gcontact::GContactCacheBase* custom_contacts_cache)
     :ApiClient(appInfo, authInfo)
 {
     m_endpoint.reset(new Endpoint(this));
+    if (custom_contacts_cache) {
+        m_contacts_cache = custom_contacts_cache;
+        m_own_contacts_cache = false;
+    }
+    else {
+        m_contacts_cache = new gcontact::GContactCache(*this);
+        m_own_contacts_cache = true;
+    }
 #ifdef API_QT_AUTOTEST
-	g__gclient_alloc_counter++;
+    g__gclient_alloc_counter++;
 #endif
 };
 
 GoogleClient::~GoogleClient()
 {
 #ifdef API_QT_AUTOTEST
-	g__gclient_alloc_counter--;
+    g__gclient_alloc_counter--;
 #endif
+    if (m_own_contacts_cache) {
+        delete m_contacts_cache;
+    }
 };
 
 void GoogleClient::cancelAllRequests() 

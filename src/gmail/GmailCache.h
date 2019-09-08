@@ -13,6 +13,7 @@ namespace googleQt{
     class GmailRoutes;
 
     namespace gcontact {
+        class GContactCacheBase;
         class GContactCache;
     };
 
@@ -94,7 +95,7 @@ namespace googleQt{
         class MessageData : public CacheData
         {
         public:
-			~MessageData();
+            ~MessageData();
             void  merge(CacheData* other)override;
             
             int     accountId()const { return m_accountId;}
@@ -313,7 +314,7 @@ namespace googleQt{
         class ThreadData : public CacheDataWithHistory
         {
         public:
-			virtual ~ThreadData();
+            virtual ~ThreadData();
 
             int     messagesCount()const { return m_messages_count; }
             QString snippet()const { return m_snippet; }
@@ -468,9 +469,12 @@ namespace googleQt{
         class GMailCache : public GoogleCache<MessageData, GMailCacheQueryTask>
         {
         public:
-            GMailCache(ApiEndpoint& ept);
+            GMailCache(Endpoint& ept);
             mail_cache::mdata_result topCacheData(int number2load, uint64_t labelFilter);
             void reorder_data_on_completed_fetch(const CACHE_LIST<MessageData>& )override {}
+            Endpoint& endpoint() { return m_endpoint; }
+        protected:
+            Endpoint& m_endpoint;
         };
 
 
@@ -585,8 +589,8 @@ namespace googleQt{
         {
         public:
             GMailSQLiteStorage(GMailCache* mc,
-				GThreadCache* tc,
-                gcontact::GContactCache* cc);
+                GThreadCache* tc/*,
+                gcontact::GContactCacheBase* cc*/);
             bool init_db(QString dbPath, 
                          QString downloadPath,
                          QString contactCachePath,
@@ -642,30 +646,30 @@ namespace googleQt{
             /// returns ID of new account or -1 in case of error            
             int addAccountDb(QString userId);
 
-            GQueryStorage*		qstorage() { return m_qstorage.get(); }
-			GMailCache*			mcache() { return m_msg_cache; }
-			GThreadCache*		tcache() { return m_thread_cache; }
+            GQueryStorage*      qstorage() { return m_qstorage.get(); }
+            GMailCache*         mcache() { return m_msg_cache; }
+            GThreadCache*       tcache() { return m_thread_cache; }
 
 
             thread_ptr findThread(QString thread_id);
 
             uint64_t lastHistoryId()const { return m_lastHistoryId; }
-			int		autoloadLimit()const {return m_cache_autoload_limit;}
+            int     autoloadLimit()const {return m_cache_autoload_limit;}
 
         protected:
             QString metaPrefix()const { return m_metaPrefix; }
             bool execQuery(QString sql);
-			bool execContactQuery(QString sql);
-			            
+            bool execContactQuery(QString sql);
+                        
             QSqlQuery* selectQuery(QString sql);
-			QSqlQuery* selectContactQuery(QString sql);
-			QSqlQuery* prepareQuery(QString sql);
-			QSqlQuery* prepareContactQuery(QString sql);
-			
+            QSqlQuery* selectContactQuery(QString sql);
+            QSqlQuery* prepareQuery(QString sql);
+            QSqlQuery* prepareContactQuery(QString sql);
+            
             QString lastSqlError()const;
 
-			QSqlQuery* doPrepareQuery(std::unique_ptr<QSqlQuery>& q, QString sql);
-			bool doExecQuery(std::unique_ptr<QSqlQuery>& q, QString sql);
+            QSqlQuery* doPrepareQuery(std::unique_ptr<QSqlQuery>& q, QString sql);
+            bool doExecQuery(std::unique_ptr<QSqlQuery>& q, QString sql);
 
             QSqlQuery* startTransaction(QString sql);
             bool startTransaction();
@@ -693,14 +697,14 @@ namespace googleQt{
             bool ensureMailTables();            
         protected:
             bool m_initialized {false};
-            QSqlDatabase		m_gmail_db;
-			std::unique_ptr<QSqlQuery>          m_query{ nullptr }, m_contact_query{nullptr};
-            GMailCache*							m_msg_cache{ nullptr };
-			GThreadCache*						m_thread_cache{ nullptr };
+            QSqlDatabase        m_gmail_db;
+            std::unique_ptr<QSqlQuery>          m_query{ nullptr }, m_contact_query{nullptr};
+            GMailCache*                         m_msg_cache{ nullptr };
+            GThreadCache*                       m_thread_cache{ nullptr };
             std::unique_ptr<GMessagesStorage>   m_mstorage;
             std::unique_ptr<GThreadsStorage>    m_tstorage;
             std::unique_ptr<GQueryStorage>      m_qstorage;
-            gcontact::GContactCache*			m_contact_cache{ nullptr };
+            //gcontact::GContactCacheBase*      m_contact_cache{ nullptr };
             std::map<QString, std::shared_ptr<LabelData>, CaseInsensitiveLess> m_acc_labels;
             std::vector<std::shared_ptr<LabelData>> m_maskbase2label;
             std::set<int> m_avail_label_base;
@@ -713,7 +717,7 @@ namespace googleQt{
             QString m_dbName;
             QString m_metaPrefix;
             int     m_accId{-1};
-			int		m_cache_autoload_limit{1000};
+            int     m_cache_autoload_limit{1000};
             uint64_t    m_lastHistoryId;///last valid history id
             friend class googleQt::mail_cache::GmailCacheRoutes;
             friend class googleQt::gcontact::GContactCache;
