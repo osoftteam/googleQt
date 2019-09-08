@@ -5,6 +5,7 @@
 
 namespace googleQt {
     class GcontactRoutes;
+    class GoogleClient;
 
     namespace mail_cache {
         class GMailSQLiteStorage;
@@ -316,15 +317,17 @@ namespace googleQt {
         class GContactCacheBase
         {
         public:
-            GContactCacheBase(QString userid);
+            GContactCacheBase(/*QString userid*/);
             virtual ~GContactCacheBase(){}
             
-			virtual QString		metaPrefix()const = 0;
-			virtual int			accountId()const = 0;
-			virtual QSqlQuery*	prepareContactQuery(QString sql) = 0;
-			virtual bool		execContactQuery(QString sql) = 0;
-			virtual QSqlQuery*	selectContactQuery(QString sql) = 0;
-			virtual QString		contactCacheDir()const = 0;
+            virtual QString     metaPrefix()const = 0;          
+            virtual QSqlQuery*  prepareContactQuery(QString sql) = 0;
+            virtual bool        execContactQuery(QString sql) = 0;
+            virtual QSqlQuery*  selectContactQuery(QString sql) = 0;
+            virtual QString     contactCacheDir()const = 0;
+            virtual QString     accountEmail()const = 0;
+
+            virtual void attachSQLStorage(mail_cache::GMailSQLiteStorage* ) {};
 
             ContactList& contacts() { return m_contacts; }
             const ContactList& contacts()const { return m_contacts; }
@@ -342,9 +345,8 @@ namespace googleQt {
             QString getPhotoMediaPath(QString contactId, bool ensurePath = false)const;
             bool addPhoto(ContactInfo::ptr c, QString photoFileName);
 
-			void setEnableContactsConfigTable(bool val) { m_enable_contacts_config_table = val;}
-			bool ensureContactTables();
-
+            void setEnableContactsConfigTable(bool val) { m_enable_contacts_config_table = val;}
+            bool ensureContactTables();         
         protected:
             bool storeContactGroups();
             bool storeContactEntries();
@@ -359,27 +361,28 @@ namespace googleQt {
             ContactList m_contacts;
             GroupList m_groups;
             std::map<QString, QString> m_configs;
-            QDateTime		m_sync_time;
-			QString			m_userid;
-			bool			m_enable_contacts_config_table{true};
+            QDateTime       m_sync_time;
+            //QString           m_userid;
+            bool            m_enable_contacts_config_table{true};
         };
 
-		class GContactCache: public GContactCacheBase
-		{
-		public:
-			GContactCache(QString userid);
-			virtual QString metaPrefix()const override;
-			virtual int		accountId()const override;
-			QSqlQuery*	prepareContactQuery(QString sql) override;
-			bool		execContactQuery(QString sql)override;
-			QSqlQuery*	selectContactQuery(QString sql)override;
-			QString		contactCacheDir()const override;
-
-			void attachSQLStorage(mail_cache::GMailSQLiteStorage* ss);
-		protected:
-			mail_cache::GMailSQLiteStorage* m_sql_storage{ nullptr };
-			friend class GcontactCacheRoutes;
-		};
+        class GContactCache: public GContactCacheBase
+        {
+        public:
+            GContactCache(googleQt::GoogleClient& gc);
+            virtual QString metaPrefix()const override;
+            QSqlQuery*  prepareContactQuery(QString sql) override;
+            bool        execContactQuery(QString sql)override;
+            QSqlQuery*  selectContactQuery(QString sql)override;
+            QString     contactCacheDir()const override;
+            virtual QString     accountEmail()const override;
+            void attachSQLStorage(mail_cache::GMailSQLiteStorage* ss)override;
+            mail_cache::GMailSQLiteStorage* sql_storage() { return m_sql_storage; };
+        protected:
+            GoogleClient& m_gc;
+            mail_cache::GMailSQLiteStorage* m_sql_storage{ nullptr };
+            friend class GcontactCacheRoutes;
+        };
 
         class GcontactCacheSyncTask : public GoogleVoidTask 
         {
@@ -418,7 +421,7 @@ namespace googleQt {
         public:
             GcontactCacheRoutes(googleQt::Endpoint& endpoint, GcontactRoutes& gcontact_routes);
 
-			GContactCache*			cache() { return m_GContactsCache.get(); }
+            //GContactCacheBase*        contacts_cache() { return m_GContactsCache.get(); }
 
             GcontactCacheSyncTask*  synchronizeContacts_Async();
             PhotoSyncTask*          synchronizePhotos_Async();
@@ -430,11 +433,10 @@ namespace googleQt {
         protected:
             void reloadCache_Async(GcontactCacheSyncTask* rv, QDateTime dtUpdatedMin);
             void applyLocalContacEntriesModifications_Async(GcontactCacheSyncTask* rv);
-            // void applyLocalGroupModifications_Async(GcontactCacheSyncTask* rv);
         protected:
-            Endpoint&						m_endpoint;
-            GcontactRoutes&					m_c_routes;
-			std::unique_ptr<GContactCache>  m_GContactsCache;
+            Endpoint&                       m_endpoint;
+            GcontactRoutes&                 m_c_routes;
+            //std::unique_ptr<GContactCacheBase>  m_GContactsCache;
 
         private:
             class PhotoListTask : public GoogleVoidTask

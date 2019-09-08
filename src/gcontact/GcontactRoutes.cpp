@@ -1,7 +1,8 @@
 #include "GcontactRoutes.h"
 using namespace googleQt;
 
-GcontactRoutes::GcontactRoutes(Endpoint& e):m_endpoint(e)
+GcontactRoutes::GcontactRoutes(Endpoint& e/*, gcontact::GContactCacheBase* cb*/)
+    :m_endpoint(e)//, m_contacts_cache(cb)
 {
     
 };

@@ -60,8 +60,8 @@ int main(int argc, char *argv[])
 
     demo::ApiListener lsn;
     //std::unique_ptr<GoogleClient > c(new GoogleClient(appInfo.release(), authInfo.release()));
-	GoogleClient* c = new GoogleClient(appInfo.release(), authInfo.release());
-    QObject::connect(c, &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);	
+    GoogleClient* c = new GoogleClient(appInfo.release(), authInfo.release());
+    QObject::connect(c, &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);   
     DECLARE_AUTOTEST_INSTANCE(c, "autotest-res.txt");
 
     /// setup DB-cache ///
@@ -125,8 +125,8 @@ int main(int argc, char *argv[])
     t.addAction("base64url_decode",   "Base64Url decode data", [&](QString arg) {cmd.base64url_decode(arg); });
     
     t.start();
-	delete c;
-	std::cout << "press ENTER to exit" << std::endl;
-	std::cin.ignore();
+    delete c;
+    std::cout << "press ENTER to exit" << std::endl;
+    std::cin.ignore();
     return 0;
 }

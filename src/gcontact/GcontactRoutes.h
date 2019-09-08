@@ -11,12 +11,13 @@ namespace googleQt
 
     namespace gcontact {
         class GcontactCacheRoutes;
+        class GContactCacheBase;
     };
 
     class GcontactRoutes {
     public:
 
-        GcontactRoutes(Endpoint&);
+        GcontactRoutes(Endpoint&/*, gcontact::GContactCacheBase**/);
         Endpoint& endpoint() { return m_endpoint; }
 
         contacts::ContactsRoutes* getContacts();
@@ -34,6 +35,7 @@ namespace googleQt
         std::unique_ptr<contacts::ContactsRoutes> m_contacts;
         std::unique_ptr<contact_group::ContactGroupRoutes> m_contact_group;
         std::unique_ptr<googleQt::gcontact::GcontactCacheRoutes>    m_CacheRoutes;
+        //gcontact::GContactCacheBase* m_contacts_cache{nullptr};
     };  
 };//googleQt
 
