@@ -81,6 +81,9 @@ namespace googleQt {
             bool isIdLimbo()const { return (m_status == localIdLimbo); }
             bool isCreatedLocally()const { return m_id.isEmpty(); }
 
+			bool isRepoSyncCompleted()const;
+			void setRepoSyncCompleted(bool val);
+
             QString  parsedXml()const { return m_parsed_xml; }
 
             bool parseXml(const QByteArray & data);
@@ -110,11 +113,23 @@ namespace googleQt {
 
             QString             m_etag, m_id, m_title, m_content;
             QDateTime           m_updated;
-            //            QString             m_original_xml_string;
             QString             m_parsed_xml;
             EStatus             m_status;
+			bool				m_repo_sync_completed{ false };
             mutable void*       m_user_ptr{ nullptr };            
         };//ContactXmlPersistant
+
+		struct ReplicaSyncResult 
+		{
+			int updated_local{ 0 };
+			int updated_remote{ 0 };
+		};
+
+		struct ContactsReplicaSyncResult 
+		{
+			ReplicaSyncResult groups;
+			ReplicaSyncResult contacts;
+		};
 
         /**
             collection of 'parts' - emails, phones, addresses, etc.
@@ -434,6 +449,80 @@ namespace googleQt {
                 return rv;
             }
 
+			ReplicaSyncResult synchronize2ReplicaLists(InfoList<T>& localList, InfoList<T>& remoteList) {
+				ReplicaSyncResult rv;
+
+				for (auto g_local : localList.m_items) {
+					if (g_local->id().isEmpty()) {
+						qWarning() << "expected valid object ID to synchronize" << localList.items().size() << remoteList.items().size();
+						continue;
+					}
+					auto g_remote = remoteList.findById(g_local->id());
+					if (!g_remote) {
+						if (!g_local->isRemoved() && !g_local->isRetired()) {
+							///clone
+							auto g2 = g_local->clone();
+							remoteList.add(g2);
+							g_local->setRepoSyncCompleted(true);
+							g2->setRepoSyncCompleted(true);
+							rv.updated_remote++;
+						}
+					}
+					else {
+						if (g_remote->isModified()) {
+							g_local->assignContent(*g_remote);
+							g_local->setRepoSyncCompleted(true);
+							g_remote->setRepoSyncCompleted(true);
+							rv.updated_local++;
+						}
+						else if (g_remote->isRemoved()) {
+							if (!g_local->isModified()) {
+								g_local->markAsDeleted();
+								g_local->setRepoSyncCompleted(true);
+								g_remote->setRepoSyncCompleted(true);
+								rv.updated_local++;
+							}
+						}
+
+						if (!g_local->isRepoSyncCompleted()) {
+							if (g_local->isModified()) {
+								g_remote->assignContent(*g_local);
+								g_local->setRepoSyncCompleted(true);
+								g_remote->setRepoSyncCompleted(true);
+								rv.updated_remote++;
+							}
+							else if (g_local->isRemoved()) {
+								if (!g_remote->isModified()) {
+									g_remote->markAsDeleted();
+									g_local->setRepoSyncCompleted(true);
+									g_remote->setRepoSyncCompleted(true);
+									rv.updated_remote++;
+								}
+							}
+						}
+					}
+				}//for
+				return rv;
+			};
+
+			ReplicaSyncResult synchronizeReplica(InfoList<T>& remoteList) {
+				ReplicaSyncResult rv;
+
+				for (auto& o : m_items) {
+					o->setRepoSyncCompleted(false);
+				}
+				for (auto& o : remoteList.m_items) {
+					o->setRepoSyncCompleted(false);
+				}
+
+				auto r1 = synchronize2ReplicaLists(*this, remoteList);
+				auto r2 = synchronize2ReplicaLists(remoteList, *this);
+
+				rv.updated_local = r1.updated_local + r2.updated_remote;
+				rv.updated_remote = r1.updated_remote + r2.updated_local;
+
+				return rv;
+			}
         protected:
             std::vector<std::shared_ptr<T>> m_items;
             std::map<QString, std::shared_ptr<T>> m_id2item;

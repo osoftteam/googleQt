@@ -192,7 +192,7 @@ mail_cache::MessageData::MessageData(int accId,
 {
     m_labels = labels;
 #ifdef API_QT_AUTOTEST
-    g__msg_alloc_counter++;
+	g__msg_alloc_counter++;
 #endif
 };
 
@@ -226,7 +226,7 @@ mail_cache::MessageData::MessageData(int accId,
 {
     m_labels = labels;
 #ifdef API_QT_AUTOTEST
-    g__msg_alloc_counter++;
+	g__msg_alloc_counter++;
 #endif
 };
 
@@ -262,7 +262,7 @@ m_accountId(accId),
     m_flags.agg_state = static_cast<unsigned int>(agg_state);
     m_labels = labels;
 #ifdef API_QT_AUTOTEST
-    g__msg_alloc_counter++;
+	g__msg_alloc_counter++;
 #endif
 };
 
@@ -277,14 +277,14 @@ mail_cache::MessageData::MessageData(int accId,
     m_flags.agg_state = 0;
     m_labels = labels;
 #ifdef API_QT_AUTOTEST
-    g__msg_alloc_counter++;
+	g__msg_alloc_counter++;
 #endif
 };
 
 mail_cache::MessageData::~MessageData()
 {
 #ifdef API_QT_AUTOTEST
-    g__msg_alloc_counter--;
+	g__msg_alloc_counter--;
 #endif
 };
 
@@ -522,15 +522,15 @@ mail_cache::ThreadData::ThreadData(QString id,
     m_snippet(snippet),
     m_labels(lbmap)
 {
-#ifdef API_QT_AUTOTEST  
-    g__thread_alloc_counter++;
+#ifdef API_QT_AUTOTEST	
+	g__thread_alloc_counter++;
 #endif
 };
 
 mail_cache::ThreadData::~ThreadData() 
 {
 #ifdef API_QT_AUTOTEST
-    g__thread_alloc_counter--;
+	g__thread_alloc_counter--;
 #endif
 };
 
@@ -1039,8 +1039,8 @@ void mail_cache::GThreadCacheQueryTask::notifyOnCompletedFromCache()
 
 ///GMailSQLiteStorage
 mail_cache::GMailSQLiteStorage::GMailSQLiteStorage(GMailCache* mc,
-    GThreadCache* tc/*,
-    gcontact::GContactCacheBase* cc*/)
+	GThreadCache* tc/*,
+	gcontact::GContactCacheBase* cc*/)
 {
     m_msg_cache = mc;
     m_thread_cache = tc;
@@ -1173,9 +1173,9 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
                                              QString db_meta_prefix)
 {
     m_accId = -1;
-    if (!m_msg_cache) {
-        return false;
-    }   
+	if (!m_msg_cache) {
+		return false;
+	}	
 
     if (!m_thread_cache) {
         return false;
@@ -1214,15 +1214,15 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
 
     m_initialized = false;  
 
-    m_gmail_db = QSqlDatabase::addDatabase("QSQLITE", dbName);
-    m_gmail_db.setDatabaseName(dbPath);
+	m_gmail_db = QSqlDatabase::addDatabase("QSQLITE", dbName);
+	m_gmail_db.setDatabaseName(dbPath);
     if (!m_gmail_db.open()) {
         qWarning() << "ERROR. Failed to connect" << dbName << dbPath;
         return false;
     }
 
     m_query.reset(new QSqlQuery(m_gmail_db));
-    m_contact_query.reset(new QSqlQuery(m_gmail_db));
+	m_contact_query.reset(new QSqlQuery(m_gmail_db));
 
     if (!ensureMailTables()) {
         qWarning() << "ERROR. Failed to create GMail cache tables" << dbName << dbPath;
@@ -1230,7 +1230,7 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
     }
 
     //auto cc = m_contact_cache.lock();
-    auto cc = m_msg_cache->endpoint().client()->contacts_cache();
+	auto cc = m_msg_cache->endpoint().client()->contacts_cache();
     if (!cc) {
         qWarning() << "ERROR. Expected GContact cache. Failed to init Gcontact cache tables" << dbName << dbPath;
         return false;
@@ -1291,8 +1291,8 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
         return false;
     };
 
-    m_msg_cache->setupLocalStorage(m_mstorage.get());
-    m_thread_cache->setupLocalStorage(m_tstorage.get());
+	m_msg_cache->setupLocalStorage(m_mstorage.get());
+	m_thread_cache->setupLocalStorage(m_tstorage.get());
     
     m_tstorage->verifyThreads();
 
@@ -1303,9 +1303,9 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
 void mail_cache::GMailSQLiteStorage::close_db() 
 {
     if (m_gmail_db.isOpen()) {
-        auto name = m_gmail_db.connectionName();
-        m_gmail_db.close();
-        QSqlDatabase::removeDatabase(name);
+		auto name = m_gmail_db.connectionName();
+		m_gmail_db.close();
+		QSqlDatabase::removeDatabase(name);
     }
     m_initialized = false;
 };
@@ -2170,36 +2170,36 @@ void mail_cache::GMailSQLiteStorage::update_attachment_local_file_db(googleQt::m
 
 bool mail_cache::GMailSQLiteStorage::doExecQuery(std::unique_ptr<QSqlQuery>& q, QString sql) 
 {
-    if (!q) {
-        qWarning() << "ERROR. Expected internal query";
-        return false;
-    }
+	if (!q) {
+		qWarning() << "ERROR. Expected internal query";
+		return false;
+	}
 
-    if (!q->prepare(sql)) {
-        QString error = q->lastError().text();
-        qWarning() << "ERROR. Failed to prepare sql query"
-            << error
-            << sql;
-        return false;
-    };
-    if (!q->exec(sql)) {
-        QString error = q->lastError().text();
-        qWarning() << "ERROR. Failed to execute query"
-            << error
-            << sql;
-        return false;
-    }
-    return true;
+	if (!q->prepare(sql)) {
+		QString error = q->lastError().text();
+		qWarning() << "ERROR. Failed to prepare sql query"
+			<< error
+			<< sql;
+		return false;
+	};
+	if (!q->exec(sql)) {
+		QString error = q->lastError().text();
+		qWarning() << "ERROR. Failed to execute query"
+			<< error
+			<< sql;
+		return false;
+	}
+	return true;
 };
 
 bool mail_cache::GMailSQLiteStorage::execQuery(QString sql)
 {
-    return doExecQuery(m_query, sql);
+	return doExecQuery(m_query, sql);
 };
 
 bool mail_cache::GMailSQLiteStorage::execContactQuery(QString sql)
 {
-    return doExecQuery(m_contact_query, sql);
+	return doExecQuery(m_contact_query, sql);
 }
 
 QSqlQuery* mail_cache::GMailSQLiteStorage::startTransaction(QString sql) 
@@ -2231,18 +2231,18 @@ bool mail_cache::GMailSQLiteStorage::commitTransaction()
 
 QSqlQuery* mail_cache::GMailSQLiteStorage::doPrepareQuery(std::unique_ptr<QSqlQuery>& q, QString sql)
 {
-    if (!q)
-    {
-        qWarning() << "ERROR. Expected internal query";
-        return nullptr;
-    }
-    if (!q->prepare(sql))
-    {
-        QString error = q->lastError().text();
-        qWarning() << "ERROR. Failed to prepare sql query" << error << sql;
-        return nullptr;
-    };
-    return q.get();
+	if (!q)
+	{
+		qWarning() << "ERROR. Expected internal query";
+		return nullptr;
+	}
+	if (!q->prepare(sql))
+	{
+		QString error = q->lastError().text();
+		qWarning() << "ERROR. Failed to prepare sql query" << error << sql;
+		return nullptr;
+	};
+	return q.get();
 };
 
 QSqlQuery* mail_cache::GMailSQLiteStorage::prepareQuery(QString sql)
@@ -2252,7 +2252,7 @@ QSqlQuery* mail_cache::GMailSQLiteStorage::prepareQuery(QString sql)
 
 QSqlQuery* mail_cache::GMailSQLiteStorage::prepareContactQuery(QString sql)
 {
-    return doPrepareQuery(m_contact_query, sql);
+	return doPrepareQuery(m_contact_query, sql);
 };
 
 QSqlQuery* mail_cache::GMailSQLiteStorage::selectQuery(QString sql)
@@ -2270,15 +2270,15 @@ QSqlQuery* mail_cache::GMailSQLiteStorage::selectQuery(QString sql)
 
 QSqlQuery* mail_cache::GMailSQLiteStorage::selectContactQuery(QString sql)
 {
-    QSqlQuery* q = prepareContactQuery(sql);
-    if (!q)return nullptr;
-    if (!q->exec(sql))
-    {
-        QString error = q->lastError().text();
-        qWarning() << "ERROR. Failed to execute contact query" << error << sql;
-        return nullptr;
-    };
-    return q;
+	QSqlQuery* q = prepareContactQuery(sql);
+	if (!q)return nullptr;
+	if (!q->exec(sql))
+	{
+		QString error = q->lastError().text();
+		qWarning() << "ERROR. Failed to execute contact query" << error << sql;
+		return nullptr;
+	};
+	return q;
 };
 
 QString mail_cache::GMailSQLiteStorage::lastSqlError()const 
@@ -2719,7 +2719,7 @@ bool mail_cache::GMessagesStorage::isValid()const
 
 bool mail_cache::GMessagesStorage::loadMessagesFromDb()
 {
-    auto cache = m_storage->mcache();
+	auto cache = m_storage->mcache();
     if (!cache) {
         return false;
     }
@@ -2728,11 +2728,11 @@ bool mail_cache::GMessagesStorage::loadMessagesFromDb()
 
     QString sql = QString("SELECT msg_state, msg_id, thread_id, msg_from, msg_to, msg_cc, msg_bcc, "
         "msg_subject, msg_snippet, msg_plain, msg_html, internal_date, msg_labels, msg_references FROM %1gmail_msg WHERE acc_id=%2 AND "
-        "thread_id IN(SELECT thread_id FROM %1gmail_thread WHERE acc_id=%2 AND thread_id IN(SELECT thread_id FROM %1gmail_msg WHERE acc_id=%2) ORDER BY internal_date DESC LIMIT %3) "
-        "ORDER BY thread_id, internal_date DESC")
+		"thread_id IN(SELECT thread_id FROM %1gmail_thread WHERE acc_id=%2 AND thread_id IN(SELECT thread_id FROM %1gmail_msg WHERE acc_id=%2) ORDER BY internal_date DESC LIMIT %3) "
+		"ORDER BY thread_id, internal_date DESC")
         .arg(m_storage->metaPrefix())
         .arg(m_storage->currentAccountId())
-        .arg(m_storage->autoloadLimit());
+		.arg(m_storage->autoloadLimit());
     QSqlQuery* q = m_storage->selectQuery(sql);
     if (!q)
         return false;
@@ -2759,10 +2759,10 @@ bool mail_cache::GMessagesStorage::loadMessagesFromDb()
                     qWarning() << "lost thread in DB" << thread_id << "for message" << q->value(1).toString();
                 }
             }//thread_id
-        }   
+        }	
 
 #ifdef API_QT_AUTOTEST
-    qDebug() << QString("loadMessagesFromDb/DB-loaded %1 records, mem-cache-size: %2").arg(loaded_objects).arg(cache->mem_size());
+	qDebug() << QString("loadMessagesFromDb/DB-loaded %1 records, mem-cache-size: %2").arg(loaded_objects).arg(cache->mem_size());
     ApiAutotest::INSTANCE() << QString("messages/DB-loaded %1 records, mem-cache-size: %2")
         .arg(loaded_objects).arg(cache->mem_size());
 #endif
@@ -2853,7 +2853,7 @@ bool mail_cache::GThreadsStorage::loadThreadsFromDb()
         "WHERE acc_id=%2 AND thread_id IN(SELECT thread_id FROM %1gmail_msg WHERE acc_id=%2) ORDER BY internal_date DESC LIMIT %3")
         .arg(m_storage->metaPrefix())
         .arg(m_storage->currentAccountId())
-        .arg(m_storage->autoloadLimit());
+		.arg(m_storage->autoloadLimit());
     QSqlQuery* q = m_storage->selectQuery(sql);
     if (!q)
         return false;
@@ -2866,10 +2866,10 @@ bool mail_cache::GThreadsStorage::loadThreadsFromDb()
             continue;
         cache->mem_insert(td->id(), td);
         loaded_objects++;
-    }   
+    }	
 
 #ifdef API_QT_AUTOTEST
-    qDebug() << QString("loadThreadsFromDb/DB-loaded %1 records, mem-cache-size: %2").arg(loaded_objects).arg(cache->mem_size());
+	qDebug() << QString("loadThreadsFromDb/DB-loaded %1 records, mem-cache-size: %2").arg(loaded_objects).arg(cache->mem_size());
     ApiAutotest::INSTANCE() << QString("threads/DB-loaded %1 records, mem-cache-size: %2")
         .arg(loaded_objects).arg(cache->mem_size());
 #endif
@@ -3018,7 +3018,7 @@ bool mail_cache::GThreadsStorage::updateDbInBatch(CACHE_LIST<ThreadData>& r)
         if (!q->execBatch())
         {
             m_storage->rollbackTransaction();
-            qWarning() << "ERROR. SQL thread/insert batch failed"
+            qWarning() << "ERROR. SQL update/insert batch failed"
                 << "err-type:" << q->lastError().type()
                 << "native-code:" << q->lastError().nativeErrorCode()
                 << "errtext:" << q->lastError().text();
