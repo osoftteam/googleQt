@@ -38,13 +38,11 @@ namespace googleQt {
         virtual bool    isLoaded(EDataState st)const;
         virtual void    merge(CacheData* other) = 0;
         QString         id()const { return m_id; }
-        int             aggState()const;// { return m_state_agg; }
+        int             aggState()const;
         bool            hasDbRecord()const;
         void            markDbRecord();
-        /// userPtr - custom user data pointer
-        void*           userPtr()const {return m_user_ptr;}
-        void            setUserPtr(void* p)const { m_user_ptr = p; }
-        
+        bool            userFlag1()const;
+        void            setUserFlag1(bool val);
     protected:
         union STATE
         {
@@ -53,10 +51,10 @@ namespace googleQt {
             {
                 unsigned agg_state : 4;
                 unsigned has_db_record : 1;
+                unsigned user_flag1 : 1;
             };
         } m_flags;
         QString        m_id;
-        mutable void*  m_user_ptr{nullptr};
     };
 
     class CacheDataWithHistory: public CacheData

@@ -286,9 +286,6 @@ namespace googleQt{
             bool        isSocialCategory()const;
             bool        isPersonalCategory()const;
             
-        /// userPtr - custom user data pointer
-      void*         userPtr()const {return m_user_ptr;}
-      void          setUserPtr(void* p)const { m_user_ptr = p; }
         protected:
             QString     m_label_id;
             QString     m_label_name;
@@ -296,7 +293,6 @@ namespace googleQt{
             uint64_t    m_label_mask;
             bool        m_is_system_label;
             uint64_t    m_unread_messages;
-        mutable void*  m_user_ptr{nullptr};
         private:
             LabelData(QString id,
                       QString name,
@@ -516,6 +512,7 @@ namespace googleQt{
         protected:
             GMailSQLiteStorage*     m_storage;
             friend class GMailSQLiteStorage;
+			friend class GThreadsStorage;
         };
 
 
@@ -531,6 +528,7 @@ namespace googleQt{
         protected:
             std::shared_ptr<ThreadData> loadThread(QSqlQuery* q);
             bool loadThreadsFromDb();
+            thread_arr loadThreadsByIdsFromDb(const std::vector<QString>& thread_ids);
             ///remove empty threads - without any messages
             void verifyThreads();
 
@@ -589,8 +587,7 @@ namespace googleQt{
         {
         public:
             GMailSQLiteStorage(GMailCache* mc,
-                GThreadCache* tc/*,
-                gcontact::GContactCacheBase* cc*/);
+                GThreadCache* tc);
             bool init_db(QString dbPath, 
                          QString downloadPath,
                          QString contactCachePath,
@@ -617,6 +614,7 @@ namespace googleQt{
                                                  QString file_name);
             /// load label info by set of label IDs, if null return all available labels
             std::vector<mail_cache::label_ptr> getLabelsInSet(std::set<QString>* in_optional_idset = nullptr);
+			thread_arr loadThreadsByIdsFromDb(const std::vector<QString>& thread_ids);
 
             uint64_t packLabels(const std::vector<QString>& labels);
             std::vector<mail_cache::label_ptr> unpackLabels(const uint64_t& data)const;

@@ -99,10 +99,6 @@ namespace googleQt {
             static EStatus validatedStatus(int val, bool* ok = nullptr);            
             static QString status2string(EStatus status);
 
-            /// userPtr - custom user data pointer
-            void* userPtr()const { return m_user_ptr; }
-            void  setUserPtr(void* p)const { m_user_ptr = p; }
-
             static void printXmlParseError(QString contextMsg,
                                             const QByteArray & data,
                                             QString errorMsg,
@@ -116,7 +112,6 @@ namespace googleQt {
             QString             m_parsed_xml;
             EStatus             m_status;
 			bool				m_repo_sync_completed{ false };
-            mutable void*       m_user_ptr{ nullptr };            
         };//ContactXmlPersistant
 
 		struct ReplicaSyncResult 

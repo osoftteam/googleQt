@@ -32,6 +32,16 @@ void googleQt::CacheData::markDbRecord()
     m_flags.has_db_record = 1;
 };
 
+bool googleQt::CacheData::userFlag1()const
+{
+    return (m_flags.user_flag1 == 1 ? true : false);
+};
+
+void googleQt::CacheData::setUserFlag1(bool val)
+{
+    m_flags.user_flag1 = val ? 1 : 0;
+};
+
 ///CacheDataWithHistory
 googleQt::CacheDataWithHistory::CacheDataWithHistory(QString id, quint64 hid) 
     :CacheData(EDataState::snippet, id),
