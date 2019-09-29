@@ -5,7 +5,7 @@
 
 #ifdef API_QT_AUTOTEST
 #include "ApiAutotest.h"
-#define LOG_REQUEST     ApiAutotest::INSTANCE().logRequest(m_last_req_info);
+#define LOG_REQUEST     ApiAutotest::INSTANCE().logRequest(lastRequestInfo().request);
 #endif
 
 #ifdef API_QT_DIAGNOSTICS
@@ -25,9 +25,6 @@ using namespace googleQt;
 
 ApiEndpoint::ApiEndpoint(ApiClient* c):m_client(c)
 {
-#ifndef API_QT_DIAGNOSTICS
-    m_last_req_info = "WARNING: last_req_info is not available because googleQt lib was compiled without API_QT_DIAGNOSTICS tracing option.";
-#endif
 }
 
 ApiEndpoint::~ApiEndpoint() 
@@ -134,10 +131,45 @@ void ApiEndpoint::unregisterReply(QNetworkReply* r)
     r->deleteLater();
 };
 
+DiagnosticRequestInfo ApiEndpoint::lastRequestInfo()const
+{
+#ifdef API_QT_DIAGNOSTICS
+	if (!m_requests.empty()) {
+		auto i = m_requests.rbegin();
+		return *i;
+	}
+	DiagnosticRequestInfo r;
+	return r;
+#else
+	DiagnosticRequestInfo r;
+	r.tag = "";
+	r.request = "last_req_info is not available because googleQt lib was compiled without API_QT_DIAGNOSTICS tracing option.";
+	return r;
+#endif//API_QT_DIAGNOSTICS
+};
+
+const DGN_LIST&	ApiEndpoint::diagnosticRequests()const 
+{
+	return m_requests;
+};
+
+void ApiEndpoint::diagnosticClearRequestsList() 
+{
+	m_requests.clear();
+};
 
 void ApiEndpoint::updateLastRequestInfo(QString s)
 {
-    m_last_req_info = s;
+#ifdef API_QT_DIAGNOSTICS
+	DiagnosticRequestInfo r;
+	r.tag = m_diagnosticsRequestTag;
+	r.context = m_diagnosticsRequestContext;
+	r.request = s;
+	m_requests.push_back(r);
+	if (m_requests.size() > 512) {
+		m_requests.erase(m_requests.begin(), m_requests.begin() + 256);
+	}
+#endif //API_QT_DIAGNOSTICS
 };
 
 QNetworkReply* ApiEndpoint::getData(const QNetworkRequest &req)

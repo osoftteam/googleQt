@@ -55,7 +55,7 @@ bool GoogleClient::isQueryInProgress()const
 
 QString GoogleClient::lastApiCall()
 {
-    return m_endpoint->lastRequestInfo();
+    return m_endpoint->lastRequestInfo().request;
 }
 
 void GoogleClient::runEventsLoop()const

@@ -105,6 +105,9 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheMessages_
     {
         rfetcher = newMessageResultFetcher(state);
     }
+#ifdef API_QT_DIAGNOSTICS
+	endpoint().diagnosticSetRequestTag(QString("getCacheMessages_Async[%1]").arg(id_list.size()));
+#endif
     m_GMsgCache->query_Async(state, id_list, rfetcher);
     return rfetcher;
 };
@@ -265,7 +268,9 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
             p->setMaximum(0, QString("query gmail q='%1' l='%2'").arg(q->qStr()).arg(q->labelid()));
         }
     }
-
+#ifdef API_QT_DIAGNOSTICS
+	endpoint().diagnosticSetRequestTag(QString("getQCache_Async/threads->list_Async[%1][%2]").arg(q->labelid()).arg(q->qStr()));
+#endif
     ///this will return list of thread Ids with HistoryId
     m_gmail_routes.getThreads()->list_Async(listArg)->then([=](std::unique_ptr<threads::ThreadListRes> tlist)
     {
@@ -325,6 +330,9 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheThreadL
     const std::vector<HistId>& id_list,
     mail_cache::GThreadCacheQueryTask* rfetcher /*= nullptr*/)
 {
+#ifdef API_QT_DIAGNOSTICS
+	endpoint().diagnosticSetRequestTag(QString("getCacheThreadList_Async[%1]").arg(id_list.size()));
+#endif
     if (!rfetcher)
     {
         rfetcher = newThreadResultFetcher();
@@ -602,6 +610,9 @@ GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setLabel_As
     bool label_on,
     bool system_label)
 {
+#ifdef API_QT_DIAGNOSTICS
+	endpoint().diagnosticSetRequestTag(QString("setLabel_Async[%1]").arg(label_id));
+#endif
     int accId = -1;
     if (m_lite_storage) {
         accId = d->accountId();

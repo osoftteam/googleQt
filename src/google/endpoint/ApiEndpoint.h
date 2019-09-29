@@ -12,9 +12,28 @@
 #include "ApiException.h"
 #include "ApiClient.h"
 
+#ifdef API_QT_AUTOTEST
+	#ifndef API_QT_DIAGNOSTICS
+		#define API_QT_DIAGNOSTICS
+	#endif
+#else
+	///this is optional for real application
+	#ifndef API_QT_DIAGNOSTICS
+		#define API_QT_DIAGNOSTICS
+	#endif
+#endif
+
 #define TIMES_TO_REFRESH_TOKEN_BEFORE_GIVEUP 2
 
 namespace googleQt{
+	struct DiagnosticRequestInfo
+	{
+		QString context;
+		QString tag;
+		QString request;
+	};
+	using DGN_LIST = std::vector<DiagnosticRequestInfo>;
+
     class ApiEndpoint
     {
     public:
@@ -25,7 +44,11 @@ namespace googleQt{
         void          exitEventsLoop()const;
         bool          isQueryInProgress()const;
 
-        QString       lastRequestInfo()const { return m_last_req_info; }
+		DiagnosticRequestInfo   lastRequestInfo()const;
+		const DGN_LIST&			diagnosticRequests()const;
+		void					diagnosticSetRequestTag(QString	s) { m_diagnosticsRequestTag = s; }
+		void					diagnosticSetRequestContext(QString	s) { m_diagnosticsRequestContext = s; }
+		void					diagnosticClearRequestsList();
         QByteArray    lastResponse()const { return m_last_response; };
         void          setProxy(const QNetworkProxy& proxy);
 
@@ -355,7 +378,11 @@ namespace googleQt{
         mutable QEventLoop    m_loop;
         ApiClient*            m_client;
         NET_REPLIES_IN_PROGRESS m_replies_in_progress;
-        QString               m_last_req_info;
         QByteArray            m_last_response;
+#ifdef API_QT_DIAGNOSTICS
+		DGN_LIST				m_requests;
+		QString					m_diagnosticsRequestTag;
+		QString					m_diagnosticsRequestContext;
+#endif //API_QT_DIAGNOSTICS
     };
 }
