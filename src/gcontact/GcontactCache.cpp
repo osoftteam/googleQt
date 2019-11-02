@@ -46,6 +46,15 @@ std::shared_ptr<ContactInfo> ContactInfo::createWithId(QString contact_id)
     return rv;
 };
 
+
+std::shared_ptr<ContactInfo> ContactInfo::cloneWithId(QString contact_id) 
+{
+	std::shared_ptr<ContactInfo> rv(new ContactInfo());
+	rv->assignContent(*this);
+	rv->m_id = contact_id;
+	return rv;
+};
+
 ContactInfo& ContactInfo::setTitle(QString val)
 {
     if(m_title != val){

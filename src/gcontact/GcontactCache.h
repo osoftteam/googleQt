@@ -104,15 +104,14 @@ namespace googleQt {
                 delete old address list and put a new one
             */
             ContactInfo& replaceAddressList(const std::vector<PostalAddress>& lst);
-
-            //..
+            
             /**
             add user field
             */
             ContactInfo& addUserField(const UserDefinedFieldInfo& f);
-            //...
 
             static std::shared_ptr<ContactInfo> createWithId(QString contact_id);
+			std::shared_ptr<ContactInfo> cloneWithId(QString contact_id);
 
             bool parseEntryNode(QDomNode n)override;
             void mergeEntryNode(QDomDocument& doc, QDomNode& entry_node)const override;
