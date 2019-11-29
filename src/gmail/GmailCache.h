@@ -335,7 +335,7 @@ namespace googleQt{
                         m_limbo_labels{0};///labels not confirmed yet, we waiting for async call to complete but app might assume is succeded
             msg_arr     m_messages;
             msg_map     m_mmap;
-            msg_ptr     m_head;
+			msg_ptr     m_head{nullptr};//ykh+1
         private:
             ThreadData(
                 QString id,
@@ -498,7 +498,7 @@ namespace googleQt{
             bool insertDbInBatch(EDataState state, CACHE_LIST<MessageData>& r);
             bool updateDbInBatch(EDataState state, CACHE_LIST<MessageData>& r);
             ///create message object from db and attach to a thread
-            std::shared_ptr<MessageData> loadMessageFromDb(thread_ptr t, QSqlQuery* q);
+            std::shared_ptr<MessageData> loadMessageFromDb(thread_ptr t, QSqlQuery* q, int msg_field_start_index = 0);
             void insertDbAttachmentData(const MessageData& m);
             bool loadMessagesFromDb();
             QString insertSnippetSQL()const;
@@ -513,6 +513,7 @@ namespace googleQt{
             GMailSQLiteStorage*     m_storage;
             friend class GMailSQLiteStorage;
 			friend class GThreadsStorage;
+			friend class GQueryStorage;
         };
 
 
@@ -561,7 +562,7 @@ namespace googleQt{
         class GQueryStorage 
         {
         public:
-            GQueryStorage(GThreadsStorage* s);                      
+            GQueryStorage(GThreadsStorage* s, GMessagesStorage* ms);
             query_ptr ensure_q(QString q_str, QString labelid);
             query_ptr lookup_q(QString q_str, QString labelid);
             bool remove_q(query_ptr q);
@@ -572,7 +573,8 @@ namespace googleQt{
             QString insertSQLthreads(query_ptr q)const;
             void bindSQL(QSqlQuery* q, STRING_LIST& r);
         protected:
-            GThreadsStorage*        m_tstorage;
+			GThreadsStorage*        m_tstorage{ nullptr };
+			GMessagesStorage*		m_mstorage{ nullptr };
             query_map               m_qmap;
             query_db_map            m_q_dbmap;
             friend class GMailSQLiteStorage;
