@@ -457,7 +457,7 @@ namespace googleQt {
 						if (!g_local->isRemoved() && !g_local->isRetired()) {
 							///clone
 							auto g2 = g_local->clone();
-							remoteList.add(g2);
+							remoteList.add(std::move(g2));
 							g_local->setRepoSyncCompleted(true);
 							g2->setRepoSyncCompleted(true);
 							rv.updated_remote++;

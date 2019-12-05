@@ -39,17 +39,17 @@ static QString getAttribute(const QDomNode& n, QString name)
 /**
     ContactInfo
 */
-std::shared_ptr<ContactInfo> ContactInfo::createWithId(QString contact_id)
+std::unique_ptr<ContactInfo> ContactInfo::createWithId(QString contact_id)
 {
-    std::shared_ptr<ContactInfo> rv(new ContactInfo());
+    std::unique_ptr<ContactInfo> rv(new ContactInfo());
     rv->m_id = contact_id;
     return rv;
 };
 
 
-std::shared_ptr<ContactInfo> ContactInfo::cloneWithId(QString contact_id) 
+std::unique_ptr<ContactInfo> ContactInfo::cloneWithId(QString contact_id)
 {
-	std::shared_ptr<ContactInfo> rv(new ContactInfo());
+	std::unique_ptr<ContactInfo> rv(new ContactInfo());
 	rv->assignContent(*this);
 	rv->m_id = contact_id;
 	return rv;
@@ -413,9 +413,9 @@ void ContactInfo::assignContent(const ContactInfo& src)
     m_address_list.rebuildLabelsMap();
 };
 
-std::shared_ptr<ContactInfo> ContactInfo::clone()const
+std::unique_ptr<ContactInfo> ContactInfo::clone()const
 {
-	auto c = std::make_shared<ContactInfo>();
+	auto c = std::make_unique<ContactInfo>();
 	c->assignContent(*this);
 	return c;
 };
@@ -454,9 +454,9 @@ bool ContactInfo::isPhotoModified()const
 /**
     GroupInfo
 */
-std::shared_ptr<GroupInfo> GroupInfo::createWithId(QString group_id)
+std::unique_ptr<GroupInfo> GroupInfo::createWithId(QString group_id)
 {
-    std::shared_ptr<GroupInfo> rv(new GroupInfo());
+    std::unique_ptr<GroupInfo> rv(new GroupInfo());
     rv->m_id = group_id;
     return rv;
 };
@@ -548,9 +548,9 @@ void GroupInfo::assignContent(const GroupInfo& src)
     ContactXmlPersistant::assignContent(src);
 }
 
-std::shared_ptr<GroupInfo> GroupInfo::clone()const
+std::unique_ptr<GroupInfo> GroupInfo::clone()const
 {
-	auto c = std::make_shared<GroupInfo>();
+	auto c = std::make_unique<GroupInfo>();
 	c->assignContent(*this);
 	return c;
 };

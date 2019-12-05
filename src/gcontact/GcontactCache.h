@@ -110,8 +110,8 @@ namespace googleQt {
             */
             ContactInfo& addUserField(const UserDefinedFieldInfo& f);
 
-            static std::shared_ptr<ContactInfo> createWithId(QString contact_id);
-			std::shared_ptr<ContactInfo> cloneWithId(QString contact_id);
+            static std::unique_ptr<ContactInfo> createWithId(QString contact_id);
+			std::unique_ptr<ContactInfo> cloneWithId(QString contact_id);
 
             bool parseEntryNode(QDomNode n)override;
             void mergeEntryNode(QDomDocument& doc, QDomNode& entry_node)const override;
@@ -132,7 +132,7 @@ namespace googleQt {
             bool isPhotoResolved()const;
             bool isPhotoModified()const;
 
-			std::shared_ptr<ContactInfo> clone()const;
+			std::unique_ptr<ContactInfo> clone()const;
 
 #ifdef API_QT_AUTOTEST
             static std::unique_ptr<ContactInfo> EXAMPLE(int context_index, int parent_content_index);
@@ -190,10 +190,10 @@ namespace googleQt {
 
             void assignContent(const GroupInfo& src);
 
-			std::shared_ptr<GroupInfo> clone()const;
+			std::unique_ptr<GroupInfo> clone()const;
 			///this function is useless for regular GContacts interaction, since server should generate ID
 			///but we can use it maintain local GContacts-style replicas
-			static std::shared_ptr<GroupInfo> createWithId(QString group_id);
+			static std::unique_ptr<GroupInfo> createWithId(QString group_id);
 
             std::unique_ptr<BatchRequestGroupInfo> buildBatchRequest(googleQt::EBatchId batch_id);
 
