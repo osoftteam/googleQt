@@ -415,7 +415,7 @@ void ContactInfo::assignContent(const ContactInfo& src)
 
 std::unique_ptr<ContactInfo> ContactInfo::clone()const
 {
-	auto c = std::make_unique<ContactInfo>();
+	std::unique_ptr<ContactInfo> c(new ContactInfo);
 	c->assignContent(*this);
 	return c;
 };
@@ -550,7 +550,7 @@ void GroupInfo::assignContent(const GroupInfo& src)
 
 std::unique_ptr<GroupInfo> GroupInfo::clone()const
 {
-	auto c = std::make_unique<GroupInfo>();
+	std::unique_ptr<GroupInfo> c(new GroupInfo);
 	c->assignContent(*this);
 	return c;
 };
