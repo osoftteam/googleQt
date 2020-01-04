@@ -718,7 +718,7 @@ namespace googleQt{
             QString m_metaPrefix;
             int     m_accId{-1};
             int     m_cache_autoload_limit{1000};
-            uint64_t    m_lastHistoryId;///last valid history id
+			uint64_t    m_lastHistoryId{0};///last valid history id
             friend class googleQt::mail_cache::GmailCacheRoutes;
             friend class googleQt::gcontact::GContactCache;
             friend class googleQt::mail_cache::GMessagesStorage;
