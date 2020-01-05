@@ -3395,8 +3395,13 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q)
 		}
 
 		if (t) {
-			q->m_qthreads.push_back(t);
-			q->m_tmap[thread_id] = t;
+
+			auto it2 = q->m_tmap.find(thread_id);
+			if (it2 == q->m_tmap.end()) {
+				q->m_qthreads.push_back(t);
+				q->m_tmap[thread_id] = t;
+			}
+
 			/// link messages to it
 			auto m = mc->mem_object(msg_id);
 			if (m) {
