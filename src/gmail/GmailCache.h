@@ -654,6 +654,7 @@ namespace googleQt{
             thread_ptr findThread(QString thread_id);
 
             uint64_t lastHistoryId()const { return m_lastHistoryId; }
+   	    void     setHistoryId(uint64_t val){m_lastHistoryId = val;}
             int     autoloadLimit()const {return m_cache_autoload_limit;}
 
         protected:
