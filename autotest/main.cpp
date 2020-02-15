@@ -29,13 +29,11 @@ int main(int argc, char *argv[]) {
     appInfo->setKeySecret("my-key", "my-secret");
     std::unique_ptr<ApiAuthInfo> authInfo(new ApiAuthInfo());
     authInfo->setEmail("me@gmail.com");
-    //std::shared_ptr<GoogleClient > c(new GoogleClient(appInfo.release(), authInfo.release()));
-    GoogleClient* c = new GoogleClient(appInfo.release(), authInfo.release());
-
-    DECLARE_AUTOTEST_INSTANCE(c, argResFile);
+    auto c = googleQt::createClient(appInfo.release(), authInfo.release());
+    DECLARE_AUTOTEST_INSTANCE(c.get(), argResFile);
     
     autotest.generateCalls();
-    delete c;
+	googleQt::releaseClient(c);
     std::cout << "finished" << std::endl;    
     return 0;
 }

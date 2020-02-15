@@ -1424,7 +1424,7 @@ void print_cache_contact_info(ContactInfo* ci, int idx);
 
 void GcontactCommands::cache_ls()
 {    
-    auto c = m_c.endpoint()->client()->contacts_cache();
+    auto c = m_c.contacts_cache();
     c->loadContactsFromDb();
     ContactList& cl = c->contacts();
     GroupList& gl = c->groups();
@@ -1436,7 +1436,7 @@ void GcontactCommands::cache_ls()
 
 void GcontactCommands::cache_get_contact(QString cid)
 {
-	auto c = m_c.endpoint()->client()->contacts_cache();
+	auto c = m_c.contacts_cache();
     c->loadContactsFromDb();
     ContactList& cl = c->contacts();
 
@@ -1467,7 +1467,7 @@ void GcontactCommands::cache_update(QString id_space_id)
 
     int mod_idx = 0;
     
-	auto c = m_c.endpoint()->client()->contacts_cache();
+	auto c = m_c.contacts_cache();
     ContactList& cl = c->contacts();
     auto& arr = cl.items();
     for(auto& c : arr){
@@ -1504,7 +1504,7 @@ void GcontactCommands::cache_delete(QString id_space_id)
 
     int mod_idx = 0;
     
-    auto c = m_c.endpoint()->client()->contacts_cache();
+    auto c = m_c.contacts_cache();
     ContactList& cl = c->contacts();
     for(auto& cid : idset){
         auto ct = cl.findById(cid);
@@ -1530,7 +1530,7 @@ void GcontactCommands::resolve_cache_photo(QString contactid)
     }
 
     auto r = m_gt->cacheRoutes(); 
-    auto cache = m_c.endpoint()->client()->contacts_cache();
+    auto cache = m_c.contacts_cache();
     auto c = cache->contacts().findById(contactid);
     if(!c){
         std::cout << "Contact not found: " << contactid << std::endl;
@@ -1551,8 +1551,7 @@ void GcontactCommands::resolve_cache_photo(QString contactid)
 
 void GcontactCommands::sync_cache_photos()
 {    
-//    auto r = m_gt->cacheRoutes(); 
-    auto cache = m_c.endpoint()->client()->contacts_cache();
+    auto cache = m_c.contacts_cache();
     STRING_LIST lst_unresolved = cache->contacts().buildUnresolvedPhotoIdList();
     std::cout << "===unresolved photos===" << std::endl;
     for(auto s : lst_unresolved){
@@ -1594,8 +1593,7 @@ void GcontactCommands::add_cache_photo(QString id_space_file_name)
     QString file_name = arg_list[1];
     QString full_file_name = "photo-templates/" + file_name;
 
-  //  auto r = m_gt->cacheRoutes();
-    auto cache = m_c.endpoint()->client()->contacts_cache();
+    auto cache = m_c.contacts_cache();
     auto c = cache->contacts().findById(contactId);
     if (!c) {
         std::cout << "contact not found " << contactId << std::endl;
@@ -1624,7 +1622,7 @@ void GcontactCommands::cache_sync()
             auto r = m_gt->cacheRoutes();
             auto t = r->synchronizeContacts_Async();
             t->waitForResultAndRelease();
-            auto c = m_c.endpoint()->client()->contacts_cache();
+            auto c = m_c.contacts_cache();
             
             ContactList& cl = c->contacts();
             GroupList& gl = c->groups();
