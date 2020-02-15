@@ -324,8 +324,8 @@ namespace googleQt {
     class CacheQueryTask : public CacheTaskParent<O>
     {
     public:
-        CacheQueryTask(EDataState load, ApiEndpoint& ept, GoogleCacheBase<O>* c)
-            :GoogleTask<CacheDataResult<O>>(ept),
+        CacheQueryTask(EDataState load, ApiClient* cl, GoogleCacheBase<O>* c)
+            :GoogleTask<CacheDataResult<O>>(cl),
             m_cache(c) {
             CacheTaskParent<O>::m_completed.reset(new CacheDataResult<O>); CacheTaskParent<O>::m_completed->state = load;
         };

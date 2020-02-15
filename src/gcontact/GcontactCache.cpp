@@ -1498,10 +1498,10 @@ GoogleVoidTask* PhotoUploader::routeRequest(QString contact_id)
 template <class PROCESSOR>
 GcontactCacheRoutes::PhotoListTask* GcontactCacheRoutes::transferPhotos_Async(const STRING_LIST& id_list)
 {
-    GcontactCacheRoutes::PhotoListTask* rv = new GcontactCacheRoutes::PhotoListTask(m_endpoint);
+    GcontactCacheRoutes::PhotoListTask* rv = new GcontactCacheRoutes::PhotoListTask(m_endpoint.apiClient());
     if (!id_list.empty()) {
         std::unique_ptr<PROCESSOR> pr(new PROCESSOR(m_c_routes));
-        ConcurrentArgRunner<QString, PROCESSOR>* r = new ConcurrentArgRunner<QString, PROCESSOR>(id_list, std::move(pr), m_endpoint);
+        ConcurrentArgRunner<QString, PROCESSOR>* r = new ConcurrentArgRunner<QString, PROCESSOR>(id_list, std::move(pr), m_endpoint.apiClient());
         r->run();
         connect(r, &EndpointRunnable::finished, [=]()
         {
@@ -1544,7 +1544,7 @@ GcontactCacheRoutes::PhotoListTask* GcontactCacheRoutes::uploadPhotos_Async()
 
 PhotoSyncTask* GcontactCacheRoutes::synchronizePhotos_Async()
 {
-    PhotoSyncTask* t = new PhotoSyncTask(m_endpoint);
+    PhotoSyncTask* t = new PhotoSyncTask(m_endpoint.apiClient());
 
     auto t1 = downloadPhotos_Async();
     t1->then([=]() {
@@ -1645,16 +1645,8 @@ void applyBatchStep(std::shared_ptr<B> b, L& lst)
 
 GcontactCacheSyncTask* GcontactCacheRoutes::synchronizeContacts_Async()
 {
-    GcontactCacheSyncTask* rv = new GcontactCacheSyncTask(m_endpoint);
+    GcontactCacheSyncTask* rv = new GcontactCacheSyncTask(m_endpoint.apiClient());
 	auto cc = m_endpoint.client()->contacts_cache();
-	/*
-	auto cc = m_endpoint.client()->contacts_cache();
-    if (!cc->sql_storage()) {
-        std::unique_ptr<GoogleException> ex(new GoogleException("Local cache DB is not setup. Call setupCache first"));
-        rv->failed_callback(std::move(ex));
-        return rv;
-    }
-	*/
 
     QDateTime dtUpdatedMin = cc->lastSyncTime();
 
@@ -1743,7 +1735,7 @@ void GcontactCacheRoutes::reloadCache_Async(GcontactCacheSyncTask* rv, QDateTime
     auto entries_task = m_endpoint.client()->gcontact()->getContacts()->list_Async(entries_arg);
     auto groups_task = m_endpoint.client()->gcontact()->getContactGroup()->list_Async(groups_arg);
 
-    TaskAggregator* agg = new TaskAggregator(m_endpoint);
+    TaskAggregator* agg = new TaskAggregator(m_endpoint.apiClient());
     agg->add(entries_task);
     agg->add(groups_task);
     agg->then([=]() 

@@ -58,7 +58,7 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::newMessageResultF
 {
     auto rfetcher = new mail_cache::GMailCacheQueryTask(
         state,
-        m_endpoint,
+        m_endpoint.apiClient(),
         *this,
         m_GMsgCache.get());
     return rfetcher;
@@ -86,7 +86,7 @@ ConcurrentValueRunner<QString,
                     mail_cache::MessagesReceiver,
                     messages::MessageResource>* r = new ConcurrentValueRunner<QString,
                                                                         mail_cache::MessagesReceiver,
-                                                                        messages::MessageResource>(id_list, std::move(mr), m_endpoint);
+                                                                        messages::MessageResource>(id_list, std::move(mr), m_endpoint.apiClient());
     r->run();
     return r;
 };
@@ -753,10 +753,10 @@ namespace googleQt {
 
 template <class PROCESSOR> googleQt::mail_cache::LabelProcessorTask* mail_cache::GmailCacheRoutes::processLabelList_Async(const STRING_LIST& slist)
 {
-    LabelProcessorTask* t = new LabelProcessorTask(m_endpoint);
+    LabelProcessorTask* t = new LabelProcessorTask(m_endpoint.apiClient());
     if (!slist.empty()) {
         std::unique_ptr<PROCESSOR> pr(new PROCESSOR(*this));
-        ConcurrentValueRunner<QString, PROCESSOR, QString>* r = new ConcurrentValueRunner<QString, PROCESSOR, QString>(slist, std::move(pr), m_endpoint);
+        ConcurrentValueRunner<QString, PROCESSOR, QString>* r = new ConcurrentValueRunner<QString, PROCESSOR, QString>(slist, std::move(pr), m_endpoint.apiClient());
         r->run();
         connect(r, &EndpointRunnable::finished, [=]()
         {
@@ -905,7 +905,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadListLabels_Async(const
     GoogleVoidTask* t = m_endpoint.produceVoidTask();
     if (!tlist.empty()) {
         std::unique_ptr<ThreadModifier> pr(new ThreadModifier(*this, labels2add, labels2remove));
-        ConcurrentArgRunner<thread_ptr, ThreadModifier>* r = new ConcurrentArgRunner<thread_ptr, ThreadModifier>(tlist, std::move(pr), m_endpoint);
+        ConcurrentArgRunner<thread_ptr, ThreadModifier>* r = new ConcurrentArgRunner<thread_ptr, ThreadModifier>(tlist, std::move(pr), m_endpoint.apiClient());
         r->run();
         connect(r, &EndpointRunnable::finished, [=]()
         {

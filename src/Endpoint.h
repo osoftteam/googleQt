@@ -661,18 +661,18 @@ namespace googleQt{
         template <class T>
         GoogleTask<T>* produceTask()
         {
-            GoogleTask<T>* rv = new GoogleTask<T>(*this);
+            GoogleTask<T>* rv = new GoogleTask<T>(apiClient());
             return rv;
         };
 
         GoogleVoidTask* produceVoidTask()
         {
-            return new GoogleVoidTask(*this);
+            return new GoogleVoidTask(apiClient());
         }
 
-        TaskAggregator* produceAggregatorTask()
+        TaskAggregator* produceAggregatorTask()override
         {
-            return new TaskAggregator(*this);
+            return new TaskAggregator(apiClient());
         }
 
     protected:

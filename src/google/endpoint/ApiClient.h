@@ -6,7 +6,9 @@
 class QNetworkProxy;
 
 namespace googleQt{
-    class ApiClient: public QObject{
+    class ApiClient: public QObject,
+					 public std::enable_shared_from_this<ApiClient>
+	{
         Q_OBJECT
     public:
         ApiClient(ApiAppInfo* appInfo, ApiAuthInfo* authInfo);
@@ -18,11 +20,12 @@ namespace googleQt{
         QString userAgent()const{return m_userAgent;}
         void setUserAgent(QString s){m_userAgent = s;}
         virtual bool refreshToken() = 0;        
+		virtual ApiEndpoint* endpoint() = 0;
     signals:
         void downloadProgress(qint64 bytesProcessed, qint64 total);
         void uploadProgress(qint64 bytesProcessed, qint64 total);
 
-    protected:
+    protected:		
         std::unique_ptr<ApiAppInfo>  m_app;
         std::unique_ptr<ApiAuthInfo> m_auth;
         QString m_userAgent;

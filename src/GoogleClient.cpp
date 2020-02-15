@@ -14,6 +14,20 @@ using namespace googleQt;
 int g__gclient_alloc_counter = 0;
 #endif
 
+gclient_ptr googleQt::createClient(googleQt::ApiAppInfo* appInfo, googleQt::ApiAuthInfo* authInfo, gcontact::GContactCacheBase* custom_contacts_cache)
+{
+	std::shared_ptr<GoogleClient>  rv(new GoogleClient(appInfo, authInfo, custom_contacts_cache));
+	return rv;
+};
+
+void googleQt::releaseClient(gclient_ptr p)
+{
+	if (p) {
+		p.reset();
+	}
+};
+
+
 GoogleClient::GoogleClient(ApiAppInfo* appInfo,
                          ApiAuthInfo* authInfo, 
                          gcontact::GContactCacheBase* custom_contacts_cache)
@@ -157,7 +171,7 @@ void GoogleClient::setNetworkProxy(const QNetworkProxy& proxy)
     m_endpoint->setProxy(proxy);
 };
 
-Endpoint* GoogleClient::endpoint()
+ApiEndpoint* GoogleClient::endpoint()
 {
     return m_endpoint.get();
 };

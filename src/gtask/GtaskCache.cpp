@@ -211,7 +211,7 @@ ConcurrentValueRunner<QString, TaskListReceiver, tasklists::TaskListResource>* G
         TaskListReceiver,
         tasklists::TaskListResource>* r = new ConcurrentValueRunner<QString,
         TaskListReceiver,
-        tasklists::TaskListResource>(idlist, std::move(mr), *(m_t_routes.endpoint()));
+        tasklists::TaskListResource>(idlist, std::move(mr), m_t_routes.endpoint()->apiClient());
     r->run();
     return r;
 };
@@ -226,7 +226,7 @@ ConcurrentValueRunner<QString, TaskReceiver, tasks::TaskCollectionRes>* GtaskCac
 
     auto r = new ConcurrentValueRunner<QString,
                                        TaskReceiver,
-                                       tasks::TaskCollectionRes>(idlist, std::move(mr), *(m_t_routes.endpoint()));
+                                       tasks::TaskCollectionRes>(idlist, std::move(mr), m_t_routes.endpoint()->apiClient());
     r->run();
     return r;
 };

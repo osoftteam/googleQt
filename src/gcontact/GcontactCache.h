@@ -397,7 +397,7 @@ namespace googleQt {
             const BatchGroupList*   updatedGroups()const{return m_updated_groups.get();}
             const std::map<QString, std::shared_ptr<BatchRequestGroupInfo>>& deleted_groups()const{return m_deleted_groups;}
         protected:
-            GcontactCacheSyncTask(ApiEndpoint& ept) :GoogleVoidTask(ept){}
+            GcontactCacheSyncTask(ApiClient* cl) :GoogleVoidTask(cl){}
             std::unique_ptr<ContactList>      m_loaded_contacts;
             std::unique_ptr<GroupList>        m_loaded_groups;
             std::unique_ptr<BatchContactList> m_updated_contacts;
@@ -412,7 +412,7 @@ namespace googleQt {
             const STRING_LIST& downloaded()const { return m_downloaded_ids; }
             const STRING_LIST& uploaded()const { return m_uploaded_ids; }
         private:
-            PhotoSyncTask(ApiEndpoint& ept) :GoogleVoidTask(ept) {}
+            PhotoSyncTask(ApiClient* cl) :GoogleVoidTask(cl) {}
             STRING_LIST m_downloaded_ids;
             STRING_LIST m_uploaded_ids;
             friend class GcontactCacheRoutes;
@@ -424,8 +424,6 @@ namespace googleQt {
             Q_OBJECT
         public:
             GcontactCacheRoutes(googleQt::Endpoint& endpoint, GcontactRoutes& gcontact_routes);
-
-			//GContactCacheBase*		contacts_cache() { return m_GContactsCache.get(); }
 
             GcontactCacheSyncTask*  synchronizeContacts_Async();
             PhotoSyncTask*          synchronizePhotos_Async();
@@ -440,7 +438,6 @@ namespace googleQt {
         protected:
             Endpoint&						m_endpoint;
             GcontactRoutes&					m_c_routes;
-			//std::unique_ptr<GContactCacheBase>  m_GContactsCache;
 
         private:
             class PhotoListTask : public GoogleVoidTask
@@ -448,7 +445,7 @@ namespace googleQt {
             public:
                 const STRING_LIST& completed()const { return m_completed_ids; }
             private:
-                PhotoListTask(ApiEndpoint& ept) :GoogleVoidTask(ept) {}
+                PhotoListTask(ApiClient* cl) :GoogleVoidTask(cl) {}
                 STRING_LIST m_completed_ids;
                 friend class GcontactCacheRoutes;
             };

@@ -418,7 +418,7 @@ namespace googleQt{
         {
         public:
             GMailCacheQueryTask(EDataState load,
-                                ApiEndpoint& ept,
+								ApiClient* cl,
                                 googleQt::mail_cache::GmailCacheRoutes& r,
                                 GMailCache* c);
             void fetchFromCloud_Async(const STRING_LIST& id_list)override;
@@ -551,7 +551,7 @@ namespace googleQt{
             const STRING_LIST&   getCompletedIds()const { return m_completed_ids; }
 
         protected:
-            LabelProcessorTask(ApiEndpoint& ept) :GoogleVoidTask(ept) {}
+            LabelProcessorTask(ApiClient* cl) :GoogleVoidTask(cl) {}
             STRING_LIST      m_completed_ids;
             friend class GmailCacheRoutes;
         };

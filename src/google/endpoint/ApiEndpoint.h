@@ -54,6 +54,7 @@ namespace googleQt{
 
         ApiClient*     apiClient() { return m_client; }
         const ApiClient*  apiClient()const { return m_client; }
+		virtual TaskAggregator* produceAggregatorTask() = 0;
 
     protected:                
         virtual QNetworkReply*  getData(const QNetworkRequest &request);

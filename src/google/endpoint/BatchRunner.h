@@ -18,8 +18,8 @@ namespace googleQt{
     class ConcurrentBaseRunner : public EndpointRunnable
     {
     public:
-        ConcurrentBaseRunner(const std::vector<ARG_PARAM>& arg_params, std::unique_ptr<ROUTER>&& r, ApiEndpoint& ept)
-            :EndpointRunnable(ept), m_router(std::move(r))
+        ConcurrentBaseRunner(const std::vector<ARG_PARAM>& arg_params, std::unique_ptr<ROUTER>&& r, ApiClient* cl)
+            :EndpointRunnable(cl), m_router(std::move(r))
         {
             m_available_concurrent_routes_count = m_max_concurrent_routes_count;
             m_arg_parameters = arg_params;
@@ -98,8 +98,8 @@ namespace googleQt{
     class ConcurrentValueRunner : public ConcurrentBaseRunner<ARG_PARAM, ROUTER>
     {
     public:
-        ConcurrentValueRunner(const std::vector<ARG_PARAM>& arg_params, std::unique_ptr<ROUTER>&& r, ApiEndpoint& ept)
-            :ConcurrentBaseRunner<ARG_PARAM, ROUTER>(arg_params, std::move(r), ept){}
+        ConcurrentValueRunner(const std::vector<ARG_PARAM>& arg_params, std::unique_ptr<ROUTER>&& r, ApiClient* cl)
+            :ConcurrentBaseRunner<ARG_PARAM, ROUTER>(arg_params, std::move(r), cl){}
 
         RESULT_LIST<RESULT>&& detachResult() { return std::move(m_result_list); }
 
@@ -145,8 +145,8 @@ namespace googleQt{
     class ConcurrentArgRunner : public ConcurrentBaseRunner<ARG_PARAM, ROUTER>
     {
     public:
-        ConcurrentArgRunner(const std::vector<ARG_PARAM>& arg_params, std::unique_ptr<ROUTER>&& r, ApiEndpoint& ept)
-            :ConcurrentBaseRunner<ARG_PARAM, ROUTER>(arg_params, std::move(r), ept) {}
+        ConcurrentArgRunner(const std::vector<ARG_PARAM>& arg_params, std::unique_ptr<ROUTER>&& r, ApiClient* cl)
+            :ConcurrentBaseRunner<ARG_PARAM, ROUTER>(arg_params, std::move(r), cl) {}
 
 
         RESULT_LIST<ARG_PARAM>&& waitForResultAndRelease()

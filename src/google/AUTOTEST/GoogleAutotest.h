@@ -19,7 +19,7 @@ namespace googleQt{
     };
 };//googleQt
 
-#define DECLARE_AUTOTEST_INSTANCE(C, F) GoogleAutotest autotest(c);                     \
+#define DECLARE_AUTOTEST_INSTANCE(C, F) GoogleAutotest autotest(C);                     \
 if (!autotest.init(F)) {                                                                \
     std::cout << "Error opening autotest output file " << F << std::endl;               \
     std::cin.ignore();                                                                  \

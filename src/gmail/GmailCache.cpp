@@ -651,10 +651,10 @@ QString mail_cache::QueryData::format_qhash(QString qstr, QString lblid)
 
 ///GMailCacheQueryTask
 mail_cache::GMailCacheQueryTask::GMailCacheQueryTask(EDataState state, 
-                                                     ApiEndpoint& ept, 
+													 ApiClient* cl,
                                                      googleQt::mail_cache::GmailCacheRoutes& r,
                                                      GMailCache* c)
-    :CacheQueryTask<MessageData>(state, ept, c), m_r(r)
+    :CacheQueryTask<MessageData>(state, cl, c), m_r(r)
 {
 
 };
@@ -909,7 +909,7 @@ mail_cache::GThreadCacheQueryTask::GThreadCacheQueryTask(
                                                          googleQt::mail_cache::GmailCacheRoutes& r,
                                                          GThreadCache* c,
                                                          query_ptr q)
-    :CacheQueryTask<ThreadData>(EDataState::snippet, r.endpoint(), c),
+    :CacheQueryTask<ThreadData>(EDataState::snippet, r.endpoint().apiClient(), c),
     m_r(r), m_q(q)
 {
 
@@ -928,7 +928,7 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& 
     std::unique_ptr<mail_cache::ThreadsReceiver> tr(new mail_cache::ThreadsReceiver(m_r.mroutes()));
     auto par_runner = new ConcurrentValueRunner<QString,
         mail_cache::ThreadsReceiver,
-        threads::ThreadResource>(id_list, std::move(tr), m_endpoint);
+        threads::ThreadResource>(id_list, std::move(tr), m_client.get());
     par_runner->run();
 
     connect(par_runner, &EndpointRunnable::finished, [=]()

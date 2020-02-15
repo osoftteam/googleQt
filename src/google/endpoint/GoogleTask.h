@@ -9,6 +9,7 @@ namespace googleQt{
     class ApiEndpoint;
     class Endpoint;
     class TaskProgress;
+	class ApiClient;
 
     /**
         EndpointRunnable - abstruct class for object-based async task classes.
@@ -19,7 +20,7 @@ namespace googleQt{
     {
         Q_OBJECT;
     public:
-        EndpointRunnable(ApiEndpoint& ept);
+        EndpointRunnable(ApiClient* cl);
         virtual ~EndpointRunnable();
         bool isFinished()const { return m_finished; }
         virtual bool isCompleted()const = 0;
@@ -50,7 +51,7 @@ namespace googleQt{
         void waitUntillFinishedOrCancelled();
 
     protected:
-        ApiEndpoint& m_endpoint;
+		std::shared_ptr<ApiClient> m_client;
         bool m_finished{ false };
         mutable bool m_in_wait_loop{ false };
         mutable bool m_progress_notifier_owner{ false };
@@ -160,7 +161,7 @@ namespace googleQt{
         };
 
     protected:
-        GoogleTask(ApiEndpoint& ept) :EndpointRunnable(ept) {};
+        GoogleTask(ApiClient* cl) :EndpointRunnable(cl) {};
     protected:
         std::unique_ptr<RESULT> m_completed;
     };
@@ -193,7 +194,7 @@ namespace googleQt{
         };
 
     protected:
-        GoogleVoidTask(ApiEndpoint& ept) :EndpointRunnable(ept) {};
+        GoogleVoidTask(ApiClient* cl) :EndpointRunnable(cl) {};
 
     protected:
         bool m_completed = { false };
@@ -213,7 +214,7 @@ namespace googleQt{
     public:
         using RUNNABLES = std::list<EndpointRunnable*>;
 
-        TaskAggregator(ApiEndpoint& ept):EndpointRunnable(ept){};
+        TaskAggregator(ApiClient* cl):EndpointRunnable(cl){};
 
         void add(EndpointRunnable* r) { m_runnables.push_back(r); }
 
