@@ -1898,6 +1898,17 @@ bool mail_cache::GMailSQLiteStorage::deleteAccountFromDb(int accId)
         return false;
     }
 
+    //..
+    sql = QString("DELETE FROM %1gmail_thread WHERE acc_id = %2")
+        .arg(m_metaPrefix)
+        .arg(accId);
+    ok = execQuery(sql);
+    if(!ok){
+        qWarning() << "ERROR.Failed to delete threads" << sql;
+        return false;
+    }
+    //...
+
     sql = QString("DELETE FROM %1gmail_label WHERE acc_id = %2")
         .arg(m_metaPrefix)
         .arg(accId);
@@ -1916,7 +1927,6 @@ bool mail_cache::GMailSQLiteStorage::deleteAccountFromDb(int accId)
         return false;
     }
 
-    //..
     sql = QString("DELETE FROM %1gmail_qres WHERE acc_id = %2")
         .arg(m_metaPrefix)
         .arg(accId);
@@ -1934,8 +1944,6 @@ bool mail_cache::GMailSQLiteStorage::deleteAccountFromDb(int accId)
         qWarning() << "ERROR.Failed to delete gmail_q" << sql;
         return false;
     }
-
-    //..
 
     sql = QString("DELETE FROM %1gmail_account WHERE acc_id = %2")
         .arg(m_metaPrefix)
