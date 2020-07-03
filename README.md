@@ -84,6 +84,7 @@ The sample implementation using blocking calls:
 
 Notice blocking calls are wrapped in try/catch block, that is because blocking functions (without Async suffix) can throw exception - when server is unhappy about request and responds with 400, network issues etc. Not-blocking functions have suffix 'Async' and don't throw exceptions but return GoogleTask objects that can be connected to, chained and used to retrieve result data and error description if any. If objects are not chained via 'then' and not turned into blocking calls with 'waitForResultAndRelease' they should be scheduled to delete using 'deleteLater'.
 
+
 ### More examples
 Please visit examples folder, there is one console-based project for each kind of API. We call them bash-projects because they offer small menu with options to explore and test API and demonstrate code snippets. You will find gdrivebash, gmailbash, gtaskbash etc.
 
