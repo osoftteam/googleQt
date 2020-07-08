@@ -960,7 +960,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::applyBatchUpdate_Async()
         MSG_SET lb2add;
         MSG_SET lb2rem;
     };
-    using L2_MSG_SET = std::unordered_map<SysLabel, LblModSet>;
+    using L2_MSG_SET = std::map<SysLabel, LblModSet>;
     L2_MSG_SET l2mset;
     for (auto i : m_lite_storage->m_batch_request) {
         auto m = m_lite_storage->findMessage(i.first);

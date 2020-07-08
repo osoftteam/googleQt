@@ -1325,7 +1325,7 @@ void mail_cache::GMailSQLiteStorage::close_db()
 
 
 static qstring_hash_map<QString> syslabelID2Name;
-static std::unordered_map<mail_cache::SysLabel, QString> syslabel2Name;
+static std::map<mail_cache::SysLabel, QString> syslabel2Name;
 static qstring_hash_map<mail_cache::SysLabel> reservedLabelID2SysLabel;
 
 static std::vector<QString>& getSysLabels()

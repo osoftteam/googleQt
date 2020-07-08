@@ -305,6 +305,7 @@ namespace googleQt{
         public:
             BatchModifyMessageArg() {};
             BatchModifyMessageArg(QString user_id);
+            virtual ~BatchModifyMessageArg() {};
 
             QString userId()const { return m_userId; }
             void    setUserId(QString id) { m_userId = id; };
