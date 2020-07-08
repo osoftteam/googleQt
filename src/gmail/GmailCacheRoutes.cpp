@@ -380,7 +380,7 @@ void mail_cache::GmailCacheRoutes::clearCache()
     m_GMsgCache.reset();
     m_GThreadCache.reset();
 
-    qDebug() << "ykh/clearCache"
+    qDebug() << "clearCache"
         << "threads" << g__msg_alloc_counter
         << "msg" << g__thread_alloc_counter;
 #endif //API_QT_AUTOTEST
@@ -1035,7 +1035,6 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::applyBatchUpdate_Async()
             :m_r(r){}
         GoogleVoidTask* routeRequest(googleQt::gmail::BatchModifyMessageArg a)
         {
-            a.print();
             return m_r.batchModify_Async(a);
         }
     protected:

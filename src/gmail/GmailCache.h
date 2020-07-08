@@ -334,7 +334,7 @@ namespace googleQt{
                         m_limbo_labels{0};///labels not confirmed yet, we waiting for async call to complete but app might assume is succeded
             msg_list    m_messages;
             msg_map     m_mmap;
-            msg_ptr     m_head{nullptr};//ykh+1
+            msg_ptr     m_head{nullptr};
         private:
             ThreadData(
                 QString id,

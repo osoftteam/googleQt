@@ -1108,8 +1108,6 @@ bool GContactCacheBase::loadContactsFromDb()
     return false;
       }
     }
-
-    //qWarning() << "ykh/loadContactsFromDb entries=" << contacts().items().size() << "groups=" << groups().items().size();
     
     return true;
 };
