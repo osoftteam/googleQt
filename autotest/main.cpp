@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     DECLARE_AUTOTEST_INSTANCE(c.get(), argResFile);
     
     autotest.generateCalls();
-	googleQt::releaseClient(c);
+    googleQt::releaseClient(c);
     std::cout << "finished" << std::endl;    
     return 0;
 }
