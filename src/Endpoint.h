@@ -29,6 +29,7 @@ namespace googleQt{
         DECL_STD_BOUND_TASK_CB      (rfc822UploadStyle);
         DECL_STD_BOUND_TASK_CB      (updateStyle);
         DECL_STD_BOUND_TASK_CB      (postStyleB);
+        DECL_BODY_VOID_RES_BOUND_TASK_CB(postStyleB2Empty);
         DECL_STD_BOUND_TASK_CB      (postContactStyleB);
         DECL_STD_BOUND_TASK_CB      (postContactGroupStyleB);
         DECL_STD_BOUND_TASK_CB      (putContactStyleB);
@@ -389,6 +390,29 @@ namespace googleQt{
                 (url, body, completed_callback, failed_callback);
         }
         
+        template <class BODY>
+        void postStyleB2Empty(QUrl url, const BODY& body,
+            std::function<void(void)> completed_callback,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+        {
+            std::function<void(std::unique_ptr<googleQt::VoidType>)> completed_with_type = nullptr;
+            if (completed_callback != nullptr)
+            {
+                completed_with_type = [=](std::unique_ptr<googleQt::VoidType>)
+                {
+                    completed_callback();
+                };
+            }
+
+            QJsonObject js = body;
+            std::shared_ptr<requester> rb(new POST_requester(*this, std::move(js)));
+            runRequest<VoidType, VoidType>
+                (url,
+                    std::move(rb),
+                    completed_with_type,
+                    failed_callback);
+        }
+
         void deleteStyle(QUrl url,
             std::function<void(void)> completed_callback = nullptr,
             std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr)
