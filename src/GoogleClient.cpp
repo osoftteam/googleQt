@@ -16,15 +16,15 @@ int g__gclient_alloc_counter = 0;
 
 gclient_ptr googleQt::createClient(googleQt::ApiAppInfo* appInfo, googleQt::ApiAuthInfo* authInfo, gcontact::GContactCacheBase* custom_contacts_cache)
 {
-	std::shared_ptr<GoogleClient>  rv(new GoogleClient(appInfo, authInfo, custom_contacts_cache));
-	return rv;
+    std::shared_ptr<GoogleClient>  rv(new GoogleClient(appInfo, authInfo, custom_contacts_cache));
+    return rv;
 };
 
 void googleQt::releaseClient(gclient_ptr p)
 {
-	if (p) {
-		p.reset();
-	}
+    if (p) {
+        p.reset();
+    }
 };
 
 
