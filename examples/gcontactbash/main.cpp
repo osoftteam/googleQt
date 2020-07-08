@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     std::cout << "GContacts" << std::endl;
     
     demo::ApiListener lsn;
-	auto c = googleQt::createClient(appInfo.release(), authInfo.release());
+    auto c = googleQt::createClient(appInfo.release(), authInfo.release());
     DECLARE_AUTOTEST_INSTANCE(c.get(), "autotest-res.txt");
 
     /// setup DB-cache ///
@@ -125,6 +125,6 @@ int main(int argc, char *argv[])
     t.addAction("test_merge", "Read xml contacts file, merge with custom data, print result", [&](QString arg) {cmd.test_merge(arg); });
     t.addAction("test_concurrent_req", "Test concurrent (time-sharing) execution more that 1 task", [&](QString) {cmd.test_concurrent_req(); });
     t.start();
-	googleQt::releaseClient(c);
+    googleQt::releaseClient(c);
     return 0;
 };

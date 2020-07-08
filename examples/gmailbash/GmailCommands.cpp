@@ -909,18 +909,18 @@ void GmailCommands::remove_thread_label(QString threadid_labelids)
 
 void GmailCommands::history(QString hist_id_res_num)
 {
-	QString startHistoryIdStr;
-	int MaxResults = 20;
-	STRING_LIST arg_list = split_string(hist_id_res_num);
-	if (arg_list.size() == 1)
-	{
-		startHistoryIdStr = arg_list[0];
-	}
-	else if (arg_list.size() > 1)
-	{
-		startHistoryIdStr = arg_list[0];
-		MaxResults = arg_list[1].toInt();
-	}
+    QString startHistoryIdStr;
+    int MaxResults = 20;
+    STRING_LIST arg_list = split_string(hist_id_res_num);
+    if (arg_list.size() == 1)
+    {
+        startHistoryIdStr = arg_list[0];
+    }
+    else if (arg_list.size() > 1)
+    {
+        startHistoryIdStr = arg_list[0];
+        MaxResults = arg_list[1].toInt();
+    }
 
     bool int_ok;
     int startHistoryId = startHistoryIdStr.toInt(&int_ok);
@@ -932,7 +932,7 @@ void GmailCommands::history(QString hist_id_res_num)
     try
         {
             gmail::HistoryListArg histArg(m_c.userId(), startHistoryId);
-			histArg.setMaxResults(MaxResults);
+            histArg.setMaxResults(MaxResults);
 
             auto history = m_gm->getHistory()->list(histArg);
             for (auto h : history->history())

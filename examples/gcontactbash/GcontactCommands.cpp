@@ -1436,7 +1436,7 @@ void GcontactCommands::cache_ls()
 
 void GcontactCommands::cache_get_contact(QString cid)
 {
-	auto c = m_c.contacts_cache();
+    auto c = m_c.contacts_cache();
     c->loadContactsFromDb();
     ContactList& cl = c->contacts();
 
@@ -1467,7 +1467,7 @@ void GcontactCommands::cache_update(QString id_space_id)
 
     int mod_idx = 0;
     
-	auto c = m_c.contacts_cache();
+    auto c = m_c.contacts_cache();
     ContactList& cl = c->contacts();
     auto& arr = cl.items();
     for(auto& c : arr){

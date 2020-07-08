@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     authInfo->setEmail(argEmail);
 
     demo::ApiListener lsn;
-	auto c = googleQt::createClient(appInfo.release(), authInfo.release());
+    auto c = googleQt::createClient(appInfo.release(), authInfo.release());
     QObject::connect(c.get(), &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);   
     DECLARE_AUTOTEST_INSTANCE(c.get(), "autotest-res.txt");
 
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
     t.addAction("base64url_decode",   "Base64Url decode data", [&](QString arg) {cmd.base64url_decode(arg); });
     
     t.start();
-	googleQt::releaseClient(c);
+    googleQt::releaseClient(c);
     std::cout << "press ENTER to exit" << std::endl;
     std::cin.ignore();
     return 0;

@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     
     demo::ApiListener lsn;
     //GoogleClient c(appInfo.release(), authInfo.release());
-	auto c = googleQt::createClient(appInfo.release(), authInfo.release());
+    auto c = googleQt::createClient(appInfo.release(), authInfo.release());
     QObject::connect(c.get(), &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);
 
     GtaskCommands cmd(*c);

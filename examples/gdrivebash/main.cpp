@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     }
 
     demo::ApiListener lsn;
-	auto c = googleQt::createClient(appInfo.release(), authInfo.release());
+    auto c = googleQt::createClient(appInfo.release(), authInfo.release());
     QObject::connect(c.get(), &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);
 
     GdriveCommands cmd(*c);
@@ -101,6 +101,6 @@ int main(int argc, char *argv[])
     t.addAction("print_last_result", "Print last response",    [&](QString arg) {cmd.print_last_result(arg); });
     t.addAction("set_local_proxy",  "Setup Local Proxy connection",    [&](QString arg) {cmd.set_local_proxy(arg); });
     t.start();
-	googleQt::releaseClient(c);
+    googleQt::releaseClient(c);
     return 0;
 }
