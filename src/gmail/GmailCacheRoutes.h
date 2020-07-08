@@ -128,6 +128,9 @@ namespace googleQt
             bool setImportant(mail_cache::MessageData* d, bool set_it = true);
             GoogleTask<messages::MessageResource>* setImportant_Async(mail_cache::MessageData* d, bool set_it = true);
 
+            /// set label on message or register batch update if label set failed (due to network issue for example)
+            GoogleTask<messages::MessageResource>* setSysLabelOrRegisterBatchUpdate_Async(mail_cache::MessageData* d, googleQt::mail_cache::SysLabel lbl, bool set_it = true);
+
             /// create list of labels and update local DB cache
             LabelProcessorTask* createLabelList_Async(const STRING_LIST& names);
             /// delete list of labels and update local DB cache
@@ -137,6 +140,7 @@ namespace googleQt
 
             GoogleVoidTask* modifyThreadLabels_Async(thread_ptr t, const label_list& labels2add, const label_list& labels2remove);
             GoogleVoidTask* modifyThreadListLabels_Async(const thread_list& listt, const label_list& labels2add, const label_list& labels2remove);
+            GoogleVoidTask* applyBatchUpdate_Async();
 
             void    clearCache();
 #ifdef API_QT_AUTOTEST

@@ -134,41 +134,41 @@ void ApiEndpoint::unregisterReply(QNetworkReply* r)
 DiagnosticRequestInfo ApiEndpoint::lastRequestInfo()const
 {
 #ifdef API_QT_DIAGNOSTICS
-	if (!m_requests.empty()) {
-		auto i = m_requests.rbegin();
-		return *i;
-	}
-	DiagnosticRequestInfo r;
-	return r;
+    if (!m_requests.empty()) {
+        auto i = m_requests.rbegin();
+        return *i;
+    }
+    DiagnosticRequestInfo r;
+    return r;
 #else
-	DiagnosticRequestInfo r;
-	r.tag = "";
-	r.request = "last_req_info is not available because googleQt lib was compiled without API_QT_DIAGNOSTICS tracing option.";
-	return r;
+    DiagnosticRequestInfo r;
+    r.tag = "";
+    r.request = "last_req_info is not available because googleQt lib was compiled without API_QT_DIAGNOSTICS tracing option.";
+    return r;
 #endif//API_QT_DIAGNOSTICS
 };
 
-const DGN_LIST&	ApiEndpoint::diagnosticRequests()const 
+const DGN_LIST& ApiEndpoint::diagnosticRequests()const 
 {
-	return m_requests;
+    return m_requests;
 };
 
 void ApiEndpoint::diagnosticClearRequestsList() 
 {
-	m_requests.clear();
+    m_requests.clear();
 };
 
 void ApiEndpoint::updateLastRequestInfo(QString s)
 {
 #ifdef API_QT_DIAGNOSTICS
-	DiagnosticRequestInfo r;
-	r.tag = m_diagnosticsRequestTag;
-	r.context = m_diagnosticsRequestContext;
-	r.request = s;
-	m_requests.push_back(r);
-	if (m_requests.size() > 512) {
-		m_requests.erase(m_requests.begin(), m_requests.begin() + 256);
-	}
+    DiagnosticRequestInfo r;
+    r.tag = m_diagnosticsRequestTag;
+    r.context = m_diagnosticsRequestContext;
+    r.request = s;
+    m_requests.push_back(r);
+    if (m_requests.size() > 512) {
+        m_requests.erase(m_requests.begin(), m_requests.begin() + 256);
+    }
 #endif //API_QT_DIAGNOSTICS
 };
 

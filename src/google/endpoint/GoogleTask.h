@@ -9,7 +9,7 @@ namespace googleQt{
     class ApiEndpoint;
     class Endpoint;
     class TaskProgress;
-	class ApiClient;
+    class ApiClient;
 
     /**
         EndpointRunnable - abstruct class for object-based async task classes.
@@ -51,7 +51,7 @@ namespace googleQt{
         void waitUntillFinishedOrCancelled();
 
     protected:
-		std::shared_ptr<ApiClient> m_client;
+        std::shared_ptr<ApiClient> m_client;
         bool m_finished{ false };
         mutable bool m_in_wait_loop{ false };
         mutable bool m_progress_notifier_owner{ false };

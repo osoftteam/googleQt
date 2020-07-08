@@ -18,7 +18,7 @@ namespace googleQt{
                 std::function<void(QString)>    action;
             };
             typedef std::list<Selection> SELECTION_LIST;
-            typedef std::map<QString, Selection> SELECTION_MAP;
+            typedef qstring_hash_map<Selection> SELECTION_MAP;
 
 Terminal(QString prompt):m_prompt(prompt){};
 

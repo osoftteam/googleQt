@@ -4,18 +4,17 @@
 #include <QFile>
 #include <QTextStream>
 #include <QNetworkRequest>
-#include <map>
 
 namespace googleQt{
 
 #ifdef API_QT_AUTOTEST
     using IDSET = std::set<QString>;
-    using IDVALMAP = std::map<QString, int>;//map ID-val -> usage-count
-    using CLASS_ID_MAP = std::map<QString, IDSET>;  
-    using MEMBER_VAL = std::map<QString, IDVALMAP>;
-    using CLASS_MEMBER_VAL = std::map<QString, MEMBER_VAL>;
+    using IDVALMAP = qstring_hash_map<int>;//map ID-val -> usage-count
+    using CLASS_ID_MAP = qstring_hash_map<IDSET>;
+    using MEMBER_VAL = qstring_hash_map<IDVALMAP>;
+    using CLASS_MEMBER_VAL = qstring_hash_map<MEMBER_VAL>;
     using BATCH_LIST = std::list<std::pair<QString, googleQt::EBatchId>>;
-    using CLASS2BATCH_LIST = std::map<QString, BATCH_LIST>;
+    using CLASS2BATCH_LIST = qstring_hash_map<BATCH_LIST>;
 #endif
 
     class ApiClient;
@@ -70,7 +69,7 @@ namespace googleQt{
         CLASS_ID_MAP        m_availID;
         CLASS2BATCH_LIST    m_availBatchID;
         CLASS_MEMBER_VAL    m_availMemberValue;
-        std::map<QString, QString> m_str4list;
+        qstring_hash_map<QString>   m_str4list;
         bool m_attachmentDataGenerationOn{true};
         mutable bool m_cancelRequest{false};
         #endif //API_QT_AUTOTEST

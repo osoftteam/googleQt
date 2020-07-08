@@ -3,6 +3,8 @@
 #include <list>
 #include <set>
 #include <memory>
+#include <unordered_map>
+#include <unordered_set>
 #include <functional>
 #include <cctype>
 #include <QString>
@@ -17,12 +19,20 @@
 #include <QDomDocument>
 #include <QDomNodeList>
 #include <QDebug>
+#include <QHash>
 
 #include "ApiException.h"
 #include "GoogleTask.h"
 
-
 namespace googleQt {
+
+    struct qs_hash{
+        std::size_t operator()(const QString& s) const noexcept {
+            return (size_t)qHash(s);
+        }
+    };
+
+    template<class T> using qstring_hash_map = std::unordered_map<QString, T, qs_hash>;
 
     bool loadJsonFromFile(QString path, QJsonObject& js);
     bool storeJsonToFile(QString path, const QJsonObject js);

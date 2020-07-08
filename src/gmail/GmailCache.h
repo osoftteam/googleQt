@@ -36,13 +36,11 @@ namespace googleQt{
         using thread_ptr        = std::shared_ptr<googleQt::mail_cache::ThreadData>;
         using query_ptr         = std::shared_ptr<googleQt::mail_cache::QueryData>;
         using msg_list          = std::vector<msg_ptr>;
-        using msg_arr           = std::vector<msg_ptr>;
-        using msg_map           = std::map<QString, msg_ptr>;
+        using msg_map           = qstring_hash_map<msg_ptr>;
         using thread_list       = std::vector<thread_ptr>;
-        using thread_arr        = std::vector<thread_ptr>;
-        using thread_map        = std::map<QString, thread_ptr>;
-        using query_map         = std::map<QString, query_ptr>;
-        using query_db_map      = std::map<int, query_ptr>;
+        using thread_map        = qstring_hash_map<thread_ptr>;
+        using query_map         = qstring_hash_map<query_ptr>;
+        using query_db_map      = std::unordered_map<int, query_ptr>;
         using label_ptr         = std::shared_ptr<googleQt::mail_cache::LabelData>;
         using att_ptr           = std::shared_ptr<googleQt::mail_cache::AttachmentData>;
         using label_list        = std::vector<label_ptr>;
@@ -50,7 +48,7 @@ namespace googleQt{
         using tdata_result      = std::unique_ptr<CacheDataResult<ThreadData>>;
         using ATTACHMENTS_LIST  = std::vector<att_ptr>;
         using acc_ptr           = std::shared_ptr<googleQt::mail_cache::AccountData>;
-        using THREADS_LIST      = std::map<QString, thread_ptr>;
+        using THREADS_LIST      = qstring_hash_map<thread_ptr>;
 
         /**
            reserved syslabels, they are looked up faster
@@ -78,6 +76,7 @@ namespace googleQt{
         extern QString sysLabelId(SysLabel l);
         extern QString sysLabelName(SysLabel l);
         extern uint64_t reservedSysLabelMask(SysLabel l);
+        extern std::vector<SysLabel> mask2reservedSysLabel(uint64_t);
 
         /**
            MessageData - local persistant rfc822 basic data.
@@ -316,8 +315,8 @@ namespace googleQt{
             QString snippet()const { return m_snippet; }
             void    merge(CacheData* other)override;
             msg_ptr findMessage(QString id);
-            const msg_arr& messages()const{return m_messages;}
-            msg_arr& messages(){return m_messages;}
+            const msg_list& messages()const{return m_messages;}
+            msg_list& messages(){return m_messages;}
             msg_ptr head() { return m_head; }
             qlonglong internalDate()const;
 
@@ -333,9 +332,9 @@ namespace googleQt{
             QString     m_snippet;
             uint64_t    m_labels{0}, 
                         m_limbo_labels{0};///labels not confirmed yet, we waiting for async call to complete but app might assume is succeded
-            msg_arr     m_messages;
+            msg_list    m_messages;
             msg_map     m_mmap;
-			msg_ptr     m_head{nullptr};//ykh+1
+            msg_ptr     m_head{nullptr};//ykh+1
         private:
             ThreadData(
                 QString id,
@@ -364,15 +363,15 @@ namespace googleQt{
             QString             labelid()const { return m_labelid; }
             void                setLabelid(QString val) { m_labelid = val; }
             bool                hasNewUnsavedThreads()const { return !m_qnew_thread_ids.empty(); }
-            const thread_arr&   threads_arr()const { return m_qthreads; }
-            thread_arr&         threads_arr(){ return m_qthreads; }
+            const thread_list&  threads_arr()const { return m_qthreads; }
+            thread_list&        threads_arr(){ return m_qthreads; }
             const thread_map&   threads_map()const { return m_tmap; }
             QString nextPageToken()const{return m_nextPageToken;}
 
         protected:          
             int                 m_db_id{ -1 };
             QString             m_q, m_labelid,m_nextPageToken;
-            thread_arr          m_qthreads;
+            thread_list         m_qthreads;
             thread_map          m_tmap;
             STRING_LIST         m_qnew_thread_ids;
             bool                m_threads_db_loaded{false};
@@ -418,7 +417,7 @@ namespace googleQt{
         {
         public:
             GMailCacheQueryTask(EDataState load,
-								ApiClient* cl,
+                                ApiClient* cl,
                                 googleQt::mail_cache::GmailCacheRoutes& r,
                                 GMailCache* c);
             void fetchFromCloud_Async(const STRING_LIST& id_list)override;
@@ -512,8 +511,8 @@ namespace googleQt{
         protected:
             GMailSQLiteStorage*     m_storage;
             friend class GMailSQLiteStorage;
-			friend class GThreadsStorage;
-			friend class GQueryStorage;
+            friend class GThreadsStorage;
+            friend class GQueryStorage;
         };
 
 
@@ -529,7 +528,7 @@ namespace googleQt{
         protected:
             std::shared_ptr<ThreadData> loadThread(QSqlQuery* q);
             bool loadThreadsFromDb();
-            thread_arr loadThreadsByIdsFromDb(const std::vector<QString>& thread_ids);
+            thread_list loadThreadsByIdsFromDb(const std::vector<QString>& thread_ids);
             ///remove empty threads - without any messages
             void verifyThreads();
 
@@ -573,8 +572,8 @@ namespace googleQt{
             QString insertSQLthreads(query_ptr q)const;
             void bindSQL(QSqlQuery* q, STRING_LIST& r);
         protected:
-			GThreadsStorage*        m_tstorage{ nullptr };
-			GMessagesStorage*		m_mstorage{ nullptr };
+            GThreadsStorage*        m_tstorage{ nullptr };
+            GMessagesStorage*       m_mstorage{ nullptr };
             query_map               m_qmap;
             query_db_map            m_q_dbmap;
             friend class GMailSQLiteStorage;
@@ -616,7 +615,7 @@ namespace googleQt{
                                                  QString file_name);
             /// load label info by set of label IDs, if null return all available labels
             std::vector<mail_cache::label_ptr> getLabelsInSet(std::set<QString>* in_optional_idset = nullptr);
-			thread_arr loadThreadsByIdsFromDb(const std::vector<QString>& thread_ids);
+            thread_list loadThreadsByIdsFromDb(const std::vector<QString>& thread_ids);
 
             uint64_t packLabels(const std::vector<QString>& labels);
             std::vector<mail_cache::label_ptr> unpackLabels(const uint64_t& data)const;
@@ -651,25 +650,32 @@ namespace googleQt{
             GThreadCache*       tcache() { return m_thread_cache; }
 
 
-            thread_ptr findThread(QString thread_id);
+            thread_ptr          findThread(QString thread_id);
+            msg_ptr             findMessage(QString msg_id);
 
-            uint64_t lastHistoryId()const { return m_lastHistoryId; }
-   	    void     setHistoryId(uint64_t val){m_lastHistoryId = val;}
-            int     autoloadLimit()const {return m_cache_autoload_limit;}
+            msg_list loadMessagesByIdsFromDb(const std::vector<QString>& msg_ids);
 
+            uint64_t                lastHistoryId()const { return m_lastHistoryId; }
+            void                    setHistoryId(uint64_t val){m_lastHistoryId = val;}
+            int                     autoloadLimit()const {return m_cache_autoload_limit;}
+
+            /// cached 'modifyBatch'
+            void                    registerBatchUpdate(QString msg_id, SysLabel l);
+            void                    clearBatchUpdate(const std::vector<QString>& msg_ids);
+            const qstring_hash_map<int>&    getBatchUpdateRequests()const { return m_batch_request; };          
         protected:
             QString metaPrefix()const { return m_metaPrefix; }
             bool execQuery(QString sql);
             bool execContactQuery(QString sql);
                         
-            QSqlQuery* selectQuery(QString sql);
+            QSqlQuery* selectQuery(QString sql)const;
             QSqlQuery* selectContactQuery(QString sql);
-            QSqlQuery* prepareQuery(QString sql);
-            QSqlQuery* prepareContactQuery(QString sql);
+            QSqlQuery* prepareQuery(QString sql)const;
+            QSqlQuery* prepareContactQuery(QString sql)const;
             
             QString lastSqlError()const;
 
-            QSqlQuery* doPrepareQuery(std::unique_ptr<QSqlQuery>& q, QString sql);
+            QSqlQuery* doPrepareQuery(std::unique_ptr<QSqlQuery>& q, QString sql)const;
             bool doExecQuery(std::unique_ptr<QSqlQuery>& q, QString sql);
 
             QSqlQuery* startTransaction(QString sql);
@@ -695,23 +701,24 @@ namespace googleQt{
             
             void reloadDbAccounts();
             bool reloadDbConfig();
-            bool ensureMailTables();            
+            bool ensureMailTables();
+            void loadBatchUpdateFromDb();
         protected:
             bool m_initialized {false};
             QSqlDatabase        m_gmail_db;
-            std::unique_ptr<QSqlQuery>          m_query{ nullptr }, m_contact_query{nullptr};
+            mutable std::unique_ptr<QSqlQuery>  m_query{ nullptr }, m_contact_query{nullptr};
             GMailCache*                         m_msg_cache{ nullptr };
             GThreadCache*                       m_thread_cache{ nullptr };
             std::unique_ptr<GMessagesStorage>   m_mstorage;
             std::unique_ptr<GThreadsStorage>    m_tstorage;
             std::unique_ptr<GQueryStorage>      m_qstorage;
-            //gcontact::GContactCacheBase*      m_contact_cache{ nullptr };
             std::map<QString, std::shared_ptr<LabelData>, CaseInsensitiveLess> m_acc_labels;
             std::vector<std::shared_ptr<LabelData>> m_maskbase2label;
-            std::set<int> m_avail_label_base;
-            std::map<int, mail_cache::acc_ptr> m_id2acc;
+            std::set<int>                       m_avail_label_base;
+            std::unordered_map<int, mail_cache::acc_ptr>    m_id2acc;
             std::map<QString, mail_cache::acc_ptr, CaseInsensitiveLess> m_user2acc;
-            std::map<QString, QString> m_configs;
+            qstring_hash_map<QString>                   m_configs;
+            qstring_hash_map<int>                       m_batch_request;
             QString m_dbPath;
             QString m_downloadDir;
             QString m_contactCacheDir;
@@ -719,7 +726,7 @@ namespace googleQt{
             QString m_metaPrefix;
             int     m_accId{-1};
             int     m_cache_autoload_limit{1000};
-			uint64_t    m_lastHistoryId{0};///last valid history id
+            uint64_t    m_lastHistoryId{0};///last valid history id
             friend class googleQt::mail_cache::GmailCacheRoutes;
             friend class googleQt::gcontact::GContactCache;
             friend class googleQt::mail_cache::GMessagesStorage;

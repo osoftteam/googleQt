@@ -9,12 +9,8 @@
 
 namespace googleQt {
 
-    template<class O>
-    using CACHE_MAP = std::map<QString, std::shared_ptr<O>>;
-    template<class O>
-    using CACHE_LIST = std::vector<std::shared_ptr<O>>;
-    template<class O>
-    using CACHE_ARR = std::vector<std::shared_ptr<O>>;
+    template<class O>using CACHE_MAP = qstring_hash_map<std::shared_ptr<O>>;
+    template<class O>using CACHE_LIST = std::vector<std::shared_ptr<O>>;
 
     enum class EDataState
     {
@@ -310,7 +306,7 @@ namespace googleQt {
     protected:
         ApiEndpoint&                m_endpoint;
         CACHE_MAP<O>                m_mcache;
-        CACHE_ARR<O>                m_ord;
+        CACHE_LIST<O>               m_ord;
         LocalPersistentStorage<O, R>* m_localDB{nullptr};
         bool                        m_valid{true};
     };//GoogleCache

@@ -75,15 +75,15 @@ void ContactXmlPersistant::markAsIdLimbo()
 
 bool ContactXmlPersistant::isRepoSyncCompleted()const 
 { 
-	return m_repo_sync_completed; 
+    return m_repo_sync_completed; 
 }
 
 void ContactXmlPersistant::setRepoSyncCompleted(bool val) 
 { 
-	m_repo_sync_completed = val;
-	if (m_repo_sync_completed) {
-		markAsNormalCopy();
-	}
+    m_repo_sync_completed = val;
+    if (m_repo_sync_completed) {
+        markAsNormalCopy();
+    }
 }
 
 void ContactXmlPersistant::printXmlParseError(QString contextMsg,

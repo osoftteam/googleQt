@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <map>
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
@@ -13,26 +12,26 @@
 #include "ApiClient.h"
 
 #ifdef API_QT_AUTOTEST
-	#ifndef API_QT_DIAGNOSTICS
-		#define API_QT_DIAGNOSTICS
-	#endif
+    #ifndef API_QT_DIAGNOSTICS
+        #define API_QT_DIAGNOSTICS
+    #endif
 #else
-	///this is optional for real application
-	#ifndef API_QT_DIAGNOSTICS
-		#define API_QT_DIAGNOSTICS
-	#endif
+    ///this is optional for real application
+    #ifndef API_QT_DIAGNOSTICS
+        #define API_QT_DIAGNOSTICS
+    #endif
 #endif
 
 #define TIMES_TO_REFRESH_TOKEN_BEFORE_GIVEUP 2
 
 namespace googleQt{
-	struct DiagnosticRequestInfo
-	{
-		QString context;
-		QString tag;
-		QString request;
-	};
-	using DGN_LIST = std::vector<DiagnosticRequestInfo>;
+    struct DiagnosticRequestInfo
+    {
+        QString context;
+        QString tag;
+        QString request;
+    };
+    using DGN_LIST = std::vector<DiagnosticRequestInfo>;
 
     class ApiEndpoint
     {
@@ -44,17 +43,17 @@ namespace googleQt{
         void          exitEventsLoop()const;
         bool          isQueryInProgress()const;
 
-		DiagnosticRequestInfo   lastRequestInfo()const;
-		const DGN_LIST&			diagnosticRequests()const;
-		void					diagnosticSetRequestTag(QString	s) { m_diagnosticsRequestTag = s; }
-		void					diagnosticSetRequestContext(QString	s) { m_diagnosticsRequestContext = s; }
-		void					diagnosticClearRequestsList();
+        DiagnosticRequestInfo   lastRequestInfo()const;
+        const DGN_LIST&         diagnosticRequests()const;
+        void                    diagnosticSetRequestTag(QString s) { m_diagnosticsRequestTag = s; }
+        void                    diagnosticSetRequestContext(QString s) { m_diagnosticsRequestContext = s; }
+        void                    diagnosticClearRequestsList();
         QByteArray    lastResponse()const { return m_last_response; };
         void          setProxy(const QNetworkProxy& proxy);
 
         ApiClient*     apiClient() { return m_client; }
         const ApiClient*  apiClient()const { return m_client; }
-		virtual TaskAggregator* produceAggregatorTask() = 0;
+        virtual TaskAggregator* produceAggregatorTask() = 0;
 
     protected:                
         virtual QNetworkReply*  getData(const QNetworkRequest &request);
@@ -86,7 +85,7 @@ namespace googleQt{
             QNetworkReply *,
             int)>;
 
-        typedef std::map<QNetworkReply*, std::shared_ptr<FINISHED_REQ>> NET_REPLIES_IN_PROGRESS;
+        typedef std::unordered_map<QNetworkReply*, std::shared_ptr<FINISHED_REQ>> NET_REPLIES_IN_PROGRESS;
 
         virtual void            registerReply(std::shared_ptr<requester>& rb, QNetworkReply*, std::shared_ptr<FINISHED_REQ>);
         virtual void            unregisterReply(QNetworkReply*);
@@ -381,9 +380,9 @@ namespace googleQt{
         NET_REPLIES_IN_PROGRESS m_replies_in_progress;
         QByteArray            m_last_response;
 #ifdef API_QT_DIAGNOSTICS
-		DGN_LIST				m_requests;
-		QString					m_diagnosticsRequestTag;
-		QString					m_diagnosticsRequestContext;
+        DGN_LIST                m_requests;
+        QString                 m_diagnosticsRequestTag;
+        QString                 m_diagnosticsRequestContext;
 #endif //API_QT_DIAGNOSTICS
     };
 }

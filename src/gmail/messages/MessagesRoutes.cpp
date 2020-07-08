@@ -12,6 +12,32 @@
 using namespace googleQt;
 using namespace messages;
 
+void MessagesRoutes::batchModify(const gmail::BatchModifyMessageArg& arg ){
+    batchModify_Async(arg)->waitForResultAndRelease();
+}
+
+GoogleVoidTask* MessagesRoutes::batchModify_Async(const gmail::BatchModifyMessageArg& arg)
+{
+    GoogleVoidTask* t = m_end_point->produceVoidTask();
+    m_end_point->postStyleB2Empty
+        (m_end_point->buildGmailUrl("messages", arg),
+        arg,
+        t);
+    return t;
+}
+
+void MessagesRoutes::batchModify_AsyncCB(
+    const gmail::BatchModifyMessageArg& arg,
+    std::function<void()> completed_callback ,
+    std::function<void(std::unique_ptr<GoogleException>)> failed_callback)
+{
+    m_end_point->postStyleB2Empty
+        (m_end_point->buildGmailUrl("messages", arg),
+        arg,
+        completed_callback,
+        failed_callback);
+}
+
 void MessagesRoutes::deleteOperation(const gmail::IdArg& arg ){
     deleteOperation_Async(arg)->waitForResultAndRelease();
 }

@@ -7,7 +7,7 @@ using namespace googleQt;
 ///EndpointRunnable
 EndpointRunnable::EndpointRunnable(ApiClient* cl)
 {
-	m_client = cl->shared_from_this();
+    m_client = cl->shared_from_this();
 };
 
 EndpointRunnable::~EndpointRunnable() 
@@ -29,13 +29,13 @@ void EndpointRunnable::notifyOnFinished()
     emit finished();
     if (m_in_wait_loop)
     {
-		m_client->endpoint()->exitEventsLoop();
+        m_client->endpoint()->exitEventsLoop();
     }
 };
 
 void EndpointRunnable::waitUntillFinishedOrCancelled()
 {
-	m_client->endpoint()->runEventsLoop();
+    m_client->endpoint()->runEventsLoop();
 };
 
 bool EndpointRunnable::waitForResult()const
@@ -43,7 +43,7 @@ bool EndpointRunnable::waitForResult()const
     if (!isCompleted() && !isFailed())
     {
         m_in_wait_loop = true;
-		m_client->endpoint()->runEventsLoop();
+        m_client->endpoint()->runEventsLoop();
     }
 
     return isCompleted();
@@ -132,7 +132,7 @@ void GoogleVoidTask::waitForResultAndRelease()
     if (!isCompleted() && !isFailed())
     {
         m_in_wait_loop = true;
-		m_client->endpoint()->runEventsLoop();
+        m_client->endpoint()->runEventsLoop();
     }
 
     if (isFailed())
@@ -234,7 +234,7 @@ void TaskAggregator::waitForResultAndRelease()
             });
         }
         m_in_wait_loop = true;
-		m_client->endpoint()->runEventsLoop();
+        m_client->endpoint()->runEventsLoop();
     }
 
     if (isFailed())

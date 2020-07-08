@@ -22,6 +22,20 @@ namespace messages{
     public:
         MessagesRoutes(Endpoint* ep):GoogleRouteBase(ep){};
             /**
+            ApiRoute('batchModify')
+
+
+            Modifies the labels on list of specified messages.
+
+            */
+        void batchModify(const gmail::BatchModifyMessageArg& );
+        GoogleVoidTask* batchModify_Async(const gmail::BatchModifyMessageArg& arg);
+        void batchModify_AsyncCB(
+            const gmail::BatchModifyMessageArg&,
+            std::function<void()> completed_callback = nullptr,
+            std::function<void(std::unique_ptr<GoogleException>)> failed_callback = nullptr);
+
+            /**
             ApiRoute('delete')
 
 

@@ -298,9 +298,44 @@ namespace googleQt{
             QString m_message_id;
             std::vector<QString> m_addLabels;
             std::vector<QString> m_removeLabels;
-
         };
-    
+
+        class BatchModifyMessageArg : public QParamArgWithBody<ModifyMessageArg>
+        {
+        public:
+            BatchModifyMessageArg() {};
+            BatchModifyMessageArg(QString user_id);
+
+            QString userId()const { return m_userId; }
+            void    setUserId(QString id) { m_userId = id; };
+
+            const std::vector<QString>& getIds()const { return m_ids; };
+            void setIds(const std::vector<QString>& arg) { m_ids = arg; };
+            const std::vector<QString>& getAddlabels()const { return m_addLabels; };
+            void setAddlabels(const std::vector<QString>& arg) { m_addLabels = arg; };
+            const std::vector<QString>& getRemovelabels()const { return m_removeLabels; };
+            void setRemovelabels(const std::vector<QString>& arg) { m_removeLabels = arg; };
+
+            void addAddLabel(QString name);
+            void addRemoveLabel(QString name);
+
+            void build(const QString& link_path, QUrl& url)const override;
+            void toJson(QJsonObject& js)const override;
+            operator QJsonObject ()const;
+
+#ifdef API_QT_AUTOTEST
+            static std::unique_ptr<BatchModifyMessageArg> EXAMPLE(int context_index, int parent_content_index);
+#endif //API_QT_AUTOTEST
+
+            void print()const;
+
+        protected:
+            QString m_userId;
+            std::vector<QString> m_ids;
+            std::vector<QString> m_addLabels;
+            std::vector<QString> m_removeLabels;
+        };
+
         class MimeBodyPart 
         {
             friend class SendMimeMessageArg;

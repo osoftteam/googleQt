@@ -81,6 +81,60 @@ ModifyMessageArg::operator QJsonObject()const {
     return js;
 }
 
+BatchModifyMessageArg::BatchModifyMessageArg(QString user_id)
+{
+    m_userId = user_id;
+}
+
+void BatchModifyMessageArg::addAddLabel(QString name)
+{
+    if (!name.isEmpty()) {
+        m_addLabels.push_back(name);
+    }
+};
+
+void BatchModifyMessageArg::addRemoveLabel(QString name)
+{
+    if (!name.isEmpty()) {
+        m_removeLabels.push_back(name);
+    }
+};
+
+
+void BatchModifyMessageArg::build(const QString& link_path, QUrl& url)const
+{
+    UrlBuilder b(link_path + QString("/batchModify"), url);
+
+};
+
+void BatchModifyMessageArg::toJson(QJsonObject& js)const
+{
+    js["ids"] = ingrl_list2jsonarray(m_ids);
+    js["addLabelIds"] = ingrl_list2jsonarray(m_addLabels);
+    js["removeLabelIds"] = ingrl_list2jsonarray(m_removeLabels);
+};
+
+BatchModifyMessageArg::operator QJsonObject()const {
+    QJsonObject js;
+    this->toJson(js);
+    return js;
+}
+
+void BatchModifyMessageArg::print()const
+{
+    qDebug() << "-- ids ---";
+    for (auto i : m_ids) {
+        qDebug() << "    " << i;
+    }
+    qDebug() << "-- add ---";
+    for (auto i : m_addLabels) {
+        qDebug() << "    " << i;
+    }
+    qDebug() << "-- rem ---";
+    for (auto i : m_removeLabels) {
+        qDebug() << "    " << i;
+    }
+};
 
 ListArg::ListArg()
 {
@@ -415,6 +469,23 @@ std::unique_ptr<ModifyMessageArg> ModifyMessageArg::EXAMPLE(int, int)
     return rv;
 };
 
+std::unique_ptr<BatchModifyMessageArg> BatchModifyMessageArg::EXAMPLE(int, int)
+{
+    std::unique_ptr<BatchModifyMessageArg> rv(new BatchModifyMessageArg(ApiAutotest::INSTANCE().userId()));
+    std::vector <QString> ids, add_label, remove_label;
+    ids.push_back("id1");
+    ids.push_back("id2");
+    add_label.push_back("LABEL_ADD_1");
+    add_label.push_back("LABEL_ADD_2");
+    remove_label.push_back("LABEL_DEL_1");
+    remove_label.push_back("LABEL_DEL_2");
+    rv->setIds(ids);
+    rv->setAddlabels(add_label);
+    rv->setRemovelabels(remove_label);
+    return rv;
+};
+
+
 std::unique_ptr<HistoryListArg> HistoryListArg::EXAMPLE(int, int)
 { 
     std::unique_ptr<HistoryListArg> rv(new HistoryListArg(ApiAutotest::INSTANCE().userId()));
@@ -423,7 +494,6 @@ std::unique_ptr<HistoryListArg> HistoryListArg::EXAMPLE(int, int)
     rv->setLabelId("hlabel1");
     rv->setMaxResults(100);
     rv->setHistoryTypes("messageAdded");
-    //rv->labels() = QString("hlabel1 hlabel2 hlabel3").split(" ");
     return rv; 
 };
 

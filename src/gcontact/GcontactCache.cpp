@@ -49,10 +49,10 @@ std::unique_ptr<ContactInfo> ContactInfo::createWithId(QString contact_id)
 
 std::unique_ptr<ContactInfo> ContactInfo::cloneWithId(QString contact_id)
 {
-	std::unique_ptr<ContactInfo> rv(new ContactInfo());
-	rv->assignContent(*this);
-	rv->m_id = contact_id;
-	return rv;
+    std::unique_ptr<ContactInfo> rv(new ContactInfo());
+    rv->assignContent(*this);
+    rv->m_id = contact_id;
+    return rv;
 };
 
 ContactInfo& ContactInfo::setTitle(QString val)
@@ -415,9 +415,9 @@ void ContactInfo::assignContent(const ContactInfo& src)
 
 std::unique_ptr<ContactInfo> ContactInfo::clone()const
 {
-	std::unique_ptr<ContactInfo> c(new ContactInfo);
-	c->assignContent(*this);
-	return c;
+    std::unique_ptr<ContactInfo> c(new ContactInfo);
+    c->assignContent(*this);
+    return c;
 };
 
 std::unique_ptr<BatchRequestContactInfo> ContactInfo::buildBatchRequest(googleQt::EBatchId batch_id)
@@ -550,9 +550,9 @@ void GroupInfo::assignContent(const GroupInfo& src)
 
 std::unique_ptr<GroupInfo> GroupInfo::clone()const
 {
-	std::unique_ptr<GroupInfo> c(new GroupInfo);
-	c->assignContent(*this);
-	return c;
+    std::unique_ptr<GroupInfo> c(new GroupInfo);
+    c->assignContent(*this);
+    return c;
 };
 
 QString GroupInfo::toString()const
@@ -682,7 +682,7 @@ QString BatchRequestGroupInfo::toXmlBegin()const
 };
 
 /**
-	GContactCache
+    GContactCache
 */
 GContactCache::GContactCache(googleQt::GoogleClient& gc):m_gc(gc)
 {
@@ -691,37 +691,37 @@ GContactCache::GContactCache(googleQt::GoogleClient& gc):m_gc(gc)
 
 QString GContactCache::metaPrefix()const 
 {
-	return m_sql_storage->m_metaPrefix;
+    return m_sql_storage->m_metaPrefix;
 };
 
 QSqlQuery* GContactCache::prepareContactQuery(QString sql)
 {
-	return m_sql_storage->prepareContactQuery(sql);
+    return m_sql_storage->prepareContactQuery(sql);
 };
 
 bool GContactCache::execContactQuery(QString sql) 
 {
-	return m_sql_storage->execContactQuery(sql);
+    return m_sql_storage->execContactQuery(sql);
 };
 
 QSqlQuery* GContactCache::selectContactQuery(QString sql)
 {
-	return m_sql_storage->selectContactQuery(sql);
+    return m_sql_storage->selectContactQuery(sql);
 };
 
 QString GContactCache::contactCacheDir()const
 {
-	return m_sql_storage->contactCacheDir();
+    return m_sql_storage->contactCacheDir();
 };
 
-QString	GContactCache::accountEmail()const
+QString GContactCache::accountEmail()const
 {
-	return m_gc.userId();
+    return m_gc.userId();
 };
 
 void GContactCache::attachSQLStorage(mail_cache::GMailSQLiteStorage* ss)
 {
-	m_sql_storage = ss;
+    m_sql_storage = ss;
 };
 
 
@@ -747,11 +747,11 @@ bool GContactCacheBase::ensureContactTables()
     if (!execContactQuery(sql_groups))
         return false;
 
-	if (m_enable_contacts_config_table) {
-		QString sql_config = QString("CREATE TABLE IF NOT EXISTS %1gcontact_config(acc_email TEXT NOT NULL, config_name TEXT, config_value TEXT)").arg(metaPrefix());
-		if (!execContactQuery(sql_config))
-			return false;
-	}
+    if (m_enable_contacts_config_table) {
+        QString sql_config = QString("CREATE TABLE IF NOT EXISTS %1gcontact_config(acc_email TEXT NOT NULL, config_name TEXT, config_value TEXT)").arg(metaPrefix());
+        if (!execContactQuery(sql_config))
+            return false;
+    }
 
     return true;
 };
@@ -1032,10 +1032,10 @@ bool GContactCacheBase::storeContactGroups()
 
 bool GContactCacheBase::storeConfig()
 {
-	if (!m_enable_contacts_config_table) {
-		qWarning() << "config table not supported for external DB";
-		return false;
-	}
+    if (!m_enable_contacts_config_table) {
+        qWarning() << "config table not supported for external DB";
+        return false;
+    }
 
     if (m_sync_time.isValid()) {
         QString sql_del_old;
@@ -1084,11 +1084,11 @@ bool GContactCacheBase::storeContactsToDb()
         return false;
     }
 
-	if (m_enable_contacts_config_table) {
-		if (!storeConfig()) {
-			return false;
-		}
-	}
+    if (m_enable_contacts_config_table) {
+        if (!storeConfig()) {
+            return false;
+        }
+    }
     
     return true;
 };
@@ -1105,7 +1105,7 @@ bool GContactCacheBase::loadContactsFromDb()
 
     if (m_enable_contacts_config_table) {
       if (!loadContactConfigFromDb()) {
-	return false;
+    return false;
       }
     }
 
@@ -1156,7 +1156,7 @@ bool GContactCacheBase::loadContactGroupsFromDb()
 {
     m_groups.clear();
 
-	QString email = accountEmail();
+    QString email = accountEmail();
     QString sql = QString("SELECT status, xml_original, updated, group_db_id, title, content, group_id FROM %1gcontact_group WHERE UPPER(acc_email)=UPPER('%2') AND status IN(1,2,3) ORDER BY updated DESC")
         .arg(metaPrefix())
         .arg(email);
@@ -1179,7 +1179,7 @@ bool GContactCacheBase::loadContactEntriesFromDb()
 {
     m_contacts.clear();
 
-	QString email = accountEmail();
+    QString email = accountEmail();
     QString sql = QString("SELECT status, xml_original, xml_current, updated, contact_db_id, title, "
         "photo_href, photo_etag, photo_status, entry_id FROM %1gcontact_entry WHERE UPPER(acc_email)=UPPER('%2') AND status IN(1,2,3) ORDER BY updated DESC")
         .arg(metaPrefix())
@@ -1201,10 +1201,10 @@ bool GContactCacheBase::loadContactEntriesFromDb()
 
 bool GContactCacheBase::loadContactConfigFromDb()
 {
-	if (!m_enable_contacts_config_table) {
-		qWarning() << "config table not supported for external DB";
-		return false;
-	}
+    if (!m_enable_contacts_config_table) {
+        qWarning() << "config table not supported for external DB";
+        return false;
+    }
 
     m_configs.clear();
     
@@ -1336,18 +1336,18 @@ bool GContactCacheBase::addPhoto(ContactInfo::ptr c, QString photoFileName)
 };
 
 ContactsReplicaSyncResult GContactCacheBase::synchronizeContactsReplica(GContactCacheBase* remoteMasterContacts)
-{	
-	ContactsReplicaSyncResult rv;
+{   
+    ContactsReplicaSyncResult rv;
 
-	auto& g_local = groups();
-	auto& g_remote = remoteMasterContacts->groups();
-	rv.groups = g_local.synchronizeReplica(g_remote);
+    auto& g_local = groups();
+    auto& g_remote = remoteMasterContacts->groups();
+    rv.groups = g_local.synchronizeReplica(g_remote);
 
-	auto& c_local = contacts();
-	auto& c_remote = remoteMasterContacts->contacts();
-	rv.contacts = c_local.synchronizeReplica(c_remote);
+    auto& c_local = contacts();
+    auto& c_remote = remoteMasterContacts->contacts();
+    rv.contacts = c_local.synchronizeReplica(c_remote);
 
-	return rv;
+    return rv;
 };
 
 GoogleTask<QString>* GcontactCacheRoutes::getContactCachePhoto_Async(ContactInfo::ptr c)
@@ -1416,7 +1416,7 @@ namespace googleQt {
 
 GoogleVoidTask* PhotoReceiver::routeRequest(QString contact_id)
 {
-	auto cache = m_r.endpoint().client()->contacts_cache();//m_r.cacheRoutes()->contacts_cache();
+    auto cache = m_r.endpoint().client()->contacts_cache();//m_r.cacheRoutes()->contacts_cache();
     QString filePath = cache->getPhotoMediaPath(contact_id, true);
     if (filePath.isEmpty()) {
         GoogleVoidTask* t = m_r.endpoint().produceVoidTask();
@@ -1553,7 +1553,7 @@ PhotoSyncTask* GcontactCacheRoutes::synchronizePhotos_Async()
         {
             t->m_downloaded_ids = t1->m_completed_ids;
             t->m_uploaded_ids = t2->m_completed_ids;
-			m_endpoint.client()->contacts_cache()->storeContactsToDb();
+            m_endpoint.client()->contacts_cache()->storeContactsToDb();
             t->completed_callback();
         },
             [=](std::unique_ptr<GoogleException> ex)
@@ -1646,7 +1646,7 @@ void applyBatchStep(std::shared_ptr<B> b, L& lst)
 GcontactCacheSyncTask* GcontactCacheRoutes::synchronizeContacts_Async()
 {
     GcontactCacheSyncTask* rv = new GcontactCacheSyncTask(m_endpoint.apiClient());
-	auto cc = m_endpoint.client()->contacts_cache();
+    auto cc = m_endpoint.client()->contacts_cache();
 
     QDateTime dtUpdatedMin = cc->lastSyncTime();
 
@@ -1682,7 +1682,7 @@ GcontactCacheSyncTask* GcontactCacheRoutes::synchronizeContacts_Async()
         auto groups_btask = m_endpoint.client()->gcontact()->getContactGroup()->batch_Async(arg);
         groups_btask->then([=](std::unique_ptr<gcontact::BatchGroupList> rlst)
         {
-			auto cc = m_endpoint.client()->contacts_cache();
+            auto cc = m_endpoint.client()->contacts_cache();
 
             rv->m_updated_groups = std::move(rlst);
             auto& arr = rv->m_updated_groups->items();
@@ -2249,7 +2249,7 @@ void GcontactCacheRoutes::runAutotest()
     ApiAutotest::INSTANCE() << "test persistance after modification identity";
     autoTestStoreAndCheckIdentityOnLoad(m_endpoint.client()->contacts_cache());
 
-	m_endpoint.client()->contacts_cache()->clearDbCache();
+    m_endpoint.client()->contacts_cache()->clearDbCache();
 
     ApiAutotest::INSTANCE().enableRequestLog(false);
 
@@ -2273,7 +2273,7 @@ void GcontactCacheRoutes::runAutotest()
     };
 
 
-	auto cc = m_endpoint.client()->contacts_cache();
+    auto cc = m_endpoint.client()->contacts_cache();
 
     std::function<void()> auto_sync_modifyContacts = [=]() 
     {

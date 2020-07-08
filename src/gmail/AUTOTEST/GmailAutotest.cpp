@@ -92,6 +92,13 @@ static void call_update_from_Labels(){
     ApiAutotest::INSTANCE() << "--------------------------";
 }
 
+static void call_batchModify_from_Messages(){
+    ApiAutotest::INSTANCE() << QString("%1/%2").arg("Messages").arg("batchModify");
+    std::unique_ptr<gmail::BatchModifyMessageArg> arg = gmail::BatchModifyMessageArg::EXAMPLE(0, 0);
+    cl->getMessages()->batchModify(*(arg.get()) );
+    ApiAutotest::INSTANCE() << "--------------------------";
+}
+
 static void call_deleteOperation_from_Messages(){
     ApiAutotest::INSTANCE() << QString("%1/%2").arg("Messages").arg("deleteOperation");
     std::unique_ptr<gmail::IdArg> arg = gmail::IdArg::EXAMPLE(0, 0);
@@ -219,6 +226,7 @@ static void test_call_LabelsRoutes(){
 }
 
 static void test_call_MessagesRoutes(){
+    call_batchModify_from_Messages();
     call_deleteOperation_from_Messages();
     call_get_from_Messages();
     call_list_from_Messages();

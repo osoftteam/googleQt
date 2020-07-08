@@ -59,7 +59,7 @@ namespace googleQt
             };
 
             using ptr   = std::shared_ptr<TaskList>;
-            using ID2T  = std::map<QString, TaskInfo::ptr>;
+            using ID2T  = qstring_hash_map<TaskInfo::ptr>;
 
             RootTaskInfo::ptr  root(){return m_root_task;}
             ID2T&              tasks_map(){return m_id2t;}
@@ -90,7 +90,7 @@ namespace googleQt
         {
         public:
             using ptr = std::shared_ptr<TaskCache>;
-            using ID2TLIST = std::map<QString, TaskList::ptr>;
+            using ID2TLIST = qstring_hash_map<TaskList::ptr>;
        
             ID2TLIST& task_lists(){return m_id2tlist;}
 

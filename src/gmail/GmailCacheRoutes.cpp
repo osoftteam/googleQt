@@ -106,7 +106,7 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheMessages_
         rfetcher = newMessageResultFetcher(state);
     }
 #ifdef API_QT_DIAGNOSTICS
-	endpoint().diagnosticSetRequestTag(QString("getCacheMessages_Async[%1]").arg(id_list.size()));
+    endpoint().diagnosticSetRequestTag(QString("getCacheMessages_Async[%1]").arg(id_list.size()));
 #endif
     m_GMsgCache->query_Async(state, id_list, rfetcher);
     return rfetcher;
@@ -269,7 +269,7 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
         }
     }
 #ifdef API_QT_DIAGNOSTICS
-	endpoint().diagnosticSetRequestTag(QString("getQCache_Async/threads->list_Async[%1][%2]").arg(q->labelid()).arg(q->qStr()));
+    endpoint().diagnosticSetRequestTag(QString("getQCache_Async/threads->list_Async[%1][%2]").arg(q->labelid()).arg(q->qStr()));
 #endif
     ///this will return list of thread Ids with HistoryId
     m_gmail_routes.getThreads()->list_Async(listArg)->then([=](std::unique_ptr<threads::ThreadListRes> tlist)
@@ -331,7 +331,7 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheThreadL
     mail_cache::GThreadCacheQueryTask* rfetcher /*= nullptr*/)
 {
 #ifdef API_QT_DIAGNOSTICS
-	endpoint().diagnosticSetRequestTag(QString("getCacheThreadList_Async[%1]").arg(id_list.size()));
+    endpoint().diagnosticSetRequestTag(QString("getCacheThreadList_Async[%1]").arg(id_list.size()));
 #endif
     if (!rfetcher)
     {
@@ -611,7 +611,7 @@ GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setLabel_As
     bool system_label)
 {
 #ifdef API_QT_DIAGNOSTICS
-	endpoint().diagnosticSetRequestTag(QString("setLabel_Async[%1]").arg(label_id));
+    endpoint().diagnosticSetRequestTag(QString("setLabel_Async[%1]").arg(label_id));
 #endif
     int accId = -1;
     if (m_lite_storage) {
@@ -639,6 +639,12 @@ GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setLabel_As
             t->rebuildLabelsMap();
         }
 
+        if (m_GMsgCache &&
+            m_lite_storage &&
+            accId != -1)
+        {
+            m_lite_storage->update_message_labels_db(accId, d->id(), d->labelsBitMap());
+        }
     }
 
     QString userId = m_lite_storage->findUser(d->accountId());
@@ -659,14 +665,24 @@ GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setLabel_As
         arg.setRemovelabels(labels);
     }
 
-    GoogleTask<messages::MessageResource>* t = m_gmail_routes.getMessages()->modify_Async(arg);
+    GoogleTask<messages::MessageResource>* t = m_gmail_routes.getMessages()->modify_Async(arg); 
+    return t;
+};
+
+GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setSysLabelOrRegisterBatchUpdate_Async(mail_cache::MessageData* d, googleQt::mail_cache::SysLabel lbl, bool set_it)
+{
+    auto accId = d->accountId();
+    auto t = setLabel_Async(mail_cache::sysLabelId(lbl), d, set_it, true);
     QObject::connect(t, &EndpointRunnable::finished, [=]()
     {
-        if (m_GMsgCache &&
-            m_lite_storage &&
-            accId != -1)
+        if (t->isFailed()) 
         {
-            m_lite_storage->update_message_labels_db(accId, msg_id, d->labelsBitMap());
+            if (m_GMsgCache &&
+                m_lite_storage &&
+                accId != -1)
+            {
+                m_lite_storage->registerBatchUpdate(d->id(), lbl);
+            }
         }
     });
     return t;
@@ -900,7 +916,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadListLabels_Async(const
         GmailCacheRoutes&     m_r;
         label_list            m_labels2add;
         label_list            m_labels2remove;
-    };//LabelDeleter
+    };//ThreadModifier
 
     GoogleVoidTask* t = m_endpoint.produceVoidTask();
     if (!tlist.empty()) {
@@ -919,8 +935,134 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadListLabels_Async(const
     return t;
 };
 
-///............
+GoogleVoidTask* mail_cache::GmailCacheRoutes::applyBatchUpdate_Async()
+{
+    /// we have to build map [L] -> [(M,M)]
+    GoogleVoidTask* t = m_endpoint.produceVoidTask();
 
+    static uint64_t theone = 1;
+
+    if (m_lite_storage->m_batch_request.empty())
+    {
+        t->completed_callback();
+        return t;
+    }
+
+    std::vector<QString> msg_ids;
+    for (auto r : m_lite_storage->m_batch_request) {
+        msg_ids.push_back(r.first);
+    }
+    m_lite_storage->loadMessagesByIdsFromDb(msg_ids);
+
+    using MSG_SET = std::unordered_set<mail_cache::msg_ptr>;
+    struct LblModSet
+    {
+        MSG_SET lb2add;
+        MSG_SET lb2rem;
+    };
+    using L2_MSG_SET = std::unordered_map<SysLabel, LblModSet>;
+    L2_MSG_SET l2mset;
+    for (auto i : m_lite_storage->m_batch_request) {
+        auto m = m_lite_storage->findMessage(i.first);
+        if (!m) {
+            qWarning() << "lost message registered for batchModify" << i.first;
+            continue;
+        }
+        auto upd_lbl = mask2reservedSysLabel(i.second);
+        for (auto lb : upd_lbl) {
+            int idx = (int)lb;
+            uint64_t label_mask = (theone << idx);
+
+            auto j = l2mset.find(lb);
+            if (j == l2mset.end()) {
+                LblModSet mset;
+                if (m->hasLabel(label_mask)) {
+                    mset.lb2add.insert(m);
+                }
+                else {
+                    mset.lb2rem.insert(m);
+                }
+                l2mset[lb] = mset;
+            }
+            else {
+                if (m->hasLabel(label_mask)) {
+                    j->second.lb2add.insert(m);
+                }
+                else {
+                    j->second.lb2rem.insert(m);
+                }
+            }
+        }
+    }
+
+    std::vector<googleQt::gmail::BatchModifyMessageArg> barg;
+
+    for (auto i : l2mset)
+    {
+        if (!i.second.lb2add.empty())
+        {
+            googleQt::gmail::BatchModifyMessageArg arg(m_endpoint.apiClient()->userId());
+            std::vector<QString> msg_ids;
+            std::vector<QString> lbl_add;
+            lbl_add.push_back(sysLabelId(i.first));
+            for (auto& j : i.second.lb2add) {
+                msg_ids.push_back(j->id());
+            }
+            arg.setIds(msg_ids);
+            arg.setAddlabels(lbl_add);
+            barg.push_back(arg);
+        }
+
+        if (!i.second.lb2rem.empty())
+        {
+            googleQt::gmail::BatchModifyMessageArg arg(m_endpoint.apiClient()->userId());
+            std::vector<QString> msg_ids;
+            std::vector<QString> lbl_rem;
+            lbl_rem.push_back(sysLabelId(i.first));
+            for (auto& j : i.second.lb2rem) {
+                msg_ids.push_back(j->id());
+            }
+            arg.setIds(msg_ids);
+            arg.setRemovelabels(lbl_rem);
+            barg.push_back(arg);
+        }
+    }
+
+    class SingleBatchModifier
+    {
+    public:
+        SingleBatchModifier(googleQt::messages::MessagesRoutes& r)
+            :m_r(r){}
+        GoogleVoidTask* routeRequest(googleQt::gmail::BatchModifyMessageArg a)
+        {
+            a.print();
+            return m_r.batchModify_Async(a);
+        }
+    protected:
+        googleQt::messages::MessagesRoutes&     m_r;
+    };
+
+    if (!barg.empty())
+    {
+        std::unique_ptr<SingleBatchModifier> pr(new SingleBatchModifier(*(m_gmail_routes.getMessages())));
+        ConcurrentArgRunner<googleQt::gmail::BatchModifyMessageArg, SingleBatchModifier>* r = new ConcurrentArgRunner<googleQt::gmail::BatchModifyMessageArg, SingleBatchModifier>(barg, std::move(pr), m_endpoint.apiClient());
+        r->run();
+        connect(r, &EndpointRunnable::finished, [=]()
+        {
+            if (r->isCompleted()) {
+                m_lite_storage->clearBatchUpdate(msg_ids);
+            }
+            t->completed_callback();
+            r->disposeLater();
+        });
+    }
+    else
+    {
+        t->completed_callback();
+    }
+
+    return t;
+};
 
 #ifdef API_QT_AUTOTEST
 void mail_cache::GmailCacheRoutes::autotestThreadDBLoad(const std::vector<HistId>& id_list)
