@@ -13,7 +13,7 @@ namespace googleQt{
     public:
         /**
             getCodeAuthorizeUrl - format string that should be opened to enable
-            Dropbox access and request for access token, which will be used in all
+            Google access and request for access token, which will be used in all
             API interactions.
         */
         static QUrl getCodeAuthorizeUrl(const ApiAppInfo* appInfo, QString scope);
@@ -21,13 +21,13 @@ namespace googleQt{
         static QUrl getCodeAuthorizeUrl(const ApiAppInfo* appInfo, const STRING_LIST& scopes);
 
         /**
-           getTokenFromCode - makes http call to Dropbox to retrive
+           getTokenFromCode - makes http call to Google to retrive
            access token by providing authorize code
          */
         static bool getTokenFromCode(const ApiAppInfo* appInfo, QString code, ApiAuthInfo* auth);
 
         /**
-           refreshToken - makes http call to Dropbox to retrive
+           refreshToken - makes http call to Google to retrive
            access token by providing refresh token
          */
         static bool refreshToken(const ApiAppInfo* appInfo, ApiAuthInfo* auth);

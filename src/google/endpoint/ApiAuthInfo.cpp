@@ -12,7 +12,7 @@ ApiAuthInfo::ApiAuthInfo()
 #endif //API_QT_AUTOTEST
 };
 
-ApiAuthInfo::ApiAuthInfo(QString token_file):m_token_file(token_file)
+ApiAuthInfo::ApiAuthInfo(QString token_file, int scope):m_token_file(token_file), m_token_scope(scope)
 {
 };
 
@@ -26,6 +26,7 @@ bool ApiAuthInfo::readFromFile(QString path)
     m_type = js["token_type"].toString();
     m_expires_in = js["expires_in"].toString().toInt();
     m_expire_time = js["expire_time"].toString();
+	m_token_scope = js["scope"].toString().toInt();
     return true;
 };
 
@@ -37,7 +38,8 @@ bool ApiAuthInfo::storeToFile(QString path)const
     js["token_type"] = m_type;
     js["expires_in"] = m_expires_in;
     js["expire_time"] = m_expire_time;
-    js["update_time"] = QDateTime::currentDateTime().toString(Qt::ISODate);;
+    js["update_time"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+	js["scope"] = m_token_scope;
     
     if(!storeJsonToFile(path, js))
         return false;
