@@ -8,6 +8,7 @@ namespace googleQt{
     namespace messages
     {
         class MessageResource;
+        class MessagePart;
     };
     namespace labels
     {
@@ -229,7 +230,8 @@ protected:
     void exportMessageBody(messages::MessageResource* r, QString fileName);
     void printLabel(labels::LabelResource*);
     bool loadMessageFile(QString fileName, messages::MessageResource*);
-    
+    void printMessagePart(const messages::MessagePart& pt, QString prefix, QString title);
+
 protected:
     GoogleClient& m_c;
     GmailRoutes*  m_gm;

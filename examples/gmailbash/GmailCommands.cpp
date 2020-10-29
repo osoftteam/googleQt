@@ -453,35 +453,48 @@ void GmailCommands::printMessage(messages::MessageResource* r)
             std::cout << "parts count: " << parts.size() << std::endl;
             for (auto pt : parts)
                 {
-                    const messages::MessagePartBody& pt_body = pt.body();
-                    QString partID = pt.partid();
-                    std::cout << "------------------------------------------------"
-                              << "part" << partID << "---------------------------------"
-                              << std::endl;
-                    std::cout << pt.mimetype() << " body-size:" << pt_body.size() << std::endl;
-                    if(!pt_body.attachmentid().isEmpty()){
-                        std::cout << "attachmentid:" << pt_body.attachmentid() << std::endl;            
+                    printMessagePart(pt, "", "part");
+                    auto subparts = pt.parts();
+                    if (subparts.size() > 0) {
+                        std::cout << "subparts count: " << subparts.size() << std::endl;
+                        for (auto spt : subparts)
+                        {
+                            printMessagePart(spt, "SSS", "subpart");
+                        }
                     }
-            
-                    bool is_plain_text = false;
-                    bool is_html_text = false;
-                    auto pt_headers = pt.headers();
-                    for (auto h : pt_headers)
-                        {
-                            if (h.name() == "Content-Type") {
-                                is_plain_text = (h.value().indexOf("text/plain") == 0);
-                                is_html_text = (h.value().indexOf("text/html") == 0);
-                            }
-                            std::cout << "" << h.name().leftJustified(20, ' ') << " " << h.value() << std::endl;
-                        }
-                    if (is_plain_text || is_html_text)
-                        {
-                            std::cout << QByteArray::fromBase64(pt_body.data(), QByteArray::Base64UrlEncoding).constData() << std::endl;
-                        }
                 }
         }
 };
 
+
+void GmailCommands::printMessagePart(const messages::MessagePart& pt, QString prefix, QString title)
+{
+    const messages::MessagePartBody& pt_body = pt.body();
+    QString partID = pt.partid();
+    std::cout << prefix << "------------------------------------------------"
+        << title << partID << "---------------------------------"
+        << std::endl;
+    std::cout << pt.mimetype() << " body-size:" << pt_body.size() << std::endl;
+    if (!pt_body.attachmentid().isEmpty()) {
+        std::cout << "attachmentid:" << pt_body.attachmentid() << std::endl;
+    }
+
+    bool is_plain_text = false;
+    bool is_html_text = false;
+    auto pt_headers = pt.headers();
+    for (auto h : pt_headers)
+    {
+        if (h.name() == "Content-Type") {
+            is_plain_text = (h.value().indexOf("text/plain") == 0);
+            is_html_text = (h.value().indexOf("text/html") == 0);
+        }
+        std::cout << "" << h.name().leftJustified(20, ' ') << " " << h.value() << std::endl;
+    }
+    if (is_plain_text || is_html_text)
+    {
+        std::cout << QByteArray::fromBase64(pt_body.data(), QByteArray::Base64UrlEncoding).constData() << std::endl;
+    }
+};
 
 void GmailCommands::exportMessageBody(messages::MessageResource* r, QString fileName)
 {

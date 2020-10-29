@@ -31,6 +31,7 @@ void MessagePart::toJson(QJsonObject& js)const{
         js["filename"] = QString(m_filename);
     js["headers"] = struct_list2jsonarray(m_headers);
     js["body"] = (QJsonObject)m_body;
+    js["parts"] = struct_list2jsonarray(m_parts);
 }
 
 void MessagePart::fromJson(const QJsonObject& js){
@@ -40,6 +41,7 @@ void MessagePart::fromJson(const QJsonObject& js){
     m_filename = js["filename"].toString();
     jsonarray2struct_list(js["headers"].toArray(), m_headers);
     m_body.fromJson(js["body"].toObject());
+    jsonarray2struct_list(js["parts"].toArray(), m_parts);
 }
 
 QString MessagePart::toString(bool multiline)const
@@ -85,6 +87,12 @@ std::unique_ptr<MessagePart> MessagePart::EXAMPLE(int context_index, int parent_
         rv->m_headers.push_back(p);
     }
     rv->m_body = *(messages::MessagePartBody::EXAMPLE(0, context_index).get());
+    std::vector<messages::MessagePart> list_of_parts;
+    for(int i = 0; i < 5; i++){
+        messages::MessagePart p = *(messages::MessagePart::EXAMPLE(i, context_index).get());
+        ApiAutotest::INSTANCE().prepareAutoTestObj("messages::MessagePart", "messages::MessagePart", &p, i, context_index);
+        rv->m_parts.push_back(p);
+    }
     return rv;
 }
 #endif //API_QT_AUTOTEST

@@ -751,10 +751,50 @@ void mail_cache::GMailCacheQueryTask::loadAttachments(messages::MessageResource*
 
 void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
 {
+    struct part_data_load 
+    {
+        QString plain_text, html_text;
+        bool plain_text_loaded{ false };
+        bool html_text_loaded{ false };
+    };
+
     if (!m_r.storage()) {
         qWarning() << "expected storage";
         return;
     }
+
+    std::function<part_data_load(const std::vector<googleQt::messages::MessagePart>&)> load_parts = [](const std::vector<googleQt::messages::MessagePart>& parts)
+    {
+        part_data_load rv;
+        for (auto pt : parts)
+        {
+            auto pt_headers = pt.headers();
+            for (auto h : pt_headers)
+            {
+                if (h.name() == "Content-Type") {
+                    if ((h.value().indexOf("text/plain") == 0))
+                    {
+                        rv.plain_text_loaded = true;
+                        const messages::MessagePartBody& pt_body = pt.body();
+                        rv.plain_text = QByteArray::fromBase64(pt_body.data(),
+                            QByteArray::Base64UrlEncoding).constData();
+                        break;
+                    }
+                    else if ((h.value().indexOf("text/html") == 0))
+                    {
+                        rv.html_text_loaded = true;
+                        const messages::MessagePartBody& pt_body = pt.body();
+                        rv.html_text = QByteArray::fromBase64(pt_body.data(),
+                            QByteArray::Base64UrlEncoding).constData();
+                        break;
+                    }
+                }//"Content-Type"
+            }//pt_headers
+            if (rv.plain_text_loaded && rv.html_text_loaded)
+                break;
+        }// parts
+        return rv;
+    };
 
     msg_ptr md;
     
@@ -798,35 +838,26 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
                 else
                     {
                         auto parts = p.parts();
-                        for (auto pt : parts)
+                        auto pres = load_parts(parts);
+                        if (pres.plain_text_loaded && pres.html_text_loaded) 
+                        {
+                            plain_text = pres.plain_text;
+                            html_text = pres.html_text;
+                        }
+                        else 
+                        {
+                            for (auto pt : parts)
                             {
-                                bool plain_text_loaded = false;
-                                bool html_text_loaded = false;
-                                auto pt_headers = pt.headers();
-                                for (auto h : pt_headers)
-                                    {
-                                        if (h.name() == "Content-Type") {
-                                            if ((h.value().indexOf("text/plain") == 0))
-                                                {
-                                                    plain_text_loaded = true;
-                                                    const messages::MessagePartBody& pt_body = pt.body();
-                                                    plain_text = QByteArray::fromBase64(pt_body.data(),
-                                                                                        QByteArray::Base64UrlEncoding).constData();
-                                                    break;
-                                                }
-                                            else if ((h.value().indexOf("text/html") == 0))
-                                                {
-                                                    html_text_loaded = true;
-                                                    const messages::MessagePartBody& pt_body = pt.body();
-                                                    html_text = QByteArray::fromBase64(pt_body.data(),
-                                                                                       QByteArray::Base64UrlEncoding).constData();
-                                                    break;
-                                                }
-                                        }//"Content-Type"
-                                    }//pt_headers
-                                if (plain_text_loaded && html_text_loaded)
+                                auto sub_parts = pt.parts();
+                                pres = load_parts(sub_parts);
+                                if (pres.plain_text_loaded && pres.html_text_loaded)
+                                {
+                                    plain_text = pres.plain_text;
+                                    html_text = pres.html_text;
                                     break;
-                            }// parts
+                                }
+                            }
+                        }
                     }
 
                 auto i = m_completed->result_map.find(m->id());

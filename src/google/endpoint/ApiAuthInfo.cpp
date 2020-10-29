@@ -26,7 +26,7 @@ bool ApiAuthInfo::readFromFile(QString path)
     m_type = js["token_type"].toString();
     m_expires_in = js["expires_in"].toString().toInt();
     m_expire_time = js["expire_time"].toString();
-	m_token_scope = js["scope"].toString().toInt();
+    m_token_scope = js["scope"].toString().toInt();
     return true;
 };
 
@@ -39,7 +39,7 @@ bool ApiAuthInfo::storeToFile(QString path)const
     js["expires_in"] = m_expires_in;
     js["expire_time"] = m_expire_time;
     js["update_time"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-	js["scope"] = m_token_scope;
+    js["scope"] = m_token_scope;
     
     if(!storeJsonToFile(path, js))
         return false;

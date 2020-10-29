@@ -11,6 +11,7 @@
 #include "gmail/GmailRequestArg.h"
 #include "gmail/messages/MessagesMessagePayloadHeader.h"
 #include "gmail/messages/MessagesMessagePartBody.h"
+#include "gmail/messages/MessagesMessagePart.h"
 
 namespace googleQt{
 namespace messages{
@@ -21,6 +22,7 @@ namespace messages{
             field: filename: file name
             field: headers: list of headers in the part
             field: body: body of the message
+            field: parts: The list of subparts in the part
         */
 
     public:
@@ -59,6 +61,12 @@ namespace messages{
             */
         const MessagePartBody& body()const{return m_body;};
         MessagePart& setBody(const MessagePartBody& arg){m_body=arg;return *this;};
+
+            /**
+                The list of subparts in the part
+            */
+        const std::vector<MessagePart>& parts()const{return m_parts;};
+        MessagePart& setParts(const std::vector<MessagePart>& arg){m_parts=arg;return *this;};
 
     public:
         operator QJsonObject ()const;
@@ -104,6 +112,11 @@ namespace messages{
                 body of the message
             */
         MessagePartBody m_body;
+
+            /**
+                The list of subparts in the part
+            */
+        std::vector<MessagePart> m_parts;
 
     };//MessagePart
 
