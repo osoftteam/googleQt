@@ -839,6 +839,14 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
                     {
                         auto parts = p.parts();
                         auto pres = load_parts(parts);
+                        if (pres.html_text_loaded) {
+                            if (!pres.plain_text_loaded) {
+                                plain_text = html_text;
+                                plain_text.remove(QRegExp("<[^>]*>"));
+                                pres.plain_text_loaded = true;
+                            }
+                        }
+
                         if (pres.plain_text_loaded && pres.html_text_loaded) 
                         {
                             plain_text = pres.plain_text;
