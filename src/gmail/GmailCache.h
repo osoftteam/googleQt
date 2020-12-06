@@ -73,10 +73,11 @@ namespace googleQt{
             CATEGORY_PROMOTIONS
         };
 
-        extern QString sysLabelId(SysLabel l);
-        extern QString sysLabelName(SysLabel l);
-        extern uint64_t reservedSysLabelMask(SysLabel l);
-        extern std::vector<SysLabel> mask2reservedSysLabel(uint64_t);
+        extern QString                  sysLabelId(SysLabel l);
+        extern QString                  sysLabelName(SysLabel l);
+        extern uint64_t                 reservedSysLabelMask(SysLabel l);
+        extern std::vector<SysLabel>    mask2reservedSysLabel(uint64_t);
+        extern std::vector<QString>     mask2SysLabelIds(uint64_t);
 
         /**
            MessageData - local persistant rfc822 basic data.
@@ -202,6 +203,7 @@ namespace googleQt{
                         QString references);
 
             friend class GMailCacheQueryTask;
+            friend class GThreadCacheQueryTask;
             friend class GMailSQLiteStorage;
             friend class GMessagesStorage;
             friend class googleQt::mail_cache::GmailCacheRoutes;
@@ -434,7 +436,7 @@ namespace googleQt{
                              QString& bcc,
                              QString& subject,
                              QString& references);
-            void loadLabels(messages::MessageResource* m, uint64_t& labels);
+            //void loadLabels(messages::MessageResource* m, uint64_t& labels);
             void loadAttachments(messages::MessageResource* m, ATTACHMENTS_LIST& lst);
         protected:
             googleQt::mail_cache::GmailCacheRoutes&  m_r;
@@ -453,6 +455,9 @@ namespace googleQt{
             QString nextPageToken()const{return m_nextPageToken;}
             tdata_result waitForResultAndRelease();
         protected:
+            GoogleVoidTask* loadMessagesSnippetsFromCloud_Async(const STRING_LIST& msg_id_list, googleQt::TaskProgress* p);
+            GoogleVoidTask* loadMessagesLabelsFromCloud_Async(const STRING_LIST& msg_id_list);
+
             googleQt::mail_cache::GmailCacheRoutes&  m_r;
             query_ptr m_q;
             QString m_nextPageToken;
@@ -752,7 +757,7 @@ namespace googleQt{
         };
       
         /**
-           we know how to prepare argument and query for email message by ID
+           we know how to prepare argument and query for email thread by ID
         */
         class ThreadsReceiver
         {

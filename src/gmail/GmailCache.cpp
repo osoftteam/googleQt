@@ -21,7 +21,11 @@ mail_cache::MessagesReceiver::MessagesReceiver(GmailRoutes& r, EDataState f)
 GoogleTask<messages::MessageResource>* mail_cache::MessagesReceiver::routeRequest(QString message_id)
 {   
     gmail::IdArg arg(m_r.endpoint()->client()->userId(), message_id);
-    if (m_msg_format == EDataState::snippet)
+    if (m_msg_format == EDataState::labels) 
+    {
+        arg.setFormat("minimal");
+    }
+    else if (m_msg_format == EDataState::snippet)
         {
             arg.setFormat("metadata");
             arg.headers().push_back("Subject");
@@ -33,7 +37,7 @@ GoogleTask<messages::MessageResource>* mail_cache::MessagesReceiver::routeReques
         }
     else if (m_msg_format == EDataState::body)
         {
-        
+            /// this falls to default
         }
 
 #ifdef API_QT_AUTOTEST
@@ -63,7 +67,7 @@ GoogleTask<threads::ThreadResource>* mail_cache::ThreadsReceiver::routeRequest(Q
 }
 
 ///GMailCache
-mail_cache::GMailCache::GMailCache(/*ApiEndpoint& ept*/Endpoint& ept)
+mail_cache::GMailCache::GMailCache(Endpoint& ept)
     :GoogleCache<MessageData, GMailCacheQueryTask>(ept), m_endpoint(ept)
 {
 
@@ -663,28 +667,28 @@ void mail_cache::GMailCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& id
 {
     if (id_list.empty())
         return;
-    
+
     auto p = progressNotifier();
     if (p) {
         p->setMaximum(id_list.size(), "requested [msg-id]->G->[messages]");
     }
 
     auto par_runner = m_r.getUserBatchMessages_Async(m_completed->state, id_list);
-    
+
     connect(par_runner, &EndpointRunnable::finished, [=]()
-            {
-                RESULT_LIST<messages::MessageResource>&& res = par_runner->detachResult();
-                for (auto& m : res)
-                    {
-                        fetchMessage(m.get());                        
-                    }
-                auto s = m_r.storage();
-                if (s) {
-                    s->updateMessagesDiagnostic(1, m_completed->result_list.size());
-                }
-                par_runner->disposeLater();
-                notifyFetchCompletedWithMergeRequest(m_completed->result_list);             
-            }); 
+    {
+        RESULT_LIST<messages::MessageResource>&& res = par_runner->detachResult();
+        for (auto& m : res)
+        {
+            fetchMessage(m.get());
+        }
+        auto s = m_r.storage();
+        if (s) {
+            s->updateMessagesDiagnostic(1, m_completed->result_list.size());
+        }
+        par_runner->disposeLater();
+        notifyFetchCompletedWithMergeRequest(m_completed->result_list);
+    });
 };
 
 void mail_cache::GMailCacheQueryTask::loadHeaders(messages::MessageResource* m,
@@ -725,11 +729,11 @@ void mail_cache::GMailCacheQueryTask::loadHeaders(messages::MessageResource* m,
         }
 };
 
-void mail_cache::GMailCacheQueryTask::loadLabels(messages::MessageResource* m, uint64_t& f)
+void loadMessageLabels(googleQt::mail_cache::GmailCacheRoutes& r, messages::MessageResource* m, uint64_t& f)
 {
     auto& labels = m->labelids();
     if(labels.size() > 0){
-        auto storage = m_r.storage();
+        auto storage = r.storage();
         if (storage) {
             f = storage->packLabels(labels);
         }
@@ -804,9 +808,9 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
             qWarning() << "Unexpected snippet state in message fetch";
         break;
         case googleQt::EDataState::snippet:
-            {
+            {               
                 uint64_t labels;
-                loadLabels(m, labels);
+                loadMessageLabels(m_r, m, labels);
                 QString from, to, cc, bcc, subject, references;
                 loadHeaders(m, from, to, cc, bcc, subject, references);
                 md.reset(new MessageData(m_r.storage()->currentAccountId(),
@@ -872,7 +876,7 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
                 if (i == m_completed->result_map.end())
                     {
                         uint64_t labels;
-                        loadLabels(m, labels);
+                        loadMessageLabels(m_r, m, labels);
                         QString from, to, cc, bcc, subject, references;
                         loadHeaders(m, from, to, cc, bcc, subject, references);
                         md.reset(new MessageData(m_r.storage()->currentAccountId(),
@@ -897,7 +901,7 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
                         if (!md->isLoaded(googleQt::EDataState::snippet)) 
                             {
                                 uint64_t labels;
-                                loadLabels(m, labels);
+                                loadMessageLabels(m_r, m, labels);
                                 QString from, to, cc, bcc, subject, references;
                                 loadHeaders(m, from, to, cc, bcc, subject, references);
                                 md->updateSnippet(from, to, cc, bcc, subject, m->snippet(), labels, references);
@@ -972,7 +976,7 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& 
 
     connect(par_runner, &EndpointRunnable::finished, [=]()
     {
-        STRING_LIST msg_list2resolve;
+        STRING_LIST msg_list2resolve, msg_list2checklabels;
 
         RESULT_LIST<threads::ThreadResource>&& res = par_runner->detachResult();
         for (auto& t : res)
@@ -985,7 +989,9 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& 
                 if (!mlst.empty()) {
                     for (const auto& m : mlst) {
                         auto md = td->findMessage(m.id());
-                        if (!md) {
+                        if (md) {
+                            msg_list2checklabels.push_back(m.id());
+                        }else {
                             msg_list2resolve.push_back(m.id());
                             is_updated = true;
                         }
@@ -993,7 +999,7 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& 
                 }
 
                 if (is_updated) {
-                    m_updated_threads.push_back(td);
+                    m_updated_threads.push_back(td);                    
                 }
             }
             else{
@@ -1010,52 +1016,144 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& 
                 m_new_threads.push_back(td);
             }
         }
-        
-        auto mfetcher = m_r.newMessageResultFetcher(EDataState::snippet);
-        if (p) {
-            mfetcher->delegateProgressNotifier(p);
-        }
-        auto r = m_r.getCacheMessages_Async(EDataState::snippet, msg_list2resolve, mfetcher);
-        r->then([=](std::unique_ptr<googleQt::CacheDataResult<googleQt::mail_cache::MessageData>> mr)
+
+        auto snippets_task = loadMessagesSnippetsFromCloud_Async(msg_list2resolve, p);
+        snippets_task->then([=]()
         {
-            if (!m_updated_threads.empty()) {
-                m_cache->update_persistent_storage(EDataState::snippet, m_updated_threads);
-                for (auto t : m_updated_threads) {
-                    if (t->head()) {
-                        add_result(t, true);
-                    }
-                }
-            }
-            if (!m_new_threads.empty()) {
-                m_cache->insert_persistent_storage(EDataState::snippet, m_new_threads);
-                for (auto t : m_new_threads) {
-                    if (t->head()) {
-                        add_result(t, true);
-                    }
-                }
-            }
-            if (!m_completed->from_cloud.empty()) {
-                m_cache->reorder_data_on_completed_fetch(m_completed->from_cloud);
-            }
-
-            if (!mr->from_cloud.empty()) {
-                for (auto& m : mr->from_cloud) {
-                    auto t = m_r.tcache()->mem_object(m->threadId());
-                    if (t) {
-                        t->resortMessages();
-                    }
-                }
-            }
-
-            notifyOnCompletedFromCache();
+            auto labels_task = loadMessagesLabelsFromCloud_Async(msg_list2checklabels);
+            labels_task->then([=]() 
+            {
+                notifyOnCompletedFromCache();
+                par_runner->disposeLater();
+            }, [=](std::unique_ptr<GoogleException> ex) 
+            {
+                failed_callback(std::move(ex));
+                par_runner->disposeLater();
+            });
         },
             [=](std::unique_ptr<GoogleException> ex)
         {
             failed_callback(std::move(ex));
+            par_runner->disposeLater();
         });
+    });//par_runner
+};
+
+GoogleVoidTask* mail_cache::GThreadCacheQueryTask::loadMessagesSnippetsFromCloud_Async(const STRING_LIST& msg_id_list, googleQt::TaskProgress* p)
+{
+    GoogleVoidTask* t = m_r.endpoint().produceVoidTask();
+
+    auto mfetcher = m_r.newMessageResultFetcher(EDataState::snippet);
+    if (p) {
+        mfetcher->delegateProgressNotifier(p);
+    }
+    auto r = m_r.getCacheMessages_Async(EDataState::snippet, msg_id_list, mfetcher);
+    r->then([=](std::unique_ptr<googleQt::CacheDataResult<googleQt::mail_cache::MessageData>> mr)
+    {
+        if (!m_updated_threads.empty()) {
+            m_cache->update_persistent_storage(EDataState::snippet, m_updated_threads);
+            for (auto t : m_updated_threads) {
+                if (t->head()) {
+                    add_result(t, true);
+                }
+            }
+        }
+        if (!m_new_threads.empty()) {
+            m_cache->insert_persistent_storage(EDataState::snippet, m_new_threads);
+            for (auto t : m_new_threads) {
+                if (t->head()) {
+                    add_result(t, true);
+                }
+            }
+        }
+        if (!m_completed->from_cloud.empty()) {
+            m_cache->reorder_data_on_completed_fetch(m_completed->from_cloud);
+        }
+
+        if (!mr->from_cloud.empty()) 
+        {
+            ///todo: make sure we don't double sort threads
+            for (auto& m : mr->from_cloud) {
+                auto t = m_r.tcache()->mem_object(m->threadId());
+                if (t) {
+                    t->resortMessages();
+                }
+            }
+        }
+
+        t->completed_callback();
+    },
+        [=](std::unique_ptr<GoogleException> ex)
+    {
+        t->failed_callback(std::move(ex));
+    });
+
+    return t;
+};
+
+GoogleVoidTask* mail_cache::GThreadCacheQueryTask::loadMessagesLabelsFromCloud_Async(const STRING_LIST& msg_id_list) 
+{
+    GoogleVoidTask* t = m_r.endpoint().produceVoidTask();
+    auto par_runner = m_r.getUserBatchMessages_Async(EDataState::labels, msg_id_list);
+    connect(par_runner, &EndpointRunnable::finished, [=]()
+    {
+        CACHE_LIST<mail_cache::MessageData> updated_messages;
+        RESULT_LIST<messages::MessageResource>&& res = par_runner->detachResult();
+        for (auto& m : res)
+        {
+            uint64_t labels;
+            loadMessageLabels(m_r, m.get(), labels);
+            auto m1 = m_r.mcache()->mem_object(m->id());
+            if (m1) 
+            {
+                auto old_labels = m1->labelsBitMap();
+                if (old_labels != labels) {
+                    m1->updateLabels(labels);
+//#ifdef _DEBUG
+//                  qDebug() << "mem-updated-msg-labels" << m->id()
+//                      << "from [" << slist2commalist(mail_cache::mask2SysLabelIds(old_labels))
+//                      << "] to [" << slist2commalist(mail_cache::mask2SysLabelIds(labels))
+//                      << "]";
+//#endif
+                    updated_messages.push_back(m1);
+                }
+            }
+            else 
+            {
+                qWarning() << "failed to locate message in cache" << m->id();
+            }
+        }//for
+        if (!updated_messages.empty()) 
+        {
+            auto st = m_r.storage();
+            if (st) 
+            {
+                std::set<thread_ptr> tset;
+                for (auto i : updated_messages) 
+                {
+                    auto t = st->findThread(i->threadId());
+                    if (t) {
+                        tset.insert(t);
+                    }
+                    else {
+                        qWarning() << "failed for locate thread for message" << i->id();
+                    }
+                }
+
+                for (auto i : tset) {
+                    i->rebuildLabelsMap();
+                }
+
+                auto mc = st->mcache();
+                auto mdb = mc->localDB();
+                mdb->update_db(EDataState::labels, updated_messages);
+            }//storage
+        }
 
         par_runner->disposeLater();
+        t->completed_callback();
     });
+    return t;
 };
 
 mail_cache::tdata_result mail_cache::GThreadCacheQueryTask::waitForResultAndRelease()
@@ -1079,12 +1177,10 @@ void mail_cache::GThreadCacheQueryTask::notifyOnCompletedFromCache()
 
 ///GMailSQLiteStorage
 mail_cache::GMailSQLiteStorage::GMailSQLiteStorage(GMailCache* mc,
-    GThreadCache* tc/*,
-    gcontact::GContactCacheBase* cc*/)
+    GThreadCache* tc)
 {
     m_msg_cache = mc;
     m_thread_cache = tc;
-    //m_contact_cache = cc;
 };
 
 
@@ -1419,6 +1515,16 @@ std::vector<mail_cache::SysLabel> mail_cache::mask2reservedSysLabel(uint64_t com
         }
     }
 
+    return rv;
+};
+
+std::vector<QString> mail_cache::mask2SysLabelIds(uint64_t composite_mask)
+{
+    std::vector<QString> rv;
+    auto lst = mask2reservedSysLabel(composite_mask);
+    for (auto i : lst) {
+        rv.push_back(sysLabelId(i));
+    }
     return rv;
 };
 
@@ -2815,9 +2921,10 @@ void mail_cache::GMessagesStorage::update_db(
         }break;
         }
 
-
         for (auto& i : r)
         {
+            qDebug() << "message/update_db" << i->id() << sql_update;
+
             QSqlQuery* q = m_storage->prepareQuery(sql_update);
             if (!q)return;
             bool ok = execOutOfBatchSQL(state, q, i.get());
