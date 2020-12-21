@@ -11,6 +11,14 @@ namespace googleQt{
     class TaskProgress;
     class ApiClient;
 
+    enum class TaskState 
+    {
+        started,
+        completed,
+        failed,
+        canceled
+    };
+
     /**
         EndpointRunnable - abstruct class for object-based async task classes.
         Has 'finished' signal and after it's finished it can be either 
@@ -43,6 +51,8 @@ namespace googleQt{
         /// detach progress and if we own it, send message to delete
         void detachProgress();
 
+        QString name()const { return m_name; }
+        void    setName(QString val) { m_name = val; }
     signals:
         void finished();
 
@@ -58,7 +68,8 @@ namespace googleQt{
         std::unique_ptr<GoogleException> m_failed;
         std::list<std::function<void()>> m_dispose_delegates;
         std::list<std::function<void()>> m_finished_delegates;
-        TaskProgress*                m_progress{nullptr};
+        TaskProgress*                   m_progress{nullptr};
+        QString                         m_name;
     };
 
     /**

@@ -4,6 +4,12 @@
 
 using namespace googleQt;
 
+#ifndef API_QT_DIAGNOSTICS
+#define TRACE_TASK(S)   if(!m_name.isEmpty()){m_client->endpoint()->diagnosticLogAsyncTask(this, S);}
+#else
+#define TRACE_TASK(S)
+#endif
+
 ///EndpointRunnable
 EndpointRunnable::EndpointRunnable(ApiClient* cl)
 {
@@ -150,20 +156,32 @@ void GoogleVoidTask::then(std::function<void()> after_completed_processing,
     std::function<void(std::unique_ptr<GoogleException>)> on_error,
     std::function<void()> on_dispose)
 {
+    TRACE_TASK(TaskState::started);
     std::function<void(void)> on_finished_processing = [=]()
     {
-        if (isCompleted()) {
+        if (isCompleted()) 
+        {
+            TRACE_TASK(TaskState::completed);
             if (after_completed_processing) {
                 after_completed_processing();
             }
         }
-        else {
-            if (isFailed() && on_error) {
-                on_error(std::move(m_failed));
+        else 
+        {
+            if (isFailed()) 
+            {
+                TRACE_TASK(TaskState::failed);
+                if (on_error) {
+                    on_error(std::move(m_failed));
+                }
+            }
+            else 
+            {
+                TRACE_TASK(TaskState::canceled);
             }
         }
         disposeLater();
-    };
+    };  
 
     if (on_dispose) {
         addDisposeDelegate(on_dispose);
