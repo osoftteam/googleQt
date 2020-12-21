@@ -148,6 +148,14 @@ DiagnosticRequestInfo ApiEndpoint::lastRequestInfo()const
 #endif//API_QT_DIAGNOSTICS
 };
 
+void ApiEndpoint::diagnosticSetRequestTag(QString s)
+{ 
+    m_diagnosticsRequestTag = s;
+#ifdef _DEBUG
+    qDebug() << "[gapi-diagnistic]" << s;
+#endif
+}
+
 const DGN_LIST& ApiEndpoint::diagnosticRequests()const 
 {
     return m_requests;
@@ -156,6 +164,26 @@ const DGN_LIST& ApiEndpoint::diagnosticRequests()const
 void ApiEndpoint::diagnosticClearRequestsList() 
 {
     m_requests.clear();
+};
+
+void ApiEndpoint::diagnosticLogAsyncTask(EndpointRunnable* task, TaskState s)
+{
+#ifdef API_QT_DIAGNOSTICS
+    QString sname = "";
+    switch (s) 
+    {
+    case TaskState::started:    sname = "s"; break;
+    case TaskState::completed:  sname = "c"; break;
+    case TaskState::failed:     sname = "f"; break;
+    case TaskState::canceled:   sname = "e"; break;
+    }
+
+    qDebug() << "[g-diagn-task]" << QString("[%1][%2][%3][%4]")
+                        .arg(sname)
+                        .arg(m_diagnosticsRequestContext)
+                        .arg(m_diagnosticsRequestTag)
+                        .arg(task->name());
+#endif
 };
 
 void ApiEndpoint::updateLastRequestInfo(QString s)
