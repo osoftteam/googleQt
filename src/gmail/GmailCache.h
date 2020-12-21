@@ -121,7 +121,7 @@ namespace googleQt{
              
             ///will load attachments from DB if not loaded already
             const ATTACHMENTS_LIST& getAttachments(GMailSQLiteStorage* storage);
-
+            void clearSnippet();
         protected:          
             void updateSnippet(QString from,
                                QString to,

@@ -380,6 +380,7 @@ void mail_cache::MessageData::merge(CacheData* other)
                 {
                     m_from = md->from();
                     m_subject = md->subject();
+                    m_snippet = md->snippet();
                     m_flags.agg_state |= static_cast<int>(EDataState::snippet);
                 }
         }
@@ -393,6 +394,12 @@ void mail_cache::MessageData::merge(CacheData* other)
                     m_flags.agg_state |= static_cast<int>(EDataState::body);
                 }
         }    
+};
+
+void mail_cache::MessageData::clearSnippet()
+{
+    m_plain = m_html = m_snippet = "";
+    m_flags.agg_state = static_cast<int>(EDataState::labels);
 };
 
 mail_cache::AttachmentData::AttachmentData() 
@@ -862,6 +869,13 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
                             {
                                 auto sub_parts = pt.parts();
                                 pres = load_parts(sub_parts);
+                                if (pres.html_text_loaded) {
+                                    if (!pres.plain_text_loaded) {
+                                        plain_text = html_text;
+                                        plain_text.remove(QRegExp("<[^>]*>"));
+                                        pres.plain_text_loaded = true;
+                                    }
+                                }
                                 if (pres.plain_text_loaded && pres.html_text_loaded)
                                 {
                                     plain_text = pres.plain_text;
@@ -917,7 +931,10 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
         auto t = m_r.tcache()->mem_object(md->threadId());
         if(t){
             auto m2 = t->findMessage(md->id());
-            if (!m2) {
+            if (m2) {
+                m2->merge(md.get());
+            }
+            else{
                 t->add_msg(md);
             }
         }
@@ -1018,9 +1035,11 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& 
         }
 
         auto snippets_task = loadMessagesSnippetsFromCloud_Async(msg_list2resolve, p);
+        snippets_task->setName(QString("thread-q-task/fetch %1").arg(msg_list2resolve.size()));
         snippets_task->then([=]()
         {
             auto labels_task = loadMessagesLabelsFromCloud_Async(msg_list2checklabels);
+            labels_task->setName(QString("loadMessagesLabelsFromCloud_Async %1").arg(msg_list2checklabels.size()));
             labels_task->then([=]() 
             {
                 notifyOnCompletedFromCache();
@@ -2323,6 +2342,7 @@ void mail_cache::GMailSQLiteStorage::update_message_labels_db(int accId, QString
         .arg(flags)
         .arg(msg_id)
         .arg(accId);
+    qDebug() << "ykh/update_message_labels_db" << sql_update;
     execQuery(sql_update);
 };
 
