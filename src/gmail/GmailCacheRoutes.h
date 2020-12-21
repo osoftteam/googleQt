@@ -87,6 +87,8 @@ namespace googleQt
             mail_cache::mdata_result getCacheMessages(EDataState, const STRING_LIST& id_list);
             mail_cache::GMailCacheQueryTask* getCacheMessages_Async(EDataState, const STRING_LIST& id_list,
                                                                     mail_cache::GMailCacheQueryTask* rfetcher = nullptr);
+            /// clear cache and reload messages with body
+            mail_cache::GMailCacheQueryTask* refreshCacheMessages_Async(const STRING_LIST& id_list);
 
             /// check for new emails - get top messagesCount messages and update cache
             mail_cache::mdata_result getNextCacheMessages(

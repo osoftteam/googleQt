@@ -106,10 +106,22 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheMessages_
         rfetcher = newMessageResultFetcher(state);
     }
 #ifdef API_QT_DIAGNOSTICS
-    endpoint().diagnosticSetRequestTag(QString("getCacheMessages_Async[%1]").arg(id_list.size()));
+    endpoint().diagnosticSetRequestTag(QString("getCacheMessages_Async %1").arg(id_list.size()));
 #endif
     m_GMsgCache->query_Async(state, id_list, rfetcher);
     return rfetcher;
+};
+
+mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::refreshCacheMessages_Async(const STRING_LIST& id_list) 
+{
+    for(auto i : id_list){
+        auto m = m_GMsgCache->mem_object(i);
+        if (m) {
+            m->clearSnippet();
+        }
+    }
+
+    return getCacheMessages_Async(EDataState::body, id_list);
 };
 
 mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheMessages_Async(
