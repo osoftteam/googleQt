@@ -101,13 +101,13 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheMessages_
     const STRING_LIST& id_list,
     mail_cache::GMailCacheQueryTask* rfetcher /*= nullptr*/)
 {
+#ifdef API_QT_DIAGNOSTICS
+    endpoint().diagnosticSetRequestTag(QString("getCacheMessages_Async %1").arg(id_list.size()));
+#endif
     if (!rfetcher)
     {
         rfetcher = newMessageResultFetcher(state);
     }
-#ifdef API_QT_DIAGNOSTICS
-    endpoint().diagnosticSetRequestTag(QString("getCacheMessages_Async %1").arg(id_list.size()));
-#endif
     m_GMsgCache->query_Async(state, id_list, rfetcher);
     return rfetcher;
 };
@@ -623,7 +623,7 @@ GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setLabel_As
     bool system_label)
 {
 #ifdef API_QT_DIAGNOSTICS
-    endpoint().diagnosticSetRequestTag(QString("setLabel_Async[%1]").arg(label_id));
+    endpoint().diagnosticSetRequestTag(QString("setLabel_Async-%1").arg(label_id));
 #endif
     int accId = -1;
     if (m_lite_storage) {

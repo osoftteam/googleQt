@@ -2087,7 +2087,6 @@ bool mail_cache::GMailSQLiteStorage::deleteAccountFromDb(int accId)
         return false;
     }
 
-    //..
     sql = QString("DELETE FROM %1gmail_thread WHERE acc_id = %2")
         .arg(m_metaPrefix)
         .arg(accId);
@@ -2096,7 +2095,6 @@ bool mail_cache::GMailSQLiteStorage::deleteAccountFromDb(int accId)
         qWarning() << "ERROR.Failed to delete threads" << sql;
         return false;
     }
-    //...
 
     sql = QString("DELETE FROM %1gmail_label WHERE acc_id = %2")
         .arg(m_metaPrefix)
@@ -2342,8 +2340,9 @@ void mail_cache::GMailSQLiteStorage::update_message_labels_db(int accId, QString
         .arg(flags)
         .arg(msg_id)
         .arg(accId);
-    qDebug() << "ykh/update_message_labels_db" << sql_update;
-    execQuery(sql_update);
+    if (!execQuery(sql_update)) {
+        qWarning() << "SQL update failed" << sql_update;
+    };
 };
 
 void mail_cache::GMailSQLiteStorage::update_attachment_local_file_db(googleQt::mail_cache::msg_ptr m, 
@@ -2384,6 +2383,9 @@ bool mail_cache::GMailSQLiteStorage::doExecQuery(std::unique_ptr<QSqlQuery>& q, 
             << sql;
         return false;
     };
+
+    m_msg_cache->endpoint().diagnosticLogSQL(sql, "exec");
+
     if (!q->exec(sql)) {
         QString error = q->lastError().text();
         qWarning() << "ERROR. Failed to execute query"
@@ -2408,6 +2410,7 @@ QSqlQuery* mail_cache::GMailSQLiteStorage::startTransaction(QString sql)
 {
     QSqlQuery* q = nullptr;
     if (startTransaction()) {
+        m_msg_cache->endpoint().diagnosticLogSQL(sql, "prepare");
         q = prepareQuery(sql);
         if (!q) {
             rollbackTransaction();

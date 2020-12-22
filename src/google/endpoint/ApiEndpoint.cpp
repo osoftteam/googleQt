@@ -148,11 +148,19 @@ DiagnosticRequestInfo ApiEndpoint::lastRequestInfo()const
 #endif//API_QT_DIAGNOSTICS
 };
 
+QString ApiEndpoint::diagnosticTimeStamp() 
+{
+    QString rv = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
+    return rv;
+};
+
 void ApiEndpoint::diagnosticSetRequestTag(QString s)
 { 
     m_diagnosticsRequestTag = s;
-#ifdef _DEBUG
-    qDebug() << "[gapi-diagnistic]" << s;
+#ifdef API_QT_DIAGNOSTICS
+    QDebug o = qWarning();
+    o.noquote();
+    o << diagnosticTimeStamp() << "[gapi-diagnistic]" << s;
 #endif
 }
 
@@ -177,12 +185,26 @@ void ApiEndpoint::diagnosticLogAsyncTask(EndpointRunnable* task, TaskState s)
     case TaskState::failed:     sname = "f"; break;
     case TaskState::canceled:   sname = "e"; break;
     }
-
-    qDebug() << "[g-diagn-task]" << QString("[%1][%2][%3][%4]")
+    QDebug o = qWarning();
+    o.noquote();
+    o << diagnosticTimeStamp() << QString("[g-diagn-task][%1][%2][%3][%4]")
                         .arg(sname)
                         .arg(m_diagnosticsRequestContext)
                         .arg(m_diagnosticsRequestTag)
                         .arg(task->name());
+#endif
+};
+
+void ApiEndpoint::diagnosticLogSQL(QString sql, QString prefix) 
+{
+#ifdef API_QT_DIAGNOSTICS
+    QDebug o = qWarning();
+    o.noquote();
+    o << diagnosticTimeStamp() << QString("[g-diagn-sql-%1][%2][%3][%4]")
+        .arg(prefix)
+        .arg(m_diagnosticsRequestContext)
+        .arg(m_diagnosticsRequestTag)
+        .arg(sql);
 #endif
 };
 

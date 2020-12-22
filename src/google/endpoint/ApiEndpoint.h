@@ -49,6 +49,8 @@ namespace googleQt{
         void                    diagnosticSetRequestContext(QString s) { m_diagnosticsRequestContext = s; }
         void                    diagnosticClearRequestsList();
         void                    diagnosticLogAsyncTask(EndpointRunnable* task, TaskState s);
+        void                    diagnosticLogSQL(QString sql, QString prefix);
+        static QString          diagnosticTimeStamp();
         QByteArray    lastResponse()const { return m_last_response; };
         void          setProxy(const QNetworkProxy& proxy);
 
