@@ -19,7 +19,7 @@ void GmailCommands::listMessages(QString nextToken, QString labelIds, QString qu
     try
         {
             gmail::ListArg listArg;
-            listArg.setMaxResults(10);
+            listArg.setMaxResults(30);
             listArg.setPageToken(nextToken);
             if(!labelIds.isEmpty()){
                 listArg.labels() = labelIds.split(" ");
