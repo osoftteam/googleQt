@@ -92,7 +92,7 @@ std::unique_ptr<MessagePart> MessagePart::EXAMPLE(int context_index, int parent_
         messages::MessagePart p = *(messages::MessagePart::EXAMPLE(i, context_index).get());
         ApiAutotest::INSTANCE().prepareAutoTestObj("messages::MessagePart", "messages::MessagePart", &p, i, context_index);
         rv->m_parts.push_back(p);
-    }
+    }	
     return rv;
 }
 #endif //API_QT_AUTOTEST

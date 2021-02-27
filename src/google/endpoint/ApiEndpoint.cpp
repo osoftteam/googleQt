@@ -197,6 +197,9 @@ void ApiEndpoint::diagnosticLogAsyncTask(EndpointRunnable* task, TaskState s)
 
 void ApiEndpoint::diagnosticLogSQL(QString sql, QString prefix) 
 {
+    Q_UNUSED(sql);
+    Q_UNUSED(prefix);
+    /*
 #ifdef API_QT_DIAGNOSTICS
     QDebug o = qWarning();
     o.noquote();
@@ -206,6 +209,7 @@ void ApiEndpoint::diagnosticLogSQL(QString sql, QString prefix)
         .arg(m_diagnosticsRequestTag)
         .arg(sql);
 #endif
+    */
 };
 
 void ApiEndpoint::updateLastRequestInfo(QString s)
