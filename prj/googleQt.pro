@@ -61,7 +61,7 @@ for(m, GC_MODULES){
 ################################################################
 # some diagnostics, some non-intence logging/tracing
 ################################################################
-DEFINES += API_QT_DIAGNOSTICS
+#DEFINES += API_QT_DIAGNOSTICS
 
 ################################################################
 # autotest generation (internal profiling usage)               

@@ -18,8 +18,16 @@
 #else
     ///this is optional for real application
     #ifndef API_QT_DIAGNOSTICS
-        #define API_QT_DIAGNOSTICS
+        //#define API_QT_DIAGNOSTICS
     #endif
+#endif
+
+#ifdef API_QT_DIAGNOSTICS
+#define ASYNC_TASK_DIAGNOSTICS(S) m_r.endpoint().diagnosticSetRequestTag(S);
+#define ASYNC_ROUTE_DIAGNOSTICS(S) endpoint().diagnosticSetRequestTag(S);
+#else
+#define ASYNC_TASK_DIAGNOSTICS(S)
+#define ASYNC_ROUTE_DIAGNOSTICS(S)
 #endif
 
 #define TIMES_TO_REFRESH_TOKEN_BEFORE_GIVEUP 2
@@ -46,7 +54,7 @@ namespace googleQt{
         DiagnosticRequestInfo   lastRequestInfo()const;
         const DGN_LIST&         diagnosticRequests()const;
         void                    diagnosticSetRequestTag(QString s);
-        void                    diagnosticSetRequestContext(QString s) { m_diagnosticsRequestContext = s; }
+		void                    diagnosticSetRequestContext(QString s);
         void                    diagnosticClearRequestsList();
         void                    diagnosticLogAsyncTask(EndpointRunnable* task, TaskState s);
         void                    diagnosticLogSQL(QString sql, QString prefix);

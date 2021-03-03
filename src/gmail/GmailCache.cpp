@@ -672,6 +672,8 @@ mail_cache::GMailCacheQueryTask::GMailCacheQueryTask(EDataState state,
 
 void mail_cache::GMailCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& id_list)
 {
+	ASYNC_TASK_DIAGNOSTICS(QString("GMailCacheQueryTask/fetchFromCloud_Async %1").arg(id_list.size()));
+
     if (id_list.empty())
         return;
 
@@ -694,6 +696,9 @@ void mail_cache::GMailCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& id
             s->updateMessagesDiagnostic(1, m_completed->result_list.size());
         }
         par_runner->disposeLater();
+		ASYNC_TASK_DIAGNOSTICS(QString("completed - GMailCacheQueryTask/fetchFromCloud_Async %1 %2")
+			.arg(id_list.size())
+			.arg(m_completed->result_list.size()));
         notifyFetchCompletedWithMergeRequest(m_completed->result_list);
     });
 };
@@ -977,6 +982,7 @@ mail_cache::GThreadCacheQueryTask::GThreadCacheQueryTask(
 
 void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& id_list)
 {
+	ASYNC_TASK_DIAGNOSTICS(QString("GThreadCacheQueryTask/fetchFromCloud_Async %1").arg(id_list.size()));
     if (id_list.empty())
         return;
 
@@ -991,6 +997,7 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& 
         threads::ThreadResource>(id_list, std::move(tr), m_client.get());
     par_runner->run();
 
+	ASYNC_TASK_DIAGNOSTICS(QString("GThreadCacheQueryTask/par_runner %1").arg(id_list.size()));
     connect(par_runner, &EndpointRunnable::finished, [=]()
     {
         STRING_LIST msg_list2resolve, msg_list2checklabels;
@@ -1036,25 +1043,38 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& 
 
         auto snippets_task = loadMessagesSnippetsFromCloud_Async(msg_list2resolve, p);
         snippets_task->setName(QString("thread-q-task/fetch %1").arg(msg_list2resolve.size()));
+		ASYNC_TASK_DIAGNOSTICS(QString("GThreadCacheQueryTask/snippets_task %1").arg(msg_list2resolve.size()));
         snippets_task->then([=]()
         {
-            auto labels_task = loadMessagesLabelsFromCloud_Async(msg_list2checklabels);
-            labels_task->setName(QString("loadMessagesLabelsFromCloud_Async %1").arg(msg_list2checklabels.size()));
-            labels_task->then([=]() 
-            {
-                notifyOnCompletedFromCache();
-                par_runner->disposeLater();
-            }, [=](std::unique_ptr<GoogleException> ex) 
-            {
-                failed_callback(std::move(ex));
-                par_runner->disposeLater();
-            });
+			ASYNC_TASK_DIAGNOSTICS(QString("completed - GThreadCacheQueryTask/snippets_task %1").arg(msg_list2resolve.size()));
+
+			if (msg_list2checklabels.size() > 0) {
+				auto labels_task = loadMessagesLabelsFromCloud_Async(msg_list2checklabels);
+				labels_task->setName(QString("loadMessagesLabelsFromCloud_Async %1").arg(msg_list2checklabels.size()));
+				ASYNC_TASK_DIAGNOSTICS(QString("GThreadCacheQueryTask/labels_task %1").arg(msg_list2checklabels.size()));
+				labels_task->then([=]()
+				{
+					ASYNC_TASK_DIAGNOSTICS(QString("completed - GThreadCacheQueryTask/labels_task %1").arg(msg_list2checklabels.size()));
+					notifyOnCompletedFromCache();
+					par_runner->disposeLater();
+				}, [=](std::unique_ptr<GoogleException> ex)
+				{
+					failed_callback(std::move(ex));
+					par_runner->disposeLater();
+				});
+			}
+			else 
+			{
+				notifyOnCompletedFromCache();
+			}
         },
             [=](std::unique_ptr<GoogleException> ex)
         {
             failed_callback(std::move(ex));
             par_runner->disposeLater();
         });
+
+		ASYNC_TASK_DIAGNOSTICS(QString("completed - GThreadCacheQueryTask/par_runner %1").arg(id_list.size()));
     });//par_runner
 };
 

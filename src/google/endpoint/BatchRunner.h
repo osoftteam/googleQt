@@ -79,7 +79,7 @@ namespace googleQt{
         std::unique_ptr<ROUTER>         m_router{ nullptr };
         std::vector<ARG_PARAM>            m_arg_parameters;
         std::vector<ARG_PARAM>            m_completed_arg_list;
-        int  m_max_concurrent_routes_count{ 4 };
+        int  m_max_concurrent_routes_count{ 4 };///4 -> 2 servr might not like too many parallel requests, not sure..
         int  m_available_concurrent_routes_count{ 0 };
         int  m_steps2complete{ 0 };
         bool m_completed{ false };
