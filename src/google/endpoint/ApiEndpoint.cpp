@@ -169,7 +169,7 @@ const DGN_LIST& ApiEndpoint::diagnosticRequests()const
 #ifdef API_QT_DIAGNOSTICS
     return m_requests;
 #else
-	DGN_LIST rv;
+	static DGN_LIST rv;
 	return rv;
 #endif
 };
