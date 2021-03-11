@@ -69,7 +69,11 @@ bool GoogleClient::isQueryInProgress()const
 
 QString GoogleClient::lastApiCall()
 {
+#ifdef API_QT_DIAGNOSTICS
     return m_endpoint->lastRequestInfo().request;
+#else
+	return "";
+#endif
 }
 
 void GoogleClient::runEventsLoop()const

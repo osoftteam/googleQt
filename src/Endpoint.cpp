@@ -47,8 +47,10 @@ QString Endpoint::prepareErrorInfo(int status_code, const QUrl& url, const QByte
 {
     QString rv = QString("ERROR. Unexpected status %1 %2 ").arg(status_code).arg(url.url());
     rv += data;
+#ifdef API_QT_DIAGNOSTICS
     rv += "\n";
     rv += lastRequestInfo().request;
+#endif//API_QT_DIAGNOSTICS
     return rv;
 };
 
