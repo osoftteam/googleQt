@@ -323,7 +323,7 @@ namespace googleQt{
             qlonglong internalDate()const;
 
             /// each label is a bit in int64
-            uint64_t labelsBitMap()const{return m_labels;}
+            uint64_t labelsBitMap()const{return m_thread_labels;}
 
             bool hasLabel(uint64_t data)const;
             bool hasLimboLabel(uint64_t data)const;
@@ -332,7 +332,7 @@ namespace googleQt{
         protected:          
             int         m_messages_count;
             QString     m_snippet;
-            uint64_t    m_labels{0}, 
+            uint64_t    m_thread_labels{0},
                         m_limbo_labels{0};///labels not confirmed yet, we waiting for async call to complete but app might assume is succeded
             msg_list    m_messages;
             msg_map     m_mmap;
@@ -342,8 +342,7 @@ namespace googleQt{
                 QString id,
                 quint64 history_id,
                 int     messages_count,
-                QString snippet,
-                uint64_t lbmap);
+                QString snippet);
             void add_msg(msg_ptr);
             void rebuildLabelsMap();
             void setupLimboLabels(const label_list& labels2add);
