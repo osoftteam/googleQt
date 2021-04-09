@@ -16,45 +16,47 @@ GT_DIR = $${SRC_DIR}/gtask
 GD_DIR = $${SRC_DIR}/gdrive
 GC_DIR = $${SRC_DIR}/gcontact
 
-HEADERS += $${SRC_DIR}/*.h
-SOURCES += $${SRC_DIR}/*.cpp
-HEADERS += $${G_DIR}/endpoint/*.h
-SOURCES += $${G_DIR}/endpoint/*.cpp
-HEADERS += $${G_DIR}/demo/*.h
-SOURCES += $${G_DIR}/demo/*.cpp
-HEADERS += $${GM_DIR}/*.h $${GT_DIR}/*.h $${GD_DIR}/*.h $${GC_DIR}/*.h
-SOURCES += $${GM_DIR}/*.cpp $${GT_DIR}/*.cpp $${GD_DIR}/*.cpp $${GC_DIR}/*.cpp
+#HEADERS += $${SRC_DIR}/*.h
+HEADERS += $$files($${SRC_DIR}/*.h, false)
+SOURCES += $$files($${SRC_DIR}/*.cpp, false)
+    
+HEADERS += $$files($${G_DIR}/endpoint/*.h, false)
+SOURCES += $$files($${G_DIR}/endpoint/*.cpp, false)
+HEADERS += $$files($${G_DIR}/demo/*.h, false)
+SOURCES += $$files($${G_DIR}/demo/*.cpp, false)
+HEADERS += $$files($${GM_DIR}/*.h,false) $$files($${GT_DIR}/*.h,false) $$files($${GD_DIR}/*.h,false) $$files($${GC_DIR}/*.h,false)
+SOURCES += $$files($${GM_DIR}/*.cpp,false) $$files($${GT_DIR}/*.cpp,false) $$files($${GD_DIR}/*.cpp,false) $$files($${GC_DIR}/*.cpp,false)
 
 
 for(m, GM_MODULES){
        d = $${GM_DIR}/$${m}
        exists($${d}){
-	   HEADERS += $${d}/*.h	
-	   SOURCES += $${d}/*.cpp
+	   HEADERS += $$files($${d}/*.h, false)	
+	   SOURCES += $$files($${d}/*.cpp, false)
        }
 }
 
 for(m, GT_MODULES){
        d = $${GT_DIR}/$${m}
        exists($${d}){
-	   HEADERS += $${d}/*.h	
-	   SOURCES += $${d}/*.cpp
+	   HEADERS += $$files($${d}/*.h, false)
+	   SOURCES += $$files($${d}/*.cpp, false)
        }
 }
 
 for(m, GD_MODULES){
        d = $${GD_DIR}/$${m}
        exists($${d}){
-	   HEADERS += $${d}/*.h	
-	   SOURCES += $${d}/*.cpp
+	   HEADERS += $$files($${d}/*.h, false)
+	   SOURCES += $$files($${d}/*.cpp, false)
        }
 }
 
 for(m, GC_MODULES){
        d = $${GC_DIR}/$${m}
        exists($${d}){
-	   HEADERS += $${d}/*.h	
-	   SOURCES += $${d}/*.cpp
+	   HEADERS += $$files($${d}/*.h, false)
+	   SOURCES += $$files($${d}/*.cpp, false)
        }
 }
 
