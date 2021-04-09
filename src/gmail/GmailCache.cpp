@@ -975,7 +975,7 @@ mail_cache::GThreadCacheQueryTask::GThreadCacheQueryTask(
                                                          GThreadCache* c,
                                                          query_ptr q)
     :CacheQueryTask<ThreadData>(EDataState::snippet, r.endpoint().apiClient(), c),
-    m_r(r), m_q(q)
+    m_r(r), m_threads_query(q)
 {
 
 };
@@ -1207,8 +1207,8 @@ mail_cache::tdata_result mail_cache::GThreadCacheQueryTask::waitForResultAndRele
 
 void mail_cache::GThreadCacheQueryTask::notifyOnCompletedFromCache()
 {
-    if (m_q && m_q->hasNewUnsavedThreads()) {
-        m_r.storage()->qstorage()->insert_db_threads(m_q);
+    if (m_threads_query && m_threads_query->hasNewUnsavedThreads()) {
+        m_r.storage()->qstorage()->insert_db_threads(m_threads_query);
     }
 
     CacheQueryTask<ThreadData>::notifyOnCompletedFromCache();

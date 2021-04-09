@@ -135,6 +135,30 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::refreshCacheMessa
     return getCacheMessages_Async(EDataState::body, id_list);
 };
 
+mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::refreshCacheThreadMessages_Async(const STRING_LIST& id_list)
+{
+	std::vector<HistId> hist_id_list;
+
+	for (auto i : id_list) {
+		auto t = m_GThreadCache->mem_object(i);
+		if (t) {
+			HistId h;
+			h.id = t->id();
+			h.hid = 0;
+			hist_id_list.push_back(h);
+
+			auto mlst = t->messages();
+			for (auto j : mlst) 
+			{
+				j->clearSnippet();
+			}			
+		}
+	}
+
+	auto r = getCacheThreadList_Async(hist_id_list);	
+	return r;
+};
+
 mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getNextCacheMessages_Async(
     int messagesCount /*= 40*/,
     QString pageToken /*= ""*/,

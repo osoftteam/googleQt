@@ -458,7 +458,7 @@ namespace googleQt{
             GoogleVoidTask* loadMessagesLabelsFromCloud_Async(const STRING_LIST& msg_id_list);
 
             googleQt::mail_cache::GmailCacheRoutes&  m_r;
-            query_ptr m_q;
+            query_ptr m_threads_query;
             QString m_nextPageToken;
             thread_list m_updated_threads;
             thread_list m_new_threads;
