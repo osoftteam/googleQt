@@ -18,7 +18,9 @@
 #else
     ///this is optional for real application
     #ifndef API_QT_DIAGNOSTICS
-        //#define API_QT_DIAGNOSTICS
+		#ifdef _DEBUG
+        #define API_QT_DIAGNOSTICS
+		#endif
     #endif
 #endif
 
