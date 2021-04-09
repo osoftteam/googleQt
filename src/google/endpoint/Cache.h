@@ -268,7 +268,8 @@ namespace googleQt {
                 std::shared_ptr<O> obj = mem_object(id);
                 if (obj)
                 {
-                    bool locatedHist = (hid == 0) || (hid != 0 && obj->historyId() == hid);
+                    //bool locatedHist = (hid == 0) || (hid != 0 && obj->historyId() == hid);
+					bool locatedHist = (hid != 0 && obj->historyId() == hid);
                     if(locatedHist){
                         rfetcher->add_result(obj, false);
                         rfetcher->inc_mem_cache_hit_count();
