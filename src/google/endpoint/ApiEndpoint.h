@@ -18,9 +18,9 @@
 #else
     ///this is optional for real application
     #ifndef API_QT_DIAGNOSTICS
-		#ifdef _DEBUG
+        #ifdef _DEBUG
         #define API_QT_DIAGNOSTICS
-		#endif
+        #endif
     #endif
 #endif
 
@@ -56,7 +56,7 @@ namespace googleQt{
         DiagnosticRequestInfo   lastRequestInfo()const;
         const DGN_LIST&         diagnosticRequests()const;
         void                    diagnosticSetRequestTag(QString s);
-		void                    diagnosticSetRequestContext(QString s);
+        void                    diagnosticSetRequestContext(QString s);
         void                    diagnosticClearRequestsList();
         void                    diagnosticLogAsyncTask(EndpointRunnable* task, TaskState s);
         void                    diagnosticLogSQL(QString sql, QString prefix);

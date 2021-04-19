@@ -157,7 +157,7 @@ QString ApiEndpoint::diagnosticTimeStamp()
 void ApiEndpoint::diagnosticSetRequestTag(QString s)
 {    
 #ifdef API_QT_DIAGNOSTICS
-	m_diagnosticsRequestTag = s;
+    m_diagnosticsRequestTag = s;
     QDebug o = qWarning();
     o.noquote();
     o << diagnosticTimeStamp() << "[gapi-diagnistic]" << s;
@@ -169,8 +169,8 @@ const DGN_LIST& ApiEndpoint::diagnosticRequests()const
 #ifdef API_QT_DIAGNOSTICS
     return m_requests;
 #else
-	static DGN_LIST rv;
-	return rv;
+    static DGN_LIST rv;
+    return rv;
 #endif
 };
 
@@ -184,7 +184,7 @@ void ApiEndpoint::diagnosticClearRequestsList()
 void ApiEndpoint::diagnosticSetRequestContext(QString s) 
 { 
 #ifdef API_QT_DIAGNOSTICS
-	m_diagnosticsRequestContext = s; 
+    m_diagnosticsRequestContext = s; 
 #endif
 }
 
@@ -207,8 +207,8 @@ void ApiEndpoint::diagnosticLogAsyncTask(EndpointRunnable* task, TaskState s)
                         .arg(m_diagnosticsRequestTag)
                         .arg(task->name());
 #else
-	Q_UNUSED(task);
-	Q_UNUSED(s);
+    Q_UNUSED(task);
+    Q_UNUSED(s);
 #endif
 };
 

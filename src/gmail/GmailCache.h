@@ -367,17 +367,17 @@ namespace googleQt{
             const thread_list&  threads_arr()const { return m_qthreads; }
             thread_list&        threads_arr(){ return m_qthreads; }
             const thread_map&   threads_map()const { return m_tmap; }
-            QString nextPageToken()const{return m_nextPageToken;}
+            QString             backendToken()const { return m_backendToken; }
 
         protected:          
             int                 m_db_id{ -1 };
-            QString             m_q, m_labelid,m_nextPageToken;
+            QString             m_q, m_labelid, m_backendToken;
             thread_list         m_qthreads;
             thread_map          m_tmap;
             STRING_LIST         m_qnew_thread_ids;
             bool                m_threads_db_loaded{false};
         private:
-            QueryData(int dbid, QString qstr, QString lbid);
+            QueryData(int dbid, QString qstr, QString lbid, QString backend_token);
             static QString      format_qhash(QString qstr, QString lblid);
             friend class GQueryStorage;
             friend class GMailSQLiteStorage;
@@ -569,6 +569,7 @@ namespace googleQt{
             query_ptr ensure_q(QString q_str, QString labelid);
             query_ptr lookup_q(QString q_str, QString labelid);
             bool remove_q(query_ptr q);
+            bool update_q_backend_token(query_ptr q, QString token);
         protected:
             void insert_db_threads(query_ptr q);
             bool loadQueriesFromDb();
