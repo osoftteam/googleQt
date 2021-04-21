@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <ctime>
 #include <QDir>
+#include <QTextDocument>
 #include "Endpoint.h"
 #include "GmailCacheRoutes.h"
 #include "gcontact/GcontactCache.h"
@@ -889,6 +890,16 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
                                 }
                             }
                         }
+
+						if (!pres.plain_text_loaded && !pres.html_text_loaded)
+						{
+							if (p.mimetype().compare("text/plain") == 0)
+							{
+								QByteArray payload_body = QByteArray::fromBase64(p.body().data(), QByteArray::Base64UrlEncoding);
+								plain_text = payload_body.constData();
+								html_text = Qt::convertFromPlainText(plain_text);
+							}
+						}
                     }
 
                 auto i = m_completed->result_map.find(m->id());
