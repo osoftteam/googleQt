@@ -1,17 +1,17 @@
-googleQt is C++11/Qt adaptation of Google GDrive v3, Contacts API v3, GMail v1, GTask v1 API. Underneath is simple web API built on HTTP, OAuth 2.0, and JSON.
+google QR is a C++11/Qt adaptation of Google GDrive v3, Contacts API v3, GMail v1, GTask v1 API. Underneath is a simple web API built on HTTP, OAuth 2.0, and JSON.
 
-The API is based on asynchronous and blocking functions. Blocking functions return unique_ptr of typed objects using move semantics or raise exceptions in case of error. The asynchronous functions are organized around GoogleTask object, similar to QNetworkReply.
+The API is based on asynchronous and blocking functions. Blocking functions return the unique_ptr of typed objects using move semantics or raise exceptions in case of error. The asynchronous functions are organized around the GoogleTask object, similar to QNetworkReply.
 
-googleQt is about concurrent processing, not parallel. That means library offers set of classes with asynchronous functions that are executed in free time slots of same thread where they are initiated. No parallel threads are created and to thread synchronizations are needed. The library encourages recursive calls when chaining of asynchronous operations are needed - it simplifies code and allows cleaner implementations. The asynchronous chaining can be demonstrated in following sample:
+google QR is about concurrent processing, not parallel. That means the library offers a set of classes with asynchronous functions that are executed in free time slots of the same thread where they are initiated. No parallel threads are created and to the thread, synchronizations are needed. The library encourages recursive calls when chaining of asynchronous operations are needed - it simplifies code and allows cleaner implementations. The asynchronous chaining can be demonstrated in the following sample:
 ```
-Problem: download last N message with attachments.
+Problem: download the last N message with attachments.
 
-The task gets splitted into subtask:
+The task gets split into subtask:
 1.list N messages to get N Ids 
 2.download N messages using Ids
 3.download attachment for each message
 ```
-All steps can be organized to run asynchronously so when one task gets finished the next would be scheduled. In real application step #1 can be implemented as series of group requests with 'next' token (so really there are 4 steps and #1 is a recursive one). To simplify implementation of such algorithms we introduced GoogleTask class with following methods:
+All steps can be organized to run asynchronously so when one task gets finished the next would be scheduled. In real application step #, 1 can be implemented as a series of group requests with 'next' token (so really there are 4 steps and #1 is a recursive one). To simplify the implementation of such algorithms we introduced GoogleTask class with the following methods:
 
 ```
 GoogleTask<T>
@@ -82,11 +82,11 @@ The sample implementation using blocking calls:
         }
 ```
 
-Notice blocking calls are wrapped in try/catch block, that is because blocking functions (without Async suffix) can throw exception - when server is unhappy about request and responds with 400, network issues etc. Not-blocking functions have suffix 'Async' and don't throw exceptions but return GoogleTask objects that can be connected to, chained and used to retrieve result data and error description if any. If objects are not chained via 'then' and not turned into blocking calls with 'waitForResultAndRelease' they should be scheduled to delete using 'deleteLater'.
+Notice blocking calls are wrapped in try/catch block, that is because blocking functions (without Async suffix) can throw an exception - when the server is unhappy about a request and responds with 400, network issues, etc. Not-blocking functions have the suffix 'Async' and don't throw exceptions but return GoogleTask objects that can be connected to, chained, and used to retrieve result data and error description if any. If objects are not chained via 'then' and not turned into blocking calls with 'waitForResultAndRelease' they should be scheduled to delete using 'delete later'.
 
 
 ### More examples
-Please visit examples folder, there is one console-based project for each kind of API. We call them bash-projects because they offer small menu with options to explore and test API and demonstrate code snippets. You will find gdrivebash, gmailbash, gtaskbash etc.
+Please visit the examples folder, there is one console-based project for each kind of API. We call them bash-projects because they offer a small menu with options to explore and test API and demonstrate code snippets. You will find drivebys, Gmail bash, gas bash, etc.
 
 Rename GDrive file
 ```
@@ -122,7 +122,7 @@ Download GDrive file
         }
 ```
 
-List GMail labels
+List Gmail labels
 ```
     try
         {
@@ -145,7 +145,7 @@ List GMail labels
         }
 ```
 
-List GMail messages
+List Gmail messages
 ```
     try
         {
@@ -168,7 +168,7 @@ List GMail messages
         }
 ```
 
-Send GMail message with attachments
+Send an email message with attachments
 ```
     QString msg_to = arg_list[0];
     QString msg_subject = arg_list[1];
@@ -211,23 +211,23 @@ Send GMail message with attachments
 C++11 compiler and Qt 5.xx. We used VS2015, GCC 5.xx, XCode 8.xx. Anything newer/better will do.
 
 ### Installation
-Run qmake in 'prj' folder to generate Makefile, compile, see generated static library googleQt. To create sample project, cd in 'examples' and run qmake for each subfolder. There is shell script to open IDE on windows and generate project files - see folder 'bin' and win-configure-open-ide.bat or Cygwin based cygwin-build.csh. You have to add googleQt to your LIB list (as shown in sample) and add path to prj/src to the INCLUDE list.
+Run make in 'project' folder to generate Makefile, compile, see generated static library google QR. To create a sample project, cd in 'examples' and run make for each subfolder. There is a shell script to open IDE on windows and generate project files - see folder 'bin' and win-configure-open-ide.bat or Cygwin based Cygwin-build.csh. You have to add google QR to your LIB list (as shown in sample) and add a path to project/src to the INCLUDE list.
 
 ### Current status.
-gcontacts namespace is getting into shape but still under development, expect surprises, others should be OK.
+contacts namespace is getting into shape but still under development, expect surprises, others should be OK.
 
 
 ### Design and development.
-At the core of library are basic interfaces that provide access to Google services using documented HTTP/JSON protocols. Those classes are geneated from doc-specifications called STONE. STONE was designed by Dropbox as declarative languague to maintain their APIs. We addapted STONE python machinery for C++11/Qt/Dropbox interfaces first and then for selected Google APIs. Our main goal was Gmail and GDrive as future engines for Ardi-application (see prokarpaty.net). At one point we desided to abstruct caching classes from Ardi into googleQt as well. We estimated development of stable GMail cache and core interfaces for GDrive, GTask in 1 year. It includes also autotests and sample projects. 7 months already passed and we have beta of rich GUI hosting application using all this code (except GTasks).
+At the core of the library are basic interfaces that provide access to Google services using documented HTTP/JSON protocols. Those classes are generated from doc-specifications called STONE. STONE was designed by Dropbox as the declarative language to maintain their APIs. We adapted STONE python machinery for C++11/Qt/Dropbox interfaces first and then for selected Google APIs. Our main goal was Gmail and GDrive as future engines for Ardi-application (see prokarpaty.net). At one point we decided to abstract caching classes from Ardi into google QR as well. We estimated the development of stable GMail cache and core interfaces for GDrive, GTask in 1 year. It includes also autotests and sample projects. 7 months already passed and we have a beta of rich GUI hosting application using all this code (except GTasks).
 
 
 ### Features
-The library covers GDrive, GMail, GTask but not completely, particularly resumable downloads are not implemented. Also sending emails functions are not fully tested for various destination client (for encoding etc). 
+The library covers GDrive, Gmail, GTalk but not completely, particularly resumable downloads are not implemented. Also sending email functions is not fully tested for various destination clients (for encoding etc). 
 
-- connect to Gdrive, Gmail, GTask Google API.
+- connect to Gdrive, Gmail, GTalk Google API.
 - request and autorefresh OAuth2 token
 - asynchronous and blocking interfaces
 - specialized exceptions for blocking calls
-- concurrent batch requests for gmail (up to 4 requests simultaneously)
+- concurrent batch requests for Gmail (up to 4 requests simultaneously)
 - caching cloud data for selected services
 
