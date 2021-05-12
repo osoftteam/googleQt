@@ -151,12 +151,13 @@ namespace googleQt
             void runAutotest();
             void autotestThreadDBLoad(const std::vector<HistId>& id_list);
 #endif
+            mail_cache::GThreadCacheQueryTask* newThreadResultFetcher(query_ptr q = nullptr);
+
         signals:
             void attachmentsDownloaded(googleQt::mail_cache::msg_ptr, googleQt::mail_cache::att_ptr);
 
         protected:
             mail_cache::GMailCacheQueryTask* newMessageResultFetcher(EDataState state);
-            mail_cache::GThreadCacheQueryTask* newThreadResultFetcher(query_ptr q=nullptr);
             GoogleTask<messages::MessageResource>* setLabel_Async(QString label_id,
                                                                   mail_cache::MessageData* d,
                                                                   bool label_on,

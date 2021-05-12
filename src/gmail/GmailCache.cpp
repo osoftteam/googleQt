@@ -332,6 +332,12 @@ bool mail_cache::MessageData::hasReservedSysLabel(SysLabel l)const
     return hasLabel(lmask);
 };
 
+void mail_cache::MessageData::addSysLabel(SysLabel l) 
+{
+    auto lmask = reservedSysLabelMask(l);
+    m_labels = m_labels | lmask;
+};
+
 bool mail_cache::MessageData::hasLabel(uint64_t data)const
 {
     bool rv = true;
@@ -573,6 +579,39 @@ void mail_cache::ThreadData::add_msg(msg_ptr m)
     else {
         m_head = m;
     }
+};
+
+void mail_cache::ThreadData::remove_msg(msg_ptr m) 
+{
+    auto i = m_mmap.find(m->id());
+    if (i != m_mmap.end()) {
+        qWarning() << "message not found in thread" << id() << m->id();
+        return;
+    }
+
+    m_mmap.erase(i);
+    
+    for (auto j = m_messages.begin(); j != m_messages.end(); j++){
+        if (*j == m) {
+            m_messages.erase(j);
+            break;
+        }
+    }
+
+    if (m_head == m){
+        m_head = nullptr;
+        if (!m_messages.empty()) {
+            auto j = m_messages.begin();
+            m_head = *j;
+            for (; j != m_messages.end(); j++) {
+                if (m->internalDate() > m_head->internalDate()) {
+                    m_head = m;
+                }
+            }
+        }
+    }
+
+    rebuildLabelsMap();
 };
 
 void mail_cache::ThreadData::rebuildLabelsMap() 
@@ -891,15 +930,15 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
                             }
                         }
 
-						if (!pres.plain_text_loaded && !pres.html_text_loaded)
-						{
-							if (p.mimetype().compare("text/plain") == 0)
-							{
-								QByteArray payload_body = QByteArray::fromBase64(p.body().data(), QByteArray::Base64UrlEncoding);
-								plain_text = payload_body.constData();
-								html_text = Qt::convertFromPlainText(plain_text);
-							}
-						}
+                        if (!pres.plain_text_loaded && !pres.html_text_loaded)
+                        {
+                            if (p.mimetype().compare("text/plain") == 0)
+                            {
+                                QByteArray payload_body = QByteArray::fromBase64(p.body().data(), QByteArray::Base64UrlEncoding);
+                                plain_text = payload_body.constData();
+                                html_text = Qt::convertFromPlainText(plain_text);
+                            }
+                        }
                     }
 
                 auto i = m_completed->result_map.find(m->id());
@@ -1159,12 +1198,12 @@ GoogleVoidTask* mail_cache::GThreadCacheQueryTask::loadMessagesLabelsFromCloud_A
                 auto old_labels = m1->labelsBitMap();
                 if (old_labels != labels) {
                     m1->updateLabels(labels);
-//#ifdef _DEBUG
-//                  qDebug() << "mem-updated-msg-labels" << m->id()
-//                      << "from [" << slist2commalist(mail_cache::mask2SysLabelIds(old_labels))
-//                      << "] to [" << slist2commalist(mail_cache::mask2SysLabelIds(labels))
-//                      << "]";
-//#endif
+#ifdef _DEBUG
+                  qDebug() << "mem-updated-msg-labels" << m->id()
+                      << "from [" << slist2commalist(mail_cache::mask2SysLabelIds(old_labels))
+                      << "] to [" << slist2commalist(mail_cache::mask2SysLabelIds(labels))
+                      << "]";
+#endif
                     updated_messages.push_back(m1);
                 }
             }

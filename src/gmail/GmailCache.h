@@ -115,6 +115,7 @@ namespace googleQt{
             bool hasLabel(uint64_t data)const;
             bool hasAllLabels(uint64_t data)const;
             bool hasReservedSysLabel(SysLabel l)const;
+            void addSysLabel(SysLabel l);
 
             /// each label is a bit in int64
             uint64_t labelsBitMap()const{return m_labels;}
@@ -344,6 +345,7 @@ namespace googleQt{
                 int     messages_count,
                 QString snippet);
             void add_msg(msg_ptr);
+            void remove_msg(msg_ptr);
             void rebuildLabelsMap();
             void setupLimboLabels(const label_list& labels2add);
 

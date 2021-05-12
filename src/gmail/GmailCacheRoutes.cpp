@@ -215,7 +215,29 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::trashCacheMessage_Async(QString ms
     m_gmail_routes.getMessages()->trash_Async(arg)->then([=]()
     {
         //clean up cache
-        if (m_lite_storage) {
+        if (m_lite_storage) 
+        {
+            auto m1 = m_GMsgCache->mem_object(msg_id);
+            if (m1) 
+            {
+                m1->addSysLabel(googleQt::mail_cache::SysLabel::TRASH);
+                //...
+                auto labels = m1->labelsBitMap();
+                qDebug() << "trashCacheMessage_Async" << m1->id() << m1->threadId()
+                    << " labels= [" << slist2commalist(mail_cache::mask2SysLabelIds(labels))
+                    << "]";
+                //...
+                auto t1 = m_GThreadCache->mem_object(m1->threadId());
+                if (t1) 
+                {
+                    t1->remove_msg(m1);
+                    if (!t1->head()) 
+                    {
+                        qDebug() << "<<< ykh - ready to delete 'no-head' thread";
+                    }
+                }
+            }
+
             std::set<QString> set2remove;
             set2remove.insert(msg_id);
             m_GMsgCache->persistent_clear(set2remove);
