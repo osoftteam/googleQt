@@ -370,7 +370,7 @@ namespace googleQt{
             thread_list&        threads_arr(){ return m_qthreads; }
             const thread_map&   threads_map()const { return m_tmap; }
             QString             backendToken()const { return m_backendToken; }
-
+			void				remove_threads(const std::set<QString>& ids2remove);
         protected:          
             int                 m_db_id{ -1 };
             QString             m_q, m_labelid, m_backendToken;
@@ -572,6 +572,7 @@ namespace googleQt{
             query_ptr lookup_q(QString q_str, QString labelid);
             bool remove_q(query_ptr q);
             bool update_q_backend_token(query_ptr q, QString token);
+			void remove_threads_from_all_q(const std::set<QString>& ids2remove);
         protected:
             void insert_db_threads(query_ptr q);
             bool loadQueriesFromDb();

@@ -584,7 +584,7 @@ void mail_cache::ThreadData::add_msg(msg_ptr m)
 void mail_cache::ThreadData::remove_msg(msg_ptr m) 
 {
     auto i = m_mmap.find(m->id());
-    if (i != m_mmap.end()) {
+    if (i == m_mmap.end()) {
         qWarning() << "message not found in thread" << id() << m->id();
         return;
     }
@@ -698,6 +698,20 @@ QString mail_cache::QueryData::format_qhash(QString qstr, QString lblid)
 {
   QString rv = qstr + ":" + lblid;
   return rv;
+};
+
+void mail_cache::QueryData::remove_threads(const std::set<QString>& ids2remove) 
+{
+	m_qthreads.erase(std::remove_if(m_qthreads.begin(), m_qthreads.end(),
+		[&](const thread_ptr& o) { return (ids2remove.find(o->id()) != ids2remove.end()); }
+	),
+		m_qthreads.end());
+
+	for (auto i = ids2remove.cbegin(); i != ids2remove.cend(); i++)
+	{
+		m_tmap.erase(*i);
+	}
+
 };
 
 ///GMailCacheQueryTask
@@ -4106,4 +4120,36 @@ bool mail_cache::GQueryStorage::update_q_backend_token(query_ptr q, QString toke
     if (!qq->exec()) return false;
     q->m_backendToken = token;
     return true;
+};
+
+void mail_cache::GQueryStorage::remove_threads_from_all_q(const std::set<QString>& set_of_ids2remove)
+{
+	STRING_LIST ids2remove;
+	for (auto& i : set_of_ids2remove)
+	{
+		ids2remove.push_back(i);
+	}
+
+	std::function<bool(const STRING_LIST& lst)> removeSublist = [&](const STRING_LIST& lst) -> bool
+	{
+		QString comma_ids = slist2commalist_decorated(lst);
+		QString sql = QString("DELETE FROM %1gmail_qres WHERE thread_id IN(%2) AND acc_id=%3")
+			.arg(m_tstorage->m_storage->metaPrefix())
+			.arg(comma_ids)
+			.arg(m_tstorage->m_storage->currentAccountId());
+		QSqlQuery* q = m_tstorage->m_storage->prepareQuery(sql);
+		if (!q)return false;
+		if (!q->exec()) return false;
+		return true;
+	};
+
+	if (!chunk_list_execution(ids2remove, removeSublist))
+	{
+		qWarning() << "ERROR. Failed to remove therad list of records.";
+	}
+
+	for (auto& i : m_qmap) {
+		auto q = i.second;
+		q->remove_threads(set_of_ids2remove);
+	}
 };

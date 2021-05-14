@@ -210,39 +210,33 @@ mail_cache::mdata_result mail_cache::GmailCacheRoutes::getNextCacheMessages(
 
 GoogleVoidTask* mail_cache::GmailCacheRoutes::trashCacheMessage_Async(QString msg_id)
 {
+	if (m_lite_storage)
+	{
+		auto m1 = m_GMsgCache->mem_object(msg_id);
+		if (m1)
+		{
+			m1->addSysLabel(googleQt::mail_cache::SysLabel::TRASH);
+#ifdef API_QT_DIAGNOSTICS
+			qDebug() << "trashCacheMessage_Async" << m1->id() << m1->threadId()
+				<< " labels= [" << slist2commalist(mail_cache::mask2SysLabelIds(m1->labelsBitMap()))
+				<< "]";
+#endif
+			auto t1 = m_GThreadCache->mem_object(m1->threadId());
+			if (t1){
+				t1->remove_msg(m1);
+			}
+		}
+
+		std::set<QString> set2remove;
+		set2remove.insert(msg_id);
+		m_GMsgCache->persistent_clear(set2remove);
+		m_lite_storage->deleteAttachmentsFromDb(msg_id);
+	}
+
     GoogleVoidTask* rv = m_endpoint.produceVoidTask();
     googleQt::gmail::TrashMessageArg arg(m_endpoint.client()->userId(), msg_id);
     m_gmail_routes.getMessages()->trash_Async(arg)->then([=]()
     {
-        //clean up cache
-        if (m_lite_storage) 
-        {
-            auto m1 = m_GMsgCache->mem_object(msg_id);
-            if (m1) 
-            {
-                m1->addSysLabel(googleQt::mail_cache::SysLabel::TRASH);
-                //...
-                auto labels = m1->labelsBitMap();
-                qDebug() << "trashCacheMessage_Async" << m1->id() << m1->threadId()
-                    << " labels= [" << slist2commalist(mail_cache::mask2SysLabelIds(labels))
-                    << "]";
-                //...
-                auto t1 = m_GThreadCache->mem_object(m1->threadId());
-                if (t1) 
-                {
-                    t1->remove_msg(m1);
-                    if (!t1->head()) 
-                    {
-                        qDebug() << "<<< ykh - ready to delete 'no-head' thread";
-                    }
-                }
-            }
-
-            std::set<QString> set2remove;
-            set2remove.insert(msg_id);
-            m_GMsgCache->persistent_clear(set2remove);
-            m_lite_storage->deleteAttachmentsFromDb(msg_id);
-        }
         rv->completed_callback();
     },
         [=](std::unique_ptr<GoogleException> ex) {
@@ -251,18 +245,6 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::trashCacheMessage_Async(QString ms
     return rv;
 };
 
-/*
-ConcurrentValueRunner<QString, 
-    mail_cache::ThreadsReceiver, 
-    threads::ThreadResource>* mail_cache::GmailCacheRoutes::getUserBatchThreads_Async(const STRING_LIST& id_list)
-{
-    std::unique_ptr<mail_cache::ThreadsReceiver> tr(new mail_cache::ThreadsReceiver(m_gmail_routes));
-    auto r = new ConcurrentValueRunner<QString,
-                            mail_cache::ThreadsReceiver,
-                            threads::ThreadResource>(id_list, std::move(tr), m_endpoint);
-    r->run();
-    return r;
-};*/
 
 mail_cache::tdata_result mail_cache::GmailCacheRoutes::getNextCacheThreads(
     int messagesCount /*= 40*/,
