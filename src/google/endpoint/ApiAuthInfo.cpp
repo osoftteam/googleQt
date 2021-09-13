@@ -24,9 +24,9 @@ bool ApiAuthInfo::readFromFile(QString path)
     m_accessToken = js["access_token"].toString();
     m_refreshToken = js["refresh_token"].toString();
     m_type = js["token_type"].toString();
-    m_expires_in = js["expires_in"].toString().toInt();
+    m_expires_in = js["expires_in"].toInt();
     m_expire_time = js["expire_time"].toString();
-    m_token_scope = js["scope"].toString().toInt();
+    m_token_scope = js["scope"].toInt();
     return true;
 };
 
