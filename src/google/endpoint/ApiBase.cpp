@@ -53,6 +53,12 @@ bool googleQt::isConnectedToNetwork()
 };
 
 
+QString googleQt::makeValidFileName(QString fileName) 
+{
+	QString rv = fileName.replace(QRegExp("[" + QRegExp::escape("\\/:*?\"<>|") + "]"), QString("_"));
+	return rv;
+};
+
 VoidType& VoidType::instance()
 {
     static VoidType void_type;
