@@ -576,7 +576,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::downloadAttachment_Async(googleQt:
             if (m_lite_storage) {
                 m_lite_storage->update_attachment_local_file_db(m, a, fi.fileName());
             }
-            emit attachmentsDownloaded(m, a);
+            emit attachmentDownloaded(m, a);
         }
         else {
             qWarning() << "Failed to create attachment file" << destFile;
@@ -585,6 +585,41 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::downloadAttachment_Async(googleQt:
     });
     return rv;
 };
+
+TaskAggregator* mail_cache::GmailCacheRoutes::downloadAllAttachments_Async(googleQt::mail_cache::msg_ptr m, QString destinationFolder)
+{
+	auto rv = m_endpoint.produceAggregatorTask();
+	if (!m_lite_storage) {
+		qWarning() << "ERROR. Expected storage object.";
+		rv->completed_callback();
+		return rv;
+	}
+
+	ATTACHMENTS_LIST att2download;
+
+	auto lst = m->getAttachments(m_lite_storage.get());
+	for (auto& a: lst) 
+	{
+		if (a->status() == mail_cache::AttachmentData::statusDownloadInProcess ||
+			a->status() == googleQt::mail_cache::AttachmentData::statusDownloaded) continue;
+
+		att2download.push_back(a);		
+	}
+
+	if (att2download.empty()) {
+		rv->completed_callback();
+		return rv;
+	}
+
+	for (auto& a : att2download) 
+	{
+		auto t = downloadAttachment_Async(m, a, destinationFolder);
+		rv->add(t);
+	}
+
+	return rv;
+};
+
 
 void mail_cache::GmailCacheRoutes::refreshLabels()
 {
