@@ -620,6 +620,21 @@ TaskAggregator* mail_cache::GmailCacheRoutes::downloadAllAttachments_Async(googl
 	return rv;
 };
 
+mail_cache::ATTACHMENTS_LIST mail_cache::GmailCacheRoutes::getAttachmentsWithStatus(googleQt::mail_cache::msg_ptr m, int status_mask)
+{
+	mail_cache::ATTACHMENTS_LIST rv;
+
+	auto lst = m->getAttachments(m_lite_storage.get());
+	for (auto& a : lst)
+	{
+		int st = a->status();
+		if (st & status_mask) {
+			rv.push_back(a);
+		}
+	}
+
+	return rv;
+};
 
 void mail_cache::GmailCacheRoutes::refreshLabels()
 {

@@ -219,9 +219,9 @@ namespace googleQt{
         {
         public:
             enum EStatus {
-                statusNotDownloaded,
-                statusDownloadInProcess,
-                statusDownloaded
+                statusNotDownloaded		= 1,
+                statusDownloadInProcess	= 2,
+                statusDownloaded		= 4
             };
 
             AttachmentData();

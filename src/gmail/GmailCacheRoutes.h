@@ -115,6 +115,8 @@ namespace googleQt
                                                      QString destinationFolder);
 			TaskAggregator* downloadAllAttachments_Async(googleQt::mail_cache::msg_ptr m,
 													 QString destinationFolder);
+			/// see AttachmentData::EStatus - we can query for downloaded, in-progress etc.
+			ATTACHMENTS_LIST getAttachmentsWithStatus(googleQt::mail_cache::msg_ptr m, int status_mask);
 
             void refreshLabels();
             std::vector<mail_cache::label_ptr> getLoadedLabels(std::set<QString>* in_optional_idset = nullptr);

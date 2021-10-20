@@ -244,7 +244,6 @@ QByteArray MimeBodyPart::toRfc822()const
 {
     QByteArray rv = QString("Content-Type: %1\r\n").arg(m_content_type).toStdString().c_str();
     rv += QString("Content-Transfer-Encoding: base64\r\n");
-    //rv += QString("Content-Transfer-Encoding: base64\r\n\r\n");
     switch(m_part_type)
         {
         case ptypePlain:
@@ -256,15 +255,25 @@ QByteArray MimeBodyPart::toRfc822()const
         case ptypeNone:break;
         case ptypeFile: 
             {
-                QFileInfo fi(m_content);
-                QString file_name = fi.fileName();
-                rv += QString("Content-Disposition: attachment; filename=%1\r\n\r\n").arg(file_name);
                 /// put the whole file here
                 QFile mf(m_content);
                 if (!mf.open(QFile::ReadOnly)) {
                     qWarning() << "Error, failed to open attachment file: " << m_content;
                 }
-                else {
+                else 
+				{
+					
+					auto x_attachment_id = QString("f_%1").arg(qHash(m_content), 0, 16);
+					auto content_id = QString("<%1>").arg(x_attachment_id);
+					/*
+					rv += QString("Content-ID: %1\r\n").arg(content_id);
+					*/
+					rv += QString("X-Attachment-Id: %1\r\n").arg(x_attachment_id);
+
+					QFileInfo fi(m_content);
+					QString file_name = fi.fileName();
+					rv += QString("Content-Disposition: attachment; filename=%1\r\n\r\n").arg(file_name);
+
                     QByteArray ba = mf.readAll().toBase64(QByteArray::Base64Encoding);
                     rv += QString("%1\r\n").arg(ba.constData());
                 }       
@@ -349,7 +358,8 @@ QByteArray SendMimeMessageArg::toRfc822()const
         rv += QString("References: %1\r\n").arg(ref_str);
     }
     rv += QString("MIME-Version: 1.0\r\n");
-    rv += QString("Content-Type: multipart/alternative; boundary=\"%1\"\r\n\r\n").arg(boundary);
+	rv += QString("Content-Type: multipart/mixed; boundary=\"%1\"\r\n\r\n").arg(boundary);
+    //rv += QString("Content-Type: multipart/alternative; boundary=\"%1\"\r\n\r\n").arg(boundary);
     for (auto& p : m_body_parts)
         {
             rv += QString("--%1\r\n").arg(boundary);
