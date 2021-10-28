@@ -131,7 +131,7 @@ void QParamArg::ResponseFields2Builder(UrlBuilder& b)const
     }
 };
 
-QString googleQt::slist2commalist(const STRING_LIST& lst)
+QString googleQt::slist2str(const STRING_LIST& lst, QString separator)
 {
     QString rv = "";
     if (!lst.empty()) {
@@ -140,14 +140,14 @@ QString googleQt::slist2commalist(const STRING_LIST& lst)
             i++)
         {
             rv += *i;
-            rv += ",";
+            rv += separator;
         }
         rv = rv.left(rv.length() - 1);
     }
     return rv;
 };
 
-QString googleQt::slist2commalist_decorated(const STRING_LIST& lst, char deco)
+QString googleQt::slist2str_decorated(const STRING_LIST& lst, char deco, QString separator)
 {
     QString rv = "";
     if (!lst.empty())
@@ -157,7 +157,7 @@ QString googleQt::slist2commalist_decorated(const STRING_LIST& lst, char deco)
             i++)
         {
             rv += QString("%1%2%3").arg(deco).arg(*i).arg(deco);
-            rv += ",";
+            rv += separator;
         }
         rv = rv.left(rv.length() - 1);
     }

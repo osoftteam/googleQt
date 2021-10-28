@@ -16,6 +16,12 @@ namespace googleQt{
         class GContactCacheBase;
     };
 
+	namespace mail_cache {
+		class GmailCacheRoutes;
+		class GMailSQLiteStorage;
+	}
+
+
     using gclient_ptr = std::shared_ptr<GoogleClient>;
 
     gclient_ptr createClient(googleQt::ApiAppInfo* appInfo, googleQt::ApiAuthInfo* authInfo, gcontact::GContactCacheBase* custom_contacts_cache = nullptr);
@@ -72,6 +78,12 @@ public:
      * we have to reload it for new user
      */
     void setUserId(QString email)override;
+
+	/**
+	* gmail poiners shortcuts
+	*/
+	googleQt::mail_cache::GmailCacheRoutes*		gmail_cache_routes();
+	googleQt::mail_cache::GMailSQLiteStorage*	gmail_storage();
 
     /*
         some debug functions, we might remove them in

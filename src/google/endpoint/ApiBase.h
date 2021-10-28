@@ -190,8 +190,8 @@ namespace googleQt {
     }
 
     /// converts list of strings -> comma separated list
-    QString slist2commalist(const STRING_LIST& lst);
-    QString slist2commalist_decorated(const STRING_LIST& lst, char deco = '\'');
+    QString slist2str(const STRING_LIST& lst, QString separator = ",");
+    QString slist2str_decorated(const STRING_LIST& lst, char deco = '\'', QString separator = ",");
     /// converts space separated strings -> list of strings
     STRING_LIST split_string(QString s);
     /// converts size to string with KB, MB or GB suffix

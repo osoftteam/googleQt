@@ -1214,8 +1214,8 @@ GoogleVoidTask* mail_cache::GThreadCacheQueryTask::loadMessagesLabelsFromCloud_A
                     m1->updateLabels(labels);
 #ifdef _DEBUG
                   qDebug() << "mem-updated-msg-labels" << m->id()
-                      << "from [" << slist2commalist(mail_cache::mask2SysLabelIds(old_labels))
-                      << "] to [" << slist2commalist(mail_cache::mask2SysLabelIds(labels))
+                      << "from [" << slist2str(mail_cache::mask2SysLabelIds(old_labels))
+                      << "] to [" << slist2str(mail_cache::mask2SysLabelIds(labels))
                       << "]";
 #endif
                     updated_messages.push_back(m1);
@@ -2657,7 +2657,7 @@ googleQt::mail_cache::msg_list mail_cache::GMailSQLiteStorage::loadMessagesByIds
 
     std::function<bool(const STRING_LIST& lst)> loadList = [&](const STRING_LIST& lst) -> bool
     {
-        QString comma_ids = slist2commalist_decorated(lst);
+        QString comma_ids = slist2str_decorated(lst);
         QString sql = QString("SELECT t.thread_id, t.history_id, t.messages_count, t.snippet, "
             "m.msg_state, m.msg_id, m.msg_from, m.msg_to, m.msg_cc, m.msg_bcc, "
             "m.msg_subject, m.msg_snippet, m.msg_plain, m.msg_html, m.internal_date, m.msg_labels, m.msg_references, m.thread_id "
@@ -2789,7 +2789,7 @@ void mail_cache::GMailSQLiteStorage::clearBatchUpdate(const std::vector<QString>
 {
     std::function<bool(const STRING_LIST& lst)> removeReqlist = [&](const STRING_LIST& lst) -> bool
     {
-        QString comma_ids = slist2commalist_decorated(lst);
+        QString comma_ids = slist2str_decorated(lst);
         QString sql = QString("DELETE FROM %1gmail_batch_update WHERE msg_id IN(%2) AND acc_id=%3")
             .arg(m_metaPrefix)
             .arg(comma_ids)
@@ -3215,7 +3215,7 @@ void mail_cache::GMessagesStorage::remove_db(const std::set<QString>& set_of_ids
 
     std::function<bool(const STRING_LIST& lst)> removeSublist = [&](const STRING_LIST& lst) -> bool
     {
-        QString comma_ids = slist2commalist_decorated(lst);
+        QString comma_ids = slist2str_decorated(lst);
         QString sql = QString("DELETE FROM %1gmail_msg WHERE msg_id IN(%2) AND acc_id=%3")
             .arg(m_storage->metaPrefix())
             .arg(comma_ids)
@@ -3454,7 +3454,7 @@ googleQt::mail_cache::thread_list mail_cache::GThreadsStorage::loadThreadsByIdsF
 
         bool load_messages_for_threads = true;
         if (load_messages_for_threads && loaded_threads.size() > 0) {
-            QString loaded_threads_id_str = slist2commalist_decorated(loaded_threads);
+            QString loaded_threads_id_str = slist2str_decorated(loaded_threads);
 
             sql = QString("SELECT msg_state, msg_id, msg_from, msg_to, msg_cc, msg_bcc, "
                 "msg_subject, msg_snippet, msg_plain, msg_html, internal_date, msg_labels, msg_references, thread_id FROM %1gmail_msg WHERE acc_id=%2 AND "
@@ -3505,7 +3505,7 @@ googleQt::mail_cache::thread_list mail_cache::GThreadsStorage::loadThreadsByIdsF
         batch_list.push_back(id);
         if (batch_list.size() == BATCH_SIZE)
         {
-            QString ids_str = slist2commalist_decorated(batch_list);
+            QString ids_str = slist2str_decorated(batch_list);
             auto batch_arr = process_list(ids_str);
             rv.insert(rv.end(), batch_arr.begin(), batch_arr.end());
             batch_list.clear();
@@ -3514,7 +3514,7 @@ googleQt::mail_cache::thread_list mail_cache::GThreadsStorage::loadThreadsByIdsF
 
     if (!batch_list.empty())
     {
-        QString ids_str = slist2commalist_decorated(batch_list);
+        QString ids_str = slist2str_decorated(batch_list);
         auto batch_arr = process_list(ids_str);
         rv.insert(rv.end(), batch_arr.begin(), batch_arr.end());
     }
@@ -3785,7 +3785,7 @@ void mail_cache::GThreadsStorage::remove_db(const std::set<QString>& set_of_ids2
 
     std::function<bool(const STRING_LIST& lst)> removeSublist = [&](const STRING_LIST& lst) -> bool
     {
-        QString comma_ids = slist2commalist_decorated(lst);
+        QString comma_ids = slist2str_decorated(lst);
         QString sql = QString("DELETE FROM %1gmail_thread WHERE thread_id IN(%2) AND acc_id=%3")
             .arg(m_storage->metaPrefix())
             .arg(comma_ids)
@@ -4132,7 +4132,7 @@ void mail_cache::GQueryStorage::remove_threads_from_all_q(const std::set<QString
 
 	std::function<bool(const STRING_LIST& lst)> removeSublist = [&](const STRING_LIST& lst) -> bool
 	{
-		QString comma_ids = slist2commalist_decorated(lst);
+		QString comma_ids = slist2str_decorated(lst);
 		QString sql = QString("DELETE FROM %1gmail_qres WHERE thread_id IN(%2) AND acc_id=%3")
 			.arg(m_tstorage->m_storage->metaPrefix())
 			.arg(comma_ids)

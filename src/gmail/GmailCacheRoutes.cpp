@@ -218,7 +218,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::trashCacheMessage_Async(QString ms
 			m1->addSysLabel(googleQt::mail_cache::SysLabel::TRASH);
 #ifdef API_QT_DIAGNOSTICS
 			qDebug() << "trashCacheMessage_Async" << m1->id() << m1->threadId()
-				<< " labels= [" << slist2commalist(mail_cache::mask2SysLabelIds(m1->labelsBitMap()))
+				<< " labels= [" << slist2str(mail_cache::mask2SysLabelIds(m1->labelsBitMap()))
 				<< "]";
 #endif
 			auto t1 = m_GThreadCache->mem_object(m1->threadId());

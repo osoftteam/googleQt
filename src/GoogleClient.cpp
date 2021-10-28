@@ -163,6 +163,23 @@ GcontactRoutes* GoogleClient::gcontact()
     return m_contact_routes.get();
 };
 
+googleQt::mail_cache::GmailCacheRoutes* GoogleClient::gmail_cache_routes() 
+{
+	auto m = gmail();
+	if (m) {
+		return m->cacheRoutes();
+	}
+	return nullptr;
+};
+
+googleQt::mail_cache::GMailSQLiteStorage* GoogleClient::gmail_storage() 
+{
+	auto s = gmail_cache_routes();
+	if (s) {
+		return s->storage();
+	}
+	return nullptr;
+};
 
 bool GoogleClient::refreshToken()
 {
