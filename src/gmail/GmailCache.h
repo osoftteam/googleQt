@@ -219,9 +219,9 @@ namespace googleQt{
         {
         public:
             enum EStatus {
-                statusNotDownloaded		= 1,
-                statusDownloadInProcess	= 2,
-                statusDownloaded		= 4
+                statusNotDownloaded     = 1,
+                statusDownloadInProcess = 2,
+                statusDownloaded        = 4
             };
 
             AttachmentData();
@@ -336,6 +336,7 @@ namespace googleQt{
             uint64_t    m_thread_labels{0},
                         m_limbo_labels{0};///labels not confirmed yet, we waiting for async call to complete but app might assume is succeded
             msg_list    m_messages;
+            uint64_t    m_filter_mask{ 0 };
             msg_map     m_mmap;
             msg_ptr     m_head{nullptr};
         private:
@@ -343,7 +344,8 @@ namespace googleQt{
                 QString id,
                 quint64 history_id,
                 int     messages_count,
-                QString snippet);
+                QString snippet,
+                uint64_t filter_mask);
             void add_msg(msg_ptr);
             void remove_msg(msg_ptr);
             void rebuildLabelsMap();
@@ -370,17 +372,20 @@ namespace googleQt{
             thread_list&        threads_arr(){ return m_qthreads; }
             const thread_map&   threads_map()const { return m_tmap; }
             QString             backendToken()const { return m_backendToken; }
-			void				remove_threads(const std::set<QString>& ids2remove);
+            void                remove_threads(const std::set<QString>& ids2remove);
+            bool                isFilter()const { return (m_filter_mask != 0); }
+            uint64_t            filterMask()const { return m_filter_mask; }
         protected:          
             int                 m_db_id{ -1 };
             QString             m_q, m_labelid, m_backendToken;
             thread_list         m_qthreads;
             thread_map          m_tmap;
             STRING_LIST         m_qnew_thread_ids;
+            uint64_t            m_filter_mask{0};
             bool                m_threads_db_loaded{false};
         private:
-            QueryData(int dbid, QString qstr, QString lbid, QString backend_token);
-            static QString      format_qhash(QString qstr, QString lblid);
+            QueryData(int dbid, QString qstr, QString lbid, QString backend_token, uint64_t filter_mask);
+            static QString      format_qhash(QString qstr, QString lblid, bool as_filter);
             friend class GQueryStorage;
             friend class GMailSQLiteStorage;
             friend class GmailCacheRoutes;
@@ -568,22 +573,24 @@ namespace googleQt{
         {
         public:
             GQueryStorage(GThreadsStorage* s, GMessagesStorage* ms);
-            query_ptr ensure_q(QString q_str, QString labelid);
-            query_ptr lookup_q(QString q_str, QString labelid);
+            query_ptr ensure_q(QString q_str, QString labelid, bool as_filter);
+            query_ptr lookup_q(QString q_str, QString labelid, bool as_filter);
             bool remove_q(query_ptr q);
             bool update_q_backend_token(query_ptr q, QString token);
-			void remove_threads_from_all_q(const std::set<QString>& ids2remove);
+            void remove_threads_from_all_q(const std::set<QString>& ids2remove);
         protected:
             void insert_db_threads(query_ptr q);
             bool loadQueriesFromDb();
             bool loadQueryThreadsFromDb(query_ptr d);
             QString insertSQLthreads(query_ptr q)const;
             void bindSQL(QSqlQuery* q, STRING_LIST& r);
+            uint64_t nextFilterMask()const;
         protected:
             GThreadsStorage*        m_tstorage{ nullptr };
             GMessagesStorage*       m_mstorage{ nullptr };
             query_map               m_qmap;
             query_db_map            m_q_dbmap;
+            uint64_t                m_all_filters_mask{0};
             friend class GMailSQLiteStorage;
             friend class GThreadCacheQueryTask;
         };
