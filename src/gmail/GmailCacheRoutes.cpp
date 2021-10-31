@@ -210,28 +210,28 @@ mail_cache::mdata_result mail_cache::GmailCacheRoutes::getNextCacheMessages(
 
 GoogleVoidTask* mail_cache::GmailCacheRoutes::trashCacheMessage_Async(QString msg_id)
 {
-	if (m_lite_storage)
-	{
-		auto m1 = m_GMsgCache->mem_object(msg_id);
-		if (m1)
-		{
-			m1->addSysLabel(googleQt::mail_cache::SysLabel::TRASH);
+    if (m_lite_storage)
+    {
+        auto m1 = m_GMsgCache->mem_object(msg_id);
+        if (m1)
+        {
+            m1->addSysLabel(googleQt::mail_cache::SysLabel::TRASH);
 #ifdef API_QT_DIAGNOSTICS
-			qDebug() << "trashCacheMessage_Async" << m1->id() << m1->threadId()
-				<< " labels= [" << slist2str(mail_cache::mask2SysLabelIds(m1->labelsBitMap()))
-				<< "]";
+            qDebug() << "trashCacheMessage_Async" << m1->id() << m1->threadId()
+                << " labels= [" << slist2str(mail_cache::mask2SysLabelIds(m1->labelsBitMap()))
+                << "]";
 #endif
-			auto t1 = m_GThreadCache->mem_object(m1->threadId());
-			if (t1){
-				t1->remove_msg(m1);
-			}
-		}
+            auto t1 = m_GThreadCache->mem_object(m1->threadId());
+            if (t1){
+                t1->remove_msg(m1);
+            }
+        }
 
-		std::set<QString> set2remove;
-		set2remove.insert(msg_id);
-		m_GMsgCache->persistent_clear(set2remove);
-		m_lite_storage->deleteAttachmentsFromDb(msg_id);
-	}
+        std::set<QString> set2remove;
+        set2remove.insert(msg_id);
+        m_GMsgCache->persistent_clear(set2remove);
+        m_lite_storage->deleteAttachmentsFromDb(msg_id);
+    }
 
     GoogleVoidTask* rv = m_endpoint.produceVoidTask();
     googleQt::gmail::TrashMessageArg arg(m_endpoint.client()->userId(), msg_id);
@@ -588,52 +588,52 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::downloadAttachment_Async(googleQt:
 
 TaskAggregator* mail_cache::GmailCacheRoutes::downloadAllAttachments_Async(googleQt::mail_cache::msg_ptr m, QString destinationFolder)
 {
-	auto rv = m_endpoint.produceAggregatorTask();
-	if (!m_lite_storage) {
-		qWarning() << "ERROR. Expected storage object.";
-		rv->completed_callback();
-		return rv;
-	}
+    auto rv = m_endpoint.produceAggregatorTask();
+    if (!m_lite_storage) {
+        qWarning() << "ERROR. Expected storage object.";
+        rv->completed_callback();
+        return rv;
+    }
 
-	ATTACHMENTS_LIST att2download;
+    ATTACHMENTS_LIST att2download;
 
-	auto lst = m->getAttachments(m_lite_storage.get());
-	for (auto& a: lst) 
-	{
-		if (a->status() == mail_cache::AttachmentData::statusDownloadInProcess ||
-			a->status() == googleQt::mail_cache::AttachmentData::statusDownloaded) continue;
+    auto lst = m->getAttachments(m_lite_storage.get());
+    for (auto& a: lst) 
+    {
+        if (a->status() == mail_cache::AttachmentData::statusDownloadInProcess ||
+            a->status() == googleQt::mail_cache::AttachmentData::statusDownloaded) continue;
 
-		att2download.push_back(a);		
-	}
+        att2download.push_back(a);      
+    }
 
-	if (att2download.empty()) {
-		rv->completed_callback();
-		return rv;
-	}
+    if (att2download.empty()) {
+        rv->completed_callback();
+        return rv;
+    }
 
-	for (auto& a : att2download) 
-	{
-		auto t = downloadAttachment_Async(m, a, destinationFolder);
-		rv->add(t);
-	}
+    for (auto& a : att2download) 
+    {
+        auto t = downloadAttachment_Async(m, a, destinationFolder);
+        rv->add(t);
+    }
 
-	return rv;
+    return rv;
 };
 
 mail_cache::ATTACHMENTS_LIST mail_cache::GmailCacheRoutes::getAttachmentsWithStatus(googleQt::mail_cache::msg_ptr m, int status_mask)
 {
-	mail_cache::ATTACHMENTS_LIST rv;
+    mail_cache::ATTACHMENTS_LIST rv;
 
-	auto lst = m->getAttachments(m_lite_storage.get());
-	for (auto& a : lst)
-	{
-		int st = a->status();
-		if (st & status_mask) {
-			rv.push_back(a);
-		}
-	}
+    auto lst = m->getAttachments(m_lite_storage.get());
+    for (auto& a : lst)
+    {
+        int st = a->status();
+        if (st & status_mask) {
+            rv.push_back(a);
+        }
+    }
 
-	return rv;
+    return rv;
 };
 
 void mail_cache::GmailCacheRoutes::refreshLabels()

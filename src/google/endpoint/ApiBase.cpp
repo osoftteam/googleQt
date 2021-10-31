@@ -55,8 +55,8 @@ bool googleQt::isConnectedToNetwork()
 
 QString googleQt::makeValidFileName(QString fileName) 
 {
-	QString rv = fileName.replace(QRegExp("[" + QRegExp::escape("\\/:*?\"<>|") + "]"), QString("_"));
-	return rv;
+    QString rv = fileName.replace(QRegExp("[" + QRegExp::escape("\\/:*?\"<>|") + "]"), QString("_"));
+    return rv;
 };
 
 VoidType& VoidType::instance()

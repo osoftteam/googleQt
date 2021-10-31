@@ -37,7 +37,7 @@ namespace googleQt {
     bool loadJsonFromFile(QString path, QJsonObject& js);
     bool storeJsonToFile(QString path, const QJsonObject js);
     bool isConnectedToNetwork();
-	QString makeValidFileName(QString fileName);
+    QString makeValidFileName(QString fileName);
 
     using STRING_LIST = std::vector<QString>;
 
