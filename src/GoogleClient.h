@@ -16,10 +16,10 @@ namespace googleQt{
         class GContactCacheBase;
     };
 
-	namespace mail_cache {
-		class GmailCacheRoutes;
-		class GMailSQLiteStorage;
-	}
+    namespace mail_cache {
+        class GmailCacheRoutes;
+        class GMailSQLiteStorage;
+    }
 
 
     using gclient_ptr = std::shared_ptr<GoogleClient>;
@@ -79,11 +79,11 @@ public:
      */
     void setUserId(QString email)override;
 
-	/**
-	* gmail poiners shortcuts
-	*/
-	googleQt::mail_cache::GmailCacheRoutes*		gmail_cache_routes();
-	googleQt::mail_cache::GMailSQLiteStorage*	gmail_storage();
+    /**
+    * gmail poiners shortcuts
+    */
+    googleQt::mail_cache::GmailCacheRoutes*     gmail_cache_routes();
+    googleQt::mail_cache::GMailSQLiteStorage*   gmail_storage();
 
     /*
         some debug functions, we might remove them in
