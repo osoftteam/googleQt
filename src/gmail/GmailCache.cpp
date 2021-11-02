@@ -162,7 +162,7 @@ void mail_cache::GThreadCache::verifyData()
         }
 
         //persistent_clear(ids2delete);
-        qWarning() << "Cleaning empty threads:" << ids2delete.size() << " DISABLED-by-ykh";
+        qWarning() << "Cleaning empty threads:" << ids2delete.size() << " DISABLED";
     }
 };
 
@@ -687,6 +687,11 @@ bool mail_cache::ThreadData::hasAllLabels(uint64_t data)const
     return rv;
 };
 
+void mail_cache::ThreadData::addFilterMask(uint64_t f) 
+{
+    m_filter_mask |= f;
+};
+
 ///QueryData
 mail_cache::QueryData::QueryData(int dbid, QString qstr, QString lbid, QString backend_token, uint64_t filter_mask):
     m_db_id(dbid), m_q(qstr), m_labelid(lbid), m_backendToken(backend_token), m_filter_mask(filter_mask)
@@ -1070,7 +1075,8 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& 
         for (auto& t : res)
         {
             auto td = m_cache->mem_object(t->id());
-            if (td) {
+            if (td) 
+            {
                 bool is_updated = false;
                 ///we have thread in cache, check on new mesages
                 auto mlst = t->messages();
@@ -1089,8 +1095,16 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& 
                 if (is_updated) {
                     m_updated_threads.push_back(td);                    
                 }
+
+                if (m_threads_query && m_threads_query->isFilter()){
+                    auto fmask = m_threads_query->filterMask();
+                    if (!(td->filterMask() & fmask)) {
+                        qWarning() << "inconsistant thread filter mask" << t->id() << td->filterMask() << fmask;
+                    }
+                }
             }
-            else{
+            else
+            {
                 ///new thread, get all mesages
                 uint64_t fmask = 0;
                 if (m_threads_query) {
@@ -3574,7 +3588,7 @@ void mail_cache::GThreadsStorage::verifyThreads()
 
 QString mail_cache::GThreadsStorage::insertSQL()const 
 {
-    QString sql_insert = QString("INSERT INTO %1gmail_thread(history_id, messages_count, snippet, internal_date, thread_id, acc_id) VALUES(?, ?, ?, ?, ?, %2)")
+    QString sql_insert = QString("INSERT INTO %1gmail_thread(history_id, messages_count, snippet, filter_mask, internal_date, thread_id, acc_id) VALUES(?, ?, ?, ?, ?, ?, %2)")
         .arg(m_storage->metaPrefix())
         .arg(m_storage->currentAccountId());
     return sql_insert;
@@ -3582,7 +3596,15 @@ QString mail_cache::GThreadsStorage::insertSQL()const
 
 QString mail_cache::GThreadsStorage::updateSQL()const 
 {
-    QString sql_update = QString("UPDATE %1gmail_thread SET history_id=?, messages_count=?, snippet=?, internal_date=? WHERE thread_id=? AND acc_id=%2")
+    QString sql_update = QString("UPDATE %1gmail_thread SET history_id=?, messages_count=?, snippet=?, filter_mask=?, internal_date=? WHERE thread_id=? AND acc_id=%2")
+        .arg(m_storage->metaPrefix())
+        .arg(m_storage->currentAccountId());
+    return sql_update;
+};
+
+QString mail_cache::GThreadsStorage::update_filterSQL()const
+{
+    QString sql_update = QString("UPDATE %1gmail_thread SET filter_mask=? WHERE thread_id=? AND acc_id=%2")
         .arg(m_storage->metaPrefix())
         .arg(m_storage->currentAccountId());
     return sql_update;
@@ -3590,7 +3612,7 @@ QString mail_cache::GThreadsStorage::updateSQL()const
 
 void mail_cache::GThreadsStorage::bindSQL(QSqlQuery* q, CACHE_LIST<ThreadData>& r)
 {
-    QVariantList history_id, messages_count, snippet, internalDate, id;
+    QVariantList history_id, messages_count, snippet, filter_mask, internalDate, id;
     for (auto& i : r)
     {
         thread_ptr& t = i;
@@ -3609,7 +3631,7 @@ void mail_cache::GThreadsStorage::bindSQL(QSqlQuery* q, CACHE_LIST<ThreadData>& 
         history_id << t->m_history_id;
         messages_count << t->m_messages_count;
         snippet << t->m_snippet;
-       // labelsBitMap << static_cast<quint64>(t->labelsBitMap());
+        filter_mask << t->m_filter_mask;
         internalDate << t->internalDate();
         id << t->m_id;
 
@@ -3621,17 +3643,44 @@ void mail_cache::GThreadsStorage::bindSQL(QSqlQuery* q, CACHE_LIST<ThreadData>& 
     q->addBindValue(history_id);
     q->addBindValue(messages_count);
     q->addBindValue(snippet);
-    //q->addBindValue(labelsBitMap);
+    q->addBindValue(filter_mask);
     q->addBindValue(internalDate);
     q->addBindValue(id);
 };
+
+//....
+void mail_cache::GThreadsStorage::bind_filterSQL(QSqlQuery* q, CACHE_LIST<ThreadData>& r)
+{
+    QVariantList filter_mask, id;
+    for (auto& i : r)
+    {
+        thread_ptr& t = i;
+
+        thread_ptr& m = i;
+        if (!t->head()) {
+            qWarning() << "db-insert/skipping 'headless' thread" << m->id();
+            continue;
+        }
+
+        if (t->internalDate() == 0) {
+            qWarning() << "db-insert/skipping invalid date thread" << m->id();
+            continue;
+        }
+
+        filter_mask << t->m_filter_mask;
+        id << t->m_id;
+    }
+    q->addBindValue(filter_mask);
+    q->addBindValue(id);
+};
+//...
 
 bool mail_cache::GThreadsStorage::execOutOfBatchSQL(QSqlQuery* q, mail_cache::ThreadData* t)
 {
     q->addBindValue(t->m_history_id);
     q->addBindValue(t->m_messages_count);
     q->addBindValue(t->m_snippet);
-    //q->addBindValue(static_cast<quint64>(t->labelsBitMap()));
+    q->addBindValue(t->m_filter_mask);
     q->addBindValue(t->internalDate());
     q->addBindValue(t->m_id);
     return q->exec();
@@ -4066,15 +4115,26 @@ void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
         qWarning() << "expected thread storage cache ptr";
         return;
     }
-
+    CACHE_LIST<ThreadData> tmask2upd;
     STRING_LIST  new_threads;
-    for (auto& i : qd->m_qnew_thread_ids) {
-        if (qd->m_tmap.find(i) == qd->m_tmap.end()) {
+    for (auto& i : qd->m_qnew_thread_ids) 
+    {
+        if (qd->m_tmap.find(i) == qd->m_tmap.end()) 
+        {
             auto t = tc->mem_object(i);
             if (t) {
                 new_threads.push_back(i);
                 qd->m_qthreads.push_back(t);
                 qd->m_tmap[i] = t;
+
+                if (qd->isFilter()) 
+                {
+                    auto fmask = qd->filterMask();
+                    if (!(t->filterMask() & fmask)) {
+                        t->addFilterMask(fmask);
+                        tmask2upd.push_back(t);
+                    }
+                }
             }
             else {
                 qWarning() << "insert_db_threads/failed to locate thread in cache" << i;
@@ -4082,7 +4142,31 @@ void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
         }
     }
 
-    if (qd && !new_threads.empty()) {
+    if (qd && !new_threads.empty()) 
+    {
+        if (!tmask2upd.empty()) 
+        {
+            ///update threads flag in DB
+            auto q1 = m_tstorage->m_storage->startTransaction(m_tstorage->update_filterSQL());
+            if (q1) 
+            {
+                m_tstorage->bind_filterSQL(q1, tmask2upd);
+                if (!q1->execBatch())
+                {
+                    m_tstorage->m_storage->rollbackTransaction();
+                    qWarning() << "ERROR. SQL Q/insert-threads batch failed"
+                        << "err-type:" << q1->lastError().type()
+                        << "native-code:" << q1->lastError().nativeErrorCode()
+                        << "errtext:" << q1->lastError().text();
+                    return;
+                }
+                bool rv = m_tstorage->m_storage->commitTransaction();
+                if (!rv) {
+                    qWarning() << "Failed commit Q-threads fmask transaction";
+                }
+            }
+        }
+
         auto q = m_tstorage->m_storage->startTransaction(insertSQLthreads(qd));
         if (q) {
             bindSQL(q, new_threads);
@@ -4132,6 +4216,28 @@ bool mail_cache::GQueryStorage::remove_q(query_ptr q)
 
     m_qmap.erase(QueryData::format_qhash(q->qStr(), q->labelid(), q->isFilter()));
     m_q_dbmap.erase(q->m_db_id);
+
+    if (q->isFilter()) 
+    {
+        auto fmask = q->filterMask();
+        m_all_filters_mask &= ~fmask;
+
+        QString sql_update;
+        sql_update = QString("UPDATE %1gmail_thread SET filter_mask=(~(filter_mask&%2))&(filter_mask|%2) WHERE acc_id=%3 AND (filter_mask&%2 = %2)")
+            .arg(m_tstorage->m_storage->metaPrefix())
+            .arg(fmask)
+            .arg(m_tstorage->m_storage->currentAccountId());
+        QSqlQuery* qq = m_tstorage->m_storage->prepareQuery(sql_update);
+        if (!qq){
+            qWarning() << "SQL update failed" << sql_update;
+            return false;
+        }
+        if (!qq->exec()) {
+            qWarning() << "SQL exec failed" << sql_update;
+            return false;
+        }
+    }
+
     return true;
 };
 

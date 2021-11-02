@@ -324,7 +324,10 @@ namespace googleQt{
             qlonglong internalDate()const;
 
             /// each label is a bit in int64
-            uint64_t labelsBitMap()const{return m_thread_labels;}
+            uint64_t    labelsBitMap()const{return m_thread_labels;}
+
+            uint64_t    filterMask()const { return m_filter_mask; }
+            void        addFilterMask(uint64_t f);
 
             bool hasLabel(uint64_t data)const;
             bool hasLimboLabel(uint64_t data)const;
@@ -442,7 +445,6 @@ namespace googleQt{
                              QString& bcc,
                              QString& subject,
                              QString& references);
-            //void loadLabels(messages::MessageResource* m, uint64_t& labels);
             void loadAttachments(messages::MessageResource* m, ATTACHMENTS_LIST& lst);
         protected:
             googleQt::mail_cache::GmailCacheRoutes&  m_r;
@@ -545,10 +547,12 @@ namespace googleQt{
 
             QString insertSQL()const;
             QString updateSQL()const;
+            QString update_filterSQL()const;
             bool insertDbInBatch(CACHE_LIST<ThreadData>& r);
             bool updateDbInBatch(CACHE_LIST<ThreadData>& r);
             bool execOutOfBatchSQL(QSqlQuery* q, mail_cache::ThreadData* t);
             void bindSQL(QSqlQuery* q, CACHE_LIST<ThreadData>& r);
+            void bind_filterSQL(QSqlQuery* q, CACHE_LIST<ThreadData>& r);
         protected:
             GMailSQLiteStorage*     m_storage;
             friend class GMailSQLiteStorage;
