@@ -9,6 +9,7 @@
 #include "gcontact/GcontactCache.h"
 
 #define DB_VER 2
+static uint64_t g__unread_label_mask = 0;
 
 using namespace googleQt;
 ///MessagesReceiver
@@ -716,7 +717,16 @@ void mail_cache::QueryData::remove_threads(const std::set<QString>& ids2remove)
     {
         m_tmap.erase(*i);
     }
+};
 
+void mail_cache::QueryData::recalcUnreadCount()
+{
+    m_unread_count = 0;
+    for (auto& t : m_qthreads) {
+        if (t->hasLabel(g__unread_label_mask)) {
+            m_unread_count++;
+        }
+    }
 };
 
 ///GMailCacheQueryTask
@@ -1289,8 +1299,11 @@ mail_cache::tdata_result mail_cache::GThreadCacheQueryTask::waitForResultAndRele
 
 void mail_cache::GThreadCacheQueryTask::notifyOnCompletedFromCache()
 {
-    if (m_threads_query && m_threads_query->hasNewUnsavedThreads()) {
-        m_r.storage()->qstorage()->insert_db_threads(m_threads_query);
+    if (m_threads_query) {
+        if (m_threads_query->hasNewUnsavedThreads()) {
+            m_r.storage()->qstorage()->insert_db_threads(m_threads_query);
+        }
+        m_threads_query->recalcUnreadCount();
     }
 
     CacheQueryTask<ThreadData>::notifyOnCompletedFromCache();
@@ -1692,7 +1705,11 @@ bool mail_cache::GMailSQLiteStorage::loadLabelsFromDb()
         qWarning() << "ERROR. Static table of syslabels empty";
         return false;
     }
-
+    else {
+        if (g__unread_label_mask == 0) {
+            g__unread_label_mask = mail_cache::reservedSysLabelMask(SysLabel::UNREAD);
+        }
+    }
 
     qstring_hash_map<int> system_labels2ensure;
     for(auto& i : reservedLabelID2SysLabel){
@@ -1815,7 +1832,7 @@ bool mail_cache::GMailSQLiteStorage::markMailAsTrashedInDb(MessageData& m)
     q->addBindValue(m.id());
     q->addBindValue(accId);
 
-    return true;
+    return q->exec();
 };
 
 void mail_cache::GMailSQLiteStorage::updateMessagesDiagnostic(int inc_batch, int inc_msg) 
@@ -3084,8 +3101,6 @@ void mail_cache::GMessagesStorage::update_db(
 
         for (auto& i : r)
         {
-//            qDebug() << "message/update_db" << i->id() << sql_update;
-
             QSqlQuery* q = m_storage->prepareQuery(sql_update);
             if (!q)return;
             bool ok = execOutOfBatchSQL(state, q, i.get());
@@ -4110,6 +4125,10 @@ void mail_cache::GQueryStorage::bindSQL(QSqlQuery* q, STRING_LIST& r)
 
 void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
 {
+    if (!qd->m_threads_db_loaded) {
+        qWarning() << "expected loaded from DB thread" << qd->m_db_id << qd->qStr();
+    }
+
     auto tc = m_tstorage->m_storage->tcache();
     if (!tc) {
         qWarning() << "expected thread storage cache ptr";
@@ -4154,7 +4173,7 @@ void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
                 if (!q1->execBatch())
                 {
                     m_tstorage->m_storage->rollbackTransaction();
-                    qWarning() << "ERROR. SQL Q/insert-threads batch failed"
+                    qWarning() << "ERROR. SQL Q1/insert-threads batch failed"
                         << "err-type:" << q1->lastError().type()
                         << "native-code:" << q1->lastError().nativeErrorCode()
                         << "errtext:" << q1->lastError().text();
@@ -4173,7 +4192,7 @@ void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
             if (!q->execBatch())
             {
                 m_tstorage->m_storage->rollbackTransaction();
-                qWarning() << "ERROR. SQL Q/insert-threads batch failed"
+                qWarning() << "ERROR. SQL Q2/insert-threads batch failed"
                     << "err-type:" << q->lastError().type()
                     << "native-code:" << q->lastError().nativeErrorCode()
                     << "errtext:" << q->lastError().text();
@@ -4285,4 +4304,15 @@ void mail_cache::GQueryStorage::remove_threads_from_all_q(const std::set<QString
         auto q = i.second;
         q->remove_threads(set_of_ids2remove);
     }
+};
+
+std::vector<mail_cache::query_ptr> mail_cache::GQueryStorage::filterRules()
+{
+    std::vector<query_ptr> rv;
+    for (auto& i : m_qmap) {
+        if (i.second->isFilter()) {
+            rv.push_back(i.second);
+        }
+    }
+    return rv;
 };

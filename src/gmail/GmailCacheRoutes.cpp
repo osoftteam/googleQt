@@ -1,5 +1,6 @@
 #include <QDir>
 #include <QFile>
+#include <time.h>
 #include "GmailCacheRoutes.h"
 #include "GmailRoutes.h"
 #include "Endpoint.h"
@@ -320,6 +321,8 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
         }
     }
 
+    q->m_last_run_time = time(nullptr);
+
     ASYNC_ROUTE_DIAGNOSTICS(QString("getQCache_Async/threads->list_Async[%1][%2]").arg(q->labelid()).arg(q->qStr()));
     ///this will return list of thread Ids with HistoryId
     m_gmail_routes.getThreads()->list_Async(listArg)->then([=](std::unique_ptr<threads::ThreadListRes> tlist)
@@ -374,6 +377,60 @@ mail_cache::tdata_result mail_cache::GmailCacheRoutes::getQCache(
 
 };
 
+TaskAggregator* mail_cache::GmailCacheRoutes::runQRulesCache_Async(query_list& qlist, int resultsPerRule, int forRulesColderThenMsec)
+{
+    auto now = time(nullptr);
+    auto rv = m_endpoint.produceAggregatorTask();
+
+    if (!m_lite_storage) {
+        qWarning() << "ERROR. Expected storage object.";
+        rv->completed_callback();
+        return rv;
+    }
+
+    if (qlist.empty()) {
+        rv->completed_callback();
+        return rv;
+    }
+
+    auto qst = m_lite_storage->qstorage();
+    std::vector<query_ptr> rules2run;
+    for (auto& r : qlist)
+    {
+        bool add_rule = true;
+        if (forRulesColderThenMsec > 0)
+        {
+            add_rule = false;
+            if (r->m_last_run_time == 0) {
+                add_rule = true;
+            }
+            else if ((now - r->m_last_run_time) * 1000 > forRulesColderThenMsec) {
+                add_rule = true;
+            }
+        }
+
+        if (add_rule) {
+            if (!r->m_threads_db_loaded) {
+                if (!qst->loadQueryThreadsFromDb(r)) {
+                    qWarning() << "Failed to load query from DB" << r->m_db_id;
+                }
+            }
+            rules2run.push_back(r);         
+        }
+    }
+
+    if (rules2run.empty()) {
+        rv->completed_callback();
+        return rv;
+    }
+
+    for (auto& r : rules2run){
+        auto t = getQCache_Async(r, resultsPerRule);
+        rv->add(t);
+    }
+
+    return rv;
+};
 
 mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheThreadList_Async(
     const std::vector<HistId>& id_list,

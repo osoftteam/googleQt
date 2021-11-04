@@ -41,6 +41,7 @@ namespace googleQt{
         using thread_map        = qstring_hash_map<thread_ptr>;
         using query_map         = qstring_hash_map<query_ptr>;
         using query_db_map      = std::unordered_map<int, query_ptr>;
+        using query_list        = std::vector<query_ptr>;
         using label_ptr         = std::shared_ptr<googleQt::mail_cache::LabelData>;
         using att_ptr           = std::shared_ptr<googleQt::mail_cache::AttachmentData>;
         using label_list        = std::vector<label_ptr>;
@@ -378,13 +379,18 @@ namespace googleQt{
             void                remove_threads(const std::set<QString>& ids2remove);
             bool                isFilter()const { return (m_filter_mask != 0); }
             uint64_t            filterMask()const { return m_filter_mask; }
-        protected:          
+            int                 unreadCount()const { return m_unread_count; };
+        protected:
+            void                recalcUnreadCount();
+
             int                 m_db_id{ -1 };
             QString             m_q, m_labelid, m_backendToken;
             thread_list         m_qthreads;
             thread_map          m_tmap;
             STRING_LIST         m_qnew_thread_ids;
             uint64_t            m_filter_mask{0};
+            time_t              m_last_run_time{0};
+            int                 m_unread_count{0};
             bool                m_threads_db_loaded{false};
         private:
             QueryData(int dbid, QString qstr, QString lbid, QString backend_token, uint64_t filter_mask);
@@ -392,6 +398,7 @@ namespace googleQt{
             friend class GQueryStorage;
             friend class GMailSQLiteStorage;
             friend class GmailCacheRoutes;
+            friend class GThreadCacheQueryTask;
         };
 
         class DiagnosticData 
@@ -582,6 +589,7 @@ namespace googleQt{
             bool remove_q(query_ptr q);
             bool update_q_backend_token(query_ptr q, QString token);
             void remove_threads_from_all_q(const std::set<QString>& ids2remove);
+            std::vector<query_ptr> filterRules();
         protected:
             void insert_db_threads(query_ptr q);
             bool loadQueriesFromDb();
@@ -597,6 +605,7 @@ namespace googleQt{
             uint64_t                m_all_filters_mask{0};
             friend class GMailSQLiteStorage;
             friend class GThreadCacheQueryTask;
+            friend class GmailCacheRoutes;
         };
         
         /**
