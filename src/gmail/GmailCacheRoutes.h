@@ -129,18 +129,20 @@ namespace googleQt
 
             /// STARRED label
             bool setStarred(mail_cache::MessageData* d, bool set_it = true);
-            GoogleTask<messages::MessageResource>* setStarred_Async(mail_cache::MessageData* d, bool set_it = true);
+            TaskAggregator* setStarred_Async(mail_cache::MessageData* d, bool set_it = true);
 
             /// UNREAD label
             bool setUnread(mail_cache::MessageData* d, bool set_it = true);
-            GoogleTask<messages::MessageResource>* setUnread_Async(mail_cache::MessageData* d, bool set_it = true);
+            TaskAggregator* setUnread_Async(mail_cache::MessageData* d, bool set_it = true);
 
             /// IMPORTANT label
             bool setImportant(mail_cache::MessageData* d, bool set_it = true);
-            GoogleTask<messages::MessageResource>* setImportant_Async(mail_cache::MessageData* d, bool set_it = true);
+            TaskAggregator* setImportant_Async(mail_cache::MessageData* d, bool set_it = true);
 
             /// set label on message or register batch update if label set failed (due to network issue for example)
-            GoogleTask<messages::MessageResource>* setSysLabelOrRegisterBatchUpdate_Async(mail_cache::MessageData* d, googleQt::mail_cache::SysLabel lbl, bool set_it = true);
+           // GoogleTask<messages::MessageResource>* setSysLabelOrRegisterBatchUpdate_Async(mail_cache::MessageData* d, googleQt::mail_cache::SysLabel lbl, bool set_it = true);
+
+            TaskAggregator* setLabel_Async(QString label_id, const std::vector<mail_cache::MessageData*>& lst, bool label_on, bool system_label);
 
             /// create list of labels and update local DB cache
             LabelProcessorTask* createLabelList_Async(const STRING_LIST& names);
@@ -151,7 +153,7 @@ namespace googleQt
 
             GoogleVoidTask* modifyThreadLabels_Async(thread_ptr t, const label_list& labels2add, const label_list& labels2remove);
             GoogleVoidTask* modifyThreadListLabels_Async(const thread_list& listt, const label_list& labels2add, const label_list& labels2remove);
-            GoogleVoidTask* applyBatchUpdate_Async();
+     //       GoogleVoidTask* applyBatchUpdate_Async();
 
             void    clearCache();
 #ifdef API_QT_AUTOTEST

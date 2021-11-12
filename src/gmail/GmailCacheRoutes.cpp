@@ -728,8 +728,8 @@ std::vector<mail_cache::label_ptr> mail_cache::GmailCacheRoutes::getThreadLabels
 #define TRY_LABEL_MODIFY(F, M, S) bool rv = false;                      \
     try                                                                 \
         {                                                               \
-            std::unique_ptr<messages::MessageResource> m = F(M, S)->waitForResultAndRelease(); \
-            rv = (!m->id().isEmpty());                                  \
+            F(M, S)->waitForResultAndRelease();                         \
+            rv = true;                                                  \
         }                                                               \
     catch (GoogleException& e)                                          \
         {                                                               \
@@ -744,9 +744,11 @@ bool mail_cache::GmailCacheRoutes::setStarred(mail_cache::MessageData* d, bool s
     TRY_LABEL_MODIFY(setStarred_Async, d, set_it);
 };
 
-GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setStarred_Async(mail_cache::MessageData* d, bool set_it)
+TaskAggregator* mail_cache::GmailCacheRoutes::setStarred_Async(mail_cache::MessageData* d, bool set_it)
 {
-    return setLabel_Async(mail_cache::sysLabelId(mail_cache::SysLabel::STARRED), d, set_it, true);
+    std::vector<mail_cache::MessageData*> lst;
+    lst.push_back(d);
+    return setLabel_Async(mail_cache::sysLabelId(mail_cache::SysLabel::STARRED), lst, set_it, true);
 };
 
 bool mail_cache::GmailCacheRoutes::setUnread(mail_cache::MessageData* d, bool set_it)
@@ -754,9 +756,11 @@ bool mail_cache::GmailCacheRoutes::setUnread(mail_cache::MessageData* d, bool se
     TRY_LABEL_MODIFY(setUnread_Async, d, set_it);
 };
 
-GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setUnread_Async(mail_cache::MessageData* d, bool set_it)
+TaskAggregator* mail_cache::GmailCacheRoutes::setUnread_Async(mail_cache::MessageData* d, bool set_it)
 {
-    return setLabel_Async(mail_cache::sysLabelId(mail_cache::SysLabel::UNREAD), d, set_it, true);
+    std::vector<mail_cache::MessageData*> lst;
+    lst.push_back(d);
+    return setLabel_Async(mail_cache::sysLabelId(mail_cache::SysLabel::UNREAD), lst, set_it, true);
 };
 
 bool mail_cache::GmailCacheRoutes::setImportant(mail_cache::MessageData* d, bool set_it)
@@ -764,12 +768,14 @@ bool mail_cache::GmailCacheRoutes::setImportant(mail_cache::MessageData* d, bool
     TRY_LABEL_MODIFY(setImportant_Async, d, set_it);
 };
 
-GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setImportant_Async(mail_cache::MessageData* d, bool set_it)
+TaskAggregator* mail_cache::GmailCacheRoutes::setImportant_Async(mail_cache::MessageData* d, bool set_it)
 {
-    return setLabel_Async(mail_cache::sysLabelId(mail_cache::SysLabel::IMPORTANT), d, set_it, true);
+    std::vector<mail_cache::MessageData*> lst;
+    lst.push_back(d);
+    return setLabel_Async(mail_cache::sysLabelId(mail_cache::SysLabel::IMPORTANT), lst, set_it, true);
 };
 
-
+/*
 GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setLabel_Async(QString label_id,
     mail_cache::MessageData* d,
     bool label_on,
@@ -819,19 +825,105 @@ GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setLabel_As
     gmail::ModifyMessageArg arg(userId, msg_id);
     std::vector <QString> labels;
     labels.push_back(label_id);
-    if (label_on)
-    {
+    if (label_on){
         arg.setAddlabels(labels);
     }
-    else
-    {
+    else{
         arg.setRemovelabels(labels);
     }
 
     GoogleTask<messages::MessageResource>* t = m_gmail_routes.getMessages()->modify_Async(arg); 
     return t;
 };
+*/
+TaskAggregator* mail_cache::GmailCacheRoutes::setLabel_Async(QString label_id, const std::vector<mail_cache::MessageData*>& lst, bool label_on, bool system_label) 
+{
+    auto rv = m_endpoint.produceAggregatorTask();
+    if (!m_lite_storage) {
+        qWarning() << "ERROR. Expected storage object.";
+        rv->completed_callback();
+        return rv;
+    }
 
+    if (lst.empty()) {
+        rv->completed_callback();
+        return rv;
+    }
+ 
+    auto accId = m_lite_storage->currentAccountId();
+    if (accId == -1) {
+        qWarning() << "ERROR. Invalid account Id" << accId;
+        rv->completed_callback();
+        return rv;
+    }
+
+    auto userId = m_endpoint.client()->userId();
+    if (userId.isEmpty()) {
+        qWarning() << "ERROR. Invalid userId" << accId;
+        rv->completed_callback();
+        return rv;
+    }
+
+    auto lbl = m_lite_storage->ensureLabel(accId, label_id, system_label);
+    if (!lbl) {
+        qWarning() << "failed to create label" << label_id;
+        rv->completed_callback();
+        return rv;
+    }
+
+    auto qstorage = m_lite_storage->qstorage();
+    std::set<mail_cache::thread_ptr> th_set;
+    std::set<mail_cache::query_ptr> q_set;
+    for (auto& i : lst) {
+        if (label_on) {
+            i->m_labels |= lbl->labelMask();
+        }
+        else {
+            i->m_labels &= ~(lbl->labelMask());
+        }
+        auto t = m_lite_storage->findThread(i->threadId());
+        if (t) {
+            th_set.insert(t);
+        }
+        m_lite_storage->update_message_labels_db(accId, i->id(), i->labelsBitMap());
+    }
+
+    for (auto& i : th_set) {
+        i->rebuildLabelsMap();
+        auto fmsk = i->filterMask();
+        if (fmsk != 0) {
+            auto q_lst = qstorage->find_q_by_mask(fmsk);
+            if (!q_lst.empty()) {
+                q_set.insert(q_lst.begin(), q_lst.end());
+            }
+        }
+    }
+
+    for (auto& i : q_set) {
+        qDebug() << "ykh-q-async-label" << i->qStr();
+        i->recalcUnreadCount();
+    }
+
+    for (auto& i : lst) {
+        QString msg_id = i->id();
+        gmail::ModifyMessageArg arg(userId, msg_id);
+        std::vector <QString> labels;
+        labels.push_back(label_id);
+        if (label_on) {
+            arg.setAddlabels(labels);
+        }
+        else {
+            arg.setRemovelabels(labels);
+        }
+
+        auto t = m_gmail_routes.getMessages()->modify_Async(arg);
+        rv->add(t);
+    }
+
+    return rv;
+};
+
+/*
 GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setSysLabelOrRegisterBatchUpdate_Async(mail_cache::MessageData* d, googleQt::mail_cache::SysLabel lbl, bool set_it)
 {
     auto accId = d->accountId();
@@ -849,7 +941,7 @@ GoogleTask<messages::MessageResource>* mail_cache::GmailCacheRoutes::setSysLabel
         }
     });
     return t;
-};
+};*/
 
 bool mail_cache::GmailCacheRoutes::messageHasLabel(mail_cache::MessageData* d, QString label_id)const
 {
@@ -1098,6 +1190,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::modifyThreadListLabels_Async(const
     return t;
 };
 
+/*
 GoogleVoidTask* mail_cache::GmailCacheRoutes::applyBatchUpdate_Async()
 {
     /// we have to build map [L] -> [(M,M)]
@@ -1191,6 +1284,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::applyBatchUpdate_Async()
         }
     }
 
+    
     class SingleBatchModifier
     {
     public:
@@ -1224,7 +1318,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::applyBatchUpdate_Async()
     }
 
     return t;
-};
+};*/
 
 #ifdef API_QT_AUTOTEST
 void mail_cache::GmailCacheRoutes::autotestThreadDBLoad(const std::vector<HistId>& id_list)

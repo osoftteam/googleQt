@@ -10,6 +10,7 @@
 
 #define DB_VER 2
 static uint64_t g__unread_label_mask = 0;
+static uint64_t g__trash_label_mask = 0;
 
 using namespace googleQt;
 ///MessagesReceiver
@@ -693,6 +694,21 @@ void mail_cache::ThreadData::addFilterMask(uint64_t f)
     m_filter_mask |= f;
 };
 
+std::set<uint64_t> mail_cache::ThreadData::unpackMask()const 
+{
+    std::set<uint64_t> rv;
+    uint64_t theone = 1;
+    for (int b = 0; b < 64; b++)
+    {
+        uint64_t m = (theone << b);
+        if (m > m_filter_mask)break;
+        if (m & m_filter_mask) {
+            rv.insert(m);
+        }
+    }
+    return rv;
+};
+
 ///QueryData
 mail_cache::QueryData::QueryData(int dbid, QString qstr, QString lbid, QString backend_token, uint64_t filter_mask):
     m_db_id(dbid), m_q(qstr), m_labelid(lbid), m_backendToken(backend_token), m_filter_mask(filter_mask)
@@ -723,7 +739,14 @@ void mail_cache::QueryData::recalcUnreadCount()
 {
     m_unread_count = 0;
     for (auto& t : m_qthreads) {
-        if (t->hasLabel(g__unread_label_mask)) {
+        if (t->hasLabel(g__trash_label_mask)) {
+            continue;
+        }
+        if (!t->head()) {
+            continue;
+        }
+
+        if (t->hasLabel(g__unread_label_mask)) {            
             m_unread_count++;
         }
     }
@@ -1429,9 +1452,9 @@ bool mail_cache::GMailSQLiteStorage::ensureMailTables()
     if (!execQuery(sql_qres))
         return false;
 
-    QString sql_delayed_updates = QString("CREATE TABLE IF NOT EXISTS %1gmail_batch_update(acc_id INTEGER NOT NULL, msg_id TEXT NOT NULL, msg_labels INTEGER)").arg(m_metaPrefix);
-    if (!execQuery(sql_delayed_updates))
-        return false;
+//    QString sql_delayed_updates = QString("CREATE TABLE IF NOT EXISTS %1gmail_batch_update(acc_id INTEGER NOT NULL, msg_id TEXT NOT NULL, msg_labels INTEGER)").arg(m_metaPrefix);
+//    if (!execQuery(sql_delayed_updates))
+//        return false;
 
 
     if (!execQuery(QString("CREATE INDEX IF NOT EXISTS %1gmail_qres_accid_idx ON %1gmail_qres(acc_id, q_id)").arg(m_metaPrefix)))
@@ -1440,8 +1463,8 @@ bool mail_cache::GMailSQLiteStorage::ensureMailTables()
     if (!execQuery(QString("CREATE UNIQUE INDEX IF NOT EXISTS %1gmail_qres_u_idx ON %1gmail_qres(acc_id, q_id, thread_id)").arg(m_metaPrefix)))
         return false;
 
-    if (!execQuery(QString("CREATE UNIQUE INDEX IF NOT EXISTS %1gmail_batch_update_idx ON %1gmail_batch_update(acc_id, msg_id)").arg(m_metaPrefix)))
-        return false;
+//    if (!execQuery(QString("CREATE UNIQUE INDEX IF NOT EXISTS %1gmail_batch_update_idx ON %1gmail_batch_update(acc_id, msg_id)").arg(m_metaPrefix)))
+//        return false;
 
     return true;
 };
@@ -1575,7 +1598,7 @@ bool mail_cache::GMailSQLiteStorage::init_db(QString dbPath,
     m_thread_cache->setupLocalStorage(m_tstorage.get());
     
     m_tstorage->verifyThreads();
-    loadBatchUpdateFromDb();
+    //loadBatchUpdateFromDb();
 
     m_initialized = true;
     return m_initialized;
@@ -1690,6 +1713,10 @@ QString mail_cache::sysLabelName(SysLabel l)
     return idx->second;
 };
 
+uint64_t mail_cache::unread_label_mask() {return g__unread_label_mask;};
+uint64_t mail_cache::trash_label_mask() { return g__trash_label_mask; };
+
+
 bool mail_cache::GMailSQLiteStorage::loadLabelsFromDb()
 {
     QString sql = QString("SELECT label_id, label_name, label_type, label_unread_messages, label_mask FROM %1gmail_label WHERE acc_id=%2 ORDER BY label_id")
@@ -1708,6 +1735,7 @@ bool mail_cache::GMailSQLiteStorage::loadLabelsFromDb()
     else {
         if (g__unread_label_mask == 0) {
             g__unread_label_mask = mail_cache::reservedSysLabelMask(SysLabel::UNREAD);
+            g__trash_label_mask = mail_cache::reservedSysLabelMask(SysLabel::TRASH);
         }
     }
 
@@ -2451,8 +2479,7 @@ std::vector<mail_cache::label_ptr> mail_cache::GMailSQLiteStorage::unpackLabels(
     for (int b = 0; b < 64; b++)
         {
             uint64_t m = (theone << b);
-            if (m > data)
-                break;
+            if (m > data)break;
             if (m & data) {
                 auto lbl = m_maskbase2label[b];
                 if (lbl) {
@@ -2768,6 +2795,7 @@ googleQt::mail_cache::msg_list mail_cache::GMailSQLiteStorage::loadMessagesByIds
     return rv;
 };
 
+/*
 void mail_cache::GMailSQLiteStorage::registerBatchUpdate(QString msg_id, SysLabel l)
 {
     auto m = reservedSysLabelMask(l);
@@ -2845,7 +2873,7 @@ void mail_cache::GMailSQLiteStorage::clearBatchUpdate(const std::vector<QString>
         qWarning() << "ERROR. Failed to remove list of delayed msg.";
     }
 };
-
+*/
 
 /**
     GMessagesStorage
@@ -3914,6 +3942,8 @@ bool mail_cache::GQueryStorage::loadQueriesFromDb()
         auto qd = std::shared_ptr<QueryData>(new QueryData(q_id, q_str, lbid, backend_token, fmask));
         m_qmap[QueryData::format_qhash(q_str, lbid, (fmask != 0))] = qd;
         m_q_dbmap[q_id] = qd;
+        //if (fmask != 0)
+        //  m_q_msk_map[fmask] = qd;
         loaded_objects++;
     }
 
@@ -4026,6 +4056,7 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q)
             return rv;
         });
     }
+    q->recalcUnreadCount();
     q->m_threads_db_loaded = true;
     return true;
 };
@@ -4062,6 +4093,8 @@ mail_cache::query_ptr mail_cache::GQueryStorage::ensure_q(QString q_str, QString
         m_qmap[QueryData::format_qhash(q_str, labelid, as_filter)] = qd;
         m_q_dbmap[q_id] = qd;
         m_all_filters_mask |= fmask;
+        //if (fmask != 0)
+        //  m_q_msk_map[fmask] = qd;
         return qd;
     }
     else {
@@ -4090,6 +4123,22 @@ mail_cache::query_ptr mail_cache::GQueryStorage::lookup_q(QString q_str, QString
         };
     }
     return q;
+};
+
+mail_cache::query_list mail_cache::GQueryStorage::find_q_by_mask(uint64_t msk)
+{
+    mail_cache::query_list lst;
+    for (auto& i : m_qmap) {
+        if (i.second->filterMask() & msk) {
+            lst.push_back(i.second);
+        }
+    }
+    /*
+    auto i = m_q_msk_map.find(msk);
+    if (i != m_q_msk_map.end()) {
+        return i->second;
+    }*/
+    return lst;
 };
 
 uint64_t mail_cache::GQueryStorage::nextFilterMask()const 
@@ -4240,6 +4289,7 @@ bool mail_cache::GQueryStorage::remove_q(query_ptr q)
     {
         auto fmask = q->filterMask();
         m_all_filters_mask &= ~fmask;
+        //m_q_msk_map.erase(fmask);
 
         QString sql_update;
         sql_update = QString("UPDATE %1gmail_thread SET filter_mask=(~(filter_mask&%2))&(filter_mask|%2) WHERE acc_id=%3 AND (filter_mask&%2 = %2)")

@@ -41,6 +41,7 @@ namespace googleQt{
         using thread_map        = qstring_hash_map<thread_ptr>;
         using query_map         = qstring_hash_map<query_ptr>;
         using query_db_map      = std::unordered_map<int, query_ptr>;
+        using query_mask_map    = std::unordered_map<uint64_t, query_ptr>;
         using query_list        = std::vector<query_ptr>;
         using label_ptr         = std::shared_ptr<googleQt::mail_cache::LabelData>;
         using att_ptr           = std::shared_ptr<googleQt::mail_cache::AttachmentData>;
@@ -79,6 +80,8 @@ namespace googleQt{
         extern uint64_t                 reservedSysLabelMask(SysLabel l);
         extern std::vector<SysLabel>    mask2reservedSysLabel(uint64_t);
         extern std::vector<QString>     mask2SysLabelIds(uint64_t);
+        extern uint64_t                 unread_label_mask();
+        extern uint64_t                 trash_label_mask();
 
         /**
            MessageData - local persistant rfc822 basic data.
@@ -327,8 +330,9 @@ namespace googleQt{
             /// each label is a bit in int64
             uint64_t    labelsBitMap()const{return m_thread_labels;}
 
-            uint64_t    filterMask()const { return m_filter_mask; }
-            void        addFilterMask(uint64_t f);
+            uint64_t            filterMask()const { return m_filter_mask; }
+            void                addFilterMask(uint64_t f);
+            std::set<uint64_t>  unpackMask()const;
 
             bool hasLabel(uint64_t data)const;
             bool hasLimboLabel(uint64_t data)const;
@@ -584,8 +588,9 @@ namespace googleQt{
         {
         public:
             GQueryStorage(GThreadsStorage* s, GMessagesStorage* ms);
-            query_ptr ensure_q(QString q_str, QString labelid, bool as_filter);
-            query_ptr lookup_q(QString q_str, QString labelid, bool as_filter);
+            query_ptr   ensure_q(QString q_str, QString labelid, bool as_filter);
+            query_ptr   lookup_q(QString q_str, QString labelid, bool as_filter);
+            query_list  find_q_by_mask(uint64_t msk);
             bool remove_q(query_ptr q);
             bool update_q_backend_token(query_ptr q, QString token);
             void remove_threads_from_all_q(const std::set<QString>& ids2remove);
@@ -602,6 +607,7 @@ namespace googleQt{
             GMessagesStorage*       m_mstorage{ nullptr };
             query_map               m_qmap;
             query_db_map            m_q_dbmap;
+            //query_mask_map            m_q_msk_map;
             uint64_t                m_all_filters_mask{0};
             friend class GMailSQLiteStorage;
             friend class GThreadCacheQueryTask;
@@ -688,9 +694,9 @@ namespace googleQt{
             int                     autoloadLimit()const {return m_cache_autoload_limit;}
 
             /// cached 'modifyBatch'
-            void                    registerBatchUpdate(QString msg_id, SysLabel l);
-            void                    clearBatchUpdate(const std::vector<QString>& msg_ids);
-            const qstring_hash_map<int>&    getBatchUpdateRequests()const { return m_batch_request; };          
+            //void                    registerBatchUpdate(QString msg_id, SysLabel l);
+            //void                    clearBatchUpdate(const std::vector<QString>& msg_ids);
+            //const qstring_hash_map<int>&    getBatchUpdateRequests()const { return m_batch_request; };          
         protected:
             QString metaPrefix()const { return m_metaPrefix; }
             bool execQuery(QString sql);
@@ -730,7 +736,7 @@ namespace googleQt{
             void reloadDbAccounts();
             bool reloadDbConfig();
             bool ensureMailTables();
-            void loadBatchUpdateFromDb();
+//            void loadBatchUpdateFromDb();
         protected:
             bool m_initialized {false};
             QSqlDatabase        m_gmail_db;
@@ -746,7 +752,7 @@ namespace googleQt{
             std::unordered_map<int, mail_cache::acc_ptr>    m_id2acc;
             std::map<QString, mail_cache::acc_ptr, CaseInsensitiveLess> m_user2acc;
             qstring_hash_map<QString>                   m_configs;
-            qstring_hash_map<int>                       m_batch_request;
+            //qstring_hash_map<int>                       m_batch_request;
             QString m_dbPath;
             QString m_downloadDir;
             QString m_contactCacheDir;
