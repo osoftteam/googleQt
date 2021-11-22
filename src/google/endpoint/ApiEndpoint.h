@@ -27,9 +27,11 @@
 #ifdef API_QT_DIAGNOSTICS
 #define ASYNC_TASK_DIAGNOSTICS(S) m_r.endpoint().diagnosticSetRequestTag(S);
 #define ASYNC_ROUTE_DIAGNOSTICS(S) endpoint().diagnosticSetRequestTag(S);
+#define GQ_TRAIL_LOG(S) {auto o = qWarning();o.noquote(); o << QDateTime::currentDateTime().toString("hh:mm:ss.zzz") << "[gapi/trace]" << S;}
 #else
 #define ASYNC_TASK_DIAGNOSTICS(S)
 #define ASYNC_ROUTE_DIAGNOSTICS(S)
+#define GQ_TRAIL_LOG(S)
 #endif
 
 #define TIMES_TO_REFRESH_TOKEN_BEFORE_GIVEUP 2

@@ -158,9 +158,9 @@ void ApiEndpoint::diagnosticSetRequestTag(QString s)
 {    
 #ifdef API_QT_DIAGNOSTICS
     m_diagnosticsRequestTag = s;
-    QDebug o = qWarning();
+    auto o = qWarning();
     o.noquote();
-    o << diagnosticTimeStamp() << "[gapi-diagnistic]" << s;
+    o << diagnosticTimeStamp() << "[gapi]" << s;
 #endif
 }
 

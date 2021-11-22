@@ -750,6 +750,8 @@ void mail_cache::QueryData::recalcUnreadCount()
             m_unread_count++;
         }
     }
+
+    GQ_TRAIL_LOG(QString("recalcUnreadCount %1 [%2]").arg(m_unread_count).arg(m_q));
 };
 
 ///GMailCacheQueryTask
@@ -2515,6 +2517,7 @@ std::vector<mail_cache::label_ptr> mail_cache::GMailSQLiteStorage::unpackLabels(
 
 void mail_cache::GMailSQLiteStorage::update_message_labels_db(int accId, QString msg_id, uint64_t flags)
 {
+    GQ_TRAIL_LOG(QString("update_message_labels_db %1 [%2]").arg(msg_id).arg(flags));
     QString sql_update;
     sql_update = QString("UPDATE %1gmail_msg SET msg_labels=%2 WHERE msg_id='%3' AND acc_id=%4")
         .arg(m_metaPrefix)

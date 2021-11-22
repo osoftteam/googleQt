@@ -39,6 +39,8 @@ namespace googleQt {
         void            markDbRecord();
         bool            userFlag1()const;
         void            setUserFlag1(bool val);
+        uint32_t        userData()const;
+        void            setUserData(uint32_t val);
     protected:
         union STATE
         {
@@ -48,6 +50,7 @@ namespace googleQt {
                 unsigned agg_state : 4;
                 unsigned has_db_record : 1;
                 unsigned user_flag1 : 1;
+                unsigned user_data : 32;
             };
         } m_flags;
         QString        m_id;

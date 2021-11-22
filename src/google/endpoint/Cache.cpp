@@ -42,6 +42,16 @@ void googleQt::CacheData::setUserFlag1(bool val)
     m_flags.user_flag1 = val ? 1 : 0;
 };
 
+uint32_t googleQt::CacheData::userData()const 
+{
+    return m_flags.user_data;
+};
+
+void googleQt::CacheData::setUserData(uint32_t val) 
+{
+    m_flags.user_data = val;
+};
+
 ///CacheDataWithHistory
 googleQt::CacheDataWithHistory::CacheDataWithHistory(QString id, quint64 hid) 
     :CacheData(EDataState::snippet, id),
