@@ -209,6 +209,7 @@ mail_cache::mdata_result mail_cache::GmailCacheRoutes::getNextCacheMessages(
         q)->waitForResultAndRelease();
 };
 
+/*
 GoogleVoidTask* mail_cache::GmailCacheRoutes::trashCacheMessage_Async(QString msg_id)
 {
     if (m_lite_storage)
@@ -244,7 +245,7 @@ GoogleVoidTask* mail_cache::GmailCacheRoutes::trashCacheMessage_Async(QString ms
         rv->failed_callback(std::move(ex));
     });
     return rv;
-};
+};*/
 
 
 mail_cache::tdata_result mail_cache::GmailCacheRoutes::getNextCacheThreads(

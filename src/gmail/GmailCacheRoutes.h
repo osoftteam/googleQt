@@ -106,7 +106,7 @@ namespace googleQt
                 QStringList* labels = nullptr,
                 QString q = "");
 
-            GoogleVoidTask* trashCacheMessage_Async(QString msg_id);
+            //GoogleVoidTask* trashCacheMessage_Async(QString msg_id);
 
             //            ConcurrentValueRunner<QString, mail_cache::ThreadsReceiver, threads::ThreadResource>* getUserBatchThreads_Async(const STRING_LIST& id_list);
 

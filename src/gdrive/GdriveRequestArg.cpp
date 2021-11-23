@@ -214,7 +214,7 @@ void UpdateFileArg::build(const QString& link_path, QUrl& url)const
 {
     UrlBuilder b(link_path + QString("/files/%1").arg(m_fileId), url);
     b.add("ocrLanguage", m_ocrLanguage);
-    QString parents2remove = slist2str(m_removeParents);
+    QString parents2remove = slist2str(m_removeParents.begin(), m_removeParents.end());
     if(!parents2remove.isEmpty())
         b.add("removeParents", parents2remove);
     ResponseFields2Builder(b);
@@ -397,8 +397,8 @@ MoveFileArg::MoveFileArg(QString fileId)
 
 void MoveFileArg::build(const QString& link_path, QUrl& url)const
 {
-    QString parents2add = slist2str(m_addParents);
-    QString parents2remove = slist2str(m_removeParents);
+    QString parents2add = slist2str(m_addParents.begin(), m_addParents.end());
+    QString parents2remove = slist2str(m_removeParents.begin(), m_removeParents.end());
     
     UrlBuilder b(link_path + QString("/files/%1").arg(m_fileId), url);
     if(!parents2add.isEmpty())

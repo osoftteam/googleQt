@@ -131,38 +131,8 @@ void QParamArg::ResponseFields2Builder(UrlBuilder& b)const
     }
 };
 
-QString googleQt::slist2str(const STRING_LIST& lst, QString separator)
-{
-    QString rv = "";
-    if (!lst.empty()) {
-        for (STRING_LIST::const_iterator i = lst.begin();
-            i != lst.end();
-            i++)
-        {
-            rv += *i;
-            rv += separator;
-        }
-        rv = rv.left(rv.length() - 1);
-    }
-    return rv;
-};
 
-QString googleQt::slist2str_decorated(const STRING_LIST& lst, char deco, QString separator)
-{
-    QString rv = "";
-    if (!lst.empty())
-    {
-        for (STRING_LIST::const_iterator i = lst.begin();
-            i != lst.end();
-            i++)
-        {
-            rv += QString("%1%2%3").arg(deco).arg(*i).arg(deco);
-            rv += separator;
-        }
-        rv = rv.left(rv.length() - 1);
-    }
-    return rv;
-};
+
 
 
 STRING_LIST googleQt::split_string(QString s)

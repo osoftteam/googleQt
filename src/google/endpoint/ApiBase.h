@@ -190,8 +190,10 @@ namespace googleQt {
     }
 
     /// converts list of strings -> comma separated list
-    QString slist2str(const STRING_LIST& lst, QString separator = ",");
-    QString slist2str_decorated(const STRING_LIST& lst, char deco = '\'', QString separator = ",");
+    template<class IT>
+    QString slist2str(IT b, IT e, QString separator = ",");
+    template<class IT>
+    QString slist2str_decorated(IT b, IT e, char deco = '\'', QString separator = ",");
     /// converts space separated strings -> list of strings
     STRING_LIST split_string(QString s);
     /// converts size to string with KB, MB or GB suffix
@@ -390,6 +392,42 @@ namespace googleQt {
 #define EXPECT(E, M) if(!E)qWarning() << M;
 
 }
+
+template<class IT>
+QString googleQt::slist2str(IT b, IT e, QString separator)
+{
+    QString rv = "";
+    IT i = b;
+    if (i != e) 
+    {
+        while (i != e)
+        {
+            rv += *i;
+            rv += separator;
+            i++;
+        }
+        rv = rv.left(rv.length() - 1);
+    }
+    return rv;
+};
+
+template<class IT>
+QString googleQt::slist2str_decorated(IT b, IT e, char deco, QString separator)
+{
+    QString rv = "";
+    IT i = b;
+    if (i != e)
+    {
+        while(i != e)
+        {
+            rv += QString("%1%2%3").arg(deco).arg(*i).arg(deco);
+            rv += separator;
+            i++;
+        }
+        rv = rv.left(rv.length() - 1);
+    }
+    return rv;
+};
 
 #define DECL_STD_BOUND_TASK_CB(ENDP_FUNC)                               \
     template <class RES,                                                \
