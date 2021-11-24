@@ -709,6 +709,22 @@ std::set<uint64_t> mail_cache::ThreadData::unpackMask()const
     return rv;
 };
 
+void mail_cache::ThreadData::setPrefilterMask(QueryData* q)
+{
+    m_prefilter_mask |= q->filterMask();
+    m_flags.preprocessed_filter = 1;
+};
+
+void mail_cache::ThreadData::markPrefiltered()
+{
+    m_flags.preprocessed_filter = 1;
+};
+
+bool mail_cache::ThreadData::isPrefiltered()const 
+{
+    return (m_flags.preprocessed_filter == 1);
+};
+
 ///QueryData
 mail_cache::QueryData::QueryData(int dbid, QString qstr, QString lbid, QString backend_token, uint64_t filter_mask):
     m_db_id(dbid), m_q(qstr), m_labelid(lbid), m_backendToken(backend_token), m_filter_mask(filter_mask)

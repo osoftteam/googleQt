@@ -43,6 +43,7 @@ namespace googleQt{
         using query_db_map      = std::unordered_map<int, query_ptr>;
         using query_mask_map    = std::unordered_map<uint64_t, query_ptr>;
         using query_list        = std::vector<query_ptr>;
+        using query_set         = std::unordered_set<query_ptr>;
         using label_ptr         = std::shared_ptr<googleQt::mail_cache::LabelData>;
         using att_ptr           = std::shared_ptr<googleQt::mail_cache::AttachmentData>;
         using label_list        = std::vector<label_ptr>;
@@ -331,6 +332,10 @@ namespace googleQt{
             uint64_t    labelsBitMap()const{return m_thread_labels;}
 
             uint64_t            filterMask()const { return m_filter_mask; }
+            uint64_t            prefilterMask()const { return m_prefilter_mask; }
+            void                setPrefilterMask(QueryData* q);
+            void                markPrefiltered();
+            bool                isPrefiltered()const;
             void                addFilterMask(uint64_t f);
             std::set<uint64_t>  unpackMask()const;
 
@@ -344,7 +349,7 @@ namespace googleQt{
             uint64_t    m_thread_labels{0},
                         m_limbo_labels{0};///labels not confirmed yet, we waiting for async call to complete but app might assume is succeded
             msg_list    m_messages;
-            uint64_t    m_filter_mask{ 0 };
+            uint64_t    m_filter_mask{ 0 }, m_prefilter_mask{0};
             msg_map     m_mmap;
             msg_ptr     m_head{nullptr};
         private:

@@ -378,7 +378,7 @@ mail_cache::tdata_result mail_cache::GmailCacheRoutes::getQCache(
 
 };
 
-TaskAggregator* mail_cache::GmailCacheRoutes::runQRulesCache_Async(query_list& qlist, int resultsPerRule, int forRulesColderThenMsec)
+TaskAggregator* mail_cache::GmailCacheRoutes::runQRulesCache_Async(query_set& qlist, int resultsPerRule, int forRulesColderThenMsec)
 {
     auto now = time(nullptr);
     auto rv = m_endpoint.produceAggregatorTask();
@@ -424,6 +424,10 @@ TaskAggregator* mail_cache::GmailCacheRoutes::runQRulesCache_Async(query_list& q
         rv->completed_callback();
         return rv;
     }
+
+    //ykh-test-offline
+    //rv->completed_callback();
+    //return rv;
 
     for (auto& r : rules2run){
         auto t = getQCache_Async(r, resultsPerRule);

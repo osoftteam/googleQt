@@ -76,7 +76,7 @@ namespace googleQt
                 bool monitorProgress = false);
 
             /// run series of queries, limit # or result returned and run only queries that were used after some period
-            TaskAggregator* runQRulesCache_Async(query_list& qlist, int resultsPerRule = 40, int forRulesColderThenMsec = 20000);
+            TaskAggregator* runQRulesCache_Async(query_set& qlist, int resultsPerRule = 40, int forRulesColderThenMsec = 20000);
 
             /// load threads by ID-list while updating local cache
             mail_cache::GThreadCacheQueryTask* getCacheThreadList_Async(const std::vector<HistId>& id_list,

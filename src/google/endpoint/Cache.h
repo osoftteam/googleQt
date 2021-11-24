@@ -49,6 +49,7 @@ namespace googleQt {
             {
                 unsigned agg_state : 4;
                 unsigned has_db_record : 1;
+                unsigned preprocessed_filter : 1;
                 unsigned user_flag1 : 1;
                 unsigned user_data : 32;
             };
