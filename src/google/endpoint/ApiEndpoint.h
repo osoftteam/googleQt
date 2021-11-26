@@ -25,6 +25,7 @@
 #endif
 
 #ifdef API_QT_DIAGNOSTICS
+//#define GQ_OFFLINE_MODE
 #define ASYNC_TASK_DIAGNOSTICS(S) m_r.endpoint().diagnosticSetRequestTag(S);
 #define ASYNC_ROUTE_DIAGNOSTICS(S) endpoint().diagnosticSetRequestTag(S);
 #define GQ_TRAIL_LOG(S) {auto o = qWarning();o.noquote(); o << QDateTime::currentDateTime().toString("hh:mm:ss.zzz") << "[gapi/trace]" << S;}

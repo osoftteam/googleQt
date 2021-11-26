@@ -425,16 +425,18 @@ TaskAggregator* mail_cache::GmailCacheRoutes::runQRulesCache_Async(query_set& ql
         return rv;
     }
 
-    //ykh-test-offline
-    //rv->completed_callback();
-    //return rv;
-
+#ifdef GQ_OFFLINE_MODE
+    GQ_TRAIL_LOG("emulate runQRulesCache_Async response in OFFLINE mode");
+    Q_UNUSED(resultsPerRule);
+    rv->completed_callback();
+    return rv;
+#else
     for (auto& r : rules2run){
         auto t = getQCache_Async(r, resultsPerRule);
         rv->add(t);
     }
-
     return rv;
+#endif
 };
 
 mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheThreadList_Async(
@@ -861,14 +863,16 @@ TaskAggregator* mail_cache::GmailCacheRoutes::setLabel_Async(QString label_id, c
             arg.setRemovelabels(labels);
         }
 
-        //ykh - debug/testing offline mode
+#ifndef GQ_OFFLINE_MODE
         auto t = m_gmail_routes.getMessages()->modify_Async(arg);
         rv->add(t);
+#endif
     }
 
-    //qWarning() << "ykh - offline debug/testing emulating label set";
-    //rv->completed_callback();
-
+#ifdef GQ_OFFLINE_MODE
+    GQ_TRAIL_LOG("emulate setLabel_Async response in OFFLINE mode");
+    rv->completed_callback();
+#endif
     return rv;
 };
 
