@@ -306,7 +306,7 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
     query_ptr q,
     int threadsCount /*= 40*/,
     QString pageToken /*= ""*/,
-    bool monitorProgress /*= false*/)
+    bool scrollRun /*= false*/)
 {
     auto rfetcher = newThreadResultFetcher(q);
     gmail::ListArg listArg;
@@ -314,13 +314,6 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
     listArg.setPageToken(pageToken);
     listArg.setQ(q->qStr());
     listArg.labels() = q->labelid().split(" ");
-
-    if (monitorProgress) {
-        auto p = rfetcher->createProgressNotifier();
-        if (p) {
-            p->setMaximum(0, QString("query gmail q='%1' l='%2'").arg(q->qStr()).arg(q->labelid()));
-        }
-    }
 
     q->m_last_run_time = time(nullptr);
 
@@ -355,8 +348,16 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
         }
 #endif//API_QT_AUTOTEST
 
+        bool run_list = true;
         rfetcher->m_nextPageToken = tlist->nextpagetoken();
-        getCacheThreadList_Async(id_list, rfetcher);
+        if (scrollRun) {
+            if (q->m_qnew_thread_ids.empty()) {
+                ASYNC_ROUTE_DIAGNOSTICS(QString("fast-run-completed - getQCache_Async [%1][%2]").arg(tlist->threads().size()).arg(rfetcher->m_nextPageToken));
+                rfetcher->notifyOnCompletedScrollRun();
+                run_list = false;
+            }
+        }
+        if(run_list)getCacheThreadList_Async(id_list, rfetcher);
     },
         [=](std::unique_ptr<GoogleException> ex)
     {

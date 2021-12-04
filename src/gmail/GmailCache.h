@@ -476,6 +476,7 @@ namespace googleQt{
                                   query_ptr q = nullptr);
             void fetchFromCloud_Async(const STRING_LIST& id_list)override;
             void notifyOnCompletedFromCache()override;
+            void notifyOnCompletedScrollRun();
             QString nextPageToken()const{return m_nextPageToken;}
             tdata_result waitForResultAndRelease();
         protected:

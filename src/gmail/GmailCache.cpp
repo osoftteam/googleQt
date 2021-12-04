@@ -1344,6 +1344,11 @@ void mail_cache::GThreadCacheQueryTask::notifyOnCompletedFromCache()
     CacheQueryTask<ThreadData>::notifyOnCompletedFromCache();
 };
 
+void mail_cache::GThreadCacheQueryTask::notifyOnCompletedScrollRun() 
+{
+    CacheQueryTask<ThreadData>::notifyOnCompletedFromCache();
+};
+
 ///GMailSQLiteStorage
 mail_cache::GMailSQLiteStorage::GMailSQLiteStorage(GMailCache* mc,
     GThreadCache* tc)

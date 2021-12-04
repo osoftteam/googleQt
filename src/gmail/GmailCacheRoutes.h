@@ -67,13 +67,13 @@ namespace googleQt
              * getQCache_Async
              * o-> getCacheThreadList_Async/GThreadCacheQueryTask::fetchFromCloud_Async
              *     o-> getCacheMessages_Async/GMailCacheQueryTask::fetchFromCloud_Async
-             *
+             * scrollRun - don't run getCacheThreadList_Async if query list_Async returns no new thread
              */
             mail_cache::GThreadCacheQueryTask* getQCache_Async(
                 query_ptr q,
                 int resultsCount = 40,
                 QString pageToken = "",
-                bool monitorProgress = false);
+                bool scrollRun = false);
 
             /// run series of queries, limit # or result returned and run only queries that were used after some period
             TaskAggregator* runQRulesCache_Async(query_set& qlist, int resultsPerRule = 40, int forRulesColderThenMsec = 20000);
