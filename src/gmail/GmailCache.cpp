@@ -11,6 +11,7 @@
 #define DB_VER 2
 static uint64_t g__unread_label_mask = 0;
 static uint64_t g__trash_label_mask = 0;
+static uint64_t g__draft_label_mask = 0;
 
 using namespace googleQt;
 ///MessagesReceiver
@@ -767,7 +768,7 @@ void mail_cache::QueryData::recalcUnreadCount()
         }
     }
 
-    GQ_TRAIL_LOG(QString("recalcUnreadCount %1 [%2]").arg(m_unread_count).arg(m_q));
+    GQ_TRAIL_LOG(QString("recalc-unread %1 [%2]").arg(m_unread_count).arg(m_name));
 };
 
 ///GMailCacheQueryTask
@@ -1102,7 +1103,7 @@ mail_cache::GThreadCacheQueryTask::GThreadCacheQueryTask(
 
 void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& id_list)
 {
-    ASYNC_TASK_DIAGNOSTICS(QString("GThreadCacheQueryTask/fetchFromCloud_Async %1").arg(id_list.size()));
+    ASYNC_TASK_DIAGNOSTICS(QString("threads/fetch [%1]").arg(id_list.size()));
     if (id_list.empty())
         return;
 
@@ -1117,7 +1118,7 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& 
         threads::ThreadResource>(id_list, std::move(tr), m_client.get());
     par_runner->run();
 
-    ASYNC_TASK_DIAGNOSTICS(QString("GThreadCacheQueryTask/par_runner %1").arg(id_list.size()));
+    ASYNC_TASK_DIAGNOSTICS(QString("threads/par_runner [%1]").arg(id_list.size()));
     connect(par_runner, &EndpointRunnable::finished, [=]()
     {
         STRING_LIST msg_list2resolve, msg_list2checklabels;
@@ -1175,19 +1176,18 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& 
         }
 
         auto snippets_task = loadMessagesSnippetsFromCloud_Async(msg_list2resolve, p);
-        snippets_task->setName(QString("thread-q-task/fetch %1").arg(msg_list2resolve.size()));
-        ASYNC_TASK_DIAGNOSTICS(QString("GThreadCacheQueryTask/snippets_task %1").arg(msg_list2resolve.size()));
+       // snippets_task->setName(QString("thread-snippet/fetch [%1]").arg(msg_list2resolve.size()));
         snippets_task->then([=]()
         {
-            ASYNC_TASK_DIAGNOSTICS(QString("completed - GThreadCacheQueryTask/snippets_task %1").arg(msg_list2resolve.size()));
+           // ASYNC_TASK_DIAGNOSTICS(QString("thread-snippet/completed %1").arg(msg_list2resolve.size()));
 
             if (msg_list2checklabels.size() > 0) {
                 auto labels_task = loadMessagesLabelsFromCloud_Async(msg_list2checklabels);
-                labels_task->setName(QString("loadMessagesLabelsFromCloud_Async %1").arg(msg_list2checklabels.size()));
-                ASYNC_TASK_DIAGNOSTICS(QString("GThreadCacheQueryTask/labels_task %1").arg(msg_list2checklabels.size()));
+                //labels_task->setName(QString("thread-labels/fetch [%1]").arg(msg_list2checklabels.size()));
+                //ASYNC_TASK_DIAGNOSTICS(QString("thread-labels/fetch [%1]").arg(msg_list2checklabels.size()));
                 labels_task->then([=]()
                 {
-                    ASYNC_TASK_DIAGNOSTICS(QString("completed - GThreadCacheQueryTask/labels_task %1").arg(msg_list2checklabels.size()));
+                    //ASYNC_TASK_DIAGNOSTICS(QString("thread-labels/completed [%1]").arg(msg_list2checklabels.size()));
                     notifyOnCompletedFromCache();
                     par_runner->disposeLater();
                 }, [=](std::unique_ptr<GoogleException> ex)
@@ -1207,14 +1207,19 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& 
             par_runner->disposeLater();
         });
 
-        ASYNC_TASK_DIAGNOSTICS(QString("completed - GThreadCacheQueryTask/par_runner %1").arg(id_list.size()));
+        ASYNC_TASK_DIAGNOSTICS(QString("threads/par_runner/completed [%1]").arg(id_list.size()));
     });//par_runner
 };
 
 GoogleVoidTask* mail_cache::GThreadCacheQueryTask::loadMessagesSnippetsFromCloud_Async(const STRING_LIST& msg_id_list, googleQt::TaskProgress* p)
 {
     GoogleVoidTask* t = m_r.endpoint().produceVoidTask();
+    if (msg_id_list.empty()) {
+        t->completed_callback();
+        return t;
+    }
 
+    ASYNC_TASK_DIAGNOSTICS(QString("snippet/fetch [%1]").arg(msg_id_list.size()));
     auto mfetcher = m_r.newMessageResultFetcher(EDataState::snippet);
     if (p) {
         mfetcher->delegateProgressNotifier(p);
@@ -1266,6 +1271,11 @@ GoogleVoidTask* mail_cache::GThreadCacheQueryTask::loadMessagesSnippetsFromCloud
 GoogleVoidTask* mail_cache::GThreadCacheQueryTask::loadMessagesLabelsFromCloud_Async(const STRING_LIST& msg_id_list) 
 {
     GoogleVoidTask* t = m_r.endpoint().produceVoidTask();
+    if (msg_id_list.empty()) {
+        t->completed_callback();
+        return t;
+    }
+    ASYNC_TASK_DIAGNOSTICS(QString("labels/fetch [%1]").arg(msg_id_list.size()));
     auto par_runner = m_r.getUserBatchMessages_Async(EDataState::labels, msg_id_list);
     connect(par_runner, &EndpointRunnable::finished, [=]()
     {
@@ -1732,7 +1742,7 @@ QString mail_cache::sysLabelName(SysLabel l)
 
 uint64_t mail_cache::unread_label_mask() {return g__unread_label_mask;};
 uint64_t mail_cache::trash_label_mask() { return g__trash_label_mask; };
-
+uint64_t mail_cache::draft_label_mask() { return g__draft_label_mask; };
 
 bool mail_cache::GMailSQLiteStorage::loadLabelsFromDb()
 {
@@ -1753,6 +1763,7 @@ bool mail_cache::GMailSQLiteStorage::loadLabelsFromDb()
         if (g__unread_label_mask == 0) {
             g__unread_label_mask = mail_cache::reservedSysLabelMask(SysLabel::UNREAD);
             g__trash_label_mask = mail_cache::reservedSysLabelMask(SysLabel::TRASH);
+            g__draft_label_mask = mail_cache::reservedSysLabelMask(SysLabel::DRAFT);
         }
     }
 
@@ -3893,15 +3904,23 @@ bool mail_cache::GQueryStorage::loadQueriesFromDb()
     return true;
 };
 
-bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q)
+bool mail_cache::GQueryStorage::loadAllCacheData(query_ptr q) 
 {
-    /// actually we have to assume 
-    /// q->m_qthreads is empty
-    /// q->m_tmap is empty
-    /// todo: put in some assert here
+    return loadQueryThreadsFromDb(q, true);
+};
 
-    if(q->m_threads_db_loaded){
-        return true;
+bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q, bool load_all)
+{
+    if (load_all)   
+    {
+        if (q->m_cache_status == QueryData::ECacheStatus::fully_loaded) {
+            return true;
+        }
+    }
+    else {
+        if (q->m_cache_status == QueryData::ECacheStatus::partially_loaded) {
+            return true;
+        }
     }
     
     auto tstorage = m_tstorage->m_storage;
@@ -3916,14 +3935,24 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q)
         return false;
     }
     
+    ///twice the number of autoloadLimit by default
+    int q_load_limit = tstorage->autoloadLimit() * 2;
+    if (load_all) {
+        q_load_limit = 10000;
+    }
+
     QString sql = QString("SELECT r.thread_id, t.history_id, t.messages_count, t.snippet, t.filter_mask, "
         "m.msg_state, m.msg_id, m.msg_from, m.msg_to, m.msg_cc, m.msg_bcc, "
         "m.msg_subject, m.msg_snippet, m.msg_plain, m.msg_html, m.internal_date, m.msg_labels, m.msg_references, m.thread_id "
         "FROM %1gmail_qres r, %1gmail_thread t, %1gmail_msg m "
         "WHERE t.thread_id = r.thread_id AND m.thread_id = t.thread_id AND r.q_id = %2 "
-        "LIMIT 10000")
+        "ORDER BY m.internal_date DESC LIMIT %3")
         .arg(tstorage->metaPrefix())
-        .arg(q->m_db_id);
+        .arg(q->m_db_id)
+        .arg(q_load_limit);
+
+
+    //"LIMIT 10000")
 
     QSqlQuery* qres = tstorage->selectQuery(sql);
     if (!qres)
@@ -3933,6 +3962,7 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q)
     int located_threads = 0;
     int loaded_msg = 0;
     int located_msg = 0;
+    int record_num = 0;
     while (qres->next())
     {       
         QString thread_id = qres->value(0).toString();
@@ -3968,6 +3998,7 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q)
                 }
             }
         }
+        record_num++;
     }
 
 #ifdef API_QT_AUTOTEST
@@ -3995,7 +4026,10 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q)
         });
     }
     q->recalcUnreadCount();
-    q->m_threads_db_loaded = true;
+    q->m_cache_status = load_all ? QueryData::ECacheStatus::fully_loaded : QueryData::ECacheStatus::partially_loaded;
+    if (q->m_cache_status == QueryData::ECacheStatus::fully_loaded) {
+        GQ_TRAIL_LOG(QString("load-q-cache/fully loaded [%1][%2]").arg(record_num).arg(q_load_limit));
+    }
     return true;
 };
 
@@ -4004,7 +4038,7 @@ mail_cache::query_ptr mail_cache::GQueryStorage::ensure_q(QString q_str, QString
     auto i = m_qmap.find(QueryData::format_qhash(q_str, labelid, as_filter));
     if(i != m_qmap.end()){
         auto qd = i->second;
-        if(!qd->m_threads_db_loaded){
+        if(qd->m_cache_status == QueryData::ECacheStatus::not_loaded){
             if(!loadQueryThreadsFromDb(qd)){
                 qWarning() << "Failed to load query from DB" << q_str;
                 return nullptr;
@@ -4031,8 +4065,6 @@ mail_cache::query_ptr mail_cache::GQueryStorage::ensure_q(QString q_str, QString
         m_qmap[QueryData::format_qhash(q_str, labelid, as_filter)] = qd;
         m_q_dbmap[q_id] = qd;
         m_all_filters_mask |= fmask;
-        //if (fmask != 0)
-        //  m_q_msk_map[fmask] = qd;
         return qd;
     }
     else {
@@ -4054,7 +4086,7 @@ mail_cache::query_ptr mail_cache::GQueryStorage::lookup_q(QString q_str, QString
     }
 
     auto q = i->second;
-    if (q->m_threads_db_loaded) {
+    if (q->m_cache_status == QueryData::ECacheStatus::not_loaded) {
         if (!loadQueryThreadsFromDb(q)) {
             qWarning() << "Failed to load query from DB" << q_str << labelid;
             return nullptr;
@@ -4112,7 +4144,7 @@ void mail_cache::GQueryStorage::bindSQL(QSqlQuery* q, STRING_LIST& r)
 
 void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
 {
-    if (!qd->m_threads_db_loaded) {
+    if (qd->m_cache_status == QueryData::ECacheStatus::not_loaded) {
         qWarning() << "expected loaded from DB thread" << qd->m_db_id << qd->qStr();
     }
 

@@ -83,6 +83,7 @@ namespace googleQt{
         extern std::vector<QString>     mask2SysLabelIds(uint64_t);
         extern uint64_t                 unread_label_mask();
         extern uint64_t                 trash_label_mask();
+        extern uint64_t                 draft_label_mask();
 
         /**
            MessageData - local persistant rfc822 basic data.
@@ -375,6 +376,12 @@ namespace googleQt{
         /// query results - collection of threads       
         class QueryData
         {
+            enum ECacheStatus 
+            {
+                not_loaded,
+                partially_loaded,
+                fully_loaded
+            };
         public:
             QString             qStr()const { return m_q; }
             void                setQStr(QString val) { m_q = val; }
@@ -389,6 +396,9 @@ namespace googleQt{
             bool                isFilter()const { return (m_filter_mask != 0); }
             uint64_t            filterMask()const { return m_filter_mask; }
             int                 unreadCount()const { return m_unread_count; };
+            QString             name()const { return m_name; }
+            void                setName(QString s) { m_name = s; }
+            bool                isCacheLoaded()const {return m_cache_status == ECacheStatus::fully_loaded; };
         protected:
             void                recalcUnreadCount();
 
@@ -400,7 +410,8 @@ namespace googleQt{
             uint64_t            m_filter_mask{0};
             time_t              m_last_run_time{0};
             int                 m_unread_count{0};
-            bool                m_threads_db_loaded{false};
+            ECacheStatus        m_cache_status{ ECacheStatus::not_loaded };
+            QString             m_name;/// non persistant, for short log prints
         private:
             QueryData(int dbid, QString qstr, QString lbid, QString backend_token, uint64_t filter_mask);
             static QString      format_qhash(QString qstr, QString lblid, bool as_filter);
@@ -601,10 +612,11 @@ namespace googleQt{
             bool update_q_backend_token(query_ptr q, QString token);
             void remove_threads_from_all_q(const std::set<QString>& ids2remove);
             std::vector<query_ptr> filterRules();
+            bool loadAllCacheData(query_ptr q);
         protected:
             void insert_db_threads(query_ptr q);
             bool loadQueriesFromDb();
-            bool loadQueryThreadsFromDb(query_ptr d);
+            bool loadQueryThreadsFromDb(query_ptr d, bool load_all = false);
             QString insertSQLthreads(query_ptr q)const;
             void bindSQL(QSqlQuery* q, STRING_LIST& r);
             uint64_t nextFilterMask()const;
@@ -613,7 +625,6 @@ namespace googleQt{
             GMessagesStorage*       m_mstorage{ nullptr };
             query_map               m_qmap;
             query_db_map            m_q_dbmap;
-            //query_mask_map            m_q_msk_map;
             uint64_t                m_all_filters_mask{0};
             friend class GMailSQLiteStorage;
             friend class GThreadCacheQueryTask;

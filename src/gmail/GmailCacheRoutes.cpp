@@ -102,25 +102,17 @@ mail_cache::GMailCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheMessages_
     const STRING_LIST& id_list,
     mail_cache::GMailCacheQueryTask* rfetcher /*= nullptr*/)
 {
-    ASYNC_ROUTE_DIAGNOSTICS(QString("getCacheMessages_Async %1").arg(id_list.size()));
     if (!rfetcher)
     {
         rfetcher = newMessageResultFetcher(state);
     }
-    m_GMsgCache->query_Async(state, id_list, rfetcher);
-
-#ifdef API_QT_DIAGNOSTICS
-    QObject::connect(rfetcher, &EndpointRunnable::finished, [=]()
-    {
-        if (rfetcher->isFailed()){
-            ASYNC_ROUTE_DIAGNOSTICS(QString("failed - getCacheMessages_Async %1").arg(id_list.size()));
-        }
-        else {
-            ASYNC_ROUTE_DIAGNOSTICS(QString("completed - getCacheMessages_Async %1").arg(id_list.size()));
-        }
-    });
-#endif
-
+    if (id_list.empty()) {
+        rfetcher->notifyOnCompletedFromCache();
+    }
+    else {
+        ASYNC_ROUTE_DIAGNOSTICS(QString("messages [%1]").arg(id_list.size()));
+        m_GMsgCache->query_Async(state, id_list, rfetcher);
+    }
     return rfetcher;
 };
 
@@ -316,8 +308,9 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
     listArg.labels() = q->labelid().split(" ");
 
     q->m_last_run_time = time(nullptr);
+    q->m_qnew_thread_ids.clear();
 
-    ASYNC_ROUTE_DIAGNOSTICS(QString("getQCache_Async/threads->list_Async[%1][%2]").arg(q->labelid()).arg(q->qStr()));
+    ASYNC_ROUTE_DIAGNOSTICS(QString("run-q[%1][%2]+[%3][%4]").arg(q->name()).arg(q->m_qthreads.size()).arg(threadsCount).arg(scrollRun?"Y":"N"));
     ///this will return list of thread Ids with HistoryId
     m_gmail_routes.getThreads()->list_Async(listArg)->then([=](std::unique_ptr<threads::ThreadListRes> tlist)
     {
@@ -352,9 +345,12 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
         rfetcher->m_nextPageToken = tlist->nextpagetoken();
         if (scrollRun) {
             if (q->m_qnew_thread_ids.empty()) {
-                ASYNC_ROUTE_DIAGNOSTICS(QString("fast-run-completed - getQCache_Async [%1][%2]").arg(tlist->threads().size()).arg(rfetcher->m_nextPageToken));
+                ASYNC_ROUTE_DIAGNOSTICS(QString("fast-run-done [%1][%2][%3]").arg(id_list.size()).arg(q->m_qthreads.size()).arg(rfetcher->m_nextPageToken));
                 rfetcher->notifyOnCompletedScrollRun();
                 run_list = false;
+            }
+            else {
+                ASYNC_ROUTE_DIAGNOSTICS(QString("fast-run-ignored [%1][%2][%3]").arg(id_list.size()).arg(q->m_qnew_thread_ids.size()).arg(rfetcher->m_nextPageToken));
             }
         }
         if(run_list)getCacheThreadList_Async(id_list, rfetcher);
@@ -412,7 +408,7 @@ TaskAggregator* mail_cache::GmailCacheRoutes::runQRulesCache_Async(query_set& ql
         }
 
         if (add_rule) {
-            if (!r->m_threads_db_loaded) {
+            if (r->m_cache_status == QueryData::ECacheStatus::not_loaded) {
                 if (!qst->loadQueryThreadsFromDb(r)) {
                     qWarning() << "Failed to load query from DB" << r->m_db_id;
                 }
@@ -444,7 +440,7 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheThreadL
     const std::vector<HistId>& id_list,
     mail_cache::GThreadCacheQueryTask* rfetcher /*= nullptr*/)
 {
-    ASYNC_ROUTE_DIAGNOSTICS(QString("getCacheThreadList_Async[%1]").arg(id_list.size()));
+    ASYNC_ROUTE_DIAGNOSTICS(QString("get-tlist [%1]").arg(id_list.size()));
     if (!rfetcher)
     {
         rfetcher = newThreadResultFetcher();
@@ -454,10 +450,10 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getCacheThreadL
     QObject::connect(rfetcher, &EndpointRunnable::finished, [=]()
     {
         if (rfetcher->isFailed()) {
-            ASYNC_ROUTE_DIAGNOSTICS(QString("failed - getCacheThreadList_Async %1").arg(id_list.size()));
+            ASYNC_ROUTE_DIAGNOSTICS(QString("get-tlist/failed [%1]").arg(id_list.size()));
         }
         else {
-            ASYNC_ROUTE_DIAGNOSTICS(QString("completed - getCacheThreadList_Async %1").arg(id_list.size()));
+            ASYNC_ROUTE_DIAGNOSTICS(QString("get-tlist/completed [%1]").arg(id_list.size()));
         }
     });
 #endif
@@ -479,7 +475,8 @@ bool mail_cache::GmailCacheRoutes::setupSQLiteCache(QString dbPath,
     EXPECT_STRING_VAL(dbName, "DB name");
     EXPECT_STRING_VAL(dbprefix, "DB prefix");
 
-//    auto cc = m_endpoint.client()->gcontact()->cacheRoutes()->contacts_cache();
+    GQ_TRAIL_LOG(QString("setup-cache [%1][%2][%3]").arg(cache_autoload_limit).arg(dbPath).arg(downloadPath));
+
     auto cc = m_endpoint.client()->contacts_cache();
     m_lite_storage.reset(new mail_cache::GMailSQLiteStorage(m_GMsgCache.get(), m_GThreadCache.get()));
     cc->attachSQLStorage(m_lite_storage.get());
