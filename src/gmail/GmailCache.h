@@ -337,7 +337,8 @@ namespace googleQt{
             void                setPrefilterMask(QueryData* q);
             void                markPrefiltered();
             bool                isPrefiltered()const;
-            void                addFilterMask(uint64_t f);
+            void                addFilterFlag(uint64_t f);
+			void                removeFilterFlag(uint64_t f);
             std::set<uint64_t>  unpackMask()const;
 
             bool hasLabel(uint64_t data)const;
@@ -393,8 +394,8 @@ namespace googleQt{
             const thread_map&   threads_map()const { return m_tmap; }
             QString             backendToken()const { return m_backendToken; }
             void                remove_threads(const std::set<QString>& ids2remove);
-            bool                isFilter()const { return (m_filter_mask != 0); }
-            uint64_t            filterMask()const { return m_filter_mask; }
+            bool                isFilter()const { return (m_filter_flag != 0); }
+            uint64_t            filterFlag()const { return m_filter_flag; }
             int                 unreadCount()const { return m_unread_count; };
             QString             name()const { return m_name; }
             void                setName(QString s) { m_name = s; }
@@ -407,13 +408,13 @@ namespace googleQt{
             thread_list         m_qthreads;
             thread_map          m_tmap;
             STRING_LIST         m_qnew_thread_ids;
-            uint64_t            m_filter_mask{0};
+            uint64_t            m_filter_flag{0};
             time_t              m_last_run_time{0};
             int                 m_unread_count{0};
             ECacheStatus        m_cache_status{ ECacheStatus::not_loaded };
             QString             m_name;/// non persistant, for short log prints
         private:
-            QueryData(int dbid, QString qstr, QString lbid, QString backend_token, uint64_t filter_mask);
+            QueryData(int dbid, QString qstr, QString lbid, QString backend_token, uint64_t filter_flag);
             static QString      format_qhash(QString qstr, QString lblid, bool as_filter);
             friend class GQueryStorage;
             friend class GMailSQLiteStorage;

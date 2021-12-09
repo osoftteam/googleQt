@@ -690,9 +690,15 @@ bool mail_cache::ThreadData::hasAllLabels(uint64_t data)const
     return rv;
 };
 
-void mail_cache::ThreadData::addFilterMask(uint64_t f) 
+void mail_cache::ThreadData::addFilterFlag(uint64_t f) 
 {
     m_filter_mask |= f;
+};
+
+void mail_cache::ThreadData::removeFilterFlag(uint64_t f) 
+{
+	m_filter_mask &= ~f;
+	m_prefilter_mask &= ~f;
 };
 
 std::set<uint64_t> mail_cache::ThreadData::unpackMask()const 
@@ -712,7 +718,7 @@ std::set<uint64_t> mail_cache::ThreadData::unpackMask()const
 
 void mail_cache::ThreadData::setPrefilterMask(QueryData* q)
 {
-    m_prefilter_mask |= q->filterMask();
+    m_prefilter_mask |= q->filterFlag();
     m_flags.preprocessed_filter = 1;
 };
 
@@ -727,8 +733,8 @@ bool mail_cache::ThreadData::isPrefiltered()const
 };
 
 ///QueryData
-mail_cache::QueryData::QueryData(int dbid, QString qstr, QString lbid, QString backend_token, uint64_t filter_mask):
-    m_db_id(dbid), m_q(qstr), m_labelid(lbid), m_backendToken(backend_token), m_filter_mask(filter_mask)
+mail_cache::QueryData::QueryData(int dbid, QString qstr, QString lbid, QString backend_token, uint64_t filter_flag):
+    m_db_id(dbid), m_q(qstr), m_labelid(lbid), m_backendToken(backend_token), m_filter_flag(filter_flag)
 {
 
 };
@@ -1149,20 +1155,20 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& 
                 }
 
                 if (m_threads_query && m_threads_query->isFilter()){
-                    auto fmask = m_threads_query->filterMask();
-                    if (!(td->filterMask() & fmask)) {
-                        qWarning() << "inconsistant thread filter mask" << t->id() << td->filterMask() << fmask;
+                    auto flag = m_threads_query->filterFlag();
+                    if (!(td->filterMask() & flag)) {
+						GQ_ERR_LOG(QString("inconsistant thread filter mask [%1][%2][%3][%4]").arg(t->id()).arg(td->filterMask()).arg(flag).arg(m_threads_query->name()));
                     }
                 }
             }
             else
             {
                 ///new thread, get all mesages
-                uint64_t fmask = 0;
+                uint64_t flag = 0;
                 if (m_threads_query) {
-                    fmask = m_threads_query->filterMask();
+					flag = m_threads_query->filterFlag();
                 }
-                thread_ptr td(new ThreadData(t->id(), t->historyid(), t->messages().size(), t->snipped(), fmask));
+                thread_ptr td(new ThreadData(t->id(), t->historyid(), t->messages().size(), t->snipped(), flag));
                 m_cache->mem_insert(t->id(), td);
 
                 auto mlst = t->messages();
@@ -3650,12 +3656,12 @@ void mail_cache::GThreadsStorage::bind_filterSQL(QSqlQuery* q, CACHE_LIST<Thread
 
         thread_ptr& m = i;
         if (!t->head()) {
-            qWarning() << "db-insert/skipping 'headless' thread" << m->id();
+            qWarning() << "bind_filterSQL/skipping 'headless' thread" << m->id();
             continue;
         }
 
         if (t->internalDate() == 0) {
-            qWarning() << "db-insert/skipping invalid date thread" << m->id();
+            qWarning() << "bind_filterSQL/skipping invalid date thread" << m->id();
             continue;
         }
 
@@ -4099,15 +4105,10 @@ mail_cache::query_list mail_cache::GQueryStorage::find_q_by_mask(uint64_t msk)
 {
     mail_cache::query_list lst;
     for (auto& i : m_qmap) {
-        if (i.second->filterMask() & msk) {
+        if (i.second->filterFlag() & msk) {
             lst.push_back(i.second);
         }
     }
-    /*
-    auto i = m_q_msk_map.find(msk);
-    if (i != m_q_msk_map.end()) {
-        return i->second;
-    }*/
     return lst;
 };
 
@@ -4167,9 +4168,10 @@ void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
 
                 if (qd->isFilter()) 
                 {
-                    auto fmask = qd->filterMask();
-                    if (!(t->filterMask() & fmask)) {
-                        t->addFilterMask(fmask);
+                    auto flag = qd->filterFlag();
+                    if (!(t->filterMask() & flag)) 
+					{
+                        t->addFilterFlag(flag);
                         tmask2upd.push_back(t);
                     }
                 }
@@ -4236,6 +4238,12 @@ void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
 
 bool mail_cache::GQueryStorage::remove_q(query_ptr q) 
 {
+	if (q->isFilter()) {
+		for (auto& t : q->m_qthreads) {
+			t->removeFilterFlag(q->filterFlag());
+		}
+	}
+
     QString sql_res = QString("DELETE FROM %1gmail_qres WHERE q_id=%2 AND acc_id=%3")
         .arg(m_tstorage->m_storage->metaPrefix())
         .arg(q->m_db_id)
@@ -4257,14 +4265,13 @@ bool mail_cache::GQueryStorage::remove_q(query_ptr q)
 
     if (q->isFilter()) 
     {
-        auto fmask = q->filterMask();
-        m_all_filters_mask &= ~fmask;
-        //m_q_msk_map.erase(fmask);
+        auto flag = q->filterFlag();
+        m_all_filters_mask &= ~flag;
 
         QString sql_update;
         sql_update = QString("UPDATE %1gmail_thread SET filter_mask=(~(filter_mask&%2))&(filter_mask|%2) WHERE acc_id=%3 AND (filter_mask&%2 = %2)")
             .arg(m_tstorage->m_storage->metaPrefix())
-            .arg(fmask)
+            .arg(flag)
             .arg(m_tstorage->m_storage->currentAccountId());
         QSqlQuery* qq = m_tstorage->m_storage->prepareQuery(sql_update);
         if (!qq){

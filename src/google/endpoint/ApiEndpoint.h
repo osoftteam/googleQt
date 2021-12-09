@@ -24,6 +24,8 @@
     #endif
 #endif
 
+#define GQ_ERR_LOG(S) {auto o = qWarning();o.noquote(); o << QDateTime::currentDateTime().toString("hh:mm:ss.zzz") << "[gapi/err]" << S;}
+
 #ifdef API_QT_DIAGNOSTICS
 //#define GQ_OFFLINE_MODE
 #define ASYNC_TASK_DIAGNOSTICS(S) m_r.endpoint().diagnosticSetRequestTag(S);
