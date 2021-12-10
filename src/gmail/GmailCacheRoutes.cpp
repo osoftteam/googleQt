@@ -310,7 +310,7 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
     q->m_last_run_time = time(nullptr);
     q->m_qnew_thread_ids.clear();
 
-    ASYNC_ROUTE_DIAGNOSTICS(QString("run-q[%1][%2]+[%3][%4]").arg(q->name()).arg(q->m_qthreads.size()).arg(threadsCount).arg(scrollRun?"Y":"N"));
+    ASYNC_ROUTE_DIAGNOSTICS(QString("run-q[%1][%2]->[%3][scroll=%4]").arg(q->name()).arg(q->m_qthreads.size()).arg(threadsCount).arg(scrollRun?"Y":"N"));
     ///this will return list of thread Ids with HistoryId
     m_gmail_routes.getThreads()->list_Async(listArg)->then([=](std::unique_ptr<threads::ThreadListRes> tlist)
     {

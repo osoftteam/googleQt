@@ -697,8 +697,8 @@ void mail_cache::ThreadData::addFilterFlag(uint64_t f)
 
 void mail_cache::ThreadData::removeFilterFlag(uint64_t f) 
 {
-	m_filter_mask &= ~f;
-	m_prefilter_mask &= ~f;
+    m_filter_mask &= ~f;
+    m_prefilter_mask &= ~f;
 };
 
 std::set<uint64_t> mail_cache::ThreadData::unpackMask()const 
@@ -1150,15 +1150,16 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& 
                     }
                 }
 
-                if (is_updated) {
-                    m_updated_threads.push_back(td);                    
-                }
-
                 if (m_threads_query && m_threads_query->isFilter()){
-                    auto flag = m_threads_query->filterFlag();
-                    if (!(td->filterMask() & flag)) {
-						GQ_ERR_LOG(QString("inconsistant thread filter mask [%1][%2][%3][%4]").arg(t->id()).arg(td->filterMask()).arg(flag).arg(m_threads_query->name()));
+                    auto fflag = m_threads_query->filterFlag();
+                    if (!(td->filterMask() & fflag)) {
+                        td->addFilterFlag(fflag);
+                        GQ_TRAIL_LOG(QString("add-t-flag [%1][%2][%3][%4]").arg(td->id()).arg(td->filterMask()).arg(fflag).arg(m_threads_query->name()));
+                        is_updated = true;
                     }
+                }
+                if (is_updated) {
+                    m_updated_threads.push_back(td);
                 }
             }
             else
@@ -1166,7 +1167,7 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& 
                 ///new thread, get all mesages
                 uint64_t flag = 0;
                 if (m_threads_query) {
-					flag = m_threads_query->filterFlag();
+                    flag = m_threads_query->filterFlag();
                 }
                 thread_ptr td(new ThreadData(t->id(), t->historyid(), t->messages().size(), t->snipped(), flag));
                 m_cache->mem_insert(t->id(), td);
@@ -3897,8 +3898,6 @@ bool mail_cache::GQueryStorage::loadQueriesFromDb()
         auto qd = std::shared_ptr<QueryData>(new QueryData(q_id, q_str, lbid, backend_token, fmask));
         m_qmap[QueryData::format_qhash(q_str, lbid, (fmask != 0))] = qd;
         m_q_dbmap[q_id] = qd;
-        //if (fmask != 0)
-        //  m_q_msk_map[fmask] = qd;
         loaded_objects++;
     }
 
@@ -3964,6 +3963,7 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q, bool load_al
     if (!qres)
         return false;
 
+    auto fflag = q->filterFlag();
     int loaded_threads = 0;
     int located_threads = 0;
     int loaded_msg = 0;
@@ -3990,6 +3990,13 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q, bool load_al
             if (it2 == q->m_tmap.end()) {
                 q->m_qthreads.push_back(t);
                 q->m_tmap[thread_id] = t;
+                if (fflag != 0) {
+                    if (!(t->filterMask() & fflag))
+                    {
+                        GQ_TRAIL_LOG(QString("t-lost-fflag [%1][%2][%3][%4]").arg(q->name()).arg(t->id()).arg(t->filterMask()).arg(fflag));
+                        t->addFilterFlag(fflag);
+                    }
+                }
             }
 
             /// link messages to it
@@ -4033,6 +4040,11 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q, bool load_al
     }
     q->recalcUnreadCount();
     q->m_cache_status = load_all ? QueryData::ECacheStatus::fully_loaded : QueryData::ECacheStatus::partially_loaded;
+    if (q->m_cache_status == QueryData::ECacheStatus::partially_loaded) {
+        if (record_num < q_load_limit) {
+            q->m_cache_status = QueryData::ECacheStatus::fully_loaded;
+        }
+    }
     if (q->m_cache_status == QueryData::ECacheStatus::fully_loaded) {
         GQ_TRAIL_LOG(QString("load-q-cache/fully loaded [%1][%2]").arg(record_num).arg(q_load_limit));
     }
@@ -4170,7 +4182,7 @@ void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
                 {
                     auto flag = qd->filterFlag();
                     if (!(t->filterMask() & flag)) 
-					{
+                    {
                         t->addFilterFlag(flag);
                         tmask2upd.push_back(t);
                     }
@@ -4200,9 +4212,16 @@ void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
                         << "errtext:" << q1->lastError().text();
                     return;
                 }
+                int rows_updated = q1->numRowsAffected();
                 bool rv = m_tstorage->m_storage->commitTransaction();
                 if (!rv) {
                     qWarning() << "Failed commit Q-threads fmask transaction";
+                }
+                else 
+                {
+#ifdef API_QT_DIAGNOSTICS
+                    GQ_TRAIL_LOG(QString("t-db-update-fflag [%1][%2][%3][%4]").arg(qd->name()).arg(new_threads.size()).arg(tmask2upd.size()).arg(rows_updated));
+#endif
                 }
             }
         }
@@ -4238,11 +4257,11 @@ void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
 
 bool mail_cache::GQueryStorage::remove_q(query_ptr q) 
 {
-	if (q->isFilter()) {
-		for (auto& t : q->m_qthreads) {
-			t->removeFilterFlag(q->filterFlag());
-		}
-	}
+    if (q->isFilter()) {
+        for (auto& t : q->m_qthreads) {
+            t->removeFilterFlag(q->filterFlag());
+        }
+    }
 
     QString sql_res = QString("DELETE FROM %1gmail_qres WHERE q_id=%2 AND acc_id=%3")
         .arg(m_tstorage->m_storage->metaPrefix())

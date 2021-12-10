@@ -338,7 +338,7 @@ namespace googleQt{
             void                markPrefiltered();
             bool                isPrefiltered()const;
             void                addFilterFlag(uint64_t f);
-			void                removeFilterFlag(uint64_t f);
+            void                removeFilterFlag(uint64_t f);
             std::set<uint64_t>  unpackMask()const;
 
             bool hasLabel(uint64_t data)const;
