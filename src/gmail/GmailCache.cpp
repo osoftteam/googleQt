@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <ctime>
 #include <QDir>
+#include <QRegExp>
 #include <QTextDocument>
 #include "Endpoint.h"
 #include "GmailCacheRoutes.h"
@@ -965,8 +966,7 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
                     {
                         QByteArray payload_body = QByteArray::fromBase64(p.body().data(), QByteArray::Base64UrlEncoding);
                         html_text = payload_body.constData();
-                        plain_text = html_text;
-                        plain_text.remove(QRegExp("<[^>]*>"));
+                        plain_text = QRegExp("<[^>]*>").removeIn(html_text);
                     }
                 else
                     {
@@ -974,8 +974,7 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
                         auto pres = load_parts(parts);
                         if (pres.html_text_loaded) {
                             if (!pres.plain_text_loaded) {
-                                plain_text = html_text;
-                                plain_text.remove(QRegExp("<[^>]*>"));
+                                plain_text = QRegExp("<[^>]*>").removeIn(html_text);
                                 pres.plain_text_loaded = true;
                             }
                         }
@@ -993,8 +992,7 @@ void mail_cache::GMailCacheQueryTask::fetchMessage(messages::MessageResource* m)
                                 pres = load_parts(sub_parts);
                                 if (pres.html_text_loaded) {
                                     if (!pres.plain_text_loaded) {
-                                        plain_text = html_text;
-                                        plain_text.remove(QRegExp("<[^>]*>"));
+                                        plain_text = QRegExp("<[^>]*>").removeIn(html_text);
                                         pres.plain_text_loaded = true;
                                     }
                                 }
