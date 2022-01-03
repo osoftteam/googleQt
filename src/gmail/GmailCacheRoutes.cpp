@@ -307,7 +307,8 @@ mail_cache::GThreadCacheQueryTask* mail_cache::GmailCacheRoutes::getQCache_Async
     listArg.setQ(q->qStr());
     listArg.labels() = q->labelid().split(" ");
 
-    q->m_last_run_time = time(nullptr);
+    m_last_q_run_time = time(nullptr);
+    q->m_last_run_time = m_last_q_run_time;
     q->m_qnew_thread_ids.clear();
 
     ASYNC_ROUTE_DIAGNOSTICS(QString("run-q[%1][%2]->[%3][scroll=%4]").arg(q->name()).arg(q->m_qthreads.size()).arg(threadsCount).arg(scrollRun?"Y":"N"));

@@ -139,9 +139,6 @@ namespace googleQt
             bool setImportant(mail_cache::MessageData* d, bool set_it = true);
             TaskAggregator* setImportant_Async(mail_cache::MessageData* d, bool set_it = true);
 
-            /// set label on message or register batch update if label set failed (due to network issue for example)
-           // GoogleTask<messages::MessageResource>* setSysLabelOrRegisterBatchUpdate_Async(mail_cache::MessageData* d, googleQt::mail_cache::SysLabel lbl, bool set_it = true);
-
             TaskAggregator* setLabel_Async(QString label_id, const std::vector<mail_cache::MessageData*>& lst, bool label_on, bool system_label);
 
             /// create list of labels and update local DB cache
@@ -153,9 +150,9 @@ namespace googleQt
 
             GoogleVoidTask* modifyThreadLabels_Async(thread_ptr t, const label_list& labels2add, const label_list& labels2remove);
             GoogleVoidTask* modifyThreadListLabels_Async(const thread_list& listt, const label_list& labels2add, const label_list& labels2remove);
-     //       GoogleVoidTask* applyBatchUpdate_Async();
 
             void    clearCache();
+            time_t  lastQRunTime()const {return m_last_q_run_time;}
 #ifdef API_QT_AUTOTEST
             void runAutotest();
             void autotestThreadDBLoad(const std::vector<HistId>& id_list);
@@ -182,6 +179,7 @@ namespace googleQt
             std::unique_ptr<mail_cache::GMailSQLiteStorage> m_lite_storage;
             std::unique_ptr<mail_cache::GMailCache> m_GMsgCache;
             std::unique_ptr<mail_cache::GThreadCache> m_GThreadCache;
+            time_t              m_last_q_run_time{ 0 };///last time we run any query, see QueryData::m_last_run_time
             friend class GThreadCacheQueryTask;
             friend class GmailRoutes;
         };

@@ -4212,7 +4212,9 @@ void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
                         << "errtext:" << q1->lastError().text();
                     return;
                 }
+#ifdef API_QT_DIAGNOSTICS
                 int rows_updated = q1->numRowsAffected();
+#endif
                 bool rv = m_tstorage->m_storage->commitTransaction();
                 if (!rv) {
                     qWarning() << "Failed commit Q-threads fmask transaction";
