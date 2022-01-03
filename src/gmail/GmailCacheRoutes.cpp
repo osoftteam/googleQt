@@ -512,6 +512,16 @@ void mail_cache::GmailCacheRoutes::clearCache()
     }
 };
 
+time_t mail_cache::GmailCacheRoutes::lastQRunTime()const 
+{ 
+    return m_last_q_run_time; 
+}
+
+void mail_cache::GmailCacheRoutes::updateLastQRunTime() 
+{
+    m_last_q_run_time = time(nullptr);
+};
+
 bool mail_cache::GmailCacheRoutes::resetSQLiteCache()
 {
     if (!m_GMsgCache) {

@@ -1358,6 +1358,8 @@ void mail_cache::GThreadCacheQueryTask::notifyOnCompletedFromCache()
         m_threads_query->recalcUnreadCount();
     }
 
+    m_r.updateLastQRunTime();
+
     CacheQueryTask<ThreadData>::notifyOnCompletedFromCache();
 };
 

@@ -152,7 +152,8 @@ namespace googleQt
             GoogleVoidTask* modifyThreadListLabels_Async(const thread_list& listt, const label_list& labels2add, const label_list& labels2remove);
 
             void    clearCache();
-            time_t  lastQRunTime()const {return m_last_q_run_time;}
+            time_t  lastQRunTime()const;
+            void    updateLastQRunTime();
 #ifdef API_QT_AUTOTEST
             void runAutotest();
             void autotestThreadDBLoad(const std::vector<HistId>& id_list);
