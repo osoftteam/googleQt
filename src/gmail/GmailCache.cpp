@@ -537,12 +537,14 @@ bool mail_cache::LabelData::isSocialCategory()const
 mail_cache::ThreadData::ThreadData(QString id,
                                    quint64 history_id,
                                    int      messages_count,
-                                   QString snippet,
-                                   uint64_t filter_mask):
+                                   QString  snippet,
+                                   uint64_t filter_mask,
+                                   uint64_t prefilter_mask):
     CacheDataWithHistory(id, history_id),
     m_messages_count(messages_count),
     m_snippet(snippet),
-    m_filter_mask(filter_mask)
+    m_filter_mask(filter_mask),
+    m_prefilter_mask(prefilter_mask)
 {
 #ifdef API_QT_AUTOTEST  
     g__thread_alloc_counter++;
@@ -1169,7 +1171,7 @@ void mail_cache::GThreadCacheQueryTask::fetchFromCloud_Async(const STRING_LIST& 
                 if (m_threads_query) {
                     flag = m_threads_query->filterFlag();
                 }
-                thread_ptr td(new ThreadData(t->id(), t->historyid(), t->messages().size(), t->snipped(), flag));
+                thread_ptr td(new ThreadData(t->id(), t->historyid(), t->messages().size(), t->snipped(), flag, 0));
                 m_cache->mem_insert(t->id(), td);
 
                 auto mlst = t->messages();
@@ -1465,7 +1467,7 @@ bool mail_cache::GMailSQLiteStorage::ensureMailTables()
 
     //// threads ///
     QString sql_threads = QString("CREATE TABLE IF NOT EXISTS %1gmail_thread(acc_id INTEGER NOT NULL, thread_id TEXT NOT NULL, history_id INTEGER "
-        " ,snippet TEXT, filter_mask INTEGER, messages_count INTEGER, internal_date INTEGER)")
+        " ,snippet TEXT, filter_mask INTEGER, prefilter_mask INTEGER, messages_count INTEGER, internal_date INTEGER)")
         .arg(m_metaPrefix);
     if (!execQuery(sql_threads))
         return false;
@@ -1650,6 +1652,13 @@ void mail_cache::GMailSQLiteStorage::close_db()
     m_initialized = false;
 };
 
+bool mail_cache::GMailSQLiteStorage::isValid()const 
+{
+    if (m_initialized) {
+        return m_gmail_db.isOpen();
+    }
+    return false;
+}
 
 static qstring_hash_map<QString> syslabelID2Name;
 static std::map<mail_cache::SysLabel, QString> syslabel2Name;
@@ -1951,6 +1960,47 @@ int mail_cache::GMailSQLiteStorage::getCacheMessagesCount(mail_cache::label_ptr 
     }
     return rv;
 };
+
+bool mail_cache::GMailSQLiteStorage::updatePrefiltered(CACHE_LIST<ThreadData>& r)
+{
+    bool rv = false;
+    if (!r.empty())
+    {
+        auto q1 = startTransaction(m_tstorage->update_prefilterSQL());
+        if (q1)
+        {
+            m_tstorage->bind_prefilterSQL(q1, r);
+            if (!q1->execBatch())
+            {
+                rollbackTransaction();
+                qWarning() << "ERROR. SQL update_prefilter_db failed"
+                    << "err-type:" << q1->lastError().type()
+                    << "native-code:" << q1->lastError().nativeErrorCode()
+                    << "errtext:" << q1->lastError().text();
+                return false;
+            }
+
+#ifdef API_QT_DIAGNOSTICS
+            int rows_updated = q1->numRowsAffected();
+#endif
+            rv = commitTransaction();
+            if (!rv) {
+                qWarning() << "Failed commit updatePrefiltered transaction";
+            }
+            else
+            {
+#ifdef API_QT_DIAGNOSTICS
+                GQ_TRAIL_LOG(QString("updatePrefiltered [%1][%2]").arg(r.size()).arg(rows_updated));
+#endif
+            }
+
+        }
+    }
+    return rv;
+};
+
+//...
+
 
 QString mail_cache::GMailSQLiteStorage::findAttachmentFile(att_ptr att)const 
 {
@@ -2758,7 +2808,7 @@ googleQt::mail_cache::msg_list mail_cache::GMailSQLiteStorage::loadMessagesByIds
     std::function<bool(const STRING_LIST& lst)> loadList = [&](const STRING_LIST& lst) -> bool
     {
         QString comma_ids = slist2str_decorated(lst.begin(), lst.end());
-        QString sql = QString("SELECT t.thread_id, t.history_id, t.messages_count, t.snippet, t.filter_mask, "
+        QString sql = QString("SELECT t.thread_id, t.history_id, t.messages_count, t.snippet, t.filter_mask, t.prefilter_mask, "
             "m.msg_state, m.msg_id, m.msg_from, m.msg_to, m.msg_cc, m.msg_bcc, "
             "m.msg_subject, m.msg_snippet, m.msg_plain, m.msg_html, m.internal_date, m.msg_labels, m.msg_references "
             "FROM %1gmail_thread t, %1gmail_msg m "
@@ -2778,7 +2828,7 @@ googleQt::mail_cache::msg_list mail_cache::GMailSQLiteStorage::loadMessagesByIds
         while (q->next())
         {
             QString thread_id = q->value(0).toString();
-            QString msg_id = q->value(6).toString();
+            QString msg_id = q->value(7).toString();
             auto t = tc->mem_object(thread_id);
             if (t) {
                 located_threads++;
@@ -2797,7 +2847,7 @@ googleQt::mail_cache::msg_list mail_cache::GMailSQLiteStorage::loadMessagesByIds
                     located_msg++;
                 }
                 else {
-                    m = m_mstorage->loadMessageFromDb(t, q, 5);
+                    m = m_mstorage->loadMessageFromDb(t, q, 6);
                     if (m) {
                         mc->mem_insert(m->id(), m);
                         loaded_msg++;
@@ -3396,7 +3446,7 @@ bool mail_cache::GThreadsStorage::loadThreadsFromDb()
         return false;
     }
 
-    QString sql = QString("SELECT thread_id, history_id, messages_count, snippet, filter_mask FROM %1gmail_thread " 
+    QString sql = QString("SELECT thread_id, history_id, messages_count, snippet, filter_mask, prefilter_mask FROM %1gmail_thread " 
         "WHERE acc_id=%2 AND thread_id IN(SELECT thread_id FROM %1gmail_msg WHERE acc_id=%2) ORDER BY internal_date DESC LIMIT %3")
         .arg(m_storage->metaPrefix())
         .arg(m_storage->currentAccountId())
@@ -3447,7 +3497,7 @@ googleQt::mail_cache::thread_list mail_cache::GThreadsStorage::loadThreadsByIdsF
     {
         googleQt::mail_cache::thread_list rv;
 
-        QString sql = QString("SELECT thread_id, history_id, messages_count, snippet, filter_mask FROM %1gmail_thread "
+        QString sql = QString("SELECT thread_id, history_id, messages_count, snippet, filter_mask, prefilter_mask FROM %1gmail_thread "
             "WHERE acc_id=%2 AND thread_id IN(%3) ORDER BY internal_date DESC")
             .arg(m_storage->metaPrefix())
             .arg(m_storage->currentAccountId())
@@ -3563,12 +3613,14 @@ mail_cache::thread_ptr mail_cache::GThreadsStorage::loadThread(QSqlQuery* q)
     int messages_count = q->value(2).toInt();
     QString snippet = q->value(3).toString();
     quint64 fmask = q->value(4).toULongLong();
+    quint64 pre_fmask = q->value(5).toULongLong();
     
     td = std::shared_ptr<ThreadData>(new ThreadData(thread_id,
                                                     history_id,
                                                     messages_count,
                                                     snippet,
-                                                    fmask));
+                                                    fmask,
+                                                    pre_fmask));
     if (m_storage->m_lastHistoryId < history_id) {
         m_storage->m_lastHistoryId = history_id;
     }
@@ -3606,6 +3658,14 @@ QString mail_cache::GThreadsStorage::updateSQL()const
 QString mail_cache::GThreadsStorage::update_filterSQL()const
 {
     QString sql_update = QString("UPDATE %1gmail_thread SET filter_mask=? WHERE thread_id=? AND acc_id=%2")
+        .arg(m_storage->metaPrefix())
+        .arg(m_storage->currentAccountId());
+    return sql_update;
+};
+
+QString mail_cache::GThreadsStorage::update_prefilterSQL()const 
+{
+    QString sql_update = QString("UPDATE %1gmail_thread SET prefilter_mask=? WHERE thread_id=? AND acc_id=%2")
         .arg(m_storage->metaPrefix())
         .arg(m_storage->currentAccountId());
     return sql_update;
@@ -3649,7 +3709,6 @@ void mail_cache::GThreadsStorage::bindSQL(QSqlQuery* q, CACHE_LIST<ThreadData>& 
     q->addBindValue(id);
 };
 
-//....
 void mail_cache::GThreadsStorage::bind_filterSQL(QSqlQuery* q, CACHE_LIST<ThreadData>& r)
 {
     QVariantList filter_mask, id;
@@ -3674,7 +3733,32 @@ void mail_cache::GThreadsStorage::bind_filterSQL(QSqlQuery* q, CACHE_LIST<Thread
     q->addBindValue(filter_mask);
     q->addBindValue(id);
 };
-//...
+
+//..
+void mail_cache::GThreadsStorage::bind_prefilterSQL(QSqlQuery* q, CACHE_LIST<ThreadData>& r) 
+{
+    QVariantList fmask, id;
+    for (auto& i : r)
+    {
+        thread_ptr& t = i;
+
+        thread_ptr& m = i;
+        if (!t->head()) {
+            qWarning() << "bind_prefilterSQL/skipping 'headless' thread" << m->id();
+            continue;
+        }
+
+        if (t->internalDate() == 0) {
+            qWarning() << "bind_prefilterSQL/skipping invalid date thread" << m->id();
+            continue;
+        }
+
+        fmask << t->m_prefilter_mask;
+        id << t->m_id;
+    }
+    q->addBindValue(fmask);
+    q->addBindValue(id);
+};
 
 bool mail_cache::GThreadsStorage::execOutOfBatchSQL(QSqlQuery* q, mail_cache::ThreadData* t)
 {
@@ -3948,7 +4032,7 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q, bool load_al
         q_load_limit = 10000;
     }
 
-    QString sql = QString("SELECT r.thread_id, t.history_id, t.messages_count, t.snippet, t.filter_mask, "
+    QString sql = QString("SELECT r.thread_id, t.history_id, t.messages_count, t.snippet, t.filter_mask, t.prefilter_mask, "
         "m.msg_state, m.msg_id, m.msg_from, m.msg_to, m.msg_cc, m.msg_bcc, "
         "m.msg_subject, m.msg_snippet, m.msg_plain, m.msg_html, m.internal_date, m.msg_labels, m.msg_references, m.thread_id "
         "FROM %1gmail_qres r, %1gmail_thread t, %1gmail_msg m "
@@ -3974,7 +4058,7 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q, bool load_al
     while (qres->next())
     {       
         QString thread_id = qres->value(0).toString();
-        QString msg_id = qres->value(6).toString();
+        QString msg_id = qres->value(7).toString();
         auto t = tc->mem_object(thread_id);
         if (t) {
             located_threads++;
@@ -4006,7 +4090,7 @@ bool mail_cache::GQueryStorage::loadQueryThreadsFromDb(query_ptr q, bool load_al
             if (m) {
                 located_msg++;
             }else{
-                m = m_mstorage->loadMessageFromDb(t, qres, 5);
+                m = m_mstorage->loadMessageFromDb(t, qres, 6);
                 if (m) {
                     mc->mem_insert(m->id(), m);
                     loaded_msg++;
@@ -4259,6 +4343,7 @@ void mail_cache::GQueryStorage::insert_db_threads(query_ptr qd)
     }
 };
 
+
 bool mail_cache::GQueryStorage::remove_q(query_ptr q) 
 {
     if (q->isFilter()) {
@@ -4298,7 +4383,21 @@ bool mail_cache::GQueryStorage::remove_q(query_ptr q)
             .arg(m_tstorage->m_storage->currentAccountId());
         QSqlQuery* qq = m_tstorage->m_storage->prepareQuery(sql_update);
         if (!qq){
-            qWarning() << "SQL update failed" << sql_update;
+            qWarning() << "SQL update filter_mask failed" << sql_update;
+            return false;
+        }
+        if (!qq->exec()) {
+            qWarning() << "SQL exec failed" << sql_update;
+            return false;
+        }
+
+        sql_update = QString("UPDATE %1gmail_thread SET prefilter_mask=(~(prefilter_mask&%2))&(prefilter_mask|%2) WHERE acc_id=%3 AND (prefilter_mask&%2 = %2)")
+            .arg(m_tstorage->m_storage->metaPrefix())
+            .arg(flag)
+            .arg(m_tstorage->m_storage->currentAccountId());
+        qq = m_tstorage->m_storage->prepareQuery(sql_update);
+        if (!qq) {
+            qWarning() << "SQL update prefilter_mask failed" << sql_update;
             return false;
         }
         if (!qq->exec()) {

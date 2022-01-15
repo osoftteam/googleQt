@@ -360,7 +360,8 @@ namespace googleQt{
                 quint64 history_id,
                 int     messages_count,
                 QString snippet,
-                uint64_t filter_mask);
+                uint64_t filter_mask,
+                uint64_t prefilter_mask);
             void add_msg(msg_ptr);
             void remove_msg(msg_ptr);
             void rebuildLabelsMap();
@@ -565,7 +566,7 @@ namespace googleQt{
             virtual ~GThreadsStorage(){}
             void update_db(EDataState state, CACHE_LIST<ThreadData>& r)override;
             void remove_db(const std::set<QString>& ids2remove)override;
-            void insert_db(EDataState state, CACHE_LIST<ThreadData>& r)override;
+            void insert_db(EDataState state, CACHE_LIST<ThreadData>& r)override;            
             bool isValid()const override;
         protected:
             std::shared_ptr<ThreadData> loadThread(QSqlQuery* q);
@@ -577,11 +578,13 @@ namespace googleQt{
             QString insertSQL()const;
             QString updateSQL()const;
             QString update_filterSQL()const;
+            QString update_prefilterSQL()const;
             bool insertDbInBatch(CACHE_LIST<ThreadData>& r);
             bool updateDbInBatch(CACHE_LIST<ThreadData>& r);
             bool execOutOfBatchSQL(QSqlQuery* q, mail_cache::ThreadData* t);
             void bindSQL(QSqlQuery* q, CACHE_LIST<ThreadData>& r);
             void bind_filterSQL(QSqlQuery* q, CACHE_LIST<ThreadData>& r);
+            void bind_prefilterSQL(QSqlQuery* q, CACHE_LIST<ThreadData>& r);
         protected:
             GMailSQLiteStorage*     m_storage;
             friend class GMailSQLiteStorage;
@@ -648,7 +651,7 @@ namespace googleQt{
                          QString db_meta_prefix);
             void close_db();
             
-            bool isValid()const {return m_initialized;}
+            bool isValid()const;
             ///directory for attachments
             QString downloadDir()const { return m_downloadDir; }
             ///directory for contacts photos & thumbnails
@@ -676,8 +679,8 @@ namespace googleQt{
             bool deleteAttachmentsFromDb(QString msg_id);
             bool markMailAsTrashedInDb(MessageData& m);
             void updateMessagesDiagnostic(int inc_batch, int inc_msg);
-            int getCacheMessagesCount(mail_cache::label_ptr);
-            //bool updateMailGuiZoomInDb(MessageData& m, qreal zoom);
+            int  getCacheMessagesCount(mail_cache::label_ptr);
+            bool updatePrefiltered(CACHE_LIST<ThreadData>& r);
 
             /// find account by ID
             QString findUser(int accId);
