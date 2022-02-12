@@ -221,6 +221,7 @@ gcontacts namespace is getting into shape but still under development, expect su
 At the core of library are basic interfaces that provide access to Google services using documented HTTP/JSON protocols. Those classes are geneated from doc-specifications called STONE. STONE was designed by Dropbox as declarative languague to maintain their APIs. We addapted STONE python machinery for C++11/Qt/Dropbox interfaces first and then for selected Google APIs. Our main goal was Gmail and GDrive as future engines for Ardi-application (see prokarpaty.net). At one point we desided to abstruct caching classes from Ardi into googleQt as well. We estimated development of stable GMail cache and core interfaces for GDrive, GTask in 1 year. It includes also autotests and sample projects. 7 months already passed and we have beta of rich GUI hosting application using all this code (except GTasks).
 
 
+    
 ### Features
 The library covers GDrive, GMail, GTask but not completely, particularly resumable downloads are not implemented. Also sending emails functions are not fully tested for various destination client (for encoding etc). 
 
@@ -230,4 +231,3 @@ The library covers GDrive, GMail, GTask but not completely, particularly resumab
 - specialized exceptions for blocking calls
 - concurrent batch requests for gmail (up to 4 requests simultaneously)
 - caching cloud data for selected services
-
