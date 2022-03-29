@@ -243,14 +243,14 @@ void MimeBodyPart::setContent(QString content, QString _type)
 QByteArray MimeBodyPart::toRfc822()const
 {
     QByteArray rv = QString("Content-Type: %1\r\n").arg(m_content_type).toStdString().c_str();
-    rv += QString("Content-Transfer-Encoding: base64\r\n");
+    rv += QString("Content-Transfer-Encoding: base64\r\n").toStdString().c_str();
     switch(m_part_type)
         {
         case ptypePlain:
         case ptypeHtml: 
             {       
                 QByteArray ba(m_content.toStdString().c_str());
-                rv += QString("%1\r\n").arg(ba.toBase64(QByteArray::Base64Encoding).constData());
+                rv += QString("%1\r\n").arg(ba.toBase64(QByteArray::Base64Encoding).constData()).toStdString().c_str();
             }break;
         case ptypeNone:break;
         case ptypeFile: 
@@ -266,16 +266,16 @@ QByteArray MimeBodyPart::toRfc822()const
                     auto x_attachment_id = QString("f_%1").arg(qHash(m_content), 0, 16);
                     auto content_id = QString("<%1>").arg(x_attachment_id);
                     /*
-                    rv += QString("Content-ID: %1\r\n").arg(content_id);
+                    rv += QString("Content-ID: %1\r\n").arg(content_id).toStdString().c_str();
                     */
-                    rv += QString("X-Attachment-Id: %1\r\n").arg(x_attachment_id);
+                    rv += QString("X-Attachment-Id: %1\r\n").arg(x_attachment_id).toStdString().c_str();
 
                     QFileInfo fi(m_content);
                     QString file_name = fi.fileName();
-                    rv += QString("Content-Disposition: attachment; filename=%1\r\n\r\n").arg(file_name);
+                    rv += QString("Content-Disposition: attachment; filename=%1\r\n\r\n").arg(file_name).toStdString().c_str();
 
                     QByteArray ba = mf.readAll().toBase64(QByteArray::Base64Encoding);
-                    rv += QString("%1\r\n").arg(ba.constData());
+                    rv += QString("%1\r\n").arg(ba.constData()).toStdString().c_str();
                 }       
             }break;
         }
@@ -346,28 +346,28 @@ QByteArray SendMimeMessageArg::toRfc822()const
 
     QByteArray rv;
     rv =  QString("From: %1\r\n").arg(m_From).toStdString().c_str();
-    rv += QString("To: %1\r\n").arg(m_To);
-    rv += QString("Subject: %1\r\n").arg(m_Subject);
+    rv += QString("To: %1\r\n").arg(m_To).toStdString().c_str();
+    rv += QString("Subject: %1\r\n").arg(m_Subject).toStdString().c_str();
     QString ref_str = m_references;
     if (!m_InReplyToMsgId.isEmpty()) {
-        rv += QString("In-Reply-To: <%1@mail.gmail.com>\r\n").arg(m_InReplyToMsgId);
+        rv += QString("In-Reply-To: <%1@mail.gmail.com>\r\n").arg(m_InReplyToMsgId).toStdString().c_str();
         ref_str += QString("<%1@mail.gmail.com>").arg(m_InReplyToMsgId);
     }
     
     if (!ref_str.isEmpty()) {
-        rv += QString("References: %1\r\n").arg(ref_str);
+        rv += QString("References: %1\r\n").arg(ref_str).toStdString().c_str();
     }
-    rv += QString("MIME-Version: 1.0\r\n");
-    rv += QString("Content-Type: multipart/mixed; boundary=\"%1\"\r\n\r\n").arg(boundary);
+    rv += QString("MIME-Version: 1.0\r\n").toStdString().c_str();
+    rv += QString("Content-Type: multipart/mixed; boundary=\"%1\"\r\n\r\n").arg(boundary).toStdString().c_str();
     //rv += QString("Content-Type: multipart/alternative; boundary=\"%1\"\r\n\r\n").arg(boundary);
     for (auto& p : m_body_parts)
         {
-            rv += QString("--%1\r\n").arg(boundary);
+            rv += QString("--%1\r\n").arg(boundary).toStdString().c_str();
             QString part_content = p.toRfc822();
-            rv += part_content;
+            rv += part_content.toStdString().c_str();
         }
 
-    rv += QString("--%1--").arg(boundary);
+    rv += QString("--%1--").arg(boundary).toStdString().c_str();
 
     return rv;
 };

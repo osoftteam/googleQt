@@ -71,7 +71,7 @@ Terminal(QString prompt):m_prompt(prompt){};
                             str_cmd = m_last_cmd;
                         }
                                                    
-                        QStringList arg_list = str_cmd.split(" ", QString::SkipEmptyParts);
+                        QStringList arg_list = str_cmd.split(" ", Qt::SkipEmptyParts);
                         if(!arg_list.empty()){
                             QString str = arg_list[0];
                             if(str.compare(exit_option.c_str(), Qt::CaseInsensitive) == 0)

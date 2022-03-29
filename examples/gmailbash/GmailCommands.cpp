@@ -207,7 +207,7 @@ void GmailCommands::send_prepared_rfc822(QString messageFileName)
 void GmailCommands::send_as_html(QString to_subject_text)
 {
     QStringList arg_list = to_subject_text.split(" ",
-                                                 QString::SkipEmptyParts);
+                                                 Qt::SkipEmptyParts);
 
     if (arg_list.size() < 3)
         {
@@ -235,7 +235,7 @@ void GmailCommands::send_as_html(QString to_subject_text)
 void GmailCommands::send_att(QString to_subject_text)
 {
     QStringList arg_list = to_subject_text.split(" ",
-                                                 QString::SkipEmptyParts);
+                                                 Qt::SkipEmptyParts);
 
     if (arg_list.size() < 3)
         {
@@ -336,7 +336,7 @@ void GmailCommands::delete_msg(QString message_id)
 void GmailCommands::add_label(QString message_id_label)
 {
     QStringList arg_list = message_id_label.split(" ",
-                                                  QString::SkipEmptyParts);
+                                                  Qt::SkipEmptyParts);
 
     if (arg_list.size() < 2)
         {
@@ -365,7 +365,7 @@ void GmailCommands::add_label(QString message_id_label)
 void GmailCommands::remove_label(QString message_id_label)
 {
     QStringList arg_list = message_id_label.split(" ",
-                                                  QString::SkipEmptyParts);
+                                                  Qt::SkipEmptyParts);
 
     if (arg_list.size() < 2)
         {
@@ -646,7 +646,7 @@ void GmailCommands::save_raw(QString msg_id)
 void GmailCommands::get_html(QString message_id_space_fileName)
 {
     QStringList arg_list = message_id_space_fileName.split(" ",
-                                                           QString::SkipEmptyParts);
+                                                           Qt::SkipEmptyParts);
     if(arg_list.size() < 2)
         {
             std::cout << "Invalid parameters, expected <message_id> <file_name>" << std::endl;
@@ -765,7 +765,7 @@ void GmailCommands::delete_label(QString label_id)
 
 void GmailCommands::update_label(QString labelid_space_name)
 {
-    QStringList arg_list = labelid_space_name.split(" ", QString::SkipEmptyParts);
+    QStringList arg_list = labelid_space_name.split(" ", Qt::SkipEmptyParts);
     if(arg_list.size() < 2)
         {
             std::cout << "Invalid parameters, expected <label_id> <new_name>" << std::endl;
