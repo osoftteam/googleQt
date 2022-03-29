@@ -1,0 +1,24 @@
+target_sources(googleQt PRIVATE
+    FilesContentHints.cpp
+    FilesContentHints.h
+    FilesCreateFileDetails.cpp
+    FilesCreateFileDetails.h
+    FilesFileResource.cpp
+    FilesFileResource.h
+    FilesFileResourcesCollection.cpp
+    FilesFileResourcesCollection.h
+    FilesGeneratedIdsCollection.cpp
+    FilesGeneratedIdsCollection.h
+    FilesImageMediaMetadata.cpp
+    FilesImageMediaMetadata.h
+    FilesLocationData.cpp
+    FilesLocationData.h
+    FilesRoutes.cpp
+    FilesRoutes.h
+    FilesThumbnailInfo.cpp
+    FilesThumbnailInfo.h
+    FilesUpdateFileDetails.cpp
+    FilesUpdateFileDetails.h
+    FilesVideoMediaMetadata.cpp
+    FilesVideoMediaMetadata.h
+)

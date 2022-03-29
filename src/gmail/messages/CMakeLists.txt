@@ -1,0 +1,20 @@
+target_sources(googleQt PRIVATE
+    MessagesRoutes.h
+    MessagesBatchDeleteBodyArg.cpp
+    MessagesBatchDeleteBodyArg.h
+    MessagesMessageListRes.cpp
+    MessagesMessageListRes.h
+    MessagesMessageMimeBody.cpp
+    MessagesMessageMimeBody.h
+    MessagesMessagePart.cpp
+    MessagesMessagePart.h
+    MessagesMessagePartBody.cpp
+    MessagesMessagePartBody.h
+    MessagesMessagePayload.cpp
+    MessagesMessagePayload.h
+    MessagesMessagePayloadHeader.cpp
+    MessagesMessagePayloadHeader.h
+    MessagesMessageResource.cpp
+    MessagesMessageResource.h
+    MessagesRoutes.cpp
+)

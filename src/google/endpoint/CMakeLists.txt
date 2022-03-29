@@ -1,0 +1,26 @@
+target_sources(googleQt PRIVATE
+    GoogleWebAuth.h
+    ApiAppInfo.cpp
+    ApiAppInfo.h
+    ApiAuthInfo.cpp
+    ApiAuthInfo.h
+    ApiAutotest.cpp
+    ApiAutotest.h
+    ApiBase.cpp
+    ApiBase.h
+    ApiClient.cpp
+    ApiClient.h
+    ApiEndpoint.cpp
+    ApiEndpoint.h
+    ApiException.cpp
+    ApiException.h
+    ApiUtil.h
+    BatchRunner.h
+    Cache.cpp
+    Cache.h
+    GoogleHost.cpp
+    GoogleHost.h
+    GoogleTask.cpp
+    GoogleTask.h
+    GoogleWebAuth.cpp
+)
