@@ -332,7 +332,7 @@ void GdriveCommands::clean_space_content(QString spaceName)
 void GdriveCommands::rm_appdata_files(QString name_exceptId)
 {
     QStringList arg_list = name_exceptId.split(" ",
-                                               QString::SkipEmptyParts);
+                                               Qt::SkipEmptyParts);
     if(arg_list.size() == 0)
         {
             std::cout << "Invalid parameters, expected <fileName> <fileId> (to skip)" << std::endl;
@@ -367,7 +367,7 @@ void GdriveCommands::rm_appdata_files(QString name_exceptId)
 void GdriveCommands::find_by_name(QString name_space_parentId)
 {
     QStringList arg_list = name_space_parentId.split(" ",
-                                                     QString::SkipEmptyParts);
+                                                     Qt::SkipEmptyParts);
     QString name;
     QString parentId;
 
@@ -474,7 +474,7 @@ void GdriveCommands::get(QString fileId)
 void GdriveCommands::rename(QString fileId_space_new_title) 
 {
     QStringList arg_list = fileId_space_new_title.split(" ",
-                                                        QString::SkipEmptyParts);
+                                                        Qt::SkipEmptyParts);
     if (arg_list.size() < 2)
         {
             std::cout << "Invalid parameters, expected <fileID> <fileName>" << std::endl;
@@ -503,7 +503,7 @@ void GdriveCommands::change_mime(QString fileId_space_new_mimeType)
     std::cout << "Google doesn't do it (Jan/2017) - you have to upload file again" << std::endl;
     
     QStringList arg_list = fileId_space_new_mimeType.split(" ",
-                                                           QString::SkipEmptyParts);
+                                                           Qt::SkipEmptyParts);
     if (arg_list.size() < 2)
         {
             std::cout << "Invalid parameters, expected <fileID> <mimeType>" << std::endl;
@@ -766,7 +766,7 @@ void GdriveCommands::upload_simple(QString fileName)
 void GdriveCommands::upgrade_file(QString localFile_parentFolderId)
 {
     QStringList arg_list = localFile_parentFolderId.split(" ",
-                                                          QString::SkipEmptyParts);
+                                                          Qt::SkipEmptyParts);
     if (arg_list.isEmpty())
         {
             std::cout << "<fileName> required(local-path), optional <parentId>" << std::endl;
@@ -797,7 +797,7 @@ void GdriveCommands::upgrade_file(QString localFile_parentFolderId)
 void GdriveCommands::create_using_id(QString fileName_space_fileId)
 {
     QStringList arg_list = fileName_space_fileId.split(" ",
-        QString::SkipEmptyParts);
+        Qt::SkipEmptyParts);
     if (arg_list.size() != 2)
     {
         std::cout << "<fileName> required(local-path) <fileId>" << std::endl;
@@ -830,7 +830,7 @@ void GdriveCommands::rm(QString arg)
         }
 
     QStringList arg_list = arg.split(" ",
-                                     QString::SkipEmptyParts);
+                                     Qt::SkipEmptyParts);
     
     try
         {
@@ -851,7 +851,7 @@ void GdriveCommands::rm(QString arg)
 void GdriveCommands::mkdir(QString title_Space_parentFolderId)
 {
     QStringList arg_list = title_Space_parentFolderId.split(" ",
-                                                            QString::SkipEmptyParts);
+                                                            Qt::SkipEmptyParts);
     if(arg_list.size() < 1)
         {
             std::cout << "Invalid parameters, expected <title> <parent_id>" << std::endl;
@@ -922,7 +922,7 @@ void GdriveCommands::ls_comments(QString fileId)
 void GdriveCommands::rm_comment(QString fileId_Space_commentId)
 {
     QStringList arg_list = fileId_Space_commentId.split(" ",
-                                                        QString::SkipEmptyParts);
+                                                        Qt::SkipEmptyParts);
     if(arg_list.size() < 2)
         {
             std::cout << "Invalid parameters, expected <file_id> <comment_id>" << std::endl;
@@ -946,7 +946,7 @@ void GdriveCommands::rm_comment(QString fileId_Space_commentId)
 void GdriveCommands::get_comment(QString fileId_Space_commentId)
 {
     QStringList arg_list = fileId_Space_commentId.split(" ",
-                                                        QString::SkipEmptyParts);
+                                                        Qt::SkipEmptyParts);
     if(arg_list.size() < 2)
         {
             std::cout << "Invalid parameters, expected <file_id> <comment_id>" << std::endl;
@@ -1021,7 +1021,7 @@ void GdriveCommands::ls_permissions(QString fileId)
 void GdriveCommands::get_permission(QString fileId_Space_permissionId)
 {
     QStringList arg_list = fileId_Space_permissionId.split(" ",
-                                                           QString::SkipEmptyParts);
+                                                           Qt::SkipEmptyParts);
     if(arg_list.size() < 2)
         {
             std::cout << "Invalid parameters, expected <file_id> <comment_id>" << std::endl;
@@ -1070,7 +1070,7 @@ void GdriveCommands::create_permissions(QString fileId)
 void GdriveCommands::delete_permissions(QString fileId_Space_permissionId)
 {
     QStringList arg_list = fileId_Space_permissionId.split(" ",
-        QString::SkipEmptyParts);
+        Qt::SkipEmptyParts);
     if (arg_list.size() < 2)
     {
         std::cout << "Invalid parameters, expected <file_id> <permission_id>" << std::endl;
@@ -1121,7 +1121,7 @@ void GdriveCommands::ls_revisions(QString fileId)
 void GdriveCommands::get_revision(QString fileId_Space_revisionId)
 {
     QStringList arg_list = fileId_Space_revisionId.split(" ",
-        QString::SkipEmptyParts);
+        Qt::SkipEmptyParts);
     if (arg_list.size() < 2)
     {
         std::cout << "Invalid parameters, expected <file_id> <revision_id>" << std::endl;

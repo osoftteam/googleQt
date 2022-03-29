@@ -1,5 +1,6 @@
 QT       += core network sql xml
 QT       += gui
+QT       += core5compat
 CONFIG   += console
 CONFIG   -= app_bundle
 TEMPLATE = app

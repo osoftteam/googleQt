@@ -1,6 +1,7 @@
 #include <QFile>
 #include <QJsonParseError>
 #include <QNetworkInterface>
+#include <QRegExp>
 #include <functional>
 #include "ApiUtil.h"
 
@@ -55,7 +56,8 @@ bool googleQt::isConnectedToNetwork()
 
 QString googleQt::makeValidFileName(QString fileName) 
 {
-    QString rv = fileName.replace(QRegExp("[" + QRegExp::escape("\\/:*?\"<>|") + "]"), QString("_"));
+    QRegExp exp("[" + QRegExp::escape("\\/:*?\"<>|") + "]");
+    QString rv = exp.replaceIn(fileName, QString("_"));
     return rv;
 };
 
@@ -137,7 +139,7 @@ void QParamArg::ResponseFields2Builder(UrlBuilder& b)const
 
 STRING_LIST googleQt::split_string(QString s)
 {
-    QStringList s_list = s.split(" ", QString::SkipEmptyParts);
+    QStringList s_list = s.split(" ", Qt::SkipEmptyParts);
     STRING_LIST rv;
     for (QStringList::iterator i = s_list.begin(); i != s_list.end(); i++)
     {
@@ -164,7 +166,11 @@ QString googleQt::size_human(qreal num)
 
 QString googleQt::trim_alpha_label(QString lbl)
 {
-    QString rv = lbl.trimmed().toLower().remove(QRegExp("[^a-zA-Z\\d\\s]")).remove(QRegExp("\\s"));
+    QRegExp expFirst("[^a-zA-Z\\d\\s]");
+    QRegExp expSecond("\\s");
+    QString rv = lbl.trimmed().toLower();
+    rv = expFirst.removeIn(rv);
+    rv = expSecond.removeIn(rv);
     return rv;
 };
 
