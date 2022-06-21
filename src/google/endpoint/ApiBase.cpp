@@ -2,6 +2,7 @@
 #include <QJsonParseError>
 #include <QNetworkInterface>
 #include <functional>
+#include <QRegExp>
 #include "ApiUtil.h"
 
 using namespace googleQt;

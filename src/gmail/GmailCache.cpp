@@ -3692,7 +3692,7 @@ void mail_cache::GThreadsStorage::bindSQL(QSqlQuery* q, CACHE_LIST<ThreadData>& 
         history_id << t->m_history_id;
         messages_count << t->m_messages_count;
         snippet << t->m_snippet;
-        filter_mask << t->m_filter_mask;
+        filter_mask << static_cast<qulonglong>(t->m_filter_mask);
         internalDate << t->internalDate();
         id << t->m_id;
 
@@ -3727,7 +3727,7 @@ void mail_cache::GThreadsStorage::bind_filterSQL(QSqlQuery* q, CACHE_LIST<Thread
             continue;
         }
 
-        filter_mask << t->m_filter_mask;
+        filter_mask << static_cast<qulonglong>(t->m_filter_mask);
         id << t->m_id;
     }
     q->addBindValue(filter_mask);
@@ -3753,7 +3753,7 @@ void mail_cache::GThreadsStorage::bind_prefilterSQL(QSqlQuery* q, CACHE_LIST<Thr
             continue;
         }
 
-        fmask << t->m_prefilter_mask;
+        fmask << static_cast<qulonglong>(t->m_prefilter_mask);
         id << t->m_id;
     }
     q->addBindValue(fmask);
@@ -3765,7 +3765,7 @@ bool mail_cache::GThreadsStorage::execOutOfBatchSQL(QSqlQuery* q, mail_cache::Th
     q->addBindValue(t->m_history_id);
     q->addBindValue(t->m_messages_count);
     q->addBindValue(t->m_snippet);
-    q->addBindValue(t->m_filter_mask);
+    q->addBindValue(static_cast<qulonglong>(t->m_filter_mask));
     q->addBindValue(t->internalDate());
     q->addBindValue(t->m_id);
     return q->exec();
