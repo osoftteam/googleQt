@@ -293,13 +293,11 @@ std::pair<bool, int> GdriveRoutes::uploadFileUsingId(QString localFilePath,
         return rv;
     }
 
-    QFileInfo fi(localFilePath);
-
     try
     {
         gdrive::CreateFileArg arg(destFileName);
+        arg.setFileId(fileId);
         files::CreateFileDetails& file_details = arg.fileDetailes();
-        file_details.setId(fileId);
         if (!parentFolderId.isEmpty())
         {
             std::vector<QString> parent_folders;
@@ -388,41 +386,21 @@ QString GdriveRoutes::uploadFileKeepExisting(QString localFilePath, QString dest
 
 QString GdriveRoutes::upgradeFile(QString localFilePath, QString destFileName, QString parentFolderId) 
 {
-    QString gdTmpFile = destFileName + "._tmp";
-    QString fTmpID = uploadFile(localFilePath, gdTmpFile, parentFolderId);
-    if (fTmpID.isEmpty()) {
-        qWarning() << "Failed to upload file" << localFilePath << destFileName << parentFolderId;
-        return "";
-    }
-    
-    QString oldFileID = fileExists(destFileName, parentFolderId);
-    if (!oldFileID.isEmpty()) 
-    {
-        if (!deleteFile(oldFileID)) 
-        {   
-            qWarning() << "Failed to delete file" << destFileName << parentFolderId << oldFileID;
-            return "";
-        };
-    }
+    const QString fileID = fileExists(destFileName, parentFolderId);
+    if (fileID.isEmpty())
+        return uploadFileKeepExisting(localFilePath, destFileName, parentFolderId);
 
-    if (!renameFile(fTmpID, destFileName)) 
-    {
-        qWarning() << "Failed to rename file" << destFileName << fTmpID;
-        return "";
-    }
-
-    return fTmpID;
+    const auto res = uploadFileUsingId(localFilePath, destFileName, fileID, parentFolderId);
+    return res.first ? fileID : QString();
 };
 
 QString GdriveRoutes::upgradeAppDataFile(QString localFilePath, QString destFileName)
 {
-    QString fID = uploadFileKeepExisting(localFilePath, destFileName, "appDataFolder");
+    QString fID = upgradeFile(localFilePath, destFileName, "appDataFolder");
     if (fID.isEmpty()) {
         qWarning() << "Failed to upload file" << localFilePath << destFileName << "appDataFolder";
         return "";
     }
-    int n = cleanUpAppDataFolder(destFileName, fID);
-    Q_UNUSED(n);
     return fID;
 };
 

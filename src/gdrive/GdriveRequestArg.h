@@ -292,6 +292,12 @@ namespace googleQt {
             void toJson(QJsonObject& js)const override;
 
             /**
+            The ID of the file.
+            */
+            QString getFileId()const { return m_fileId; }
+            void    setFileId(QString val) { m_fileId = val; }
+
+            /**
                 A details for file.
             */
             files::CreateFileDetails& fileDetailes();
@@ -335,6 +341,7 @@ namespace googleQt {
             */
             bool    calcMimeType();
         protected:
+            QString m_fileId;
             bool    m_ignoreDefaultVisibility;
             bool    m_keepRevisionForever;
             QString m_ocrLanguage;

@@ -616,9 +616,10 @@ namespace googleQt{
         }
 
         template <class ARG>
-        QUrl buildGdriveMPartUploadUrl(const QString&, const ARG&)const
+        QUrl buildGdriveMPartUploadUrl(const QString&, const ARG& a)const
         {
-            QUrl url("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart");
+            QUrl url;
+            a.build("https://www.googleapis.com/upload/drive/v3/files", url);
             addAppKeyParameter(url);
             return url;
         }

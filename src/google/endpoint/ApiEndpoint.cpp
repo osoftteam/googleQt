@@ -361,6 +361,8 @@ QNetworkReply* ApiEndpoint::MPartUpload_requester::request(QNetworkRequest& r)
     QString content_str = QString("multipart/related; boundary=%1").arg(delimiter);
     r.setRawHeader("Content-Type", content_str.toStdString().c_str());
     r.setRawHeader("Content-Length", QString("%1").arg(bytes2post.size()).toStdString().c_str());
+    if (!r.url().path().endsWith("files"))
+        return m_ep.patchData(r, bytes2post);
     return m_ep.postData(r, bytes2post);
 }
 

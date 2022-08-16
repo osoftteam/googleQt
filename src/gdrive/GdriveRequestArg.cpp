@@ -135,7 +135,11 @@ CreateFileArg::~CreateFileArg()
 
 void CreateFileArg::build(const QString& link_path, QUrl& url)const
 {
-    UrlBuilder b(link_path + "/files", url);
+    QString path = link_path;
+    if (!m_fileId.isEmpty())
+        path += QString("/%1").arg(m_fileId);
+    UrlBuilder b(path, url);
+    b.add("uploadType", "multipart");
     b.add("ignoreDefaultVisibility", m_ignoreDefaultVisibility)
         .add("keepRevisionForever", m_keepRevisionForever)
         .add("ocrLanguage", m_ocrLanguage)
