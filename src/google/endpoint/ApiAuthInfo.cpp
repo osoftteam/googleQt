@@ -1,4 +1,5 @@
 #include <QJsonObject>
+#include <QFile>
 #include <iostream>
 #include "ApiAuthInfo.h"
 #include "ApiUtil.h"
@@ -14,6 +15,18 @@ ApiAuthInfo::ApiAuthInfo()
 
 ApiAuthInfo::ApiAuthInfo(QString token_file, int scope):m_token_file(token_file), m_token_scope(scope)
 {
+};
+
+void ApiAuthInfo::purge()
+{
+    if (!m_token_file.isEmpty())
+        QFile::remove(m_token_file);
+    m_accessToken.clear();
+    m_refreshToken.clear();
+    m_type.clear();
+    m_expires_in = 0;
+    m_expire_time = QDateTime();
+    m_token_scope = 0;
 };
 
 bool ApiAuthInfo::readFromFile(QString path)

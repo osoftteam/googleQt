@@ -10,6 +10,7 @@ namespace googleQt{
         ApiAuthInfo(QString token_file, int scope = 0);
         virtual ~ApiAuthInfo(){};
         
+        void purge();
         virtual bool reload();
         virtual bool updateToken(const QJsonObject& js_in);
         void setEmail(QString email){ m_email = email; }        
