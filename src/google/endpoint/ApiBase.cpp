@@ -3,6 +3,7 @@
 #include <QNetworkInterface>
 #include <functional>
 #include <QRegExp>
+#include <QDir>
 #include "ApiUtil.h"
 
 using namespace googleQt;
@@ -24,6 +25,9 @@ bool googleQt::loadJsonFromFile(QString path, QJsonObject& js)
 
 bool googleQt::storeJsonToFile(QString path, const QJsonObject js)
 {
+    QDir dir;
+    dir.mkpath(QFileInfo(path).path());
+
     QFile jf(path);
     if (!jf.open(QFile::WriteOnly)) {
         return false;
