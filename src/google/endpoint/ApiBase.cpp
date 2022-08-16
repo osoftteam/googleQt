@@ -143,8 +143,13 @@ void QParamArg::ResponseFields2Builder(UrlBuilder& b)const
 STRING_LIST googleQt::split_string(QString s)
 {
     QStringList s_list = s.split(" ", QString::SkipEmptyParts);
+    return string_list(s_list);
+};
+
+STRING_LIST googleQt::string_list(const QStringList &s_list)
+{
     STRING_LIST rv;
-    for (QStringList::iterator i = s_list.begin(); i != s_list.end(); i++)
+    for (QStringList::const_iterator i = s_list.constBegin(); i != s_list.constEnd(); i++)
     {
         rv.push_back(*i);
     }
