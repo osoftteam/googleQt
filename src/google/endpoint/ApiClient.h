@@ -11,7 +11,7 @@ namespace googleQt{
     {
         Q_OBJECT
     public:
-        ApiClient(ApiAppInfo* appInfo, ApiAuthInfo* authInfo);
+        ApiClient(std::shared_ptr<ApiAppInfo> appInfo, std::shared_ptr<ApiAuthInfo> authInfo);
         virtual ~ApiClient() {};
         QString getToken()const;
         QString getAppKey()const;
@@ -22,13 +22,16 @@ namespace googleQt{
         int     getAccessScope()const;
         virtual bool refreshToken() = 0;        
         virtual ApiEndpoint* endpoint() = 0;
+        const std::shared_ptr<ApiAppInfo> &app() const;
+        const std::shared_ptr<ApiAuthInfo> &auth() const;
+
     signals:
         void downloadProgress(qint64 bytesProcessed, qint64 total);
         void uploadProgress(qint64 bytesProcessed, qint64 total);
 
     protected:      
-        std::unique_ptr<ApiAppInfo>  m_app;
-        std::unique_ptr<ApiAuthInfo> m_auth;
+        std::shared_ptr<ApiAppInfo>  m_app;
+        std::shared_ptr<ApiAuthInfo> m_auth;
         QString m_userAgent;
     };
 };

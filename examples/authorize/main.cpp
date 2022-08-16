@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
             }
         }
     
-    std::unique_ptr<ApiAppInfo> appInfo(new ApiAppInfo);
+    std::shared_ptr<ApiAppInfo> appInfo(new ApiAppInfo);
     if(!appInfo->readFromFile(argAppInfoFile)){
         std::cerr << "Error reading <app-info-file>" << std::endl;
         return 0;
@@ -77,14 +77,14 @@ int main(int argc, char *argv[])
 
     try
         {
-            std::unique_ptr<ApiAuthInfo> authInfo( new ApiAuthInfo(argAuthFileOutput));
+            std::shared_ptr<ApiAuthInfo> authInfo( new ApiAuthInfo(argAuthFileOutput));
             if(refreshToken){
                 if(!authInfo->reload()){
                     std::cout << "Failed to load token: " << argAuthFileOutput.toStdString() << std::endl;
                     return 0;
                 }
 
-                if(!GoogleWebAuth::refreshToken(appInfo.get(), authInfo.get()))
+                if(!GoogleWebAuth::refreshToken(appInfo, authInfo))
                     {
                         std::cout << "Error, failed to store access token to file: " << argAuthFileOutput.toStdString() << std::endl;
                     }
@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
                     scopes.push_back(GoogleWebAuth::authScope_gdrive());
                     scopes.push_back(GoogleWebAuth::authScope_gdrive_appdata());
                     scopes.push_back(GoogleWebAuth::authScope_contacts_modify());
-                    QUrl url = GoogleWebAuth::getCodeAuthorizeUrl(appInfo.get(), scopes);
+                    QUrl url = GoogleWebAuth::getCodeAuthorizeUrl(appInfo, scopes);
                     saveScopeUrl(url);
 
                     std::cout << "1. Go to " << url.toString().toStdString() << std::endl;
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
                     std::cin >> auth_code;
 
                     
-                    if(!GoogleWebAuth::getTokenFromCode(appInfo.get(), QString::fromStdString(auth_code), authInfo.get()))
+                    if(!GoogleWebAuth::getTokenFromCode(appInfo, QString::fromStdString(auth_code), authInfo))
                         {
                             std::cout << "Error, failed to store access token to file: " << argAuthFileOutput.toStdString() << std::endl;
                         }

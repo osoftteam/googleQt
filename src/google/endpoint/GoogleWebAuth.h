@@ -16,21 +16,21 @@ namespace googleQt{
             Google access and request for access token, which will be used in all
             API interactions.
         */
-        static QUrl getCodeAuthorizeUrl(const ApiAppInfo* appInfo, QString scope);
+        static QUrl getCodeAuthorizeUrl(std::shared_ptr<const ApiAppInfo> appInfo, QString scope);
 
-        static QUrl getCodeAuthorizeUrl(const ApiAppInfo* appInfo, const STRING_LIST& scopes);
+        static QUrl getCodeAuthorizeUrl(std::shared_ptr<const ApiAppInfo> appInfo, const STRING_LIST& scopes);
 
         /**
            getTokenFromCode - makes http call to Google to retrive
            access token by providing authorize code
          */
-        static bool getTokenFromCode(const ApiAppInfo* appInfo, QString code, ApiAuthInfo* auth);
+        static bool getTokenFromCode(std::shared_ptr<const ApiAppInfo> appInfo, QString code, std::shared_ptr<ApiAuthInfo> auth);
 
         /**
            refreshToken - makes http call to Google to retrive
            access token by providing refresh token
          */
-        static bool refreshToken(const ApiAppInfo* appInfo, ApiAuthInfo* auth);
+        static bool refreshToken(std::shared_ptr<const ApiAppInfo> appInfo, std::shared_ptr<ApiAuthInfo> auth);
         
         /**
         * Create, read, update, and delete labels only.
@@ -103,6 +103,6 @@ namespace googleQt{
         static QString authScope_contacts();
         */
     protected:
-        static bool updateToken(const QUrl& url, ApiAuthInfo* auth, const QString& str);
+        static bool updateToken(const QUrl& url, std::shared_ptr<ApiAuthInfo> auth, const QString& str);
     };
 };

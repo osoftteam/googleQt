@@ -11,7 +11,7 @@
 
 using namespace googleQt;
 
-QUrl GoogleWebAuth::getCodeAuthorizeUrl(const ApiAppInfo* appInfo, QString scope)
+QUrl GoogleWebAuth::getCodeAuthorizeUrl(std::shared_ptr<const ApiAppInfo> appInfo, QString scope)
 {
     QUrl url(QString("https://%1/%2").arg(GoogleHost::DEFAULT().getAuth()).arg("o/oauth2/auth"));
     QUrlQuery q;
@@ -24,7 +24,7 @@ QUrl GoogleWebAuth::getCodeAuthorizeUrl(const ApiAppInfo* appInfo, QString scope
     return url;
 };
 
-QUrl GoogleWebAuth::getCodeAuthorizeUrl(const ApiAppInfo* appInfo, const STRING_LIST& scopes)
+QUrl GoogleWebAuth::getCodeAuthorizeUrl(std::shared_ptr<const ApiAppInfo> appInfo, const STRING_LIST& scopes)
 {
     QString scope_summary;
 
@@ -38,7 +38,7 @@ QUrl GoogleWebAuth::getCodeAuthorizeUrl(const ApiAppInfo* appInfo, const STRING_
     return getCodeAuthorizeUrl(appInfo, scope_summary);
 };
 
-bool GoogleWebAuth::updateToken(const QUrl& url, ApiAuthInfo* auth, const QString& str)
+bool GoogleWebAuth::updateToken(const QUrl& url, std::shared_ptr<ApiAuthInfo> auth, const QString& str)
 {
 #ifdef API_QT_AUTOTEST
     Q_UNUSED(url);
@@ -100,7 +100,7 @@ bool GoogleWebAuth::updateToken(const QUrl& url, ApiAuthInfo* auth, const QStrin
 #endif
 }
 
-bool GoogleWebAuth::getTokenFromCode(const ApiAppInfo* appInfo, QString code, ApiAuthInfo* auth)
+bool GoogleWebAuth::getTokenFromCode(std::shared_ptr<const ApiAppInfo> appInfo, QString code, std::shared_ptr<ApiAuthInfo> auth)
 {
     QUrl url(QString("https://%1/%2").arg(GoogleHost::DEFAULT().getAuth()).arg("o/oauth2/token"));
     QString str = QString("code=%1&client_id=%2&client_secret=%3&grant_type=%4&redirect_uri=%5")
@@ -113,7 +113,7 @@ bool GoogleWebAuth::getTokenFromCode(const ApiAppInfo* appInfo, QString code, Ap
     return updateToken(url, auth, str);
 };
 
-bool GoogleWebAuth::refreshToken(const ApiAppInfo* appInfo, ApiAuthInfo* auth)
+bool GoogleWebAuth::refreshToken(std::shared_ptr<const ApiAppInfo> appInfo, std::shared_ptr<ApiAuthInfo> auth)
 {
     QUrl url(QString("https://%1/%2").arg(GoogleHost::DEFAULT().getAuth()).arg("o/oauth2/token"));
     QString str = QString("refresh_token=%1&client_id=%2&client_secret=%3&grant_type=%4")

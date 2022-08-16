@@ -14,7 +14,7 @@ using namespace googleQt;
 int g__gclient_alloc_counter = 0;
 #endif
 
-gclient_ptr googleQt::createClient(googleQt::ApiAppInfo* appInfo, googleQt::ApiAuthInfo* authInfo, gcontact::GContactCacheBase* custom_contacts_cache)
+gclient_ptr googleQt::createClient(std::shared_ptr<ApiAppInfo> appInfo, std::shared_ptr<ApiAuthInfo> authInfo, gcontact::GContactCacheBase* custom_contacts_cache)
 {
     std::shared_ptr<GoogleClient>  rv(new GoogleClient(appInfo, authInfo, custom_contacts_cache));
     return rv;
@@ -28,8 +28,8 @@ void googleQt::releaseClient(gclient_ptr p)
 };
 
 
-GoogleClient::GoogleClient(ApiAppInfo* appInfo,
-                         ApiAuthInfo* authInfo, 
+GoogleClient::GoogleClient(std::shared_ptr<ApiAppInfo> appInfo,
+                         std::shared_ptr<ApiAuthInfo> authInfo,
                          gcontact::GContactCacheBase* custom_contacts_cache)
     :ApiClient(appInfo, authInfo)
 {
@@ -183,7 +183,7 @@ googleQt::mail_cache::GMailSQLiteStorage* GoogleClient::gmail_storage()
 
 bool GoogleClient::refreshToken()
 {
-    bool rv = GoogleWebAuth::refreshToken(m_app.get(), m_auth.get());
+    bool rv = GoogleWebAuth::refreshToken(m_app, m_auth);
     return rv;
 };
 

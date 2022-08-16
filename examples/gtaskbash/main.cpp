@@ -38,13 +38,13 @@ int main(int argc, char *argv[])
     QString argAppFile = argv[1];
     QString argAuthFile = argv[2];
 
-    std::unique_ptr<ApiAppInfo> appInfo(new ApiAppInfo);
+    std::shared_ptr<ApiAppInfo> appInfo(new ApiAppInfo);
     if(!appInfo->readFromFile(argAppFile)){
         std::cerr << "Error reading <app-info-file>" << std::endl;
         return 0;
     };    
     
-    std::unique_ptr<ApiAuthInfo> authInfo(new ApiAuthInfo(argAuthFile));
+    std::shared_ptr<ApiAuthInfo> authInfo(new ApiAuthInfo(argAuthFile));
     if(!authInfo->reload()){
         std::cout << "Error reading <auth-file>" << std::endl;
         std::cout << "Use 'authorize' sample to generate token file." << std::endl;
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     
     demo::ApiListener lsn;
     //GoogleClient c(appInfo.release(), authInfo.release());
-    auto c = googleQt::createClient(appInfo.release(), authInfo.release());
+    auto c = googleQt::createClient(appInfo, authInfo);
     QObject::connect(c.get(), &GoogleClient::downloadProgress, &lsn, &demo::ApiListener::transferProgress);
 
     GtaskCommands cmd(*c);
