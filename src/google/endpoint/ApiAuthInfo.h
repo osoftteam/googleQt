@@ -1,4 +1,5 @@
 #pragma once
+#include <QDateTime>
 #include <QString>
 
 namespace googleQt{
@@ -31,7 +32,7 @@ namespace googleQt{
         QString m_refreshToken;
         QString m_type;
         int     m_expires_in;
-        QString m_expire_time;
+        QDateTime m_expire_time;
         QString m_email;
         int     m_token_scope;
     };

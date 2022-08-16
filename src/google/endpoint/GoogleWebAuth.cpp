@@ -48,9 +48,8 @@ bool GoogleWebAuth::updateToken(const QUrl& url, std::shared_ptr<ApiAuthInfo> au
     js["access_token"]  = "access_token_value_123";
     js["refresh_token"] = "refresh_token_value_456";
     js["token_type"]    = "my_token_type";
-    js["expires_in"]    = QDateTime::currentDateTime().toString(Qt::ISODate);;
-    js["expire_time"]   = QDateTime::currentDateTime().toString(Qt::ISODate);;
-    js["update_time"]   = QDateTime::currentDateTime().toString(Qt::ISODate);
+    js["expires_in"]    = 3599;
+    js["expire_time"]   = QDateTime::currentDateTime().addSecs(3599).toString(Qt::ISODate);
 
     bool rv = auth->updateToken(js);
     return rv;
